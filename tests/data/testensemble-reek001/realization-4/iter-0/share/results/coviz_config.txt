@@ -1,0 +1,36 @@
+- datatype: maps
+  identificator : All surfaces
+  names:
+    - TopUpperReek
+    - TopMidReek
+    - TopLowerReek
+    - BaseLowerReek
+  attributes:
+    - DS_extracted_horizons
+- datatype: polygons
+  identificator : Faultpolygons
+  names:
+    - TopUpperReek
+    - TopMidReek
+    - TopLowerReek
+    - BaseLowerReek
+  attributes:
+    - DL_extracted_faultlines
+- datatype: grid
+  identificator : Geogrid
+  names:
+    - Geogrid
+  attributes:
+    - Poro
+    - Perm
+    - SWATINIT
+    - Facies
+    - G1
+    - G2
+- datatype: grid
+  identificator : APSgrid
+  names:
+    - APSgrid
+  attributes:
+    - G1
+    - G2

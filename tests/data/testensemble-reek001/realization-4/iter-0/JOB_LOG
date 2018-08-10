@@ -1,0 +1,50 @@
+12:37:00  Calling: /project/res/etc/ERT/Scripts/design2params.py 4 /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/distributions/design_matrix.xlsx DesignMatrix DefaultValues
+12:37:01  Calling: /project/res/etc/ERT/Scripts/design_kw.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/templates/global_variables.tmpl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/global_variables.ipl
+12:37:02  Calling: /project/res/etc/ERT/Scripts/design_kw.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/templates/multflt.tmpl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/reek.multflt
+12:37:03  Calling: /project/res/etc/ERT/Scripts/design_kw.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/templates/let-swof.tmpl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/let-swof.txt
+12:37:04  Calling: /project/res/etc/ERT/Scripts/design_kw.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/templates/let-sgof.tmpl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/let-sgof.txt
+12:37:05  Calling: /project/res/etc/ERT/Scripts/design_kw.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/templates/multz.tmpl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/reek.multz
+12:37:06  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/model
+12:37:06  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_directory.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../rms/bin /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/rms
+12:37:07  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_directory.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../rms/ipl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/rms
+12:37:08  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/input/global_variables
+12:37:09  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_directory.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../rms/input/config /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/rms/input
+12:37:10  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_directory.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../rms/input/well_modelling /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/rms/input
+12:37:11  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/aps
+12:37:12  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/cohiba/surfaces
+12:37:12  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/cohiba/logfiles
+12:37:13  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/pem
+12:37:14  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/regions/data/grid
+12:37:15  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/regions/result
+12:37:16  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py rms/output/zone
+12:37:16  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py sim2seis/model
+12:37:17  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_file.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../sim2seis/model/model_2000_sim.txt /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/sim2seis/model/model_2000_sim.txt
+12:37:18  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_file.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../sim2seis/model/model_2001_sim.txt /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/sim2seis/model/model_2001_sim.txt
+12:37:19  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_file.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../sim2seis/model/model_2003_sim.txt /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/sim2seis/model/model_2003_sim.txt
+12:37:20  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py sim2seis/input
+12:37:21  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py sim2seis/output
+12:37:22  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py eclipse/include/grid
+12:37:22  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py eclipse/include/props
+12:37:23  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_file.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../eclipse/include/props/reek.endpoints /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/reek.endpoints
+12:37:24  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_file.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../eclipse/include/props/reek.pvt /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/reek.pvt
+12:37:25  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py eclipse/include/regions
+12:37:26  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py eclipse/include/solution
+12:37:27  Calling: /project/res/etc/ERT/Config/jobs/util/script/copy_directory.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../eclipse/include/summary /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include
+12:37:27  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py eclipse/include/schedule
+12:37:28  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py share/results/maps
+12:37:29  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py share/results/grids
+12:37:30  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py share/results/polygons
+12:37:31  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py share/results/volumes
+12:37:32  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py share/results/images
+12:37:33  Calling: /project/res/etc/ERT/Config/jobs/util/script/make_directory.py share/results/observations
+12:37:33  Calling: /project/res/etc/ERT/Config/jobs/util/script/move_file.py global_variables.ipl rms/input/global_variables/global_variables.ipl
+12:37:34  Calling: /project/res/etc/ERT/Config/jobs/util/script/move_file.py reek.multflt eclipse/include/grid/reek.multflt
+12:37:35  Calling: /project/res/etc/ERT/Config/jobs/util/script/move_file.py let-swof.txt eclipse/include/props/let-swof.txt
+12:37:36  Calling: /project/res/etc/ERT/Config/jobs/util/script/move_file.py let-sgof.txt eclipse/include/props/let-sgof.txt
+12:37:37  Calling: /project/res/etc/ERT/Config/jobs/util/script/move_file.py reek.multz eclipse/include/grid/reek.multz
+12:37:38  Calling: /project/res/etc/ERT/Scripts/design_kw.py /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../input/templates/seed.tmpl /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/rms/model/RMS_SEED
+12:37:39  Calling: /project/res/etc/ERT/Scripts/run_rms_batch.py rms/model 4 10.1.1 /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/model/../../rms/model/reek.rms10.1.1 ./ ./ MAIN
+12:40:54  Calling: /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/bin/scripts/generate_relperm.sh /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/let-swof.txt /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/swof.txt
+12:40:54  Calling: /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/bin/scripts/generate_relperm.sh /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/let-sgof.txt /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/sgof.txt
+12:40:54  Calling: /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/ert/bin/scripts/include_pc.py /scratch/fmu/havb/2_r001_reek/realization-4/iter-0/eclipse/include/props/swof.txt
+12:40:54  Calling: /project/res/etc/ERT/Config/jobs/ressim/Scripts/run_ecl100 2014.2 eclipse/model/2_R001_REEK-4 1
