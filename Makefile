@@ -96,6 +96,9 @@ clean-docs: ## remove tmp docs stuff
 	rm -f docs/modules.rst
 	rm -fr docs/_build
 
+develop: ## make a development version inside a virtualenv (highly recommended)
+	pip install -e .
+
 flake: ## check style with flake8
 	python -m flake8 ${SRCAPPLICATION} tests
 
@@ -137,7 +140,7 @@ dist: clean  ## builds wheel package
 	@${PYTHON} setup.py bdist_wheel
 
 
-install: dist ## version to VENV install place
+install: dist ## version to VENV install place (use make develop instead?)
 	@echo "Running ${PIP} (${PYTHON_VERSION}) ..."
 	@${PIP} install --upgrade ./dist/*
 	@echo "Install run scripts..."

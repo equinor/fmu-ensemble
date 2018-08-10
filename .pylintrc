@@ -1,0 +1,25 @@
+# PYLINT: General settings for FMU modules
+
+[GENERAL]
+disable=R0205, F0010
+
+[MASTER]
+init-hook='import sys; sys.path.append("src/")'
+ignore=_version.py
+
+[BASIC]
+good-names=logger, fmux, xfmu
+
+[FORMAT]
+max-line-length=79
+max-module-lines=3000
+
+[DESIGN]
+max-attributes=25
+max-args=20
+
+[SIMILARITIES]
+min-similarity-lines=4
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes

@@ -19,3 +19,4 @@ def test_ensemble_import():
     """Test basic behaviour, module import"""
 
     myensemble = ensemble.Ensemble()
+    assert isinstance(myensemble, ensemble.Ensemble)

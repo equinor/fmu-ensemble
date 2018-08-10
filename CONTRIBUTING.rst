@@ -107,17 +107,29 @@ Use flake8 and/or pylint to check
 
   python -m flake8 mycode.py
 
+  make flake (all)
+
 The pylint command is much stricter and sometimes wrong... , but can be quite useful!
 
   python -m pylint mycode.py
+
+  make lint (all)
+
 
 Get Started!
 ------------
 
 Ready to contribute? Here's how to set up `fmu-ensemble` for local development.
 
-1. Fork the `fmu-ensemble` repo in web browser to a personal fork
-2. Clone your fork locally::
+If you you komodo python, shift to komodo-testing, as this is more python complete.
+
+1. You need `fmu-config` installed in *your virtual env*, as fmu-ensemble is dependent
+   on the `fmu.config.etc` module. Clone this repo (as in step 3), enter the folder,
+   and type `make develop`. That's all (but perhaps you need to pull regularly).
+
+2. Fork the `fmu-ensemble` repo in web browser to a personal fork
+
+3. Clone your fork locally::
 
      $ git clone git@git.equinor.com:<your-user>/fmu-ensemble.git
      $ git remote add upstream git@git.equinor.no:fmu-utilities/fmu-ensemble.git
@@ -125,21 +137,21 @@ Ready to contribute? Here's how to set up `fmu-ensemble` for local development.
    This means your `origin` is now your personal fork, while the actual master
    is at `upstream`.
 
-3. Activate the virtual envirioment and go to your fork::
+4. Activate the virtual envirioment and go to your fork::
 
      $ <activate your virtual env>
      $ cd fmu-ensemble/
-     $ pip install -r requirements_dev.txt (needed once or rarely)
-     $ pip install -e .
+     $ pip install -r requirements_dev.txt  (needed once or rarely)
+     $ make develop  (same as pip install -e .)
      $ make test  (see that test works)
 
-4. Create a branch for local development::
+5. Create a branch for local development::
 
      $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake, lint and the tests,
+6. When you're done making changes, check that your changes pass flake, lint and the tests,
    including testing and docs::
 
      $ make flake
@@ -147,26 +159,26 @@ Ready to contribute? Here's how to set up `fmu-ensemble` for local development.
      $ make test
      $ make docs
 
-6. Commit your changes and push your branch to GitHub::
+7. Commit your changes and push your branch to GitHub::
 
      $ git commit -am "Your detailed description of your changes."
      $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request (merge request) through the Git website.
+8. Submit a pull request (merge request) through the Git website.
 
-8. Then remove the current branch::
+9. Then remove the current branch::
 
      $ git checkout master
      $ git fetch upstream
      $ git merge upstream/master
 
-9. Alterantive in one go::
+10. Alterantive in one go::
 
      $ git pull upstream master
      $ git push
      $ git remote  (watch which remotes)
 
-10. Delete your previous branch and make a new feature branch::
+11. Delete your previous branch and make a new feature branch::
 
       $ git branch -d name-of-your-bugfix-or-feature
       $ git checkout -b name-of-your-new-bugfix-or-feature
