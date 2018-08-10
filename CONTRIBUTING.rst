@@ -132,7 +132,7 @@ If you you komodo python, shift to komodo-testing, as this is more python comple
 3. Clone your fork locally::
 
      $ git clone git@git.equinor.com:<your-user>/fmu-ensemble.git
-     $ git remote add upstream git@git.equinor.no:fmu-utilities/fmu-ensemble.git
+     $ git remote add upstream git@git.equinor.com:fmu-utilities/fmu-ensemble.git
 
    This means your `origin` is now your personal fork, while the actual master
    is at `upstream`.
