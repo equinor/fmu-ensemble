@@ -8,11 +8,6 @@ Installation
 Stable release
 --------------
 
-The stable release of the scripts is on /project/res, so it can be run as:
-
-.. code-block:: console
-
-    $ fmuconfig the_master_file.yml
 
 From sources
 ------------
@@ -33,5 +28,5 @@ you can install it with:
     $ make install
 
 
-.. _Statoil Git repo: https://git.statoil.no/fmu-utilities/fmu-ensemble
+.. _Statoil Git repo: https://git.equinor.com/fmu-utilities/fmu-ensemble
 .. _virtual environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
