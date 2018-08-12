@@ -8,6 +8,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+import re
+import glob
+import pandas as pd
 
 from fmu.config import etc
 
@@ -16,11 +20,35 @@ logger = xfmu.functionlogger(__name__)
 
 
 class Ensemble(object):
-    """Class for Ensemble, more text to come."""
+    """An ensemble is a collection of Realizations.
 
-    def __init__(self):
-        self._name = None  # ensemble name
-        self._basefolder = None
+	Ensembles are initialized from path(s) pointing to
+	filesystem locations containing realizations.
+
+	Ensemble objects can be grouped into EnsembleSet.
+	
+	Realizations in an ensembles are uniquely determined
+	by their realization index (integer).
+	"""
+
+    def __init__(self, ensemble_name, paths):
+        self._name = ensemble_name  # ensemble name
+        if type(paths) == str:
+            paths = [paths]
+       
+        # Glob incoming paths to determine 
+        # paths for each realization (flatten and uniqify)
+        globbedpaths = [glob.glob(path) for path in paths]
+        globbedpaths = list(set([item for sublist in globbedpaths
+                                 for item in sublist]))
+        print(globbedpaths)
+        # Search and locate minimal set of files
+        # representing the realizations.
+        #self.files = self.find_files(paths)
+    
+        # Store list of integers, realization indices
+        #self.reals = self.files['REAL'].unique().sort_values()
+
         logger.debug('Ran __init__')
 
     @property
