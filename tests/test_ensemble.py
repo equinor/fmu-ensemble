@@ -16,9 +16,9 @@ if not fmux.testsetup():
 
 
 def test_reek001():
-	"""Test import of a stripped 5 realization ensemble"""
-	reekensemble = Ensemble('reektest',
-					 'data/testensemble-reek001/realization-*/iter-0')
-	assert isinstance(reekensemble, Ensemble)		
-	assert reekensemble.name == 'reektest'
-		
+        """Test import of a stripped 5 realization ensemble"""
+        reekensemble = Ensemble('reektest',
+                                'data/testensemble-reek001/' +
+                                'realization-*/iter-0')
+        assert isinstance(reekensemble, Ensemble)
+        assert reekensemble.name == 'reektest'

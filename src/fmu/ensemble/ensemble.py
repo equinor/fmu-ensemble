@@ -22,21 +22,21 @@ logger = xfmu.functionlogger(__name__)
 class Ensemble(object):
     """An ensemble is a collection of Realizations.
 
-	Ensembles are initialized from path(s) pointing to
-	filesystem locations containing realizations.
+        Ensembles are initialized from path(s) pointing to
+        filesystem locations containing realizations.
 
-	Ensemble objects can be grouped into EnsembleSet.
-	
-	Realizations in an ensembles are uniquely determined
-	by their realization index (integer).
-	"""
+        Ensemble objects can be grouped into EnsembleSet.
+
+        Realizations in an ensembles are uniquely determined
+        by their realization index (integer).
+        """
 
     def __init__(self, ensemble_name, paths):
         self._name = ensemble_name  # ensemble name
         if type(paths) == str:
             paths = [paths]
-       
-        # Glob incoming paths to determine 
+
+        # Glob incoming paths to determine
         # paths for each realization (flatten and uniqify)
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
@@ -45,7 +45,7 @@ class Ensemble(object):
         # Search and locate minimal set of files
         # representing the realizations.
         #self.files = self.find_files(paths)
-    
+
         # Store list of integers, realization indices
         #self.reals = self.files['REAL'].unique().sort_values()
 
