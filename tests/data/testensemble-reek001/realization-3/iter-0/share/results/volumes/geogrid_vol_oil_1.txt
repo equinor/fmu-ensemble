@@ -1,0 +1,25 @@
+Project name			: /project/fmu/users/havb/reek_20180207/resmod/ff/2017a/r001/rms/model/reek.rms10.1.1
+Date				: 2018.02.12 12:40:31
+Grid model name			: Geogrid
+
+UNITS:
+-------
+Input unit (XY)			: metre
+Input unit (Z)			: metre
+Output unit, reservoir		: cubic metre
+Output unit, surface oil	: std. cubic metre
+
+
+   Zone      Region index          Bulk                Pore                Hcpv               Stoiip       
+UpperReek  1                       348111748.55         48616833.85         16454318.93         10348628.09
+UpperReek  2                               0.00                0.00                0.00                0.00
+UpperReek  Totals                  348111748.55         48616833.85         16454318.93         10348628.09
+MidReek    1                       264608760.24         42874033.34         22101458.03         13900287.84
+MidReek    2                               0.00                0.00                0.00                0.00
+MidReek    Totals                  264608760.24         42874033.34         22101458.03         13900287.84
+LowerReek  1                       139655234.17         26443219.81         17366744.44         10922480.60
+LowerReek  2                               0.00                0.00                0.00                0.00
+LowerReek  Totals                  139655234.17         26443219.81         17366744.44         10922480.60
+Totals     1                       752375742.96        117934086.99         55922521.40         35171396.53
+Totals     2                               0.00                0.00                0.00                0.00
+Totals     Totals                  752375742.96        117934086.99         55922521.40         35171396.53

@@ -12,5 +12,5 @@ sphinx_rtd_theme>=0.4.1
 pytest>=2.9.2
 pytest-runner>=2.11.1
 versioneer==0.18
-astroid==2.0.3
-pylint==2.1.1
+astroid
+pylint
