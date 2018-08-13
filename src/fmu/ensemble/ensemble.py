@@ -11,6 +11,7 @@ from __future__ import print_function
 import os
 import re
 import glob
+import json
 import pandas as pd
 
 from fmu.config import etc
@@ -151,6 +152,7 @@ class Ensemble(object):
             # Delete potential unwanted row
             status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                                (status.colon == 'JOBID:'))]
+            status.reset_index(inplace=True)
 
             del status['colon']
             del status['dots']
@@ -160,8 +162,8 @@ class Ensemble(object):
             # Calculate duration. Only Python 3.6 has time.fromisoformat().
             # Warning: Unpandaic code..
             durations = []
-            for idx, jobrow in status.iterrows():
-                (h, m, s) = jobrow['STARTTIME'].split(':')
+            for _, jobrow in status.iterrows():
+                (h, m, s) = jobrow['STARTTIME'].split(':') 
                 start = datetime.combine(date.today(),
                                          time(hour=int(h), minute=int(m),
                                               second=int(s)))
@@ -178,9 +180,21 @@ class Ensemble(object):
             # Augment data from jobs.json if that file is available:
             jsonfilename = file.FULLPATH.replace('STATUS', 'jobs.json')
             if jsonfilename and os.path.exists(jsonfilename):
-                pass
-            statusdf = statusdf.append(status, sort=True, ignore_index=True)
+                try:
+                    jobsinfo = json.load(open(jsonfilename))
+                    jobsinfodf = pd.DataFrame(jobsinfo['jobList'])
+                    jobsinfodf['JOBINDEX'] = jobsinfodf.index.astype(int)
+                    status = status.merge(jobsinfodf, how='outer',
+                                          on='JOBINDEX')
+                except ValueError:
+                    logger.warn("Parsing file %s failed, skipping",
+                                jsonfilename)
+            statusdf = statusdf.append(status, ignore_index=True)
+            # With pandas 0.23, we need to add sort=True, but
+            # that will fail with Pandas 0.22
 
+            statusdf.sort_values(['REAL', 'JOBINDEX'], ascending=True,
+                                 inplace=True)
         return statusdf
 
     def __len__(self):
