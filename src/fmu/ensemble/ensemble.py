@@ -22,14 +22,14 @@ logger = xfmu.functionlogger(__name__)
 class Ensemble(object):
     """An ensemble is a collection of Realizations.
 
-        Ensembles are initialized from path(s) pointing to
-        filesystem locations containing realizations.
+    Ensembles are initialized from path(s) pointing to
+    filesystem locations containing realizations.
 
-        Ensemble objects can be grouped into EnsembleSet.
+    Ensemble objects can be grouped into EnsembleSet.
 
-        Realizations in an ensembles are uniquely determined
-        by their realization index (integer).
-        """
+    Realizations in an ensembles are uniquely determined
+    by their realization index (integer).
+    """
 
     def __init__(self, ensemble_name, paths):
         self._name = ensemble_name  # ensemble name
