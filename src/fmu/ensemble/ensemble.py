@@ -33,7 +33,9 @@ class Ensemble(object):
 
     def __init__(self, ensemble_name, paths):
         self._name = ensemble_name  # ensemble name
-        if type(paths) == str:
+        self.files = pd.DataFrame()  # list of files representing the ensemble
+
+        if isinstance(paths, str):
             paths = [paths]
 
         # Glob incoming paths to determine
@@ -41,15 +43,93 @@ class Ensemble(object):
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
-        print(globbedpaths)
+        logger.info("Loading ensemble from dirs: %s",
+                    " ".join(globbedpaths))
+
         # Search and locate minimal set of files
         # representing the realizations.
-        #self.files = self.find_files(paths)
-
-        # Store list of integers, realization indices
-        #self.reals = self.files['REAL'].unique().sort_values()
+        self.add_realizations(paths)
 
         logger.debug('Ran __init__')
+
+    def add_realizations(self, paths):
+        """Utility function to add realization to the ensemble.
+
+        The ensemble realizations are defined from the content of the
+        object dataframe 'files'. As a minimum, a realization must
+        have a STATUS file. Additionally, jobs.json, and
+        parameters.txt will be parsed.
+
+        A realization is *uniquely* determined by its realization index,
+        put into the column 'REAL' in the files dataframe
+
+        This function can be used to reload ensembles.
+        Existing realizations will have their data removed
+        from the files dataframe.
+
+        Columns added to the files dataframe:
+         * REAL realization index.
+         * FULLPATH absolute path to the file
+         * FILETYPE filename extension (after last dot)
+         * LOCALPATH relative filename inside realization directory
+         * BASENAME filename only. No path. Includes extension.
+
+        """
+        # This df will be appended to self.files at the end:
+        files = pd.DataFrame(columns=['REAL', 'FULLPATH', 'FILETYPE',
+                                      'LOCALPATH', 'BASENAME'])
+        if isinstance(paths, list):
+            globbedpaths = [glob.glob(path) for path in paths]
+            # Flatten list and uniquify:
+            globbedpaths = list(set([item for sublist in globbedpaths
+                                     for item in sublist]))
+        else:
+            globbedpaths = glob.glob(paths)
+
+        realregex = re.compile(r'.*realization-(\d*)')
+        for realdir in globbedpaths:
+            # Support initialization using relative paths
+            absrealdir = os.path.abspath(realdir)
+            logger.info("Processing realization directory %s...",
+                        absrealdir)
+            realidxmatch = re.match(realregex, absrealdir)
+            if realidxmatch:
+                realidx = int(realidxmatch.group(1))
+            else:
+                xfmu.warn('Realization %s not valid, skipping' %
+                          absrealdir)
+                continue
+            if os.path.exists(os.path.join(realdir, 'STATUS')):
+                files = files.append({'REAL': realidx,
+                                      'LOCALPATH': 'STATUS',
+                                      'FILETYPE': 'STATUS',
+                                      'FULLPATH': os.path.join(absrealdir,
+                                                               'STATUS')},
+                                     ignore_index=True)
+            else:
+                logger.warn("Invalid realization, no STATUS file, %s",
+                      realdir)
+            if os.path.exists(os.path.join(realdir, 'jobs.json')):
+                files = files.append({'REAL': realidx,
+                                      'LOCALPATH': 'jobs.json',
+                                      'FILETYPE': 'json',
+                                      'FULLPATH': os.path.join(absrealdir,
+                                                               'jobs.json')},
+                                     ignore_index=True)
+
+            if os.path.exists(os.path.join(realdir, 'parameters.txt')):
+                files = files.append({'REAL': realidx,
+                                    'LOCALPATH': 'parameters.txt',
+                                      'FILETYPE': 'txt',
+                                      'FULLPATH': os.path.join(absrealdir,
+                                                               'parameters.txt')},
+                                    ignore_index=True)
+        logger.info('add_realization() found %d realizations',
+                    len(files.REAL.unique()))
+        self.files = self.files.append(files, ignore_index=True)
+
+    def __len__(self):
+        return len(self.files.REAL.unique())
 
     @property
     def name(self):
