@@ -163,7 +163,7 @@ class Ensemble(object):
             # Warning: Unpandaic code..
             durations = []
             for _, jobrow in status.iterrows():
-                (h, m, s) = jobrow['STARTTIME'].split(':') 
+                (h, m, s) = jobrow['STARTTIME'].split(':')
                 start = datetime.combine(date.today(),
                                          time(hour=int(h), minute=int(m),
                                               second=int(s)))
