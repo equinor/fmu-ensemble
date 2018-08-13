@@ -129,6 +129,30 @@ class Ensemble(object):
                     len(files.REAL.unique()))
         self.files = self.files.append(files, ignore_index=True)
 
+    def get_parametersdata(self, convert_numeric=True):
+        """Collect contents of the parameters.txt files
+        the ensemble contains, and return as one dataframe
+        tagged with realization index, columnname REAL
+
+        Args:
+            convert_numeric : If set to True, numerical columns
+            will be searched for and have their dtype set
+            to integers or floats.
+        """
+        paramsdf = pd.DataFrame(columns=['REAL'])
+        paramsdictlist = []
+        for _, paramfile in self.files[self.files.LOCALPATH ==
+                                       'parameters.txt'].iterrows():
+            params = pd.read_table(paramfile.FULLPATH, sep=r"\s+",
+                                   index_col=0,
+                                   header=None)[1].to_dict()
+            params['REAL'] = int(paramfile.REAL)
+            paramsdictlist.append(params)
+        paramsdf = pd.DataFrame(paramsdictlist)
+        if convert_numeric:
+            paramsdf = _convert_numeric_columns(paramsdf)
+        return paramsdf
+
     def get_status_data(self):
         """Collects the contents of the STATUS files and return
         as a dataframe, with information from jobs.json added if
@@ -229,3 +253,11 @@ class Ensemble(object):
             myensemble.dummyfunction(basefolder=base)
         """
         pass
+
+
+def _convert_numeric_columns(dataframe):
+    """Discovers and searches for numeric columns
+    among string columns in an incoming dataframe.
+    Columns with mostly integers"""
+    logger.warn("_convert_numeric_columns() not implemented")
+    return dataframe

@@ -31,8 +31,13 @@ def test_reek001():
         reekensemble.files.LOCALPATH == 'parameters.txt']) == 5
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
-    
+
     statusdf = reekensemble.get_status_data()
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
+
+    # Parameters.txt
+    paramsdf = reekensemble.get_parametersdata(convert_numeric=False)
+    assert len(paramsdf) == 5  # 5 realizations
+    assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
