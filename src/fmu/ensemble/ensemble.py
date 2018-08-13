@@ -108,7 +108,7 @@ class Ensemble(object):
                                      ignore_index=True)
             else:
                 logger.warn("Invalid realization, no STATUS file, %s",
-                      realdir)
+                            realdir)
             if os.path.exists(os.path.join(realdir, 'jobs.json')):
                 files = files.append({'REAL': realidx,
                                       'LOCALPATH': 'jobs.json',
@@ -119,14 +119,69 @@ class Ensemble(object):
 
             if os.path.exists(os.path.join(realdir, 'parameters.txt')):
                 files = files.append({'REAL': realidx,
-                                    'LOCALPATH': 'parameters.txt',
+                                      'LOCALPATH': 'parameters.txt',
                                       'FILETYPE': 'txt',
                                       'FULLPATH': os.path.join(absrealdir,
                                                                'parameters.txt')},
-                                    ignore_index=True)
+                                     ignore_index=True)
         logger.info('add_realization() found %d realizations',
                     len(files.REAL.unique()))
         self.files = self.files.append(files, ignore_index=True)
+
+    def get_status_data(self):
+        """Collects the contents of the STATUS files and return
+        as a dataframe, with information from jobs.json added if
+        available.
+
+        Each row in the dataframe is a finished FORWARD_MODEL
+        The STATUS files are parsed and information is extracted.
+        Job duration is calculated, but jobs above 24 hours
+        get incorrect durations.
+
+        """
+        from datetime import datetime, date, time
+        statusdf = pd.DataFrame(columns=['REAL'])
+        for _, file in self.files[self.files.LOCALPATH
+                                  == 'STATUS'].iterrows():
+            status = pd.read_table(file.FULLPATH, sep=r'\s+', skiprows=1,
+                                   header=None,
+                                   names=['FORWARD_MODEL', 'colon',
+                                          'STARTTIME', 'dots', 'ENDTIME'],
+                                   engine='python')
+            # Delete potential unwanted row
+            status = status[~ ((status.FORWARD_MODEL == 'LSF') &
+                               (status.colon == 'JOBID:'))]
+
+            del status['colon']
+            del status['dots']
+            status['REAL'] = int(file.REAL)
+            # Index the jobs, this makes it possible to match with jobs.json:
+            status['JOBINDEX'] = status.index.astype(int)
+            # Calculate duration. Only Python 3.6 has time.fromisoformat().
+            # Warning: Unpandaic code..
+            durations = []
+            for idx, jobrow in status.iterrows():
+                (h, m, s) = jobrow['STARTTIME'].split(':')
+                start = datetime.combine(date.today(),
+                                         time(hour=int(h), minute=int(m),
+                                              second=int(s)))
+                (h, m, s) = jobrow['ENDTIME'].split(':')
+                end = datetime.combine(date.today(),
+                                       time(hour=int(h), minute=int(m),
+                                            second=int(s)))
+                duration = end - start
+                # This works also when we have crossed 00:00:00.
+                # Jobs > 24 h will be wrong.
+                durations.append(duration.seconds)
+            status['DURATION'] = durations
+
+            # Augment data from jobs.json if that file is available:
+            jsonfilename = file.FULLPATH.replace('STATUS', 'jobs.json')
+            if jsonfilename and os.path.exists(jsonfilename):
+                pass
+            statusdf = statusdf.append(status, sort=True, ignore_index=True)
+
+        return statusdf
 
     def __len__(self):
         return len(self.files.REAL.unique())

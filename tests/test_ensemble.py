@@ -29,3 +29,6 @@ def test_reek001():
         reekensemble.files.LOCALPATH == 'jobs.json']) == 5
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'parameters.txt']) == 5
+    assert len(reekensemble.files[
+        reekensemble.files.LOCALPATH == 'STATUS']) == 5
+    assert len(reekensemble.get_status_data()) == 250
