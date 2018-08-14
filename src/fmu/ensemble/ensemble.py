@@ -9,7 +9,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import re
 import glob
 import json
 import pandas as pd
@@ -45,19 +44,18 @@ class ScratchEnsemble(object):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on
-        disk will be discovered. 
+        disk will be discovered.
 
         Args:
-            ensemble_name (str): Name identifier for the ensemble. 
+            ensemble_name (str): Name identifier for the ensemble.
                 Optional to have it consistent with f.ex. iter-0 in the path.
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
-        
         """
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
-        
+
         if isinstance(paths, str):
             paths = [paths]
 
@@ -73,8 +71,8 @@ class ScratchEnsemble(object):
         # representing the realizations.
         count = self.add_realizations(paths)
 
-        logger.info('ScratchEnsemble initialized with ' + 
-                    str(len(self._realizations)) + ' realizations')
+        logger.info('ScratchEnsemble initialized with %d realizations',
+                    count)
 
     def add_realizations(self, paths):
         """Utility function to add realizations to the ensemble.
@@ -89,10 +87,9 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
-        
+
         Returns:
             count (int): Number of realizations successfully added.
- 
         """
         if isinstance(paths, list):
             globbedpaths = [glob.glob(path) for path in paths]
@@ -130,10 +127,9 @@ class ScratchEnsemble(object):
                 will be searched for and have their dtype set
                 to integers or floats.
         """
-        paramsdf = pd.DataFrame(columns=['REAL'])
         paramsdictlist = []
         for index, realization in self._realizations.items():
-            params = realization.parameters
+            params = realization.parameters(convert_numeric)
             params['REAL'] = index
             paramsdictlist.append(params)
         return pd.DataFrame(paramsdictlist)
@@ -212,17 +208,16 @@ class ScratchEnsemble(object):
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframe
         will be updated.
-            
+
         Args:
             paths: str or list of str with filenames (will be globbed)
                 that are relative to the realization directory.
             metadata: dict with metadata to assign for the discovered
-                files. The keys will be columns, and its values will be assigned
-                as column values for the discovered files.
+                files. The keys will be columns, and its values will be
+                assigned as column values for the discovered files.
         """
         if isinstance(paths, str):
             paths = [paths]
-        files = pd.DataFrame(columns=['REAL'])
         for realidx in self.files.REAL.unique():
             # Finding a list of realization roots
             # is perhaps not very beautiful:
@@ -247,7 +242,7 @@ class ScratchEnsemble(object):
             realfiles['REAL'] = realidx
             files = files.append(realfiles)
         return files
-            
+
     @property
     def name(self):
         """The ensemble name."""
@@ -269,7 +264,7 @@ def _convert_numeric_columns(dataframe):
     Args:
         dataframe : any dataframe with strings as column datatypes
 
-    Returns: 
+    Returns:
         A dataframe where some columns have had their datatypes
         converted to numerical types (int/float). Some values
         might contain numpy.nan.

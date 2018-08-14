@@ -2,7 +2,7 @@
 """Implementation of realization classes
 
 A realization is a set of results from one subsurface model
-realization. A realization can be either defined from 
+realization. A realization can be either defined from
 its output files from the FMU run on the file system,
 it can be computed from other realizations, or it can be
 an archived realization.
@@ -24,13 +24,13 @@ logger = fmux.basiclogger(__name__)
 if not fmux.testsetup():
     raise SystemExit()
 
-class ScratchRealization():
+class ScratchRealization(object):
     """A representation of results still present on disk
 
     ScratchRealization's point to the filesystem for their
-    contents. 
+    contents.
 
-    A realization must at least contain a STATUS file. 
+    A realization must at least contain a STATUS file.
     Additionally, jobs.json and parameters.txt will be attempted
     loaded by default.
 
@@ -45,11 +45,11 @@ class ScratchRealization():
     * FILETYPE filename extension (after last dot)
     * LOCALPATH relative filename inside realization diretory
     * BASENAME filename only. No path. Includes extension
-    
+
     This dataframe is available as a read-only property from the object
 
     Args:
-        path (str): absolute or relative path to a directory 
+        path (str): absolute or relative path to a directory
             containing a realizations files.
         realidxregexp: a compiled regular expression which
             is used to determine the realization index (integer)
@@ -62,32 +62,32 @@ class ScratchRealization():
 
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
-         
+
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
         if realidxmatch:
             self.index = int(realidxmatch.group(1))
         else:
-            logger.warn('Realization %s not valid, skipping' %
-                      abspath)
-            raise ValueError 
-        
+            logger.warn('Realization %s not valid, skipping',
+                        abspath)
+            raise ValueError
+
         # Now look for a minimal subset of files
         if os.path.exists(os.path.join(abspath, 'STATUS')):
             self.files = self.files.append({'LOCALPATH': 'STATUS',
                                             'FILETYPE': 'STATUS',
                                             'FULLPATH': os.path.join(abspath,
-                                                                    'STATUS')},
+                                                                     'STATUS')},
                                            ignore_index=True)
         else:
             logger.warn("Invalid realization, no STATUS file, %s",
-                            abspath)
+                        abspath)
             raise ValueError
         if os.path.exists(os.path.join(abspath, 'jobs.json')):
             self.files = self.files.append({'LOCALPATH': 'jobs.json',
                                             'FILETYPE': 'json',
                                             'FULLPATH': os.path.join(abspath,
-                                                               'jobs.json')},
+                                                                     'jobs.json')},
                                            ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
@@ -97,10 +97,10 @@ class ScratchRealization():
                                                                      'parameters.txt')},
                                            ignore_index=True)
     @property
-    def parameters(self):
+    def parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
 
-        Strings will attempted to be parsed as numeric, and 
+        Strings will attempted to be parsed as numeric, and
         dictionary datatypes will be either int, float or string.
 
         Parsing is aggressive, parameter values that are by chance
@@ -108,10 +108,10 @@ class ScratchRealization():
         but should aggregate well with floats from other realizations.
 
         Returns:
-            dict: keys are the first column in parameters.txt, values from 
+            dict: keys are the first column in parameters.txt, values from
                 the second column
         """
-        paramfile = self.files[self.files.LOCALPATH=='parameters.txt']
+        paramfile = self.files[self.files.LOCALPATH == 'parameters.txt']
         params = pd.read_table(paramfile.FULLPATH.values[0], sep=r'\s+',
                                index_col=0,
                                header=None)[1].to_dict()
@@ -126,7 +126,7 @@ def parse_number(value):
     Caveats: Know your Python numbers:
     https://stackoverflow.com/questions/379906/how-do-i-parse-a-string-to-a-float-or-int-in-python
 
-    Beware; this is a minefield. 
+    Beware, this is a minefield.
 
     Returns:
         int, float or string
@@ -138,15 +138,15 @@ def parse_number(value):
             return int(value)
         else:
             return value
-    else:
+    else:  # noqa
         try:
             return int(value)
         except ValueError:
             try:
                 return float(value)
             except ValueError:
-                return value 
-    
+                return value
+
 class VirtualRealization():
     """A computed or archived realization.
 
