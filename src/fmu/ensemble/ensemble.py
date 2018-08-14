@@ -34,7 +34,10 @@ class Ensemble(object):
 
     def __init__(self, ensemble_name, paths):
         self._name = ensemble_name  # ensemble name
-        self.files = pd.DataFrame()  # list of files representing the ensemble
+
+        # This dataframe is what this class is all about,
+        # list of files representing the ensemble
+        self.files = pd.DataFrame(columns=['REAL'])
 
         if isinstance(paths, str):
             paths = [paths]
@@ -63,6 +66,12 @@ class Ensemble(object):
 
         A realization is *uniquely* determined by its realization index,
         put into the column 'REAL' in the files dataframe
+
+        A realization in the context of this class is just
+        a list of pointers to the filesystem. Nothing else is
+        internalized in this class. In order to remove a
+        realization, only the filesystem references need
+        to be removed from the files dataframe.
 
         This function can be used to reload ensembles.
         Existing realizations will have their data removed
@@ -101,6 +110,7 @@ class Ensemble(object):
                           absrealdir)
                 continue
             if os.path.exists(os.path.join(realdir, 'STATUS')):
+                self.remove_realizations([realidx])
                 files = files.append({'REAL': realidx,
                                       'LOCALPATH': 'STATUS',
                                       'FILETYPE': 'STATUS',
@@ -128,6 +138,17 @@ class Ensemble(object):
         logger.info('add_realization() found %d realizations',
                     len(files.REAL.unique()))
         self.files = self.files.append(files, ignore_index=True)
+
+    def remove_realizations(self, realindices):
+        """Remove specific realizations from the ensemble
+
+        Args:
+            realindices : int or list of ints for the realization
+            indices to be removed
+        """
+        if isinstance(realindices, int):
+            realindices = [realindices]
+        self.files = self.files[~ self.files.REAL.isin(realindices)]
 
     def get_parametersdata(self, convert_numeric=True):
         """Collect contents of the parameters.txt files
