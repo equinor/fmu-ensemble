@@ -314,6 +314,15 @@ class Ensemble(object):
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
     among string columns in an incoming dataframe.
-    Columns with mostly integers"""
+    Columns with mostly integer
+
+    Args:
+        dataframe : any dataframe with strings as column datatypes
+
+    Returns: 
+        A dataframe where some columns have had their datatypes
+        converted to numerical types (int/float). Some values
+        might contain numpy.nan.
+    """
     logger.warn("_convert_numeric_columns() not implemented")
     return dataframe
