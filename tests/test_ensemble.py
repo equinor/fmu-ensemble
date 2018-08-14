@@ -43,5 +43,5 @@ def test_reek001():
     assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
 
     # Realization deletion:
-    reekensemble.remove_realizations([1,3])
+    reekensemble.remove_realizations([1, 3])
     assert len(reekensemble) == 3
