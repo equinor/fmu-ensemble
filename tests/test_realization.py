@@ -17,4 +17,8 @@ if not fmux.testsetup():
 def test_single_realization():
     real = ensemble.ScratchRealization('data/testensemble-reek001/' +
                                        'realization-0/iter-0')
-    
+    assert len(real.files) == 3    
+
+    assert isinstance(real.parameters['RMS_SEED'], int)
+    assert real.parameters['RMS_SEED'] == 422851785
+    assert isinstance(real.parameters['MULTFLT_F1'], float)
