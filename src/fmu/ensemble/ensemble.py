@@ -30,9 +30,29 @@ class Ensemble(object):
 
     Realizations in an ensembles are uniquely determined
     by their realization index (integer).
+
+    Attributes:
+        files: A dataframe containing discovered files.
+
+    Example:
+        >>> import fmu.ensemble
+        >>> myensemble = ensemble.Ensemble('ensemblename',
+                    '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
     """
 
     def __init__(self, ensemble_name, paths):
+        """Initialize an ensemble from disk
+
+        Upon initialization, only a subset of the files on
+        disk will be discovered. 
+
+        Args:
+            ensemble_name (str): Name identifier for the ensemble. 
+                Optional to have it consistent with f.ex. iter-0 in the path.
+            paths (list/str): String or list of strings with wildcards
+                to file system. Absolute or relative paths.
+        
+        """
         self._name = ensemble_name  # ensemble name
 
         # This dataframe is what this class is all about,
@@ -73,7 +93,7 @@ class Ensemble(object):
         realization, only the filesystem references need
         to be removed from the files dataframe.
 
-        This function can be used to reload ensembles.
+        This function can be used to reload or augment ensembles.
         Existing realizations will have their data removed
         from the files dataframe.
 
@@ -84,6 +104,10 @@ class Ensemble(object):
          * LOCALPATH relative filename inside realization directory
          * BASENAME filename only. No path. Includes extension.
 
+        Args:
+            paths (list/str): String or list of strings with wildcards
+                to file system. Absolute or relative paths.
+ 
         """
         # This df will be appended to self.files at the end:
         files = pd.DataFrame(columns=['REAL', 'FULLPATH', 'FILETYPE',
@@ -156,9 +180,9 @@ class Ensemble(object):
         tagged with realization index, columnname REAL
 
         Args:
-            convert_numeric : If set to True, numerical columns
-            will be searched for and have their dtype set
-            to integers or floats.
+            convert_numeric: If set to True, numerical columns
+                will be searched for and have their dtype set
+                to integers or floats.
         """
         paramsdf = pd.DataFrame(columns=['REAL'])
         paramsdictlist = []
@@ -184,6 +208,9 @@ class Ensemble(object):
         Job duration is calculated, but jobs above 24 hours
         get incorrect durations.
 
+        Returns:
+            A dataframe with information from the STATUS files.
+            Each row represents one job in one of the realizations.
         """
         from datetime import datetime, date, time
         statusdf = pd.DataFrame(columns=['REAL'])
@@ -247,12 +274,11 @@ class Ensemble(object):
         will be updated.
             
         Args:
-            paths : str or list of str with filenames (will be globbed)
-            that are relative to the realization directory.
-
-            metadata : dict with metadata to assign for the discovered
-            files. The keys will be columns, and its values will be assigned
-            as column values for the discovered files.
+            paths: str or list of str with filenames (will be globbed)
+                that are relative to the realization directory.
+            metadata: dict with metadata to assign for the discovered
+                files. The keys will be columns, and its values will be assigned
+                as column values for the discovered files.
         """
         if isinstance(paths, str):
             paths = [paths]
@@ -284,28 +310,19 @@ class Ensemble(object):
         else:
             raise ValueError('Name input is not a string')
 
-    def dummyfunction(self, basefolder='myensemble',
-                      resultfolder='share/results'):
-        """Do something with an ensemble.
-
-        Args:
-            basefolder (str): Base folder path for an ensemble
-            resultfolder: Relative path to results to search for.
-
-        Raises:
-            ValueError: If basefolder does not exist
-
-        Example::
-
-            base = '/scratch/ola/dunk'
-            myensemble.dummyfunction(basefolder=base)
-        """
-        pass
-
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
     among string columns in an incoming dataframe.
-    Columns with mostly integers"""
+    Columns with mostly integer
+
+    Args:
+        dataframe : any dataframe with strings as column datatypes
+
+    Returns: 
+        A dataframe where some columns have had their datatypes
+        converted to numerical types (int/float). Some values
+        might contain numpy.nan.
+    """
     logger.warn("_convert_numeric_columns() not implemented")
     return dataframe

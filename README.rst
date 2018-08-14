@@ -10,5 +10,6 @@ output from their associated *jobs* stored in text or binary files.
 
 This module will help you handle ensembles and realizations (and their
 associated data) as Python objects, and thereby facilitating the use
-use of other Python visualizations modules like webviz.
+use of other Python visualizations modules like webviz, plotly or
+interactive usage in IPython/Jupyter.
 
