@@ -42,6 +42,9 @@ def test_reek001():
     assert len(paramsdf) == 5  # 5 realizations
     assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
 
+    # File discovery:
+    reekensemble.find_files('share/results/volumes/*txt')
+
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])
     assert len(reekensemble) == 3

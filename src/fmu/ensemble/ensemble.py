@@ -242,6 +242,33 @@ class Ensemble(object):
                                  inplace=True)
         return statusdf
 
+    def find_files(self, paths, metadata=None):
+        """Discover realization files. The files dataframe
+        will be updated.
+            
+        Args:
+            paths : str or list of str with filenames (will be globbed)
+            that are relative to the realization directory.
+
+            metadata : dict with metadata to assign for the discovered
+            files. The keys will be columns, and its values will be assigned
+            as column values for the discovered files.
+        """
+        if isinstance(paths, str):
+            paths = [paths]
+        files = pd.DataFrame(columns=['REAL'])
+        for realidx in self.files.REAL.unique():
+            # Finding a list of realization roots
+            # is perhaps not very beautiful:
+            statusfile = self.files[(self.files.REAL == realidx) &
+                                    (self.files.LOCALPATH == 'STATUS')]
+            statusfile = statusfile.FULLPATH.values[0]
+            realroot = statusfile.replace('STATUS', '')
+            for searchpath in paths:
+                globs = glob.glob(os.path.join(realroot, searchpath))
+                for match in globs:
+                    print(match)
+
     def __len__(self):
         return len(self.files.REAL.unique())
 
