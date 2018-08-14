@@ -22,14 +22,7 @@ logger = fmux.basiclogger(__name__)
 if not fmux.testsetup():
     raise SystemExit()
 
-class Realization():
-    """Abstract representation of a realization
-
-    Operations that are meaningful for both ScratchRealization
-    and VirtualRealization
-    """
-    
-class ScratchRealization(Realization):
+class ScratchRealization():
     """A representation of results still present on disk
 
     ScratchRealization's point to the filesystem for their
@@ -40,7 +33,7 @@ class ScratchRealization(Realization):
 
         self.files = pd.DataFrame()
     
-class VirtualRealization(Realization):
+class VirtualRealization():
     """A computed or archived realization.
 
     Computed or archived, one cannot assume to have access to the file
@@ -51,3 +44,7 @@ class VirtualRealization(Realization):
     by the localpath in the files dataframe from ScratchRealization-
 
     """
+    def __init__(self, path=None, description=None):
+        self._description = ''
+        if description:
+            self._description = description

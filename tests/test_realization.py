@@ -15,6 +15,6 @@ if not fmux.testsetup():
     raise SystemExit()
 
 def test_single_realization():
-    real = ensemble.ScratchRealization('data/testensemble-reek001/' +\
+    real = ensemble.ScratchRealization('data/testensemble-reek001/' +
                                        'realization-0/iter-0')
     
