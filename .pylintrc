@@ -2,6 +2,7 @@
 
 [GENERAL]
 disable=R0205, F0010
+output-format=colorized
 
 [MASTER]
 init-hook='import sys; sys.path.append("src/")'
