@@ -24,8 +24,9 @@ logger = fmux.basiclogger(__name__)
 if not fmux.testsetup():
     raise SystemExit()
 
+
 class ScratchRealization(object):
-    """A representation of results still present on disk
+    r"""A representation of results still present on disk
 
     ScratchRealization's point to the filesystem for their
     contents.
@@ -96,6 +97,7 @@ class ScratchRealization(object):
                                             'FULLPATH': os.path.join(abspath,
                                                                      'parameters.txt')},
                                            ignore_index=True)
+
     @property
     def parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
@@ -118,6 +120,7 @@ class ScratchRealization(object):
         for key in params:
             params[key] = parse_number(params[key])
         return params
+
 
 def parse_number(value):
     """Try to parse the string first as an integer, then as float,
@@ -146,6 +149,7 @@ def parse_number(value):
                 return float(value)
             except ValueError:
                 return value
+
 
 class VirtualRealization():
     """A computed or archived realization.

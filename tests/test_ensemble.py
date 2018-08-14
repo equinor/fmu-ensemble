@@ -31,14 +31,14 @@ def test_reek001():
         reekensemble.files.LOCALPATH == 'parameters.txt']) == 5
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
-    
+
     reekensemble.files.to_csv('files.csv', index=False)
 
     statusdf = reekensemble.get_status_data()
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
-    
+
     statusdf.to_csv('status.csv', index=False)
 
     # Parameters.txt
