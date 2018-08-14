@@ -6,7 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 from fmu import config
-from fmu.ensemble import Ensemble
+from fmu import ensemble
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -17,11 +17,11 @@ if not fmux.testsetup():
 
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
-    reekensemble = Ensemble('reektest',
-                            'data/testensemble-reek001/' +
-                            'realization-*/iter-0')
+    reekensemble = ensemble.ScratchEnsemble('reektest',
+                                            'data/testensemble-reek001/' +
+                                            'realization-*/iter-0')
 
-    assert isinstance(reekensemble, Ensemble)
+    assert isinstance(reekensemble, ensemble.ScratchEnsemble)
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5
 

@@ -20,7 +20,7 @@ xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
 
 
-class Ensemble(object):
+class ScratchEnsemble(object):
     """An ensemble is a collection of Realizations.
 
     Ensembles are initialized from path(s) pointing to
@@ -54,7 +54,9 @@ class Ensemble(object):
         
         """
         self._name = ensemble_name  # ensemble name
-
+        self._realizations = []  # list of ScratchRealization objects
+        
+        
         # This dataframe is what this class is all about,
         # list of files representing the ensemble
         self.files = pd.DataFrame(columns=['REAL'])
@@ -293,7 +295,7 @@ class Ensemble(object):
             for searchpath in paths:
                 globs = glob.glob(os.path.join(realroot, searchpath))
                 for match in globs:
-                    print(match)
+                    pass
 
     def __len__(self):
         return len(self.files.REAL.unique())
