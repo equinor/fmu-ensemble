@@ -109,7 +109,7 @@ Use flake8 and/or pylint to check
 
   make flake (all)
 
-The pylint command is much stricter and sometimes wrong... , but can be quite useful!
+The pylint command is much stricter and sometimes wrong..., but can be quite useful!
 
   python -m pylint mycode.py
 
