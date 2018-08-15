@@ -65,7 +65,7 @@ class ScratchRealization(object):
 
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
-        self._eclsum = None # Placeholder for caching
+        self._eclsum = None  # Placeholder for caching
 
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
@@ -147,20 +147,22 @@ class ScratchRealization(object):
         Returns:
            EclSum: object representing the summary file
         """
-        unsmry_file_row = self.files[self.files.FILETYPE=='UNSMRY']
+        if self._eclsum:  # Return cached object if available
+            return self._eclsum
+
+        unsmry_file_row = self.files[self.files.FILETYPE == 'UNSMRY']
         unsmry_filename = None
         if len(unsmry_file_row) == 1:
             unsmry_filename = unsmry_file_row.FULLPATH.values[0]
         else:
-            unsmry_fileguess = os.path.join(self._origpath,'eclipse/model',
+            unsmry_fileguess = os.path.join(self._origpath, 'eclipse/model',
                                             '*.UNSMRY')
             unsmry_filename = glob.glob(unsmry_fileguess)[0]
         if not os.path.exists(unsmry_filename):
             return None
-        else:
-            # Cache result
-            self._eclsum = ert.ecl.EclSum(unsmry_filename)
-            return self._eclsum
+        # Cache result
+        self._eclsum = ert.ecl.EclSum(unsmry_filename)
+        return self._eclsum
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -191,7 +193,7 @@ class ScratchRealization(object):
                     prop in props}
         else:  # get_values() is deprecated in newer libecl
             data = {prop: self._eclsum.get_values(prop, report_only=True) for
-            prop in props}
+                    prop in props}
         dates = self._eclsum.get_dates(report_only=True)
         return pd.DataFrame(data=data, index=dates)
 
@@ -213,8 +215,7 @@ def parse_number(value):
     elif isinstance(value, float):
         if int(value) == value:
             return int(value)
-        else:
-            return value
+        return value
     else:  # noqa
         try:
             return int(value)

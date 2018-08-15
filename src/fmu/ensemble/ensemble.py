@@ -233,6 +233,31 @@ class ScratchEnsemble(object):
     def __len__(self):
         return len(self._realizations)
 
+    def get_smrykeys(self, vector_match=None):
+        """
+        Return a union of all Eclipse Summary vector names
+        in all realizations (union).
+
+        Args:
+            vector_match: `Optional`. String (or list of strings)
+               with wildcard filter. If None, all vectors are returned
+        Returns:
+            list of strings with summary vectors. Empty list if no
+            summary file or no matched summary file vectors
+        """
+        if isinstance(vector_match, str):
+            vector_match = [vector_match]
+        result = set()
+        for _, realization in self._realizations.items():
+            eclsum = realization.get_eclsum()
+            if eclsum:
+                if vector_match is None:
+                    result = result.union(set(eclsum.keys()))
+                else:
+                    for vector in vector_match:
+                        result = result.union(set(eclsum.keys(vector)))
+        return list(result)
+
     @property
     def files(self):
         """Return a concatenation of files in each realization"""
