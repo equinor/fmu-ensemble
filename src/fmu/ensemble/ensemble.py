@@ -9,18 +9,18 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import re
 import glob
 import json
 import pandas as pd
 
 from fmu.config import etc
+from .realization import ScratchRealization
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
 
 
-class Ensemble(object):
+class ScratchEnsemble(object):
     """An ensemble is a collection of Realizations.
 
     Ensembles are initialized from path(s) pointing to
@@ -44,20 +44,17 @@ class Ensemble(object):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on
-        disk will be discovered. 
+        disk will be discovered.
 
         Args:
-            ensemble_name (str): Name identifier for the ensemble. 
+            ensemble_name (str): Name identifier for the ensemble.
                 Optional to have it consistent with f.ex. iter-0 in the path.
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
-        
         """
         self._name = ensemble_name  # ensemble name
-
-        # This dataframe is what this class is all about,
-        # list of files representing the ensemble
-        self.files = pd.DataFrame(columns=['REAL'])
+        self._realizations = {}  # dict of ScratchRealization objects,
+        # indexed by realization indices as integers.
 
         if isinstance(paths, str):
             paths = [paths]
@@ -72,46 +69,28 @@ class Ensemble(object):
 
         # Search and locate minimal set of files
         # representing the realizations.
-        self.add_realizations(paths)
+        count = self.add_realizations(paths)
 
-        logger.debug('Ran __init__')
+        logger.info('ScratchEnsemble initialized with %d realizations',
+                    count)
 
     def add_realizations(self, paths):
-        """Utility function to add realization to the ensemble.
+        """Utility function to add realizations to the ensemble.
 
-        The ensemble realizations are defined from the content of the
-        object dataframe 'files'. As a minimum, a realization must
-        have a STATUS file. Additionally, jobs.json, and
-        parameters.txt will be parsed.
+        Realizations are identified by their integer index.
+        If the realization index already exists, it will be replaced
+        when calling this function.
 
-        A realization is *uniquely* determined by its realization index,
-        put into the column 'REAL' in the files dataframe
-
-        A realization in the context of this class is just
-        a list of pointers to the filesystem. Nothing else is
-        internalized in this class. In order to remove a
-        realization, only the filesystem references need
-        to be removed from the files dataframe.
-
-        This function can be used to reload or augment ensembles.
-        Existing realizations will have their data removed
-        from the files dataframe.
-
-        Columns added to the files dataframe:
-         * REAL realization index.
-         * FULLPATH absolute path to the file
-         * FILETYPE filename extension (after last dot)
-         * LOCALPATH relative filename inside realization directory
-         * BASENAME filename only. No path. Includes extension.
+        This function passes on initialization to ScratchRealization
+        and stores a reference to those generated objects.
 
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
- 
+
+        Returns:
+            count (int): Number of realizations successfully added.
         """
-        # This df will be appended to self.files at the end:
-        files = pd.DataFrame(columns=['REAL', 'FULLPATH', 'FILETYPE',
-                                      'LOCALPATH', 'BASENAME'])
         if isinstance(paths, list):
             globbedpaths = [glob.glob(path) for path in paths]
             # Flatten list and uniquify:
@@ -120,48 +99,11 @@ class Ensemble(object):
         else:
             globbedpaths = glob.glob(paths)
 
-        realregex = re.compile(r'.*realization-(\d*)')
         for realdir in globbedpaths:
-            # Support initialization using relative paths
-            absrealdir = os.path.abspath(realdir)
-            logger.info("Processing realization directory %s...",
-                        absrealdir)
-            realidxmatch = re.match(realregex, absrealdir)
-            if realidxmatch:
-                realidx = int(realidxmatch.group(1))
-            else:
-                xfmu.warn('Realization %s not valid, skipping' %
-                          absrealdir)
-                continue
-            if os.path.exists(os.path.join(realdir, 'STATUS')):
-                self.remove_realizations([realidx])
-                files = files.append({'REAL': realidx,
-                                      'LOCALPATH': 'STATUS',
-                                      'FILETYPE': 'STATUS',
-                                      'FULLPATH': os.path.join(absrealdir,
-                                                               'STATUS')},
-                                     ignore_index=True)
-            else:
-                logger.warn("Invalid realization, no STATUS file, %s",
-                            realdir)
-            if os.path.exists(os.path.join(realdir, 'jobs.json')):
-                files = files.append({'REAL': realidx,
-                                      'LOCALPATH': 'jobs.json',
-                                      'FILETYPE': 'json',
-                                      'FULLPATH': os.path.join(absrealdir,
-                                                               'jobs.json')},
-                                     ignore_index=True)
-
-            if os.path.exists(os.path.join(realdir, 'parameters.txt')):
-                files = files.append({'REAL': realidx,
-                                      'LOCALPATH': 'parameters.txt',
-                                      'FILETYPE': 'txt',
-                                      'FULLPATH': os.path.join(absrealdir,
-                                                               'parameters.txt')},
-                                     ignore_index=True)
+            realization = ScratchRealization(realdir)
+            self._realizations[realization.index] = realization
         logger.info('add_realization() found %d realizations',
-                    len(files.REAL.unique()))
-        self.files = self.files.append(files, ignore_index=True)
+                    len(self._realizations))
 
     def remove_realizations(self, realindices):
         """Remove specific realizations from the ensemble
@@ -172,9 +114,10 @@ class Ensemble(object):
         """
         if isinstance(realindices, int):
             realindices = [realindices]
-        self.files = self.files[~ self.files.REAL.isin(realindices)]
+        for index in realindices:
+            self._realizations.pop(index, None)
 
-    def get_parametersdata(self, convert_numeric=True):
+    def get_parameters(self, convert_numeric=True):
         """Collect contents of the parameters.txt files
         the ensemble contains, and return as one dataframe
         tagged with realization index, columnname REAL
@@ -184,19 +127,12 @@ class Ensemble(object):
                 will be searched for and have their dtype set
                 to integers or floats.
         """
-        paramsdf = pd.DataFrame(columns=['REAL'])
         paramsdictlist = []
-        for _, paramfile in self.files[self.files.LOCALPATH ==
-                                       'parameters.txt'].iterrows():
-            params = pd.read_table(paramfile.FULLPATH, sep=r"\s+",
-                                   index_col=0,
-                                   header=None)[1].to_dict()
-            params['REAL'] = int(paramfile.REAL)
+        for index, realization in self._realizations.items():
+            params = realization.get_parameters(convert_numeric)
+            params['REAL'] = index
             paramsdictlist.append(params)
-        paramsdf = pd.DataFrame(paramsdictlist)
-        if convert_numeric:
-            paramsdf = _convert_numeric_columns(paramsdf)
-        return paramsdf
+        return pd.DataFrame(paramsdictlist)
 
     def get_status_data(self):
         """Collects the contents of the STATUS files and return
@@ -272,17 +208,16 @@ class Ensemble(object):
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframe
         will be updated.
-            
+
         Args:
             paths: str or list of str with filenames (will be globbed)
                 that are relative to the realization directory.
             metadata: dict with metadata to assign for the discovered
-                files. The keys will be columns, and its values will be assigned
-                as column values for the discovered files.
+                files. The keys will be columns, and its values will be
+                assigned as column values for the discovered files.
         """
         if isinstance(paths, str):
             paths = [paths]
-        files = pd.DataFrame(columns=['REAL'])
         for realidx in self.files.REAL.unique():
             # Finding a list of realization roots
             # is perhaps not very beautiful:
@@ -293,10 +228,20 @@ class Ensemble(object):
             for searchpath in paths:
                 globs = glob.glob(os.path.join(realroot, searchpath))
                 for match in globs:
-                    print(match)
+                    pass
 
     def __len__(self):
-        return len(self.files.REAL.unique())
+        return len(self._realizations)
+
+    @property
+    def files(self):
+        """Return a concatenation of files in each realization"""
+        files = pd.DataFrame()
+        for realidx, realization in self._realizations.items():
+            realfiles = realization.files.copy()
+            realfiles['REAL'] = realidx
+            files = files.append(realfiles)
+        return files
 
     @property
     def name(self):
@@ -319,7 +264,7 @@ def _convert_numeric_columns(dataframe):
     Args:
         dataframe : any dataframe with strings as column datatypes
 
-    Returns: 
+    Returns:
         A dataframe where some columns have had their datatypes
         converted to numerical types (int/float). Some values
         might contain numpy.nan.

@@ -7,4 +7,5 @@ __version__ = get_versions()['version']
 
 del get_versions
 
-from .ensemble import Ensemble  # noqa
+from .ensemble import ScratchEnsemble  # noqa
+from .realization import ScratchRealization  # noqa

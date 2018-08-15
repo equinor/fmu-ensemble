@@ -6,7 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 from fmu import config
-from fmu.ensemble import Ensemble
+from fmu import ensemble
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -17,11 +17,11 @@ if not fmux.testsetup():
 
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
-    reekensemble = Ensemble('reektest',
-                            'data/testensemble-reek001/' +
-                            'realization-*/iter-0')
+    reekensemble = ensemble.ScratchEnsemble('reektest',
+                                            'data/testensemble-reek001/' +
+                                            'realization-*/iter-0')
 
-    assert isinstance(reekensemble, Ensemble)
+    assert isinstance(reekensemble, ensemble.ScratchEnsemble)
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5
 
@@ -32,15 +32,20 @@ def test_reek001():
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
 
+    reekensemble.files.to_csv('files.csv', index=False)
+
     statusdf = reekensemble.get_status_data()
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
 
+    statusdf.to_csv('status.csv', index=False)
+
     # Parameters.txt
-    paramsdf = reekensemble.get_parametersdata(convert_numeric=False)
+    paramsdf = reekensemble.get_parameters(convert_numeric=False)
     assert len(paramsdf) == 5  # 5 realizations
     assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
+    paramsdf.to_csv('params.csv', index=False)
 
     # File discovery:
     reekensemble.find_files('share/results/volumes/*txt')
