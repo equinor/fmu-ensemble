@@ -169,6 +169,21 @@ class ScratchRealization(object):
                            inplace=True)
         return status
 
+    def get_csv(self, filename):
+        """Load a CSV file as a DataFrame
+
+        Filename is relative to realization root.
+
+        Returns:
+            dataframe: The CSV file loaded. Empty dataframe
+                if file is not present.
+        """
+        absfilename = os.path.join(self._origpath, filename)
+        if os.path.exists(absfilename):
+            return pd.read_csv(absfilename)
+        else:
+            return pd.DataFrame()
+
     @property
     def parameters(self):
         """Getter for get_parameters(convert_numeric=True)

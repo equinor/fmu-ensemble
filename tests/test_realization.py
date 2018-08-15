@@ -41,3 +41,11 @@ def test_single_realization():
     assert len(real.get_status())
     assert 'ECLIPSE' in real.get_status().loc[49, 'FORWARD_MODEL']
     assert int(real.get_status().loc[49, 'DURATION']) == 141
+
+    # CSV file loading
+    vol_df = real.get_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    assert isinstance(vol_df, pd.DataFrame)
+    assert vol_df['STOIIP_TOTAL'].sum() > 0
+
+    assert isinstance(real.get_csv('bogus.csv'), pd.DataFrame)
+    assert len(real.get_csv('bogus.csv')) == 0
