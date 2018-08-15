@@ -14,8 +14,10 @@ from __future__ import print_function
 
 import os
 import re
+import glob
 import pandas as pd
 
+import ert.ecl
 from fmu import config
 
 fmux = config.etc.Interaction()
@@ -63,6 +65,7 @@ class ScratchRealization(object):
 
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
+        self._eclsum = None # Placeholder for caching
 
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
@@ -103,7 +106,7 @@ class ScratchRealization(object):
         """Getter for get_parameters(convert_numeric=True)
         """
         return self.get_parameters(self)
-    
+
     def get_parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
 
@@ -128,6 +131,69 @@ class ScratchRealization(object):
             for key in params:
                 params[key] = parse_number(params[key])
         return params
+
+    def get_eclsum(self):
+        """
+        Fetch the Eclipse Summary file from the realization
+        and return as a libecl EclSum object
+
+        Unless the UNSMRY file has been discovered, it will
+        pick the file from the glob eclipse/model/*UNSMRY
+
+        Warning: If you have multiple UNSMRY files and have not
+        performed explicit discovery, this function will
+        not help you (yet).
+
+        Returns:
+           EclSum: object representing the summary file
+        """
+        unsmry_file_row = self.files[self.files.FILETYPE=='UNSMRY']
+        unsmry_filename = None
+        if len(unsmry_file_row) == 1:
+            unsmry_filename = unsmry_file_row.FULLPATH.values[0]
+        else:
+            unsmry_fileguess = os.path.join(self._origpath,'eclipse/model',
+                                            '*.UNSMRY')
+            unsmry_filename = glob.glob(unsmry_fileguess)[0]
+        if not os.path.exists(unsmry_filename):
+            return None
+        else:
+            # Cache result
+            self._eclsum = ert.ecl.EclSum(unsmry_filename)
+            return self._eclsum
+
+    def get_smryvalues(self, props_wildcard=None):
+        """
+        Fetch selected vectors from Eclipse Summary data.
+
+        Args:
+            props_wildcard : string or list of strings with vector
+                wildcards
+        Returns:
+            a dataframe with values. Raw times from UNSMRY.
+            Empty dataframe if no summary file data available
+        """
+        if not self._eclsum:  # check if it is cached
+            self.get_eclsum()
+
+        if not self._eclsum:
+            return pd.DataFrame()
+
+        if not props_wildcard:
+            props_wildcard = [None]
+        if isinstance(props_wildcard, str):
+            props_wildcard = [props_wildcard]
+        props = set()
+        for prop in props_wildcard:
+            props = props.union(set(self._eclsum.keys(prop)))
+        if 'numpy_vector' in dir(self._eclsum):
+            data = {prop: self._eclsum.numpy_vector(prop, report_only=True) for
+                    prop in props}
+        else:  # get_values() is deprecated in newer libecl
+            data = {prop: self._eclsum.get_values(prop, report_only=True) for
+            prop in props}
+        dates = self._eclsum.get_dates(report_only=True)
+        return pd.DataFrame(data=data, index=dates)
 
 
 def parse_number(value):

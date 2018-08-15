@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import ert.ecl
 
 from fmu import config
 from fmu import ensemble
@@ -28,3 +29,7 @@ def test_single_realization():
     assert isinstance(real.parameters['MULTFLT_F1'], float)
     assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'],
                       str)
+
+    # Eclipse summary files:
+    assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
+    assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
