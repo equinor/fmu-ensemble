@@ -5,6 +5,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+
 from fmu import config
 from fmu import ensemble
 
@@ -17,8 +19,11 @@ if not fmux.testsetup():
 
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
     reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            'data/testensemble-reek001/' +
+                                            testdir +
+                                            '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
 
     assert isinstance(reekensemble, ensemble.ScratchEnsemble)
@@ -38,6 +43,7 @@ def test_reek001():
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
+    assert int(statusdf.loc[249, 'DURATION']) == 150  # sample check
 
     statusdf.to_csv('status.csv', index=False)
 
@@ -49,6 +55,12 @@ def test_reek001():
 
     # File discovery:
     reekensemble.find_files('share/results/volumes/*txt')
+
+    # Eclipse summary files
+    assert len(reekensemble.get_smrykeys('FOPT')) == 1
+    assert len(reekensemble.get_smrykeys('F*')) == 49
+    assert len(reekensemble.get_smrykeys(['F*', 'W*'])) == 49 + 280
+    assert len(reekensemble.get_smrykeys('BOGUS')) == 0
 
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])

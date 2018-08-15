@@ -5,6 +5,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+import ert.ecl
+
 from fmu import config
 from fmu import ensemble
 
@@ -16,10 +19,18 @@ if not fmux.testsetup():
 
 
 def test_single_realization():
-    real = ensemble.ScratchRealization('data/testensemble-reek001/' +
-                                       'realization-0/iter-0')
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
     assert len(real.files) == 3
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
-    assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'], str)
+    assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'],
+                      str)
+
+    # Eclipse summary files:
+    assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
+    assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
