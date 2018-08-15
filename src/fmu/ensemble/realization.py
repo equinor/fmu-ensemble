@@ -99,7 +99,12 @@ class ScratchRealization(object):
                                            ignore_index=True)
 
     @property
-    def parameters(self, convert_numeric=True):
+    def parameters(self):
+        """Getter for get_parameters(convert_numeric=True)
+        """
+        return self.get_parameters(self)
+    
+    def get_parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
 
         Strings will attempted to be parsed as numeric, and
@@ -115,10 +120,13 @@ class ScratchRealization(object):
         """
         paramfile = self.files[self.files.LOCALPATH == 'parameters.txt']
         params = pd.read_table(paramfile.FULLPATH.values[0], sep=r'\s+',
-                               index_col=0,
+                               index_col=0, dtype=str,
                                header=None)[1].to_dict()
-        for key in params:
-            params[key] = parse_number(params[key])
+        # pandas.read_table has its own numerics parsing, but this is turned
+        # off by dtype=str above.
+        if convert_numeric:
+            for key in params:
+                params[key] = parse_number(params[key])
         return params
 
 

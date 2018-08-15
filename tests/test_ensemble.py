@@ -42,7 +42,7 @@ def test_reek001():
     statusdf.to_csv('status.csv', index=False)
 
     # Parameters.txt
-    paramsdf = reekensemble.get_parametersdata(convert_numeric=False)
+    paramsdf = reekensemble.get_parameters(convert_numeric=False)
     assert len(paramsdf) == 5  # 5 realizations
     assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)

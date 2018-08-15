@@ -117,7 +117,7 @@ class ScratchEnsemble(object):
         for index in realindices:
             self._realizations.pop(index, None)
 
-    def get_parametersdata(self, convert_numeric=True):
+    def get_parameters(self, convert_numeric=True):
         """Collect contents of the parameters.txt files
         the ensemble contains, and return as one dataframe
         tagged with realization index, columnname REAL
@@ -129,7 +129,7 @@ class ScratchEnsemble(object):
         """
         paramsdictlist = []
         for index, realization in self._realizations.items():
-            params = realization.parameters(convert_numeric)
+            params = realization.get_parameters(convert_numeric)
             params['REAL'] = index
             paramsdictlist.append(params)
         return pd.DataFrame(paramsdictlist)

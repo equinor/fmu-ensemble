@@ -22,3 +22,4 @@ def test_single_realization():
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
+    assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'], str)
