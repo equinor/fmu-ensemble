@@ -15,6 +15,7 @@ from __future__ import print_function
 import os
 import re
 import glob
+import json
 import pandas as pd
 
 import ert.ecl
@@ -98,6 +99,75 @@ class ScratchRealization(object):
                        'FILETYPE': 'txt',
                        'FULLPATH': os.path.join(abspath, 'parameters.txt')}
             self.files = self.files.append(filerow, ignore_index=True)
+
+    def get_status(self):
+        """Collects the contents of the STATUS files and return
+        as a dataframe, with information from jobs.json added if
+        available.
+
+        Each row in the dataframe is a finished FORWARD_MODEL
+        The STATUS files are parsed and information is extracted.
+        Job duration is calculated, but jobs above 24 hours
+        get incorrect durations.
+
+        Returns:
+            A dataframe with information from the STATUS files.
+            Each row represents one job in one of the realizations.
+        """
+        from datetime import datetime, date, time
+        statusfile = os.path.join(self._origpath, 'STATUS')
+        if not os.path.exists(statusfile):
+            # This should not happen as long as __init__ requires STATUS
+            # to be present.
+            return pd.DataFrame()  # will be empty
+        status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
+                               header=None,
+                               names=['FORWARD_MODEL', 'colon',
+                                      'STARTTIME', 'dots', 'ENDTIME'],
+                               engine='python')
+        # Delete potential unwanted row
+        status = status[~ ((status.FORWARD_MODEL == 'LSF') &
+                           (status.colon == 'JOBID:'))]
+        status.reset_index(inplace=True)
+        del status['colon']
+        del status['dots']
+        # Index the jobs, this makes it possible to match with jobs.json:
+        status['JOBINDEX'] = status.index.astype(int)
+        # Calculate duration. Only Python 3.6 has time.fromisoformat().
+        # Warning: Unpandaic code..
+        durations = []
+        for _, jobrow in status.iterrows():
+            hms = map(int, jobrow['STARTTIME'].split(':'))
+            start = datetime.combine(date.today(),
+                                     time(hour=hms[0], minute=hms[1],
+                                          second=hms[2]))
+            hms = map(int, jobrow['ENDTIME'].split(':'))
+            end = datetime.combine(date.today(),
+                                   time(hour=hms[0], minute=hms[1],
+                                        second=hms[2]))
+            # This works also when we have crossed 00:00:00.
+            # Jobs > 24 h will be wrong.
+            durations.append((end - start).seconds)
+        status['DURATION'] = durations
+
+        # Augment data from jobs.json if that file is available:
+        jsonfilename = os.path.join(self._origpath, 'jobs.json')
+        if jsonfilename and os.path.exists(jsonfilename):
+            try:
+                jobsinfo = json.load(open(jsonfilename))
+                jobsinfodf = pd.DataFrame(jobsinfo['jobList'])
+                jobsinfodf['JOBINDEX'] = jobsinfodf.index.astype(int)
+                # Outer merge means that we will also have jobs from
+                # jobs.json that has not started (failed or perhaps
+                # the jobs are still running on the cluster)
+                status = status.merge(jobsinfodf, how='outer',
+                                      on='JOBINDEX')
+            except ValueError:
+                logger.warn("Parsing file %s failed, skipping",
+                            jsonfilename)
+        status.sort_values(['JOBINDEX'], ascending=True,
+                           inplace=True)
+        return status
 
     @property
     def parameters(self):

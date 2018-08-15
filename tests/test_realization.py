@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pandas as pd
 import ert.ecl
 
 from fmu import config
@@ -34,3 +35,9 @@ def test_single_realization():
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
+
+    # STATUS file
+    assert isinstance(real.get_status(), pd.DataFrame)
+    assert len(real.get_status())
+    assert 'ECLIPSE' in real.get_status().loc[49, 'FORWARD_MODEL']
+    assert int(real.get_status().loc[49, 'DURATION']) == 141

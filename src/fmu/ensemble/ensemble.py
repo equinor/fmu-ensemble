@@ -10,7 +10,6 @@ from __future__ import print_function
 
 import os
 import glob
-import json
 import pandas as pd
 
 from fmu.config import etc
@@ -135,9 +134,8 @@ class ScratchEnsemble(object):
         return pd.DataFrame(paramsdictlist)
 
     def get_status_data(self):
-        """Collects the contents of the STATUS files and return
-        as a dataframe, with information from jobs.json added if
-        available.
+        """Collects the contents of the STATUS files and jobs.json
+        from all realizations.
 
         Each row in the dataframe is a finished FORWARD_MODEL
         The STATUS files are parsed and information is extracted.
@@ -148,62 +146,11 @@ class ScratchEnsemble(object):
             A dataframe with information from the STATUS files.
             Each row represents one job in one of the realizations.
         """
-        from datetime import datetime, date, time
-        statusdf = pd.DataFrame(columns=['REAL'])
-        for _, file in self.files[self.files.LOCALPATH
-                                  == 'STATUS'].iterrows():
-            status = pd.read_table(file.FULLPATH, sep=r'\s+', skiprows=1,
-                                   header=None,
-                                   names=['FORWARD_MODEL', 'colon',
-                                          'STARTTIME', 'dots', 'ENDTIME'],
-                                   engine='python')
-            # Delete potential unwanted row
-            status = status[~ ((status.FORWARD_MODEL == 'LSF') &
-                               (status.colon == 'JOBID:'))]
-            status.reset_index(inplace=True)
-
-            del status['colon']
-            del status['dots']
-            status['REAL'] = int(file.REAL)
-            # Index the jobs, this makes it possible to match with jobs.json:
-            status['JOBINDEX'] = status.index.astype(int)
-            # Calculate duration. Only Python 3.6 has time.fromisoformat().
-            # Warning: Unpandaic code..
-            durations = []
-            for _, jobrow in status.iterrows():
-                (h, m, s) = jobrow['STARTTIME'].split(':')
-                start = datetime.combine(date.today(),
-                                         time(hour=int(h), minute=int(m),
-                                              second=int(s)))
-                (h, m, s) = jobrow['ENDTIME'].split(':')
-                end = datetime.combine(date.today(),
-                                       time(hour=int(h), minute=int(m),
-                                            second=int(s)))
-                duration = end - start
-                # This works also when we have crossed 00:00:00.
-                # Jobs > 24 h will be wrong.
-                durations.append(duration.seconds)
-            status['DURATION'] = durations
-
-            # Augment data from jobs.json if that file is available:
-            jsonfilename = file.FULLPATH.replace('STATUS', 'jobs.json')
-            if jsonfilename and os.path.exists(jsonfilename):
-                try:
-                    jobsinfo = json.load(open(jsonfilename))
-                    jobsinfodf = pd.DataFrame(jobsinfo['jobList'])
-                    jobsinfodf['JOBINDEX'] = jobsinfodf.index.astype(int)
-                    status = status.merge(jobsinfodf, how='outer',
-                                          on='JOBINDEX')
-                except ValueError:
-                    logger.warn("Parsing file %s failed, skipping",
-                                jsonfilename)
-            statusdf = statusdf.append(status, ignore_index=True)
-            # With pandas 0.23, we need to add sort=True, but
-            # that will fail with Pandas 0.22
-
-            statusdf.sort_values(['REAL', 'JOBINDEX'], ascending=True,
-                                 inplace=True)
-        return statusdf
+        statusdict = {}  # dict of status dataframes pr. realization
+        for realidx, realization in self._realizations.items():
+            statusdict[realidx] = realization.get_status()
+            statusdict[realidx]['REAL'] = realidx  # Tag it!
+        return pd.concat(statusdict, ignore_index=True)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframe
