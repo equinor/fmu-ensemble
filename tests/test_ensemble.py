@@ -37,8 +37,6 @@ def test_reek001():
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
 
-    reekensemble.files.to_csv('files.csv', index=False)
-
     statusdf = reekensemble.get_status_data()
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
@@ -54,13 +52,23 @@ def test_reek001():
     paramsdf.to_csv('params.csv', index=False)
 
     # File discovery:
-    reekensemble.find_files('share/results/volumes/*txt')
+    reekensemble.find_files('share/results/volumes/*csv',
+                            metadata={'GRID': 'simgrid'})
+
+    reekensemble.files.to_csv('files.csv', index=False)
 
     # Eclipse summary files
     assert len(reekensemble.get_smrykeys('FOPT')) == 1
     assert len(reekensemble.get_smrykeys('F*')) == 49
     assert len(reekensemble.get_smrykeys(['F*', 'W*'])) == 49 + 280
     assert len(reekensemble.get_smrykeys('BOGUS')) == 0
+
+    # CSV files
+    vol_df = reekensemble.get_csv('share/results/volumes/' +
+                                  'simulator_volume_fipnum.csv')
+    assert 'REAL' in vol_df
+    assert len(vol_df['REAL'].unique()) == 3  # missing in 2 reals
+    vol_df.to_csv('simulatorvolumes.csv', index=False)
 
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])

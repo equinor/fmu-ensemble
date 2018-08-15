@@ -81,7 +81,8 @@ class ScratchRealization(object):
         if os.path.exists(os.path.join(abspath, 'STATUS')):
             filerow = {'LOCALPATH': 'STATUS',
                        'FILETYPE': 'STATUS',
-                       'FULLPATH': os.path.join(abspath, 'STATUS')}
+                       'FULLPATH': os.path.join(abspath, 'STATUS'),
+                       'BASENAME': 'STATUS'}
             self.files = self.files.append(filerow, ignore_index=True)
         else:
             logger.warn("Invalid realization, no STATUS file, %s",
@@ -91,13 +92,15 @@ class ScratchRealization(object):
         if os.path.exists(os.path.join(abspath, 'jobs.json')):
             filerow = {'LOCALPATH': 'jobs.json',
                        'FILETYPE': 'json',
-                       'FULLPATH': os.path.join(abspath, 'jobs.json')}
+                       'FULLPATH': os.path.join(abspath, 'jobs.json'),
+                       'BASENAME': 'jobs.json'}
             self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
             filerow = {'LOCALPATH': 'parameters.txt',
                        'FILETYPE': 'txt',
-                       'FULLPATH': os.path.join(abspath, 'parameters.txt')}
+                       'FULLPATH': os.path.join(abspath, 'parameters.txt'),
+                       'BASENAME': 'parameters.txt'}
             self.files = self.files.append(filerow, ignore_index=True)
 
     def get_status(self):
@@ -169,6 +172,36 @@ class ScratchRealization(object):
                            inplace=True)
         return status
 
+    def find_files(self, paths, metadata=None):
+        """Discover realization files. The files dataframe
+        will be updated.
+
+        Certain functionality requires up-front file discovery,
+        e.g. ensemble archiving and ensemble arithmetic.
+
+        CSV files for single use does not have to be discovered.
+
+        Args:
+            paths: str or list of str with filenames (will be globbed)
+                that are relative to the realization directory.
+            metadata: dict with metadata to assign for the discovered
+                files. The keys will be columns, and its values will be
+                assigned as column values for the discovered files.
+        """
+        if isinstance(paths, str):
+            paths = [paths]
+        for searchpath in paths:
+            globs = glob.glob(os.path.join(self._origpath, searchpath))
+            for match in globs:
+                filerow = {'LOCALPATH': os.path.relpath(match, self._origpath),
+                           'FILETYPE': match.split('.')[-1],
+                           'FULLPATH': match,
+                           'BASENAME': os.path.basename(match)}
+                if metadata:
+                    filerow.update(metadata)
+                # Issue: Solve when file is discovered multiple times.
+                self.files = self.files.append(filerow, ignore_index=True)
+
     def get_csv(self, filename):
         """Load a CSV file as a DataFrame
 
@@ -181,8 +214,7 @@ class ScratchRealization(object):
         absfilename = os.path.join(self._origpath, filename)
         if os.path.exists(absfilename):
             return pd.read_csv(absfilename)
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame()
 
     @property
     def parameters(self):

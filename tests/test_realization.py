@@ -49,3 +49,6 @@ def test_single_realization():
 
     assert isinstance(real.get_csv('bogus.csv'), pd.DataFrame)
     assert len(real.get_csv('bogus.csv')) == 0
+
+    # File discovery
+    real.find_files('share/results/volumes/*.csv')

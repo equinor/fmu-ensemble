@@ -8,7 +8,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import glob
 import pandas as pd
 
@@ -153,8 +152,13 @@ class ScratchEnsemble(object):
         return pd.concat(statusdict, ignore_index=True)
 
     def find_files(self, paths, metadata=None):
-        """Discover realization files. The files dataframe
-        will be updated.
+        """Discover realization files. The files dataframes
+        for each realization will be updated.
+
+        Certain functionality requires up-front file discovery,
+        e.g. ensemble archiving and ensemble arithmetic.
+
+        CSV files for single use does not have to be discovered.
 
         Args:
             paths: str or list of str with filenames (will be globbed)
@@ -163,19 +167,8 @@ class ScratchEnsemble(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
         """
-        if isinstance(paths, str):
-            paths = [paths]
-        for realidx in self.files.REAL.unique():
-            # Finding a list of realization roots
-            # is perhaps not very beautiful:
-            statusfile = self.files[(self.files.REAL == realidx) &
-                                    (self.files.LOCALPATH == 'STATUS')]
-            statusfile = statusfile.FULLPATH.values[0]
-            realroot = statusfile.replace('STATUS', '')
-            for searchpath in paths:
-                globs = glob.glob(os.path.join(realroot, searchpath))
-                for match in globs:
-                    pass
+        for _, realization in self._realizations.items():
+            realization.find_files(paths, metadata)
 
     def __len__(self):
         return len(self._realizations)
@@ -204,6 +197,28 @@ class ScratchEnsemble(object):
                     for vector in vector_match:
                         result = result.union(set(eclsum.keys(vector)))
         return list(result)
+
+    def get_csv(self, filename):
+        """Load CSV data from each realization and concatenated vertically
+
+        Each row is tagged by the realization index.
+        The loaded CSV files does not have to be discovered,
+        and will not be discovered either by this call.
+
+        Args:
+            filename: string, filename local to realization
+        Returns:
+           dataframe: Merged CSV from each realization.
+               Realizations with missing data are ignored.
+               Empty dataframe if no data is found
+
+        """
+        dflist = []
+        for index, realization in self._realizations.items():
+            dframe = realization.get_csv(filename)
+            dframe['REAL'] = index
+            dflist.append(dframe)
+        return pd.concat(dflist)
 
     @property
     def files(self):
