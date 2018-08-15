@@ -5,6 +5,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+
 from fmu import config
 from fmu import ensemble
 
@@ -17,8 +19,11 @@ if not fmux.testsetup():
 
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
     reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            'data/testensemble-reek001/' +
+                                            testdir +
+                                            '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
 
     assert isinstance(reekensemble, ensemble.ScratchEnsemble)
