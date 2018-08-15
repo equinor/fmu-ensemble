@@ -78,28 +78,26 @@ class ScratchRealization(object):
 
         # Now look for a minimal subset of files
         if os.path.exists(os.path.join(abspath, 'STATUS')):
-            self.files = self.files.append({'LOCALPATH': 'STATUS',
-                                            'FILETYPE': 'STATUS',
-                                            'FULLPATH': os.path.join(abspath,
-                                                                     'STATUS')},
-                                           ignore_index=True)
+            filerow = {'LOCALPATH': 'STATUS',
+                       'FILETYPE': 'STATUS',
+                       'FULLPATH': os.path.join(abspath, 'STATUS')}
+            self.files = self.files.append(filerow, ignore_index=True)
         else:
             logger.warn("Invalid realization, no STATUS file, %s",
                         abspath)
             raise ValueError
+
         if os.path.exists(os.path.join(abspath, 'jobs.json')):
-            self.files = self.files.append({'LOCALPATH': 'jobs.json',
-                                            'FILETYPE': 'json',
-                                            'FULLPATH': os.path.join(abspath,
-                                                                     'jobs.json')},
-                                           ignore_index=True)
+            filerow = {'LOCALPATH': 'jobs.json',
+                       'FILETYPE': 'json',
+                       'FULLPATH': os.path.join(abspath, 'jobs.json')}
+            self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
-            self.files = self.files.append({'LOCALPATH': 'parameters.txt',
-                                            'FILETYPE': 'txt',
-                                            'FULLPATH': os.path.join(abspath,
-                                                                     'parameters.txt')},
-                                           ignore_index=True)
+            filerow = {'LOCALPATH': 'parameters.txt',
+                       'FILETYPE': 'txt',
+                       'FULLPATH': os.path.join(abspath, 'parameters.txt')}
+            self.files = self.files.append(filerow, ignore_index=True)
 
     @property
     def parameters(self):
@@ -226,7 +224,7 @@ def parse_number(value):
                 return value
 
 
-class VirtualRealization():
+class VirtualRealization(object):
     """A computed or archived realization.
 
     Computed or archived, one cannot assume to have access to the file
@@ -237,7 +235,22 @@ class VirtualRealization():
     by the localpath in the files dataframe from ScratchRealization-
 
     """
-    def __init__(self, path=None, description=None):
+    def __init__(self, description=None, origpath=None):
         self._description = ''
+        self._origpath = None
+
+        if origpath:
+            self._origpath = origpath
         if description:
             self._description = description
+
+    def get_smryvalues(self, props_wildcard=None):
+        """Returns summary values for certain vectors.
+
+        Taken from stored dataframe.
+        """
+        raise NotImplementedError
+
+    @property
+    def __len__(self):
+        raise NotImplementedError
