@@ -1,5 +1,5 @@
 Welcome to fmu-ensemble's documentation!
-======================================
+========================================
 
 Contents:
 
