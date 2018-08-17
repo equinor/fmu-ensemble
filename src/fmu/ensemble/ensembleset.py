@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import re
 import glob
+import pandas as pd
 
 from fmu.config import etc
 from .ensemble import ScratchEnsemble
@@ -89,3 +90,27 @@ class EnsembleSet(object):
         Name is taken from the ensembleobject.
         """
         self._ensembles[ensembleobject.name] = ensembleobject
+
+    @property
+    def parameters(self):
+        """Getter for get_parameters(convert_numeric=True)
+        """
+        return self.get_parameters(self)
+
+    def get_parameters(self, convert_numeric=True):
+        """Collect contents of the parameters.txt files
+        from each of the ensembles. Return as one dataframe
+        tagged with realization index, columnname REAL,
+        and ensemble name in ENSEMBLE
+
+        Args:
+            convert_numeric: If set to True, numerical columns
+                will be searched for and have their dtype set
+                to integers or floats.
+        """
+        ensparamsdictlist = []
+        for _, ensemble in self._ensembles.items():
+            params = ensemble.get_parameters(convert_numeric)
+            params['ENSEMBLE'] = ensemble.name
+            ensparamsdictlist.append(params)
+        return pd.concat(ensparamsdictlist)

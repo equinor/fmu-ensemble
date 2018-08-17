@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import pandas as pd
 
 from fmu import config
 from fmu import ensemble
@@ -58,6 +59,15 @@ def test_ensembleset_reek001():
     ensset3 = ensemble.EnsembleSet("reek001direct", [])
     ensset3.add_ensembles_frompath(ensdir)
     assert len(ensset3) == 2
+
+    # Testing aggregation of parameters
+    paramsdf = ensset3.parameters
+    paramsdf.to_csv('enssetparams.csv', index=False)
+    assert isinstance(paramsdf, pd.DataFrame)
+    assert len(ensset3.parameters) == 10
+    assert len(ensset3.parameters.columns) == 26
+    assert 'ENSEMBLE' in ensset3.parameters.columns
+    assert 'REAL' in ensset3.parameters.columns
 
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
