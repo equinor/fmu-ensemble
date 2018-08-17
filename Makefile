@@ -12,8 +12,7 @@
 # > make install
 #
 # $TARGET may also be applied explicitly for e.g. install at /project/res
-# > setenv RESTARGET ${SDP_BINDIST_ROOT}/lib/python${PYTHON_SHORT}/site-packages
-# > make siteinstall TARGET=$RESTARGET
+# > make siteinstall TARGET=${SDP_BINDIST_ROOT} BINTARGET=${SDP_BINDIST}
 # =============================================================================
 
 xt.PHONY: clean clean-test clean-pyc clean-build docs help pyver
@@ -32,6 +31,7 @@ export PRINT_HELP_PYSCRIPT
 
 APPLICATIONROOT := fmu
 APPLICATION := fmu/ensemble
+APPLICATIONPKG := fmu_ensemble
 SRCAPPLICATION := src/fmu/ensemble
 TOPSRCAPPLICATION := src/fmu
 DOCSINSTALL := /project/sdpdocs/FMU/lib
@@ -55,19 +55,21 @@ PYTHON := python${PSHORT}
 PIP := pip${PSHORT}
 
 
-TARGET := ${SDP_BINDIST_ROOT}/lib/python${PYTHON_SHORT}/site-packages
+TARGET := ${SDP_BINDIST_ROOT}
+BINTARGET := ${SDP_BINDIST}
+FULLTARGET := ${TARGET}/lib/python${PYTHON_SHORT}/site-packages
 
-BININSTALL := /project/res/x86_64_RH_6/bin
+BININSTALL := ${BINTARGET}/bin
 
 MY_BINDIST ?= $HOME
-
-USRPYPATH := ${MY_BINDIST}/lib/python${PYVER}/site-packages
+USRPYPATH := ${MY_BINDIST}
+FULLUSRPYPATH := ${USRPYPATH}/lib/python${PYTHON_SHORT}/site-packages
 
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 
-clean: clean-build clean-pyc clean-test clean-docs ## remove all build, test,..
+clean: clean-build clean-pyc clean-test ## remove all build, test, coverage...
 
 
 clean-build: ## remove build artifacts
@@ -91,13 +93,6 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 	rm -fr TMP/
 
-clean-docs: ## remove tmp docs stuff
-	rm -f docs/${APPLICATIONROOT}*.rst
-	rm -f docs/modules.rst
-	rm -fr docs/_build
-
-develop: ## make a development version inside a virtualenv (highly recommended)
-	pip install -e .
 
 flake: ## check style with flake8
 	python -m flake8 ${SRCAPPLICATION} tests
@@ -120,8 +115,13 @@ coverage: ## check code coverage quickly with the default Python
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
+develop:  ## make a development link to src
+	pip install -e .
 
 docsrun: clean ## generate Sphinx HTML documentation, including API docs
+	rm -f docs/${APPLICATIONROOT}*.rst
+	rm -f docs/modules.rst
+	rm -fr docs/_build
 	sphinx-apidoc -H "API for fmu.ensemble" -o docs ${TOPSRCAPPLICATION}
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
@@ -140,7 +140,7 @@ dist: clean  ## builds wheel package
 	@${PYTHON} setup.py bdist_wheel
 
 
-install: dist ## version to VENV install place (use make develop instead?)
+install: dist ## version to VENV install place
 	@echo "Running ${PIP} (${PYTHON_VERSION}) ..."
 	@${PIP} install --upgrade ./dist/*
 	@echo "Install run scripts..."
@@ -148,18 +148,19 @@ install: dist ## version to VENV install place (use make develop instead?)
 
 siteinstall: dist ## Install in /project/res (Trondheim) using $TARGET
 	@echo $(HOST)
-	\rm -fr  ${TARGET}/${APPLICATION}
-	\rm -fr  ${TARGET}/${APPLICATION}-*
-	@${PYTHON} -m pip install --target ${TARGET} --upgrade  ./dist/${APPLICATIONROOT}*.whl
-	/project/res/bin/res_perm ${TARGET}/${APPLICATIONROOT}*
-	# @echo "Install run scripts..."
+	\rm -fr  ${FULLTARGET}/${APPLICATION}
+	\rm -fr  ${FULLTARGET}/${APPLICATIONPKG}*
+	PYTHONUSERBASE=${TARGET} pip install --user .
+	/project/res/bin/res_perm ${FULLTARGET}/${APPLICATIONROOT}*
+	@echo "Install run scripts..."
 	# $(foreach RUNAPP, ${RUNAPPS}, rsync -av --delete bin/${RUNAPP} ${BININSTALL}/.; )
 	# $(foreach RUNAPP, ${RUNAPPS}, /project/res/bin/res_perm ${BININSTALL}/${RUNAPP}; )
 
 userinstall: dist ## Install on user directory (need a MY_BINDIST env variable)
-	@\rm -fr  ${USRPYPATH}/${APPLICATION}
-	@\rm -fr  ${USRPYPATH}/${APPLICATION}-*
-	@${PIP} install --target ${USRPYPATH} --upgrade  ./dist/*.whl
+	\rm -fr  ${FULLUSRPYPATH}/${APPLICATION}
+	\rm -fr  ${FULLUSRPYPATH}/${APPLICATIONPKG}*
+	@echo ${USRPYPATH}
+	PYTHONUSERBASE=${USRPYPATH} pip install --user .
 	# $(foreach RUNAPP, ${RUNAPPS}, rsync -av --delete bin/${RUNAPP} ${MYBINDIST}/bin/.; )
 
 
