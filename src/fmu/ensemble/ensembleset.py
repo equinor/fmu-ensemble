@@ -6,11 +6,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import re
 import glob
-import pandas as pd
 
 from fmu.config import etc
-from .realization import ScratchRealization
+from .ensemble import ScratchEnsemble
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -22,21 +22,70 @@ class EnsembleSet(object):
     Ensembles might be both ScratchEnsembles or VirtualEnsembles.
     """
 
-    def __init__(self, ensembleset_name, paths=None):
-        """Initiate an ensemble set
+    def __init__(self, ensembleset_name, ensembles):
+        """Initiate an ensemble set from a list of ensembles
 
-        For convencience, it is possible to initiate with paths to the
-        file system, which will amount to the same as generating
-        ScratchEnsembles for each ensemble.
+        Args:
+            ensemblesetname: string with the name of the ensemble set
+            ensembles: list of existing Ensemble objects. Can be empty.
         """
+        self._name = ensembleset_name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
+        for ensemble in ensembles:
+            self._ensembles[ensemble.name] = ensemble
 
+    @property
+    def name(self):
+        """Return the name of the ensembleset,
+        as initialized"""
+        return self._name
+
+    def __len__(self):
+        return len(self._ensembles)
+
+    def __getitem__(self, name):
+        return self._ensembles[name]
+
+    def add_ensembles_frompath(self, paths):
+        """Convenience function for adding multiple ensembles.
+
+        Tailored for the realization-*/iter-* disk structure.
+
+        Args:
+            path: str or list of strings with path to the
+                directory containing the realization-*/iter-*
+                structure
+        """
         if isinstance(paths, str):
+            if 'realization' not in paths:
+                paths = paths + '/realization-*/iter-*'
             paths = [paths]
-        if paths:
-            # Recognize realization-*/iter-* and use iter-* to set ensemble
-            # names for each ScratchEnsemble
-            raise NotImplementedError
+        globbedpaths = [glob.glob(path) for path in paths]
+        globbedpaths = list(set([item for sublist in globbedpaths
+                                 for item in sublist]))
+        realidxregexp = re.compile(r'.*realization-(\d+).*')
+        iteridxregexp = re.compile(r'.*iter-(\d+).*')
+
+        reals = set()
+        iters = set()
+        for path in globbedpaths:
+            realidxmatch = re.match(realidxregexp, path)
+            if realidxmatch:
+                reals.add(int(realidxmatch.group(1)))
+            iteridxmatch = re.match(iteridxregexp, path)
+            if iteridxmatch:
+                iters.add(int(iteridxmatch.group(1)))
+
+        # Initialize ensemble objects for each iter found:
+        for iterr in iters:
+            ens = ScratchEnsemble('iter-' + str(iterr),
+                                  [x for x in globbedpaths
+                                   if 'iter-' + str(iterr) in x])
+            self._ensembles[ens.name] = ens
 
     def add_ensemble(self, ensembleobject):
-        self._ensembles[ensembleobject.name] = ensemble
+        """Add a single ensemble to the ensemble set
+
+        Name is taken from the ensembleobject.
+        """
+        self._ensembles[ensembleobject.name] = ensembleobject
