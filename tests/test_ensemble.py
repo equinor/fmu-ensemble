@@ -73,3 +73,15 @@ def test_reek001():
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])
     assert len(reekensemble) == 3
+
+    # reading ensemble dataframe
+    assert len(reekensemble.get_ens_smry(['FOPR']).columns) == 1
+    assert len(reekensemble.get_ens_smry('FOP*').columns) == 9
+    assert len(reekensemble.get_ens_smry(['FGPR', 'FOP*']).columns) == 10
+    assert len(reekensemble.get_ens_smry(['FGPR', 'FOP*']).index) == 3294
+
+    # eclipse well names list
+    assert len(reekensemble.get_wellnames('OP*')) == 5
+
+    # eclipse well groups list
+    assert len(reekensemble.get_groupnames()) == 3
