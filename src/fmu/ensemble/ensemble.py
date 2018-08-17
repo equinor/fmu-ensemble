@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Module for parsing an ensemble for FMU.
+"""Module for parsing an ensemble from FMU. This class represents an
+ensemble, which is nothing but a collection of realizations.
 
-This module will be ... (text to come).
+The typical task of this class is book-keeping of each realization,
+and abilities to aggregate any information that each realization can
+provide.
 """
 
 from __future__ import absolute_import
@@ -115,6 +118,12 @@ class ScratchEnsemble(object):
             realindices = [realindices]
         for index in realindices:
             self._realizations.pop(index, None)
+
+    @property
+    def parameters(self):
+        """Getter for get_parameters(convert_numeric=True)
+        """
+        return self.get_parameters(self)
 
     def get_parameters(self, convert_numeric=True):
         """Collect contents of the parameters.txt files

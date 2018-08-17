@@ -48,6 +48,7 @@ def test_reek001():
     # Parameters.txt
     paramsdf = reekensemble.get_parameters(convert_numeric=False)
     assert len(paramsdf) == 5  # 5 realizations
+    paramsdf = reekensemble.parameters  # also test as property
     assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)
 
@@ -73,6 +74,26 @@ def test_reek001():
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])
     assert len(reekensemble) == 3
+
+    # Readd the same realizations
+    reekensemble.add_realizations([testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-1/iter-0',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-3/iter-0'])
+    assert len(reekensemble) == 5
+    assert len(reekensemble.files) == 17
+    # File discovery must be repeated for the newly added realizations
+    reekensemble.find_files('share/results/volumes/*csv',
+                            metadata={'GRID': 'simgrid'})
+    assert len(reekensemble.files) == 18
+    # Test addition of already added realization:
+    reekensemble.add_realizations(testdir +
+                                  '/data/testensemble-reek001/' +
+                                  'realization-1/iter-0')
+    assert len(reekensemble) == 5
+    assert len(reekensemble.files) == 17  # discovered files are lost!
 
     # reading ensemble dataframe
     assert len(reekensemble.get_ens_smry(['FOPR']).columns) == 1

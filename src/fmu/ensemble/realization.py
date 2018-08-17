@@ -197,6 +197,9 @@ class ScratchRealization(object):
                            'FILETYPE': match.split('.')[-1],
                            'FULLPATH': match,
                            'BASENAME': os.path.basename(match)}
+                # Delete this row if it already exists, determined by FULLPATH
+                if match in self.files.FULLPATH.values:
+                    self.files = self.files[self.files.FULLPATH != match]
                 if metadata:
                     filerow.update(metadata)
                 # Issue: Solve when file is discovered multiple times.
