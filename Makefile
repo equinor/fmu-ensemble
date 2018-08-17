@@ -34,7 +34,7 @@ APPLICATIONROOT := fmu
 APPLICATION := fmu/ensemble
 SRCAPPLICATION := src/fmu/ensemble
 TOPSRCAPPLICATION := src/fmu
-DOCSINSTALL := tr-linrgsn001.tr.statoil.no:/project/sdpdocs/FMU/lib
+DOCSINSTALL := /project/sdpdocs/FMU/lib
 
 # A list of the applications
 RUNAPPS := fmuensemble
@@ -164,5 +164,5 @@ userinstall: dist ## Install on user directory (need a MY_BINDIST env variable)
 
 
 docsinstall: docsrun
-	/project/res/bin/res_perm docs
 	rsync -av --delete docs/_build/html ${DOCSINSTALL}/${APPLICATION}
+	/project/res/bin/res_perm ${DOCSINSTALL}/${APPLICATION}
