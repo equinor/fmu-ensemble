@@ -115,6 +115,12 @@ class ScratchEnsemble(object):
         for index in realindices:
             self._realizations.pop(index, None)
 
+    @property
+    def parameters(self):
+        """Getter for get_parameters(convert_numeric=True)
+        """
+        return self.get_parameters(self)
+
     def get_parameters(self, convert_numeric=True):
         """Collect contents of the parameters.txt files
         the ensemble contains, and return as one dataframe
