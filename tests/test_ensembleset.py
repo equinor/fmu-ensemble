@@ -69,6 +69,14 @@ def test_ensembleset_reek001():
     assert 'ENSEMBLE' in ensset3.parameters.columns
     assert 'REAL' in ensset3.parameters.columns
 
+    # Test aggregation of csv files:
+    vol_df = ensset3.get_csv('share/results/volumes/' +
+                             'simulator_volume_fipnum.csv')
+    assert 'REAL' in vol_df
+    assert 'ENSEMBLE' in vol_df
+    assert len(vol_df['REAL'].unique()) == 3
+    assert len(vol_df['ENSEMBLE'].unique()) == 2
+
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         os.remove(realizationdir + '/iter-1')

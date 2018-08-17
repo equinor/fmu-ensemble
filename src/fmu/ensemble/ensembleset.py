@@ -114,3 +114,21 @@ class EnsembleSet(object):
             params['ENSEMBLE'] = ensemble.name
             ensparamsdictlist.append(params)
         return pd.concat(ensparamsdictlist)
+
+    def get_csv(self, filename):
+        """Load CSV data from each realization in each
+        ensemble, and aggregate.
+
+        Args:
+            filename: string, filename local to realization
+        Returns:
+           dataframe: Merged CSV from each realization.
+               Realizations with missing data are ignored.
+               Empty dataframe if no data is found
+        """
+        dflist = []
+        for _, ensemble in self._ensembles.items():
+            dframe = ensemble.get_csv(filename)
+            dframe['ENSEMBLE'] = ensemble.name
+            dflist.append(dframe)
+        return pd.concat(dflist)
