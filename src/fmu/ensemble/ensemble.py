@@ -259,13 +259,16 @@ class ScratchEnsemble(object):
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False
         """
-        dflist = []
-        for index, realization in self._realizations.items():
-            dframe = realization.get_smry(time_index=time_index,
+        if stacked:
+            dflist = []
+            for index, realization in self._realizations.items():
+                dframe = realization.get_smry(time_index=time_index,
                                           column_keys=column_keys)
-            dframe['REAL'] = index
-            dflist.append(dframe)
-        return pd.concat(dflist)
+                dframe['REAL'] = index
+                dflist.append(dframe)
+            return pd.concat(dflist)
+        else:
+            raise NotImplementedError
 
     def get_wellnames(self, well_match=None):
         """
