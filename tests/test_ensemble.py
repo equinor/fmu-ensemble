@@ -88,6 +88,7 @@ def test_reek001():
     assert len(reekensemble) == 5
     assert len(reekensemble.files) == 17  # discovered files are lost!
 
+
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
 
@@ -105,18 +106,28 @@ def test_ensemble_ecl():
 
     # reading ensemble dataframe
 
-    # When asking the ensemble for FOPR, we also get REAL as a column in return:
+    # When asking the ensemble for FOPR, we also get REAL as a column
+    # in return:
     assert len(reekensemble.get_smry(column_keys=['FOPR']).columns) == 2
     assert len(reekensemble.get_smry(column_keys=['FOP*']).columns) == 10
-    assert len(reekensemble.get_smry(column_keys=['FGPR', 'FOP*']).columns) == 11
-    assert len(reekensemble.get_smry(column_keys=['FGPR', 'FOP*']).index) == 1700
+    assert len(reekensemble.get_smry(column_keys=['FGPR',
+                                                  'FOP*']).columns) == 11
+    assert len(reekensemble.get_smry(column_keys=['FGPR',
+                                                  'FOP*']).index) == 1700
 
     # Date list handling:
     assert len(reekensemble.get_smry_dates(freq='report')) == 641
+    assert len(reekensemble.get_smry_dates(freq='yearly')) == 4
+    assert len(reekensemble.get_smry_dates(freq='monthly')) == 37
+    assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
+
+    # Time interpolated dataframes with summary data:
+    yearly = reekensemble.get_smry_dates(freq='yearly')
+    assert len(reekensemble.get_smry(column_keys=['FOPT'],
+                                     time_index=yearly)) == 20
 
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
 
     # eclipse well groups list
     assert len(reekensemble.get_groupnames()) == 3
-

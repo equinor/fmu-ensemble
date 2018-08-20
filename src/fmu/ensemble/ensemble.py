@@ -263,7 +263,7 @@ class ScratchEnsemble(object):
             dflist = []
             for index, realization in self._realizations.items():
                 dframe = realization.get_smry(time_index=time_index,
-                                          column_keys=column_keys)
+                                              column_keys=column_keys)
                 dframe['REAL'] = index
                 dflist.append(dframe)
             return pd.concat(dflist)
@@ -282,14 +282,28 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes.
         """
-        if freq=='report':
+        if freq == 'report':
             dates = set()
             for _, realization in self._realizations.items():
                 dates = dates.union(realization.get_eclsum().dates)
             dates = list(dates)
             dates.sort()
             return dates
-                
+        else:
+            start_date = min([real[1].get_eclsum().start_date
+                              for real in self._realizations.items()])
+            end_date = max([real[1].get_eclsum().end_date
+                            for real in self._realizations.items()])
+            pd_freq_mnenomics = {'monthly': 'MS',
+                                 'yearly': 'YS',
+                                 'daily': 'D'}
+            if freq not in pd_freq_mnenomics:
+                raise ValueError('Requested frequency %s not supported' % freq)
+            datetimes = pd.date_range(start_date, end_date,
+                                      freq=pd_freq_mnenomics[freq])
+            # Convert from Pandas' datetime64 to datetime.date:
+            return [x.date() for x in datetimes]
+
     def get_wellnames(self, well_match=None):
         """
         Return a union of all Eclipse Summary well names
