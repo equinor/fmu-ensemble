@@ -50,7 +50,7 @@ def test_single_realization():
     # File discovery
     real.find_files('share/results/volumes/*.csv')
 
-    
+
 def test_singlereal_ecl():
     """Test Eclipse specific functionality for realizations"""
 
