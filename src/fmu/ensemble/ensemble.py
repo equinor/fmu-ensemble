@@ -246,6 +246,8 @@ class ScratchEnsemble(object):
         Args:
             time_index: list of DateTime if interpolation is wanted
                default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
             stacked: boolean determining the dataframe layout. If
                 true, the realization index is a column, and dates are repeated
@@ -259,6 +261,8 @@ class ScratchEnsemble(object):
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False
         """
+        if isinstance(time_index, str):
+            time_index = self.get_smry_dates(time_index)
         if stacked:
             dflist = []
             for index, realization in self._realizations.items():

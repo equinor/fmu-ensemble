@@ -125,6 +125,9 @@ def test_ensemble_ecl():
     yearly = reekensemble.get_smry_dates(freq='yearly')
     assert len(reekensemble.get_smry(column_keys=['FOPT'],
                                      time_index=yearly)) == 20
+    # Check that we can shortcut get_smry_dates:
+    assert len(reekensemble.get_smry(column_keys=['FOPT'],
+                                     time_index='yearly')) == 20
 
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
