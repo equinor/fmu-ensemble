@@ -48,7 +48,8 @@ class EnsembleSet(object):
         return self._ensembles[name]
 
     def __repr__(self):
-        return "<EnsembleSet {}, {} ensembles>".format(self.name, len(self))
+        return "<EnsembleSet {}, {} ensembles:\n{}>".format(
+            self.name, len(self), self._ensembles)
 
     def add_ensembles_frompath(self, paths):
         """Convenience function for adding multiple ensembles.
