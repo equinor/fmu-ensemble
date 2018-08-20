@@ -56,6 +56,7 @@ class ScratchEnsemble(object):
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
+        self._ens_df = pd.DataFrame()
 
         if isinstance(paths, str):
             paths = [paths]
@@ -231,6 +232,119 @@ class ScratchEnsemble(object):
             dframe['REAL'] = index
             dflist.append(dframe)
         return pd.concat(dflist)
+
+    def get_ens_smry(self, vector_match=None):
+        """
+        Returns a datframe of all eclipse summary
+        vectors for all realizations in the ensemble.
+
+        Args:
+            vector_match: `Optional`. String (or list of strings)
+                with wildcard filter. If None, all vectors are returned
+
+        Returns:
+            A DataFame of summary vectors for the ensemble.
+
+        Todo:
+            *  Throw an warning if the requested summary keyword does
+                not exists.
+            *  freq (str): `Optional`. Date freqency of dataframe. 'D' - daily,
+                'W' - weekly, 'M' - en of Month, 'MS' - start of month,
+                'A' - end of year, 'AS' - end of year. Default 'MS'
+            *  agg (str): `Optional`. Data aggredation. 'mean' or 'sum'.
+                Default 'mean'.
+            *  Filter based on time range interval
+        """
+
+        # get matches based on input string or list of strings
+        flat_vector_match = self.get_smrykeys(vector_match=vector_match)
+
+        # check if the vector have been cached
+        if not self._ens_df.empty:
+            smrykeys = [key for key in flat_vector_match if key not in
+                        self._ens_df.columns.values.tolist()]
+        else:
+            smrykeys = flat_vector_match
+
+        # read the summary keys for each realization if the list is not empty
+        if smrykeys:
+            ens_df = pd.DataFrame()
+            for index, realization in self._realizations.items():
+                dframe = realization.get_smryvalues(props_wildcard=smrykeys)
+                dframe = dframe.resample('D').mean().fillna(method='ffill')
+                if self._ens_df.empty:
+                    # add realisation number and ensemble name
+                    dframe.insert(0, 'REAL', index)
+                    dframe.insert(1, 'ENS', self._name)
+                ens_df = pd.concat([ens_df, dframe])
+        else:
+            return self._ens_df[flat_vector_match].copy()
+
+        # cache the dataframe
+        if self._ens_df.empty:
+            self._ens_df = ens_df
+        else:
+            self._ens_df = pd.concat([self._ens_df, ens_df], axis=1)
+
+        return self._ens_df[flat_vector_match].copy()
+
+    def get_wellnames(self, well_match=None):
+        """
+        Return a union of all Eclipse Summary well names
+        in all realizations (union). In addition, can return a list
+        based on matches to an input string pattern.
+
+        Args:
+            well_match: `Optional`. String (or list of strings)
+               with wildcard filter. If None, all wells are returned
+        Returns:
+            list of strings with eclipse well names. Empty list if no
+            summary file or no matched well names.
+
+        """
+
+        if isinstance(well_match, str):
+            well_match = [well_match]
+        result = set()
+        for _, realization in self._realizations.items():
+            eclsum = realization.get_eclsum()
+            if eclsum:
+                if well_match is None:
+                    result = result.union(set(eclsum.wells()))
+                else:
+                    for well in well_match:
+                        result = result.union(set(eclsum.wells(well)))
+
+        return sorted(list(result))
+
+    def get_groupnames(self, group_match=None):
+        """
+        Return a union of all Eclipse Summary group names
+        in all realizations (union). In addition, can return a list
+        based on matches to an input string pattern.
+
+        Args:
+            well_match: `Optional`. String (or list of strings)
+               with wildcard filter. If None, all wells are returned
+        Returns:
+            list of strings with eclipse well names. Empty list if no
+            summary file or no matched well names.
+
+        """
+
+        if isinstance(group_match, str):
+            group_match = [group_match]
+        result = set()
+        for _, realization in self._realizations.items():
+            eclsum = realization.get_eclsum()
+            if eclsum:
+                if group_match is None:
+                    result = result.union(set(eclsum.groups()))
+                else:
+                    for group in group_match:
+                        result = result.union(set(eclsum.groups(group)))
+
+        return sorted(list(result))
 
     @property
     def files(self):
