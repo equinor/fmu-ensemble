@@ -30,7 +30,7 @@ fmuensemble_function = ('fmuensemble='
                         'fmu.ensemble.unknowrunner:main')
 
 setup(
-    name='fmu.ensemble',
+    name='fmu_ensemble',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Library for various config scripts in FMU scope",
@@ -39,6 +39,7 @@ setup(
     author_email='jriv@statoil.com',
     url='https://git.equinor.com/fmu-utilities/fmu-ensemble',
     packages=find_packages('src'),
+#    namespace_packages=['fmu'],
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     entry_points={

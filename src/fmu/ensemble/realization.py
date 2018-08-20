@@ -282,6 +282,9 @@ class ScratchRealization(object):
         self._eclsum = ert.ecl.EclSum(unsmry_filename)
         return self._eclsum
 
+    def get_smry(self, time_index=None, column_index=None):
+        return self.get_eclsum().pandas_dataframe(time_index, column_index)
+
     def get_smryvalues(self, props_wildcard=None):
         """
         Fetch selected vectors from Eclipse Summary data.
@@ -310,9 +313,9 @@ class ScratchRealization(object):
             data = {prop: self._eclsum.numpy_vector(prop, report_only=True) for
                     prop in props}
         else:  # get_values() is deprecated in newer libecl
-            data = {prop: self._eclsum.get_values(prop, report_only=True) for
+            data = {prop: self._eclsum.get_values(prop, report_only=False) for
                     prop in props}
-        dates = self._eclsum.get_dates(report_only=True)
+        dates = self._eclsum.get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
 
     def __repr__(self):
