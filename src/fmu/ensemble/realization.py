@@ -322,8 +322,8 @@ class ScratchRealization(object):
         for prop in props_wildcard:
             props = props.union(set(self._eclsum.keys(prop)))
         if 'numpy_vector' in dir(self._eclsum):
-            data = {prop: self._eclsum.numpy_vector(prop, report_only=False) for
-                    prop in props}
+            data = {prop: self._eclsum.numpy_vector(prop, report_only=False)
+                    for prop in props}
         else:  # get_values() is deprecated in newer libecl
             data = {prop: self._eclsum.get_values(prop, report_only=False) for
                     prop in props}
