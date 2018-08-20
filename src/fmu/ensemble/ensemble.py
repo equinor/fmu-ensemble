@@ -100,11 +100,14 @@ class ScratchEnsemble(object):
         else:
             globbedpaths = glob.glob(paths)
 
+        count = 0
         for realdir in globbedpaths:
             realization = ScratchRealization(realdir)
+            count += 1
             self._realizations[realization.index] = realization
         logger.info('add_realization() found %d realizations',
                     len(self._realizations))
+        return count
 
     def remove_realizations(self, realindices):
         """Remove specific realizations from the ensemble
