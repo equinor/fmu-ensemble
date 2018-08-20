@@ -310,9 +310,9 @@ class ScratchRealization(object):
             data = {prop: self._eclsum.numpy_vector(prop, report_only=True) for
                     prop in props}
         else:  # get_values() is deprecated in newer libecl
-            data = {prop: self._eclsum.get_values(prop, report_only=False) for
+            data = {prop: self._eclsum.get_values(prop, report_only=True) for
                     prop in props}
-        dates = self._eclsum.get_dates(report_only=False)
+        dates = self._eclsum.get_dates(report_only=True)
         return pd.DataFrame(data=data, index=dates)
 
     def __repr__(self):
