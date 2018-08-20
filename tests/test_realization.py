@@ -60,4 +60,6 @@ def test_singlereal_ecl():
 
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
+    assert real.get_smry().shape == (378, 470)  # 378 dates, 470 columns
+    assert real.get_smry(column_keys='FOP*')['FOPT'].max() > 6000000
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
