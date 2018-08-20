@@ -282,8 +282,20 @@ class ScratchRealization(object):
         self._eclsum = ert.ecl.EclSum(unsmry_filename)
         return self._eclsum
 
-    def get_smry(self, time_index=None, column_index=None):
-        return self.get_eclsum().pandas_dataframe(time_index, column_index)
+    def get_smry(self, time_index=None, column_keys=None):
+        """Return the Eclipse summary data from the realization
+
+        Convenience wrapper for ert.ecl.EclSum.pandas_frame()
+
+        Args:
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+            column_keys: list of column key wildcards.
+
+        Returns:
+            DataFrame with summary keys as columns and dates as indices
+        """
+        return self.get_eclsum().pandas_frame(time_index, column_keys)
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -310,8 +322,8 @@ class ScratchRealization(object):
         for prop in props_wildcard:
             props = props.union(set(self._eclsum.keys(prop)))
         if 'numpy_vector' in dir(self._eclsum):
-            data = {prop: self._eclsum.numpy_vector(prop, report_only=True) for
-                    prop in props}
+            data = {prop: self._eclsum.numpy_vector(prop, report_only=False)
+                    for prop in props}
         else:  # get_values() is deprecated in newer libecl
             data = {prop: self._eclsum.get_values(prop, report_only=False) for
                     prop in props}
@@ -322,7 +334,7 @@ class ScratchRealization(object):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]
         return "<Realization, index={}, path=...{}>".format(self.index,
-                                                             pathsummary)
+                                                            pathsummary)
 
 
 def parse_number(value):

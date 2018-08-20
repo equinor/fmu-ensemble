@@ -236,60 +236,73 @@ class ScratchEnsemble(object):
             dflist.append(dframe)
         return pd.concat(dflist)
 
-    def get_ens_smry(self, vector_match=None):
+    def get_smry(self, time_index=None, column_keys=None, stacked=True):
         """
-        Returns a datframe of all eclipse summary
-        vectors for all realizations in the ensemble.
+        Aggregates summary data from all realizations.
+
+        Wraps around Realization.get_smry() which wraps around
+        ert.ecl.EclSum.pandas_frame()
 
         Args:
-            vector_match: `Optional`. String (or list of strings)
-                with wildcard filter. If None, all vectors are returned
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+            column_keys: list of column key wildcards
+            stacked: boolean determining the dataframe layout. If
+                true, the realization index is a column, and dates are repeated
+                for each realization in the DATES column.
+                If false, a dictionary of dataframes is returned, indexed
+                by vector name, and with realization index as columns.
+                This only works when time_index is the same for all
+                realizations. Not implemented yet!
 
         Returns:
-            A DataFame of summary vectors for the ensemble.
-
-        Todo:
-            *  Throw an warning if the requested summary keyword does
-                not exists.
-            *  freq (str): `Optional`. Date freqency of dataframe. 'D' - daily,
-                'W' - weekly, 'M' - en of Month, 'MS' - start of month,
-                'A' - end of year, 'AS' - end of year. Default 'MS'
-            *  agg (str): `Optional`. Data aggredation. 'mean' or 'sum'.
-                Default 'mean'.
-            *  Filter based on time range interval
+            A DataFame of summary vectors for the ensemble, or
+            a dict of dataframes if stacked=False
         """
-
-        # get matches based on input string or list of strings
-        flat_vector_match = self.get_smrykeys(vector_match=vector_match)
-
-        # check if the vector have been cached
-        if not self._ens_df.empty:
-            smrykeys = [key for key in flat_vector_match if key not in
-                        self._ens_df.columns.values.tolist()]
-        else:
-            smrykeys = flat_vector_match
-
-        # read the summary keys for each realization if the list is not empty
-        if smrykeys:
-            ens_df = pd.DataFrame()
+        if stacked:
+            dflist = []
             for index, realization in self._realizations.items():
-                dframe = realization.get_smryvalues(props_wildcard=smrykeys)
-                dframe = dframe.resample('D').mean().fillna(method='ffill')
-                if self._ens_df.empty:
-                    # add realisation number and ensemble name
-                    dframe.insert(0, 'REAL', index)
-                    dframe.insert(1, 'ENS', self._name)
-                ens_df = pd.concat([ens_df, dframe])
+                dframe = realization.get_smry(time_index=time_index,
+                                              column_keys=column_keys)
+                dframe['REAL'] = index
+                dflist.append(dframe)
+            return pd.concat(dflist)
         else:
-            return self._ens_df[flat_vector_match].copy()
+            raise NotImplementedError
 
-        # cache the dataframe
-        if self._ens_df.empty:
-            self._ens_df = ens_df
+    def get_smry_dates(self, freq='monthly'):
+        """Return list of datetimes for an ensemble according to frequency
+
+        Args:
+           freq: string denoting requested frequency for
+               the returned list of datetime. 'report' will
+               yield the sorted union of all valid timesteps for
+               all realizations. Other valid options are
+               'daily', 'monthly' and 'yearly'.
+        Returns:
+            list of datetimes.
+        """
+        if freq == 'report':
+            dates = set()
+            for _, realization in self._realizations.items():
+                dates = dates.union(realization.get_eclsum().dates)
+            dates = list(dates)
+            dates.sort()
+            return dates
         else:
-            self._ens_df = pd.concat([self._ens_df, ens_df], axis=1)
-
-        return self._ens_df[flat_vector_match].copy()
+            start_date = min([real[1].get_eclsum().start_date
+                              for real in self._realizations.items()])
+            end_date = max([real[1].get_eclsum().end_date
+                            for real in self._realizations.items()])
+            pd_freq_mnenomics = {'monthly': 'MS',
+                                 'yearly': 'YS',
+                                 'daily': 'D'}
+            if freq not in pd_freq_mnenomics:
+                raise ValueError('Requested frequency %s not supported' % freq)
+            datetimes = pd.date_range(start_date, end_date,
+                                      freq=pd_freq_mnenomics[freq])
+            # Convert from Pandas' datetime64 to datetime.date:
+            return [x.date() for x in datetimes]
 
     def get_wellnames(self, well_match=None):
         """
