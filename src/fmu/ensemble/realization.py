@@ -315,6 +315,12 @@ class ScratchRealization(object):
         dates = self._eclsum.get_dates(report_only=True)
         return pd.DataFrame(data=data, index=dates)
 
+    def __repr__(self):
+        """Represent the realization. Show only the last part of the path"""
+        pathsummary = self._origpath[-50:]
+        return "<Realization, index={}, path=...{}>".format(self.index,
+                                                             pathsummary)
+
 
 def parse_number(value):
     """Try to parse the string first as an integer, then as float,
@@ -371,6 +377,5 @@ class VirtualRealization(object):
         """
         raise NotImplementedError
 
-    @property
     def __len__(self):
         raise NotImplementedError

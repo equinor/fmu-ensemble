@@ -25,7 +25,6 @@ def test_reek001():
                                             testdir +
                                             '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
-
     assert isinstance(reekensemble, ensemble.ScratchEnsemble)
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5

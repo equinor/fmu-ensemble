@@ -25,6 +25,7 @@ def test_single_realization():
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
+
     assert len(real.files) == 3
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785

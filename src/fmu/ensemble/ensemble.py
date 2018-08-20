@@ -182,6 +182,9 @@ class ScratchEnsemble(object):
         for _, realization in self._realizations.items():
             realization.find_files(paths, metadata)
 
+    def __repr__(self):
+        return "<Ensemble {}, {} realizations>".format(self.name, len(self))
+
     def __len__(self):
         return len(self._realizations)
 
