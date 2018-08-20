@@ -270,6 +270,26 @@ class ScratchEnsemble(object):
         else:
             raise NotImplementedError
 
+    def get_smry_dates(self, freq='monthly'):
+        """Return list of datetimes for an ensemble according to frequency
+
+        Args:
+           freq: string denoting requested frequency for
+               the returned list of datetime. 'report' will
+               yield the sorted union of all valid timesteps for
+               all realizations. Other valid options are
+               'daily', 'monthly' and 'yearly'.
+        Returns:
+            list of datetimes.
+        """
+        if freq=='report':
+            dates = set()
+            for _, realization in self._realizations.items():
+                dates = dates.union(realization.get_eclsum().dates)
+            dates = list(dates)
+            dates.sort()
+            return dates
+                
     def get_wellnames(self, well_match=None):
         """
         Return a union of all Eclipse Summary well names

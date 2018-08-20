@@ -111,6 +111,9 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smry(column_keys=['FGPR', 'FOP*']).columns) == 11
     assert len(reekensemble.get_smry(column_keys=['FGPR', 'FOP*']).index) == 1700
 
+    # Date list handling:
+    assert len(reekensemble.get_smry_dates(freq='report')) == 641
+
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
 
