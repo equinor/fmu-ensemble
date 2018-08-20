@@ -282,6 +282,9 @@ class ScratchRealization(object):
         self._eclsum = ert.ecl.EclSum(unsmry_filename)
         return self._eclsum
 
+    def get_smry(self, time_index=None, column_index=None):
+        return self.get_eclsum().pandas_dataframe(time_index, column_index)
+
     def get_smryvalues(self, props_wildcard=None):
         """
         Fetch selected vectors from Eclipse Summary data.

@@ -33,10 +33,6 @@ def test_single_realization():
     assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'],
                       str)
 
-    # Eclipse summary files:
-    assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
-    assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
-
     # STATUS file
     assert isinstance(real.get_status(), pd.DataFrame)
     assert len(real.get_status())
@@ -53,3 +49,15 @@ def test_single_realization():
 
     # File discovery
     real.find_files('share/results/volumes/*.csv')
+
+def test_singlereal_ecl():
+    """Test Eclipse specific functionality for realizations"""
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+
+    # Eclipse summary files:
+    assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
+    assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
