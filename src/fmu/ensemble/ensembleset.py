@@ -47,6 +47,9 @@ class EnsembleSet(object):
     def __getitem__(self, name):
         return self._ensembles[name]
 
+    def __repr__(self):
+        return "<EnsembleSet {}, {} ensembles>".format(self.name, len(self))
+
     def add_ensembles_frompath(self, paths):
         """Convenience function for adding multiple ensembles.
 
