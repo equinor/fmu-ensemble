@@ -130,6 +130,7 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smry_dates(freq='yearly')) == 4
     assert len(reekensemble.get_smry_dates(freq='monthly')) == 37
     assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
+    assert len(reekensemble.get_smry_dates(freq='last')) == 1
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
@@ -139,6 +140,8 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smry(column_keys=['FOPT'],
                                      time_index='yearly')) == 20
 
+    assert len(reekensemble.get_smry(column_keys=['FOPR'],
+                                     time_index='last')) == 5
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
 

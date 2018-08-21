@@ -286,6 +286,7 @@ class ScratchEnsemble(object):
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
+               'last' will give out the last date (maximum).
         Returns:
             list of datetimes.
         """
@@ -296,6 +297,10 @@ class ScratchEnsemble(object):
             dates = list(dates)
             dates.sort()
             return dates
+        elif freq == 'last':
+            end_date = max([real[1].get_eclsum().end_date
+                            for real in self._realizations.items()])
+            return [end_date]
         else:
             start_date = min([real[1].get_eclsum().start_date
                               for real in self._realizations.items()])
