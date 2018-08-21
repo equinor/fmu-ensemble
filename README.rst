@@ -12,3 +12,5 @@ This module will help you handle ensembles and realizations (and their
 associated data) as Python objects, and thereby facilitating the use
 use of other Python visualizations modules like webviz, plotly or
 interactive usage in IPython/Jupyter.
+
+This software is internal to Equinor ASA and shall not be shared externally.
