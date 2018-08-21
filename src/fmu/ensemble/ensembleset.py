@@ -136,3 +136,68 @@ class EnsembleSet(object):
             dframe['ENSEMBLE'] = ensemble.name
             dflist.append(dframe)
         return pd.concat(dflist)
+
+    def get_smry(self, time_index=None, column_keys=None):
+        """
+        Aggregates summary data from all ensembles.
+
+        Wraps around Ensemble.get_smry(stacked=True) which wraps
+        Realization.get_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+
+        Args:
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+            column_keys: list of column key wildcards
+        Returns:
+            A DataFame of summary vectors for the ensembleset.
+            The column 'ENSEMBLE' will denote each ensemble's name
+        """
+        if isinstance(time_index, str):
+            time_index = self.get_smry_dates(time_index)
+        dflist = []
+        for name, ensemble in self._ensembles.items():
+            dframe = ensemble.get_smry(time_index=time_index,
+                                       column_keys=column_keys,
+                                       stacked=True)
+            dframe['ENSEMBLE'] = name
+            dflist.append(dframe)
+        return pd.concat(dflist)
+
+    def get_smry_dates(self, freq='monthly'):
+        """Return list of datetimes from an ensembleset
+
+        Datetimes from each realization in each ensemble can
+        be returned raw, or be resampled.
+
+        Args:
+           freq: string denoting requested frequency for
+               the returned list of datetime. 'report' will
+               yield the sorted union of all valid timesteps for
+               all realizations. Other valid options are
+               'daily', 'monthly' and 'yearly'.
+        Returns:
+            list of datetime.date.
+        """
+
+        rawdates = set()
+        for _, ensemble in self._ensembles.items():
+            rawdates = rawdates.union(ensemble.get_smry_dates(freq='report'))
+        rawdates = list(rawdates)
+        rawdates.sort()
+        if freq == 'report':
+            return rawdates
+        else:
+            # Later optimization: Wrap eclsum.start_date in the
+            # ensemble object.
+            start_date = min(rawdates)
+            end_date = max(rawdates)
+            pd_freq_mnenomics = {'monthly': 'MS',
+                                 'yearly': 'YS', 'daily': 'D'}
+            if freq not in pd_freq_mnenomics:
+                raise ValueError('Requested frequency %s not supported' % freq)
+            datetimes = pd.date_range(start_date, end_date,
+                                      freq=pd_freq_mnenomics[freq])
+            # Convert from Pandas' datetime64 to datetime.date:
+            return [x.date() for x in datetimes]

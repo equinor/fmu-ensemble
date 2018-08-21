@@ -24,7 +24,12 @@ def test_ensembleset_reek001():
     manually doubled to two identical ensembles
     """
 
-    ensdir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+    ensdir = os.path.join(testdir,
                           "data/testensemble-reek001/")
 
     # Copy iter-0 to iter-1, creating an identical ensemble
@@ -69,6 +74,12 @@ def test_ensembleset_reek001():
     assert 'ENSEMBLE' in ensset3.parameters.columns
     assert 'REAL' in ensset3.parameters.columns
 
+    # Test Eclipse summary handling:
+    assert len(ensset3.get_smry_dates(freq='report')) == 641
+    assert len(ensset3.get_smry_dates(freq='monthly')) == 37
+    assert len(ensset3.get_smry(column_keys=['FOPT'],
+                                time_index='yearly')) == 40
+
     # Test aggregation of csv files:
     vol_df = ensset3.get_csv('share/results/volumes/' +
                              'simulator_volume_fipnum.csv')
@@ -80,3 +91,4 @@ def test_ensembleset_reek001():
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         os.remove(realizationdir + '/iter-1')
+
