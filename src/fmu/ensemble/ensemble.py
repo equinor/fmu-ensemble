@@ -137,6 +137,8 @@ class ScratchEnsemble(object):
             convert_numeric: If set to True, numerical columns
                 will be searched for and have their dtype set
                 to integers or floats.
+        Returns:
+            Dataframe with all parameters, indexed by realization index.
         """
         paramsdictlist = []
         for index, realization in self._realizations.items():
