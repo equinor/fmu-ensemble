@@ -44,4 +44,25 @@ the ensemble object can look it up:
     # column REAL
     vol_df = reekensemble.get_csv('share/results/volumes/simulatorvolumes.csv')
 
+.. code-block:: python
+
+    # The results from the Eclipse summary data can be obtained as this
+    smry = reekensemble.get_smry(column_keys=['F*', 'W*'], time_index='monthly')
+
+Summary data is typical to combine with parameters data, in order to be able
+to analyze how the parameter values influence simulated data. The classical 
+CSV export from ERT is doing exactly this, and the same export can be
+accomplished using the following code
+
+.. code-block:: python
+
+    import pandas as pd
+    smry = reekensemble.get_smry(time_index='monthly')
+    params = reekensemble.parameters
+    # Match the two tables where the value of REAL is identical:
+    smry_params = pd.merge(smry, params)
+    smry_params.to_csv('smry_params.csv', index=False)
+
+For finer control, you can specify exactly which summary vectors you want
+to include, the time resolution, and perhaps also a subset of the parameters.
 
