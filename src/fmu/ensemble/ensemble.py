@@ -259,7 +259,7 @@ class ScratchEnsemble(object):
 
         Returns:
             A DataFame of summary vectors for the ensemble, or
-            a dict of dataframes if stacked=False
+            a dict of dataframes if stacked=False.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)
@@ -268,9 +268,10 @@ class ScratchEnsemble(object):
             for index, realization in self._realizations.items():
                 dframe = realization.get_smry(time_index=time_index,
                                               column_keys=column_keys)
-                dframe['REAL'] = index
+                dframe.insert(0, 'REAL', index)
+                dframe.index.name = 'DATE'
                 dflist.append(dframe)
-            return pd.concat(dflist)
+            return pd.concat(dflist).reset_index()
         else:
             raise NotImplementedError
 

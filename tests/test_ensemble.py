@@ -20,7 +20,12 @@ if not fmux.testsetup():
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
 
-    testdir = os.path.dirname(os.path.abspath(__file__))
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
     reekensemble = ensemble.ScratchEnsemble('reektest',
                                             testdir +
                                             '/data/testensemble-reek001/' +
@@ -92,7 +97,12 @@ def test_reek001():
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
 
-    testdir = os.path.dirname(os.path.abspath(__file__))
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
     reekensemble = ensemble.ScratchEnsemble('reektest',
                                             testdir +
                                             '/data/testensemble-reek001/' +
@@ -108,10 +118,10 @@ def test_ensemble_ecl():
 
     # When asking the ensemble for FOPR, we also get REAL as a column
     # in return:
-    assert len(reekensemble.get_smry(column_keys=['FOPR']).columns) == 2
-    assert len(reekensemble.get_smry(column_keys=['FOP*']).columns) == 10
+    assert len(reekensemble.get_smry(column_keys=['FOPR']).columns) == 3
+    assert len(reekensemble.get_smry(column_keys=['FOP*']).columns) == 11
     assert len(reekensemble.get_smry(column_keys=['FGPR',
-                                                  'FOP*']).columns) == 11
+                                                  'FOP*']).columns) == 12
     assert len(reekensemble.get_smry(column_keys=['FGPR',
                                                   'FOP*']).index) == 1700
 
