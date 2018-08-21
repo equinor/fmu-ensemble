@@ -9,3 +9,4 @@ del get_versions
 
 from .ensemble import ScratchEnsemble  # noqa
 from .realization import ScratchRealization  # noqa
+from .ensembleset import EnsembleSet  # noqa

@@ -56,6 +56,7 @@ class ScratchEnsemble(object):
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
+        self._ens_df = pd.DataFrame()
 
         if isinstance(paths, str):
             paths = [paths]
@@ -234,6 +235,136 @@ class ScratchEnsemble(object):
             dframe['REAL'] = index
             dflist.append(dframe)
         return pd.concat(dflist)
+
+    def get_smry(self, time_index=None, column_keys=None, stacked=True):
+        """
+        Aggregates summary data from all realizations.
+
+        Wraps around Realization.get_smry() which wraps around
+        ert.ecl.EclSum.pandas_frame()
+
+        Args:
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+            column_keys: list of column key wildcards
+            stacked: boolean determining the dataframe layout. If
+                true, the realization index is a column, and dates are repeated
+                for each realization in the DATES column.
+                If false, a dictionary of dataframes is returned, indexed
+                by vector name, and with realization index as columns.
+                This only works when time_index is the same for all
+                realizations. Not implemented yet!
+
+        Returns:
+            A DataFame of summary vectors for the ensemble, or
+            a dict of dataframes if stacked=False
+        """
+        if isinstance(time_index, str):
+            time_index = self.get_smry_dates(time_index)
+        if stacked:
+            dflist = []
+            for index, realization in self._realizations.items():
+                dframe = realization.get_smry(time_index=time_index,
+                                              column_keys=column_keys)
+                dframe['REAL'] = index
+                dflist.append(dframe)
+            return pd.concat(dflist)
+        else:
+            raise NotImplementedError
+
+    def get_smry_dates(self, freq='monthly'):
+        """Return list of datetimes for an ensemble according to frequency
+
+        Args:
+           freq: string denoting requested frequency for
+               the returned list of datetime. 'report' will
+               yield the sorted union of all valid timesteps for
+               all realizations. Other valid options are
+               'daily', 'monthly' and 'yearly'.
+        Returns:
+            list of datetimes.
+        """
+        if freq == 'report':
+            dates = set()
+            for _, realization in self._realizations.items():
+                dates = dates.union(realization.get_eclsum().dates)
+            dates = list(dates)
+            dates.sort()
+            return dates
+        else:
+            start_date = min([real[1].get_eclsum().start_date
+                              for real in self._realizations.items()])
+            end_date = max([real[1].get_eclsum().end_date
+                            for real in self._realizations.items()])
+            pd_freq_mnenomics = {'monthly': 'MS',
+                                 'yearly': 'YS',
+                                 'daily': 'D'}
+            if freq not in pd_freq_mnenomics:
+                raise ValueError('Requested frequency %s not supported' % freq)
+            datetimes = pd.date_range(start_date, end_date,
+                                      freq=pd_freq_mnenomics[freq])
+            # Convert from Pandas' datetime64 to datetime.date:
+            return [x.date() for x in datetimes]
+
+    def get_wellnames(self, well_match=None):
+        """
+        Return a union of all Eclipse Summary well names
+        in all realizations (union). In addition, can return a list
+        based on matches to an input string pattern.
+
+        Args:
+            well_match: `Optional`. String (or list of strings)
+               with wildcard filter. If None, all wells are returned
+        Returns:
+            list of strings with eclipse well names. Empty list if no
+            summary file or no matched well names.
+
+        """
+
+        if isinstance(well_match, str):
+            well_match = [well_match]
+        result = set()
+        for _, realization in self._realizations.items():
+            eclsum = realization.get_eclsum()
+            if eclsum:
+                if well_match is None:
+                    result = result.union(set(eclsum.wells()))
+                else:
+                    for well in well_match:
+                        result = result.union(set(eclsum.wells(well)))
+
+        return sorted(list(result))
+
+    def get_groupnames(self, group_match=None):
+        """
+        Return a union of all Eclipse Summary group names
+        in all realizations (union). In addition, can return a list
+        based on matches to an input string pattern.
+
+        Args:
+            well_match: `Optional`. String (or list of strings)
+               with wildcard filter. If None, all wells are returned
+        Returns:
+            list of strings with eclipse well names. Empty list if no
+            summary file or no matched well names.
+
+        """
+
+        if isinstance(group_match, str):
+            group_match = [group_match]
+        result = set()
+        for _, realization in self._realizations.items():
+            eclsum = realization.get_eclsum()
+            if eclsum:
+                if group_match is None:
+                    result = result.union(set(eclsum.groups()))
+                else:
+                    for group in group_match:
+                        result = result.union(set(eclsum.groups(group)))
+
+        return sorted(list(result))
 
     @property
     def files(self):
