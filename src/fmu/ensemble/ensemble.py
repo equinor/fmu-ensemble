@@ -232,7 +232,7 @@ class ScratchEnsemble(object):
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_csv(filename)
-            dframe['REAL'] = index
+            dframe.insert(0, 'REAL', index)
             dflist.append(dframe)
         return pd.concat(dflist)
 
@@ -373,7 +373,7 @@ class ScratchEnsemble(object):
         files = pd.DataFrame()
         for realidx, realization in self._realizations.items():
             realfiles = realization.files.copy()
-            realfiles['REAL'] = realidx
+            realfiles.insert(0, 'REAL', realidx)
             files = files.append(realfiles)
         return files
 
