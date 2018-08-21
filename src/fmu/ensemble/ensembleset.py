@@ -112,12 +112,12 @@ class EnsembleSet(object):
                 will be searched for and have their dtype set
                 to integers or floats.
         """
-        ensparamsdictlist = []
+        ensparamsdflist = []
         for _, ensemble in self._ensembles.items():
             params = ensemble.get_parameters(convert_numeric)
-            params['ENSEMBLE'] = ensemble.name
-            ensparamsdictlist.append(params)
-        return pd.concat(ensparamsdictlist)
+            params.insert(0, 'ENSEMBLE', ensemble.name)
+            ensparamsdflist.append(params)
+        return pd.concat(ensparamsdflist)
 
     def get_csv(self, filename):
         """Load CSV data from each realization in each
