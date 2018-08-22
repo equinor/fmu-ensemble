@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pytest
 import pandas as pd
 import ert.ecl
 
@@ -38,6 +39,10 @@ def test_single_realization():
     # should not increase:
     assert len(real.files) == 3
 
+    with pytest.raises(IOError):
+        real.from_txt('nonexistingfile.txt')
+    
+    
     # STATUS file
     assert isinstance(real.get_status(), pd.DataFrame)
     assert len(real.get_status())

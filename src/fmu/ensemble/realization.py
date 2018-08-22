@@ -137,7 +137,7 @@ class ScratchRealization(object):
         """
         fullpath = os.path.join(self._origpath, localpath)
         if not os.path.exists(fullpath):
-            raise FileNotFoundError(localpath)
+            raise IOError("File not found: " + localpath)
         else:
             if fullpath in self.files['FULLPATH'].values and force_reread == False:
                 return self.keyvaluedata[localpath]
