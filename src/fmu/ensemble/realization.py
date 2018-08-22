@@ -68,6 +68,8 @@ class ScratchRealization(object):
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
 
+        self.keyvaluedata = {} # dict of dicts with any kind of data.
+
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
         if realidxmatch:
@@ -96,12 +98,63 @@ class ScratchRealization(object):
                        'BASENAME': 'jobs.json'}
             self.files = self.files.append(filerow, ignore_index=True)
 
-        if os.path.exists(os.path.join(abspath, 'parameters.txt')):
-            filerow = {'LOCALPATH': 'parameters.txt',
-                       'FILETYPE': 'txt',
-                       'FULLPATH': os.path.join(abspath, 'parameters.txt'),
-                       'BASENAME': 'parameters.txt'}
-            self.files = self.files.append(filerow, ignore_index=True)
+        self.from_txt('parameters.txt')
+
+    def from_txt(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Parse a txt file with
+        <key> <value>
+        in each line.
+
+        The txt file will be internalized in a dict and will be
+        stored if the object is archived. Recommended file
+        extension is 'txt'.
+        
+        Common usage is internalization of parameters.txt which
+        happens by default, but this can be used for all txt files.
+
+        The parsed data is returned as a dict. At the ensemble level
+        the same function returns a dataframe.
+
+        There is no get'er for the constructed data, access the 
+        class variable keyvaluedata directly, or rerun this function.
+        (except for parameters.txt, for which there is a property
+        called 'parameters')
+
+        Args:
+            localpath: path local the realization to the txt file
+            convert_numeric: defaults to True, will try to parse
+                all values as integers, if not, then floats, and
+                strings as the last resort.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+
+        Returns:
+            dict with the parsed values. Values will be returned as
+                integers, floats or strings. If convert_numeric
+                is False, all values are strings.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise FileNotFoundError(localpath)
+        else:
+            if fullpath in self.files['FULLPATH'].values and force_reread == False:
+                return self.keyvaluedata[localpath]
+            elif fullpath not in self.files['FULLPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            keyvalues = pd.read_table(fullpath, sep=r'\s+',
+                                      index_col=0, dtype=str,
+                                      header=None)[1].to_dict()
+            if convert_numeric:
+                for key in keyvalues:
+                    keyvalues[key] = parse_number(keyvalues[key])
+            self.keyvaluedata[localpath] = keyvalues
+            return keyvalues
 
     def get_status(self):
         """Collects the contents of the STATUS files and return
@@ -221,34 +274,12 @@ class ScratchRealization(object):
 
     @property
     def parameters(self):
-        """Getter for get_parameters(convert_numeric=True)
-        """
-        return self.get_parameters(self)
-
-    def get_parameters(self, convert_numeric=True):
-        """Return the contents of parameters.txt as a dict
-
-        Strings will attempted to be parsed as numeric, and
-        dictionary datatypes will be either int, float or string.
-
-        Parsing is aggressive, parameter values that are by chance
-        integers in a particular realization will be integers,
-        but should aggregate well with floats from other realizations.
+        """Access the data obtained from parameters.tx2t
 
         Returns:
-            dict: keys are the first column in parameters.txt, values from
-                the second column
+            dict with data from parameters.txt
         """
-        paramfile = self.files[self.files.LOCALPATH == 'parameters.txt']
-        params = pd.read_table(paramfile.FULLPATH.values[0], sep=r'\s+',
-                               index_col=0, dtype=str,
-                               header=None)[1].to_dict()
-        # pandas.read_table has its own numerics parsing, but this is turned
-        # off by dtype=str above.
-        if convert_numeric:
-            for key in params:
-                params[key] = parse_number(params[key])
-        return params
+        return self.keyvaluedata['parameters.txt']
 
     def get_eclsum(self):
         """

@@ -142,7 +142,7 @@ class ScratchEnsemble(object):
         """
         paramsdictlist = []
         for index, realization in self._realizations.items():
-            params = realization.get_parameters(convert_numeric)
+            params = realization.parameters
             params['REAL'] = index
             paramsdictlist.append(params)
         return pd.DataFrame(paramsdictlist)

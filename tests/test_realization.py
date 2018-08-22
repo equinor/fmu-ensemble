@@ -30,8 +30,13 @@ def test_single_realization():
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
-    assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'],
+    assert isinstance(real.from_txt('parameters.txt',
+                                    convert_numeric=False,
+                                    force_reread=True)['RMS_SEED'],
                       str)
+    # We have rerun from_txt on parameters, but file count
+    # should not increase:
+    assert len(real.files) == 3
 
     # STATUS file
     assert isinstance(real.get_status(), pd.DataFrame)
