@@ -28,6 +28,7 @@ def test_single_realization():
     real = ensemble.ScratchRealization(realdir)
 
     assert len(real.files) == 3
+    assert 'parameters.txt' in real.keyvaluedata
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
@@ -41,7 +42,12 @@ def test_single_realization():
 
     with pytest.raises(IOError):
         real.from_txt('nonexistingfile.txt')
-    
+
+    # Load more data from text files:
+    assert 'NPV' in real.from_txt('outputs.txt')
+    assert len(real.files) == 4
+    assert 'outputs.txt' in real.keyvaluedata
+    assert 'top_structure' in real.keyvaluedata['outputs.txt']
     
     # STATUS file
     assert isinstance(real.get_status(), pd.DataFrame)
