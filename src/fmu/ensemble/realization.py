@@ -136,7 +136,8 @@ class ScratchRealization(object):
         del status['colon']
         del status['dots']
         # Index the jobs, this makes it possible to match with jobs.json:
-        status['JOBINDEX'] = status.index.astype(int)
+        status.insert(0, 'JOBINDEX', status.index.astype(int))
+        del status['index']
         # Calculate duration. Only Python 3.6 has time.fromisoformat().
         # Warning: Unpandaic code..
         durations = []

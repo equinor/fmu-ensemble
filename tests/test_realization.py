@@ -34,10 +34,11 @@ def test_single_realization():
                       str)
 
     # STATUS file
-    assert isinstance(real.get_status(), pd.DataFrame)
-    assert len(real.get_status())
-    assert 'ECLIPSE' in real.get_status().loc[49, 'FORWARD_MODEL']
-    assert int(real.get_status().loc[49, 'DURATION']) == 141
+    status = real.get_status()
+    assert isinstance(status, pd.DataFrame)
+    assert len(status)
+    assert 'ECLIPSE' in status.loc[49, 'FORWARD_MODEL']
+    assert int(status.loc[49, 'DURATION']) == 141
 
     # CSV file loading
     vol_df = real.get_csv('share/results/volumes/simulator_volume_fipnum.csv')

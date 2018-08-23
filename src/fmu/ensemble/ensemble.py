@@ -163,7 +163,8 @@ class ScratchEnsemble(object):
         statusdict = {}  # dict of status dataframes pr. realization
         for realidx, realization in self._realizations.items():
             statusdict[realidx] = realization.get_status()
-            statusdict[realidx]['REAL'] = realidx  # Tag it!
+            # Tag it:
+            statusdict[realidx].insert(0, 'REAL', realidx)
         return pd.concat(statusdict, ignore_index=True)
 
     def find_files(self, paths, metadata=None):
