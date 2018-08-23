@@ -74,6 +74,9 @@ def test_ensembleset_reek001():
     assert 'ENSEMBLE' in ensset3.parameters.columns
     assert 'REAL' in ensset3.parameters.columns
 
+    outputs = ensset3.from_txt('outputs.txt')
+    assert 'NPV' in outputs.columns
+
     # Test Eclipse summary handling:
     assert len(ensset3.get_smry_dates(freq='report')) == 641
     assert len(ensset3.get_smry_dates(freq='monthly')) == 37
