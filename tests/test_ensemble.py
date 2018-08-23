@@ -56,6 +56,12 @@ def test_reek001():
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)
 
+    # The column FOO in parameters is only present in some, and
+    # is present with NaN in real0:
+    assert 'FOO' in reekensemble.parameters.columns
+    assert len(reekensemble.parameters['FOO'].dropna()) == 1
+    # (NaN ine one real, and non-existing in the others is the same thing)
+
     # File discovery:
     reekensemble.find_files('share/results/volumes/*csv',
                             metadata={'GRID': 'simgrid'})
