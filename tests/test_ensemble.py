@@ -53,7 +53,7 @@ def test_reek001():
     paramsdf = reekensemble.get_parameters(convert_numeric=False)
     assert len(paramsdf) == 5  # 5 realizations
     paramsdf = reekensemble.parameters  # also test as property
-    assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
+    assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)
 
     # File discovery:

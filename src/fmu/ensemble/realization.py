@@ -352,9 +352,13 @@ def parse_number(value):
     if isinstance(value, int):
         return value
     elif isinstance(value, float):
-        if int(value) == value:
-            return int(value)
-        return value
+        # int(afloat) fails on some, e.g. NaN
+        try:
+            if int(value) == value:
+                return int(value)
+            return value
+        except ValueError:
+            return value  # return float
     else:  # noqa
         try:
             return int(value)
