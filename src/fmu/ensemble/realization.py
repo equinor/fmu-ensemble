@@ -16,6 +16,7 @@ import os
 import re
 import glob
 import json
+import numpy
 import pandas as pd
 
 import ert.ecl
@@ -193,17 +194,20 @@ class ScratchRealization(object):
         # Warning: Unpandaic code..
         durations = []
         for _, jobrow in status.iterrows():
-            hms = map(int, jobrow['STARTTIME'].split(':'))
-            start = datetime.combine(date.today(),
-                                     time(hour=hms[0], minute=hms[1],
-                                          second=hms[2]))
-            hms = map(int, jobrow['ENDTIME'].split(':'))
-            end = datetime.combine(date.today(),
-                                   time(hour=hms[0], minute=hms[1],
-                                        second=hms[2]))
-            # This works also when we have crossed 00:00:00.
-            # Jobs > 24 h will be wrong.
-            durations.append((end - start).seconds)
+            if not jobrow['ENDTIME']:  # A job that is not finished.
+                durations.append(numpy.nan)
+            else:
+                hms = map(int, jobrow['STARTTIME'].split(':'))
+                start = datetime.combine(date.today(),
+                                         time(hour=hms[0], minute=hms[1],
+                                              second=hms[2]))
+                hms = map(int, jobrow['ENDTIME'].split(':'))
+                end = datetime.combine(date.today(),
+                                       time(hour=hms[0], minute=hms[1],
+                                            second=hms[2]))
+                # This works also when we have crossed 00:00:00.
+                # Jobs > 24 h will be wrong.
+                durations.append((end - start).seconds)
         status['DURATION'] = durations
 
         # Augment data from jobs.json if that file is available:
@@ -383,9 +387,13 @@ def parse_number(value):
     if isinstance(value, int):
         return value
     elif isinstance(value, float):
-        if int(value) == value:
-            return int(value)
-        return value
+        # int(afloat) fails on some, e.g. NaN
+        try:
+            if int(value) == value:
+                return int(value)
+            return value
+        except ValueError:
+            return value  # return float
     else:  # noqa
         try:
             return int(value)

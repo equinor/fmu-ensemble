@@ -70,7 +70,7 @@ def test_ensembleset_reek001():
     paramsdf.to_csv('enssetparams.csv', index=False)
     assert isinstance(paramsdf, pd.DataFrame)
     assert len(ensset3.parameters) == 10
-    assert len(ensset3.parameters.columns) == 26
+    assert len(ensset3.parameters.columns) == 27
     assert 'ENSEMBLE' in ensset3.parameters.columns
     assert 'REAL' in ensset3.parameters.columns
 
