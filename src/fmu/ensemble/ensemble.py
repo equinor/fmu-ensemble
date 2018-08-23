@@ -378,12 +378,12 @@ class ScratchEnsemble(object):
     @property
     def files(self):
         """Return a concatenation of files in each realization"""
-        files = pd.DataFrame()
+        filedflist = []
         for realidx, realization in self._realizations.items():
             realfiles = realization.files.copy()
             realfiles.insert(0, 'REAL', realidx)
-            files = files.append(realfiles)
-        return files
+            filedflist.append(realfiles)
+        return pd.concat(filedflist, ignore_index=True, sort=False)
 
     @property
     def name(self):
