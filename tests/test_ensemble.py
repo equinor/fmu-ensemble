@@ -42,7 +42,7 @@ def test_reek001():
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
 
-    statusdf = reekensemble.get_status_data()
+    statusdf = reekensemble.get_status()
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json

@@ -47,8 +47,8 @@ def test_ensembleset_reek001():
 
     ensset = ensemble.EnsembleSet("reek001", [iter0, iter1])
     assert len(ensset) == 2
-    assert len(ensset['iter-0'].get_status_data()) == 250
-    assert len(ensset['iter-1'].get_status_data()) == 250
+    assert len(ensset['iter-0'].get_status()) == 250
+    assert len(ensset['iter-1'].get_status()) == 250
 
     # Try adding the same object over again
     ensset.add_ensemble(iter0)

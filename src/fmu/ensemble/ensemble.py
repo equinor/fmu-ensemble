@@ -147,7 +147,7 @@ class ScratchEnsemble(object):
             paramsdictlist.append(params)
         return pd.DataFrame(paramsdictlist)
 
-    def get_status_data(self):
+    def get_status(self):
         """Collects the contents of the STATUS files and jobs.json
         from all realizations.
 
