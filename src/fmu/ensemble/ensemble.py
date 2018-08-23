@@ -162,7 +162,7 @@ class ScratchEnsemble(object):
                 pass
         return pd.DataFrame(keyvaluesdictlist)
 
-    def get_status_data(self):
+    def get_status(self):
         """Collects the contents of the STATUS files and jobs.json
         from all realizations.
 
@@ -178,8 +178,9 @@ class ScratchEnsemble(object):
         statusdict = {}  # dict of status dataframes pr. realization
         for realidx, realization in self._realizations.items():
             statusdict[realidx] = realization.get_status()
-            statusdict[realidx]['REAL'] = realidx  # Tag it!
-        return pd.concat(statusdict, ignore_index=True)
+            # Tag it:
+            statusdict[realidx].insert(0, 'REAL', realidx)
+        return pd.concat(statusdict, ignore_index=True, sort=False)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframes
@@ -251,7 +252,7 @@ class ScratchEnsemble(object):
             dframe = realization.get_csv(filename)
             dframe.insert(0, 'REAL', index)
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, ignore_index=True, sort=False)
 
     def get_smry(self, time_index=None, column_keys=None, stacked=True):
         """
@@ -288,7 +289,7 @@ class ScratchEnsemble(object):
                 dframe.insert(0, 'REAL', index)
                 dframe.index.name = 'DATE'
                 dflist.append(dframe)
-            return pd.concat(dflist).reset_index()
+            return pd.concat(dflist, sort=False).reset_index()
         else:
             raise NotImplementedError
 
@@ -392,12 +393,12 @@ class ScratchEnsemble(object):
     @property
     def files(self):
         """Return a concatenation of files in each realization"""
-        files = pd.DataFrame()
+        filedflist = []
         for realidx, realization in self._realizations.items():
             realfiles = realization.files.copy()
             realfiles.insert(0, 'REAL', realidx)
-            files = files.append(realfiles)
-        return files
+            filedflist.append(realfiles)
+        return pd.concat(filedflist, ignore_index=True, sort=False)
 
     @property
     def name(self):

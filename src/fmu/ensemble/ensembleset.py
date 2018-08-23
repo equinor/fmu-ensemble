@@ -126,7 +126,7 @@ class EnsembleSet(object):
                                            force_reread)
             keyvaluedf.insert(0, 'ENSEMBLE', ensemble.name)
             enskeyvaluedflist.append(keyvaluedf)
-        return pd.concat(enskeyvaluedflist)
+        return pd.concat(enskeyvaluedflist, sort=False)
 
     def get_csv(self, filename):
         """Load CSV data from each realization in each
@@ -144,7 +144,7 @@ class EnsembleSet(object):
             dframe = ensemble.get_csv(filename)
             dframe['ENSEMBLE'] = ensemble.name
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, sort=False)
 
     def get_smry(self, time_index=None, column_keys=None):
         """
@@ -172,7 +172,7 @@ class EnsembleSet(object):
                                        stacked=True)
             dframe['ENSEMBLE'] = name
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, sort=False)
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes from an ensembleset
