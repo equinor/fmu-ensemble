@@ -110,7 +110,7 @@ class ScratchRealization(object):
         The txt file will be internalized in a dict and will be
         stored if the object is archived. Recommended file
         extension is 'txt'.
-        
+
         Common usage is internalization of parameters.txt which
         happens by default, but this can be used for all txt files.
 
@@ -138,7 +138,7 @@ class ScratchRealization(object):
         """
         fullpath = os.path.join(self._origpath, localpath)
         if not os.path.exists(fullpath):
-            raise IOError("File not found: " + localpath)
+            raise IOError("File not found: " + fullpath)
         else:
             if fullpath in self.files['FULLPATH'].values and force_reread == False:
                 return self.keyvaluedata[localpath]
