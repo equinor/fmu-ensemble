@@ -165,7 +165,7 @@ class ScratchEnsemble(object):
             statusdict[realidx] = realization.get_status()
             # Tag it:
             statusdict[realidx].insert(0, 'REAL', realidx)
-        return pd.concat(statusdict, ignore_index=True)
+        return pd.concat(statusdict, ignore_index=True, sort=False)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframes
@@ -237,7 +237,7 @@ class ScratchEnsemble(object):
             dframe = realization.get_csv(filename)
             dframe.insert(0, 'REAL', index)
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, ignore_index=True, sort=False)
 
     def get_smry(self, time_index=None, column_keys=None, stacked=True):
         """
@@ -274,7 +274,7 @@ class ScratchEnsemble(object):
                 dframe.insert(0, 'REAL', index)
                 dframe.index.name = 'DATE'
                 dflist.append(dframe)
-            return pd.concat(dflist).reset_index()
+            return pd.concat(dflist, sort=False).reset_index()
         else:
             raise NotImplementedError
 
