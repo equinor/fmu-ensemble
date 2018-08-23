@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import numpy
 
 from fmu import config
 from fmu import ensemble
@@ -45,7 +46,9 @@ def test_reek001():
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
-    assert int(statusdf.loc[249, 'DURATION']) == 150  # sample check
+    assert int(statusdf.loc[245, 'DURATION']) == 195  # sample check
+    # STATUS in real4 is modified to simulate that Eclipse never finished:
+    assert numpy.isnan(statusdf.loc[249, 'DURATION'])
 
     statusdf.to_csv('status.csv', index=False)
 
