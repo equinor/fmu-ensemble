@@ -148,9 +148,12 @@ class ScratchRealization(object):
                            'FULLPATH': fullpath,
                            'BASENAME': os.path.split(localpath)[-1]}
                 self.files = self.files.append(filerow, ignore_index=True)
-            keyvalues = pd.read_table(fullpath, sep=r'\s+',
-                                      index_col=0, dtype=str,
-                                      header=None)[1].to_dict()
+            try:
+                keyvalues = pd.read_table(fullpath, sep=r'\s+',
+                                          index_col=0, dtype=str,
+                                          header=None)[1].to_dict()
+            except pd.errors.EmptyDataError:
+                keyvalues = {}
             if convert_numeric:
                 for key in keyvalues:
                     keyvalues[key] = parse_number(keyvalues[key])
