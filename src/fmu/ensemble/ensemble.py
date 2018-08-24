@@ -132,14 +132,14 @@ class ScratchEnsemble(object):
                  force_reread=False):
         return self.from_file(localpath, convert_numeric,
                               force_reread)
+
     def from_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
         return self.from_file(localpath, convert_numeric,
                               force_reread)
-        
-                       
+
     def from_file(self, localpath, convert_numeric=True,
-                 force_reread=False):
+                  force_reread=False):
         """Wrap around ScratchRealization.from_txt()
         and from_csv()
 
@@ -160,7 +160,6 @@ class ScratchEnsemble(object):
         Returns:
             Dataframe with all parameters, indexed by realization index.
         """
-        keyvaluesdictlist = []
         for index, realization in self._realizations.items():
             try:
                 if '.csv' in localpath:
@@ -174,7 +173,7 @@ class ScratchEnsemble(object):
                 # some realizations
                 pass
         return self.get_df(localpath)
-    
+
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframes
         for each realization will be updated.
@@ -245,12 +244,19 @@ class ScratchEnsemble(object):
                 dframe = realization.get_df(localpath)
                 if isinstance(dframe, dict):
                     dframe = pd.DataFrame(index=[1], data=dframe)
+                # This is a temporary solution, find a better concat
+                # routine than making a full copy here. We can't call
+                # insert on the realizations dataframe, we should not touch it.
+                dframe = dframe.copy()
                 dframe.insert(0, 'REAL', index)
                 dflist.append(dframe)
             except ValueError:
                 # Just skip realizations where this localpath is missing
                 pass
-        return pd.concat(dflist, ignore_index=True, sort=False)
+        if len(dflist):
+            return pd.concat(dflist, ignore_index=True, sort=False)
+        else:
+            raise ValueError("No data found for " + localpath)
 
     def get_smry(self, time_index=None, column_keys=None, stacked=True):
         """

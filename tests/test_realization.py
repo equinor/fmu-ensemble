@@ -65,7 +65,7 @@ def test_single_realization():
     # Test later retrieval of cached data:
     vol_df2 = real.get_df('share/results/volumes/simulator_volume_fipnum.csv')
     assert vol_df2['STOIIP_TOTAL'].sum() > 0
-    
+
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
     assert localpath in real.data
@@ -76,7 +76,8 @@ def test_single_realization():
     # Test shortcuts to the internal datastore
     assert isinstance(real.get_df('simulator_volume_fipnum.csv'), pd.DataFrame)
     # test without extension:
-    assert isinstance(real.get_df('share/results/volumes/simulator_volume_fipnum'),
+    assert isinstance(real.get_df('share/results/volumes/' +
+                                  'simulator_volume_fipnum'),
                       pd.DataFrame)
     assert isinstance(real.get_df('parameters'), dict)
     # test basename and no extension:

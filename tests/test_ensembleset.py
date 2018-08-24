@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import pytest
 import pandas as pd
 
 from fmu import config
@@ -47,8 +48,8 @@ def test_ensembleset_reek001():
 
     ensset = ensemble.EnsembleSet("reek001", [iter0, iter1])
     assert len(ensset) == 2
-    assert len(ensset['iter-0'].get_status()) == 250
-    assert len(ensset['iter-1'].get_status()) == 250
+    assert len(ensset['iter-0'].get_df('STATUS')) == 250
+    assert len(ensset['iter-1'].get_df('STATUS')) == 250
 
     # Try adding the same object over again
     ensset.add_ensemble(iter0)
@@ -83,9 +84,15 @@ def test_ensembleset_reek001():
     assert len(ensset3.get_smry(column_keys=['FOPT'],
                                 time_index='yearly')) == 40
 
+    # Check errors when we ask for stupid stuff
+    with pytest.raises(ValueError):
+        ensset3.from_csv('bogus.csv')
+    with pytest.raises(ValueError):
+        ensset3.get_df('bogus.csv')
+
     # Test aggregation of csv files:
-    vol_df = ensset3.get_csv('share/results/volumes/' +
-                             'simulator_volume_fipnum.csv')
+    vol_df = ensset3.from_csv('share/results/volumes/' +
+                              'simulator_volume_fipnum.csv')
     assert 'REAL' in vol_df
     assert 'ENSEMBLE' in vol_df
     assert len(vol_df['REAL'].unique()) == 3
@@ -94,4 +101,3 @@ def test_ensembleset_reek001():
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         os.remove(realizationdir + '/iter-1')
-

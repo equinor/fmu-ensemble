@@ -121,7 +121,7 @@ class ScratchRealization(object):
         The parsed data is returned as a dict. At the ensemble level
         the same function returns a dataframe.
 
-        There is no get'er for the constructed data, access the 
+        There is no get'er for the constructed data, access the
         class variable keyvaluedata directly, or rerun this function.
         (except for parameters.txt, for which there is a property
         called 'parameters')
@@ -362,7 +362,6 @@ class ScratchRealization(object):
                     filerow.update(metadata)
                 # Issue: Solve when file is discovered multiple times.
                 self.files = self.files.append(filerow, ignore_index=True)
-
 
     @property
     def parameters(self):

@@ -56,8 +56,13 @@ def test_reek001():
     paramsdf = reekensemble.from_txt('parameters.txt')
     assert len(paramsdf) == 5  # 5 realizations
     paramsdf = reekensemble.parameters  # also test as property
+    paramsdf = reekensemble.get_df('parameters.txt')
+    assert len(paramsdf) == 5
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)
+
+    # Check that the ensemble object has not tainted the realization dataframe:
+    assert 'REAL' not in reekensemble._realizations[0].get_df('parameters.txt')
 
     # The column FOO in parameters is only present in some, and
     # is present with NaN in real0:
@@ -78,11 +83,21 @@ def test_reek001():
     reekensemble.files.to_csv('files.csv', index=False)
 
     # CSV files
-    vol_df = reekensemble.from_csv('share/results/volumes/' +
-                                   'simulator_volume_fipnum.csv')
+    csvpath = 'share/results/volumes/simulator_volume_fipnum.csv'
+    vol_df = reekensemble.from_csv(csvpath)
+
+    # Check that we have not tainted the realization dataframes:
+    assert 'REAL' not in reekensemble._realizations[0].get_df(csvpath)
+
     assert 'REAL' in vol_df
     assert len(vol_df['REAL'].unique()) == 3  # missing in 2 reals
     vol_df.to_csv('simulatorvolumes.csv', index=False)
+
+    # Test retrival of cached data
+    vol_df2 = reekensemble.get_df(csvpath)
+
+    assert 'REAL' in vol_df2
+    assert len(vol_df2['REAL'].unique()) == 3  # missing in 2 reals
 
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])

@@ -99,17 +99,27 @@ class EnsembleSet(object):
     def parameters(self):
         """Getter for ensemble.parameters(convert_numeric=True)
         """
-        return self.from_txt('parameters.txt')
+        return self.get_df('parameters.txt')
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Collect contents of txt files
-        from each of the ensembles. Return as one dataframe
-        tagged with realization index, columnname REAL,
-        and ensemble name in ENSEMBLE
+        return self.from_file(localpath, convert_numeric,
+                              force_reread)
 
-        Wraps around ensemble.from_txt which wraps around
-        realization.from_txt
+    def from_csv(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        return self.from_file(localpath, convert_numeric,
+                              force_reread)
+
+    def from_file(self, localpath, convert_numeric=True,
+                  force_reread=False):
+        for _, ensemble in self._ensembles.items():
+            ensemble.from_file(localpath, convert_numeric,
+                               force_reread)
+        return self.get_df(localpath)
+
+    def get_df(self, localpath):
+        """Collect contents of dataframes from each ensemble
 
         Args:
             localpath: path to the text file, relative to each realization
@@ -120,15 +130,14 @@ class EnsembleSet(object):
                 False, repeated calls to this function will
                 returned cached results.
         """
-        enskeyvaluedflist = []
+        ensdflist = []
         for _, ensemble in self._ensembles.items():
-            keyvaluedf = ensemble.from_txt(localpath, convert_numeric,
-                                           force_reread)
-            keyvaluedf.insert(0, 'ENSEMBLE', ensemble.name)
-            enskeyvaluedflist.append(keyvaluedf)
-        return pd.concat(enskeyvaluedflist, sort=False)
+            ensdf = ensemble.get_df(localpath)
+            ensdf.insert(0, 'ENSEMBLE', ensemble.name)
+            ensdflist.append(ensdf)
+        return pd.concat(ensdflist, sort=False)
 
-    def get_csv(self, filename):
+    def get_csv_deprecated(self, filename):
         """Load CSV data from each realization in each
         ensemble, and aggregate.
 
