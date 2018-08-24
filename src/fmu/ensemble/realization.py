@@ -103,6 +103,13 @@ class ScratchRealization(object):
                        'BASENAME': 'parameters.txt'}
             self.files = self.files.append(filerow, ignore_index=True)
 
+        if os.path.exists(os.path.join(abspath, 'OK')):
+            filerow = {'LOCALPATH': 'OK',
+                       'FILETYPE': 'OK',
+                       'FULLPATH': os.path.join(abspath, 'OK'),
+                       'BASENAME': 'OK'}
+            self.files = self.files.append(filerow, ignore_index=True)
+
     def get_status(self):
         """Collects the contents of the STATUS files and return
         as a dataframe, with information from jobs.json added if
@@ -224,6 +231,13 @@ class ScratchRealization(object):
         """Getter for get_parameters(convert_numeric=True)
         """
         return self.get_parameters(self)
+
+    def get_ok(self):
+        okfile = os.path.join(self._origpath, 'OK')
+        if os.path.exists(okfile):
+            return True
+        else:
+            return False
 
     def get_parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
