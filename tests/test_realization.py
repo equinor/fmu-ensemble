@@ -62,6 +62,10 @@ def test_single_realization():
     assert isinstance(vol_df, pd.DataFrame)
     assert vol_df['STOIIP_TOTAL'].sum() > 0
 
+    # Test later retrieval of cached data:
+    vol_df2 = real.get_df('share/results/volumes/simulator_volume_fipnum.csv')
+    assert vol_df2['STOIIP_TOTAL'].sum() > 0
+    
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
     assert localpath in real.data
