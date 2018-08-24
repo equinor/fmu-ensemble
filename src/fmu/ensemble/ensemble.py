@@ -13,9 +13,11 @@ from __future__ import print_function
 
 import glob
 import pandas as pd
+from collections import defaultdict
 
 from fmu.config import etc
 from .realization import ScratchRealization
+from .delta import Delta
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -254,6 +256,14 @@ class ScratchEnsemble(object):
             dflist.append(dframe)
         return pd.concat(dflist, ignore_index=True, sort=False)
 
+    def get_ok(self):
+        """ collate the ok status for the ensemble """
+        ens_ok = defaultdict(list)
+        for index, realization in self._realizations.items():
+            ens_ok['REAL'].append(index) 
+            ens_ok['OK'].append(realization.get_ok())
+        return pd.DataFrame(ens_ok)
+
     def get_smry(self, time_index=None, column_keys=None, stacked=True):
         """
         Aggregates summary data from all realizations.
@@ -412,6 +422,13 @@ class ScratchEnsemble(object):
         else:
             raise ValueError('Name input is not a string')
 
+    def __sub__(self, other):
+        diff = Delta(ref=self, subs=other)
+        return diff
+
+    def __add__(self, other):
+        diff = Delta(ref=self, adds=other)
+        return diff
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns

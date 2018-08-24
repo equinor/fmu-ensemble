@@ -160,6 +160,13 @@ class ScratchRealization(object):
             self.keyvaluedata[localpath] = keyvalues
             return keyvalues
 
+        if os.path.exists(os.path.join(abspath, 'OK')):
+            filerow = {'LOCALPATH': 'OK',
+                       'FILETYPE': 'OK',
+                       'FULLPATH': os.path.join(abspath, 'OK'),
+                       'BASENAME': 'OK'}
+            self.files = self.files.append(filerow, ignore_index=True)
+
     def get_status(self):
         """Collects the contents of the STATUS files and return
         as a dataframe, with information from jobs.json added if
@@ -282,7 +289,19 @@ class ScratchRealization(object):
 
     @property
     def parameters(self):
-        """Access the data obtained from parameters.tx2t
+        """Getter for get_parameters(convert_numeric=True)
+        """
+        return self.get_parameters(self)
+
+    def get_parameters(self, convert_numeric=True):
+        """Return the contents of parameters.txt as a dict
+
+        Strings will attempted to be parsed as numeric, and
+        dictionary datatypes will be either int, float or string.
+
+        Parsing is aggressive, parameter values that are by chance
+        integers in a particular realization will be integers,
+        but should aggregate well with floats from other realizations.
 
         Returns:
             dict with data from parameters.txt
@@ -374,6 +393,13 @@ class ScratchRealization(object):
         pathsummary = self._origpath[-50:]
         return "<Realization, index={}, path=...{}>".format(self.index,
                                                             pathsummary)
+
+    def get_ok(self):
+        okfile = os.path.join(self._origpath, 'OK')
+        if os.path.exists(okfile):
+            return True
+        else:
+            return False
 
 
 def parse_number(value):
