@@ -69,7 +69,10 @@ class ScratchRealization(object):
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
 
-        self.keyvaluedata = {} # dict of dicts with any kind of data.
+        # The datastore for internalized data. Dictionarly
+        # indexed by filenames (local to the realization).
+        # values in the dictionary can be either dicts or dataframes
+        self.data = {}
 
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
@@ -100,6 +103,7 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
 
         self.from_txt('parameters.txt')
+        self.from_status()
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -141,7 +145,7 @@ class ScratchRealization(object):
             raise IOError("File not found: " + fullpath)
         else:
             if fullpath in self.files['FULLPATH'].values and force_reread == False:
-                return self.keyvaluedata[localpath]
+                return self.data[localpath]
             elif fullpath not in self.files['FULLPATH'].values:
                 filerow = {'LOCALPATH': localpath,
                            'FILETYPE': localpath.split('.')[-1],
@@ -157,10 +161,61 @@ class ScratchRealization(object):
             if convert_numeric:
                 for key in keyvalues:
                     keyvalues[key] = parse_number(keyvalues[key])
-            self.keyvaluedata[localpath] = keyvalues
+            self.data[localpath] = keyvalues
             return keyvalues
 
-    def get_status(self):
+    def from_csv(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Parse a CSV file as a DataFrame
+
+        Data will be stored as a DataFrame for later
+        access or storage.
+
+        Filename is relative to realization root.
+
+        Args:
+            localpath: path local the realization to the txt file
+            convert_numeric: defaults to True, will try to parse
+                all values as integers, if not, then floats, and
+                strings as the last resort.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+
+        Returns:
+            dataframe: The CSV file loaded. Empty dataframe
+                if file is not present.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise IOError("File not found: " + fullpath)
+        else:
+            # Look for cached version
+            if localpath in self.data and force_reread == False:
+                return self.data[localpath]
+            # Check the file store, append if not there
+            if localpath not in self.files['LOCALPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            try:
+                if convert_numeric:
+                    # Trust that Pandas will determine sensible datatypes
+                    # faster than the convert_numeric() function
+                    dtype = None
+                else:
+                    dtype = str
+                df = pd.read_csv(fullpath, dtype=dtype)
+            except pd.errors.EmptyDataError:
+                df = None  # or empty dataframe?
+
+            # Store parsed data:
+            self.data[localpath] = df
+            return df
+
+    def from_status(self):
         """Collects the contents of the STATUS files and return
         as a dataframe, with information from jobs.json added if
         available.
@@ -231,7 +286,48 @@ class ScratchRealization(object):
                             jsonfilename)
         status.sort_values(['JOBINDEX'], ascending=True,
                            inplace=True)
+        self.data['STATUS'] = status
         return status
+
+    def get_df(self, localpath):
+        """Access the internal datastore which contains dataframes (or dicts)
+
+        Shorthand is allowed, if the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+
+        then you can also get this dataframe returned with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity!
+
+        Args:
+            localpath: the idenfier of the data requested
+
+        Returns:
+            dataframe or dictionary
+        """
+        if localpath in self.data.keys():
+            return self.data[localpath]
+
+        # Allow shorthand, but check ambiguity
+        basenames = [os.path.basename(x) for x in self.data.keys()]
+        if basenames.count(localpath) == 1:
+            shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
+            return self.data[shortcut2path[localpath]]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.data.keys()]
+        if noexts.count(localpath) == 1:
+            shortcut2path = {''.join(x.split('.')[:-1]): x
+                             for x in self.data.keys()}
+            return self.data[shortcut2path[localpath]]
+        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
+                          for x in self.data.keys()]
+        if basenamenoexts.count(localpath) == 1:
+            shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
+                             for x in self.data.keys()}
+            return self.data[shortcut2path[localpath]]
+        raise ValueError(localpath)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframe
@@ -249,6 +345,7 @@ class ScratchRealization(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
         """
+        logger.critical("find_files() is deprecated")
         if isinstance(paths, str):
             paths = [paths]
         for searchpath in paths:
@@ -266,19 +363,6 @@ class ScratchRealization(object):
                 # Issue: Solve when file is discovered multiple times.
                 self.files = self.files.append(filerow, ignore_index=True)
 
-    def get_csv(self, filename):
-        """Load a CSV file as a DataFrame
-
-        Filename is relative to realization root.
-
-        Returns:
-            dataframe: The CSV file loaded. Empty dataframe
-                if file is not present.
-        """
-        absfilename = os.path.join(self._origpath, filename)
-        if os.path.exists(absfilename):
-            return pd.read_csv(absfilename)
-        return pd.DataFrame()
 
     @property
     def parameters(self):
@@ -287,7 +371,7 @@ class ScratchRealization(object):
         Returns:
             dict with data from parameters.txt
         """
-        return self.keyvaluedata['parameters.txt']
+        return self.data['parameters.txt']
 
     def get_eclsum(self):
         """

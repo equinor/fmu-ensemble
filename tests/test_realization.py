@@ -28,7 +28,7 @@ def test_single_realization():
     real = ensemble.ScratchRealization(realdir)
 
     assert len(real.files) == 3
-    assert 'parameters.txt' in real.keyvaluedata
+    assert 'parameters.txt' in real.data
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
@@ -46,26 +46,45 @@ def test_single_realization():
     # Load more data from text files:
     assert 'NPV' in real.from_txt('outputs.txt')
     assert len(real.files) == 4
-    assert 'outputs.txt' in real.keyvaluedata
-    assert 'top_structure' in real.keyvaluedata['outputs.txt']
-    
+    assert 'outputs.txt' in real.data
+    assert 'top_structure' in real.data['outputs.txt']
+
     # STATUS file
-    status = real.get_status()
+    status = real.get_df('STATUS')
     assert isinstance(status, pd.DataFrame)
     assert len(status)
     assert 'ECLIPSE' in status.loc[49, 'FORWARD_MODEL']
     assert int(status.loc[49, 'DURATION']) == 141
 
     # CSV file loading
-    vol_df = real.get_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    vol_df = real.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    assert len(real.files) == 5
     assert isinstance(vol_df, pd.DataFrame)
     assert vol_df['STOIIP_TOTAL'].sum() > 0
 
-    assert isinstance(real.get_csv('bogus.csv'), pd.DataFrame)
-    assert len(real.get_csv('bogus.csv')) == 0
+    # Test internal storage:
+    localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
+    assert localpath in real.data
+    assert isinstance(real.get_df(localpath), pd.DataFrame)
+    assert isinstance(real.get_df('parameters.txt'), dict)
+    assert isinstance(real.get_df('outputs.txt'), dict)
 
-    # File discovery
-    real.find_files('share/results/volumes/*.csv')
+    # Test shortcuts to the internal datastore
+    assert isinstance(real.get_df('simulator_volume_fipnum.csv'), pd.DataFrame)
+    # test without extension:
+    assert isinstance(real.get_df('share/results/volumes/simulator_volume_fipnum'),
+                      pd.DataFrame)
+    assert isinstance(real.get_df('parameters'), dict)
+    # test basename and no extension:
+    assert isinstance(real.get_df('simulator_volume_fipnum'), pd.DataFrame)
+
+    with pytest.raises(ValueError):
+        real.get_df('notexisting.csv')
+
+    # At realization level, wrong filenames should throw exceptions,
+    # at ensemble level it is fine.
+    with pytest.raises(IOError):
+        real.from_csv('bogus.csv')
 
 
 def test_singlereal_ecl():
