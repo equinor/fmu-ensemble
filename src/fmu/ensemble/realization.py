@@ -289,12 +289,9 @@ class ScratchRealization(object):
 
     @property
     def parameters(self):
-<<<<<<< HEAD
         """Getter for get_parameters(convert_numeric=True)
         """
         return self.get_parameters(self)
-
-
 
     def get_parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
@@ -305,9 +302,6 @@ class ScratchRealization(object):
         Parsing is aggressive, parameter values that are by chance
         integers in a particular realization will be integers,
         but should aggregate well with floats from other realizations.
-=======
-        """Access the data obtained from parameters.tx2t
->>>>>>> upstream/master
 
         Returns:
             dict with data from parameters.txt
@@ -399,6 +393,7 @@ class ScratchRealization(object):
         pathsummary = self._origpath[-50:]
         return "<Realization, index={}, path=...{}>".format(self.index,
                                                             pathsummary)
+
     def get_ok(self):
         okfile = os.path.join(self._origpath, 'OK')
         if os.path.exists(okfile):
