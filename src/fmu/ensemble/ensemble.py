@@ -423,10 +423,12 @@ class ScratchEnsemble(object):
             raise ValueError('Name input is not a string')
 
     def __sub__(self, other):
-        diff = Delta(ref=self, ior=other)
+        diff = Delta(ref=self, subs=other)
         return diff
 
-
+    def __add__(self, other):
+        diff = Delta(ref=self, adds=other)
+        return diff
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
