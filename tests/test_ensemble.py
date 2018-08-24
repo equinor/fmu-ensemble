@@ -162,3 +162,8 @@ def test_ensemble_ecl():
 
     # eclipse well groups list
     assert len(reekensemble.get_groupnames()) == 3
+
+    # delta between two ensembles
+    diff = reekensemble - reekensemble
+    assert len(diff.get_diff_smmry(column_keys=['FOPR', 'FGPR',
+                                   'FWCT']).columns) == 5

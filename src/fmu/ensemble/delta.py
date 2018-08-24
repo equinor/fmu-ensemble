@@ -48,5 +48,6 @@ class Delta(object):
 
         diff = ior - ref
         diff['DATE'] = ref['DATE']
+        diff['REAL'] = ref['REAL']
 
         return diff
