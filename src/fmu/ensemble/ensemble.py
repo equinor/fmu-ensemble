@@ -238,23 +238,23 @@ class ScratchEnsemble(object):
                Empty dataframe if no data is found
 
         """
-        dflist = []
+        dflist = {}
         for index, realization in self._realizations.items():
             try:
                 dframe = realization.get_df(localpath)
                 if isinstance(dframe, dict):
                     dframe = pd.DataFrame(index=[1], data=dframe)
-                # This is a temporary solution, find a better concat
-                # routine than making a full copy here. We can't call
-                # insert on the realizations dataframe, we should not touch it.
-                dframe = dframe.copy()
-                dframe.insert(0, 'REAL', index)
-                dflist.append(dframe)
+                dflist[index] = dframe
             except ValueError:
                 # Just skip realizations where this localpath is missing
                 pass
         if len(dflist):
-            return pd.concat(dflist, ignore_index=True, sort=False)
+            # Merge a dictionary of dataframes. The dict key is
+            # the realization index, and end up in a MultiIndex
+            df = pd.concat(dflist).reset_index()
+            df.rename(columns={'level_0': 'REAL'}, inplace=True)
+            del df['level_1'] # This is the indices from each real
+            return df
         else:
             raise ValueError("No data found for " + localpath)
 
