@@ -130,7 +130,18 @@ class ScratchEnsemble(object):
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
+        return self.from_file(localpath, convert_numeric,
+                              force_reread)
+    def from_csv(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        return self.from_file(localpath, convert_numeric,
+                              force_reread)
+        
+                       
+    def from_file(self, localpath, convert_numeric=True,
+                 force_reread=False):
         """Wrap around ScratchRealization.from_txt()
+        and from_csv()
 
         Parses text files on the form
         <key> <value>
@@ -152,36 +163,18 @@ class ScratchEnsemble(object):
         keyvaluesdictlist = []
         for index, realization in self._realizations.items():
             try:
-                keyvalues = realization.from_txt(localpath, convert_numeric,
-                                             force_reread)
-                keyvalues['REAL'] = index
-                keyvaluesdictlist.append(keyvalues)
+                if '.csv' in localpath:
+                    realization.from_csv(localpath, convert_numeric,
+                                         force_reread)
+                else:
+                    realization.from_txt(localpath, convert_numeric,
+                                         force_reread)
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
                 pass
-        return pd.DataFrame(keyvaluesdictlist)
-
-    def get_status(self):
-        """Collects the contents of the STATUS files and jobs.json
-        from all realizations.
-
-        Each row in the dataframe is a finished FORWARD_MODEL
-        The STATUS files are parsed and information is extracted.
-        Job duration is calculated, but jobs above 24 hours
-        get incorrect durations.
-
-        Returns:
-            A dataframe with information from the STATUS files.
-            Each row represents one job in one of the realizations.
-        """
-        statusdict = {}  # dict of status dataframes pr. realization
-        for realidx, realization in self._realizations.items():
-            statusdict[realidx] = realization.get_status()
-            # Tag it:
-            statusdict[realidx].insert(0, 'REAL', realidx)
-        return pd.concat(statusdict, ignore_index=True, sort=False)
-
+        return self.get_df(localpath)
+    
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframes
         for each realization will be updated.
@@ -198,6 +191,7 @@ class ScratchEnsemble(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
         """
+        logger.warning("find_files() might become deprecated")
         for _, realization in self._realizations.items():
             realization.find_files(paths, metadata)
 
@@ -232,26 +226,30 @@ class ScratchEnsemble(object):
                         result = result.union(set(eclsum.keys(vector)))
         return list(result)
 
-    def get_csv(self, filename):
-        """Load CSV data from each realization and concatenated vertically
+    def get_df(self, localpath):
+        """Load data from each realization and concatenate vertically
 
         Each row is tagged by the realization index.
-        The loaded CSV files does not have to be discovered,
-        and will not be discovered either by this call.
 
         Args:
-            filename: string, filename local to realization
+            localpath: string, filename local to realization
         Returns:
-           dataframe: Merged CSV from each realization.
+           dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
                Empty dataframe if no data is found
 
         """
         dflist = []
         for index, realization in self._realizations.items():
-            dframe = realization.get_csv(filename)
-            dframe.insert(0, 'REAL', index)
-            dflist.append(dframe)
+            try:
+                dframe = realization.get_df(localpath)
+                if isinstance(dframe, dict):
+                    dframe = pd.DataFrame(index=[1], data=dframe)
+                dframe.insert(0, 'REAL', index)
+                dflist.append(dframe)
+            except ValueError:
+                # Just skip realizations where this localpath is missing
+                pass
         return pd.concat(dflist, ignore_index=True, sort=False)
 
     def get_smry(self, time_index=None, column_keys=None, stacked=True):

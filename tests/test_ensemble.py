@@ -42,7 +42,7 @@ def test_reek001():
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
 
-    statusdf = reekensemble.get_status()
+    statusdf = reekensemble.get_df('STATUS')
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
@@ -78,8 +78,8 @@ def test_reek001():
     reekensemble.files.to_csv('files.csv', index=False)
 
     # CSV files
-    vol_df = reekensemble.get_csv('share/results/volumes/' +
-                                  'simulator_volume_fipnum.csv')
+    vol_df = reekensemble.from_csv('share/results/volumes/' +
+                                   'simulator_volume_fipnum.csv')
     assert 'REAL' in vol_df
     assert len(vol_df['REAL'].unique()) == 3  # missing in 2 reals
     vol_df.to_csv('simulatorvolumes.csv', index=False)
