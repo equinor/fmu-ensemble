@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pytest
 import pandas as pd
 import ert.ecl
 
@@ -27,17 +28,33 @@ def test_single_realization():
     real = ensemble.ScratchRealization(realdir)
 
     assert len(real.files) == 3
+    assert 'parameters.txt' in real.keyvaluedata
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
-    assert isinstance(real.get_parameters(convert_numeric=False)['RMS_SEED'],
+    assert isinstance(real.from_txt('parameters.txt',
+                                    convert_numeric=False,
+                                    force_reread=True)['RMS_SEED'],
                       str)
+    # We have rerun from_txt on parameters, but file count
+    # should not increase:
+    assert len(real.files) == 3
 
+    with pytest.raises(IOError):
+        real.from_txt('nonexistingfile.txt')
+
+    # Load more data from text files:
+    assert 'NPV' in real.from_txt('outputs.txt')
+    assert len(real.files) == 4
+    assert 'outputs.txt' in real.keyvaluedata
+    assert 'top_structure' in real.keyvaluedata['outputs.txt']
+    
     # STATUS file
-    assert isinstance(real.get_status(), pd.DataFrame)
-    assert len(real.get_status())
-    assert 'ECLIPSE' in real.get_status().loc[49, 'FORWARD_MODEL']
-    assert int(real.get_status().loc[49, 'DURATION']) == 141
+    status = real.get_status()
+    assert isinstance(status, pd.DataFrame)
+    assert len(status)
+    assert 'ECLIPSE' in status.loc[49, 'FORWARD_MODEL']
+    assert int(status.loc[49, 'DURATION']) == 141
 
     # CSV file loading
     vol_df = real.get_csv('share/results/volumes/simulator_volume_fipnum.csv')

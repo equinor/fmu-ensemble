@@ -128,28 +128,43 @@ class ScratchEnsemble(object):
     def parameters(self):
         """Getter for get_parameters(convert_numeric=True)
         """
-        return self.get_parameters(self)
+        return self.from_txt('parameters.txt')
 
-    def get_parameters(self, convert_numeric=True):
-        """Collect contents of the parameters.txt files
-        the ensemble contains, and return as one dataframe
-        tagged with realization index, columnname REAL
+    def from_txt(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Wrap around ScratchRealization.from_txt()
+
+        Parses text files on the form
+        <key> <value>
+        in each line.
+
+        Aggregrates to ensemble level and returns as a dataframe
 
         Args:
+            localpath: path to the text file, relative to each realization
             convert_numeric: If set to True, numerical columns
                 will be searched for and have their dtype set
                 to integers or floats.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
         Returns:
             Dataframe with all parameters, indexed by realization index.
         """
-        paramsdictlist = []
+        keyvaluesdictlist = []
         for index, realization in self._realizations.items():
-            params = realization.get_parameters(convert_numeric)
-            params['REAL'] = index
-            paramsdictlist.append(params)
-        return pd.DataFrame(paramsdictlist)
+            try:
+                keyvalues = realization.from_txt(localpath, convert_numeric,
+                                             force_reread)
+                keyvalues['REAL'] = index
+                keyvaluesdictlist.append(keyvalues)
+            except IOError:
+                # At ensemble level, we allow files to be missing in
+                # some realizations
+                pass
+        return pd.DataFrame(keyvaluesdictlist)
 
-    def get_status_data(self):
+    def get_status(self):
         """Collects the contents of the STATUS files and jobs.json
         from all realizations.
 
@@ -165,8 +180,9 @@ class ScratchEnsemble(object):
         statusdict = {}  # dict of status dataframes pr. realization
         for realidx, realization in self._realizations.items():
             statusdict[realidx] = realization.get_status()
-            statusdict[realidx]['REAL'] = realidx  # Tag it!
-        return pd.concat(statusdict, ignore_index=True)
+            # Tag it:
+            statusdict[realidx].insert(0, 'REAL', realidx)
+        return pd.concat(statusdict, ignore_index=True, sort=False)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframes
@@ -238,7 +254,7 @@ class ScratchEnsemble(object):
             dframe = realization.get_csv(filename)
             dframe.insert(0, 'REAL', index)
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, ignore_index=True, sort=False)
 
     def get_ok(self):
         """ collate the ok status for the ensemble """
@@ -283,7 +299,7 @@ class ScratchEnsemble(object):
                 dframe.insert(0, 'REAL', index)
                 dframe.index.name = 'DATE'
                 dflist.append(dframe)
-            return pd.concat(dflist).reset_index()
+            return pd.concat(dflist, sort=False).reset_index()
         else:
             raise NotImplementedError
 
@@ -387,12 +403,12 @@ class ScratchEnsemble(object):
     @property
     def files(self):
         """Return a concatenation of files in each realization"""
-        files = pd.DataFrame()
+        filedflist = []
         for realidx, realization in self._realizations.items():
             realfiles = realization.files.copy()
             realfiles.insert(0, 'REAL', realidx)
-            files = files.append(realfiles)
-        return files
+            filedflist.append(realfiles)
+        return pd.concat(filedflist, ignore_index=True, sort=False)
 
     @property
     def name(self):

@@ -16,6 +16,7 @@ import os
 import re
 import glob
 import json
+import numpy
 import pandas as pd
 
 import ert.ecl
@@ -68,6 +69,8 @@ class ScratchRealization(object):
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
 
+        self.keyvaluedata = {} # dict of dicts with any kind of data.
+
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
         if realidxmatch:
@@ -96,12 +99,66 @@ class ScratchRealization(object):
                        'BASENAME': 'jobs.json'}
             self.files = self.files.append(filerow, ignore_index=True)
 
-        if os.path.exists(os.path.join(abspath, 'parameters.txt')):
-            filerow = {'LOCALPATH': 'parameters.txt',
-                       'FILETYPE': 'txt',
-                       'FULLPATH': os.path.join(abspath, 'parameters.txt'),
-                       'BASENAME': 'parameters.txt'}
-            self.files = self.files.append(filerow, ignore_index=True)
+        self.from_txt('parameters.txt')
+
+    def from_txt(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Parse a txt file with
+        <key> <value>
+        in each line.
+
+        The txt file will be internalized in a dict and will be
+        stored if the object is archived. Recommended file
+        extension is 'txt'.
+
+        Common usage is internalization of parameters.txt which
+        happens by default, but this can be used for all txt files.
+
+        The parsed data is returned as a dict. At the ensemble level
+        the same function returns a dataframe.
+
+        There is no get'er for the constructed data, access the 
+        class variable keyvaluedata directly, or rerun this function.
+        (except for parameters.txt, for which there is a property
+        called 'parameters')
+
+        Args:
+            localpath: path local the realization to the txt file
+            convert_numeric: defaults to True, will try to parse
+                all values as integers, if not, then floats, and
+                strings as the last resort.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+
+        Returns:
+            dict with the parsed values. Values will be returned as
+                integers, floats or strings. If convert_numeric
+                is False, all values are strings.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise IOError("File not found: " + fullpath)
+        else:
+            if fullpath in self.files['FULLPATH'].values and force_reread == False:
+                return self.keyvaluedata[localpath]
+            elif fullpath not in self.files['FULLPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            try:
+                keyvalues = pd.read_table(fullpath, sep=r'\s+',
+                                          index_col=0, dtype=str,
+                                          header=None)[1].to_dict()
+            except pd.errors.EmptyDataError:
+                keyvalues = {}
+            if convert_numeric:
+                for key in keyvalues:
+                    keyvalues[key] = parse_number(keyvalues[key])
+            self.keyvaluedata[localpath] = keyvalues
+            return keyvalues
 
         if os.path.exists(os.path.join(abspath, 'OK')):
             filerow = {'LOCALPATH': 'OK',
@@ -142,22 +199,26 @@ class ScratchRealization(object):
         del status['colon']
         del status['dots']
         # Index the jobs, this makes it possible to match with jobs.json:
-        status['JOBINDEX'] = status.index.astype(int)
+        status.insert(0, 'JOBINDEX', status.index.astype(int))
+        del status['index']
         # Calculate duration. Only Python 3.6 has time.fromisoformat().
         # Warning: Unpandaic code..
         durations = []
         for _, jobrow in status.iterrows():
-            hms = map(int, jobrow['STARTTIME'].split(':'))
-            start = datetime.combine(date.today(),
-                                     time(hour=hms[0], minute=hms[1],
-                                          second=hms[2]))
-            hms = map(int, jobrow['ENDTIME'].split(':'))
-            end = datetime.combine(date.today(),
-                                   time(hour=hms[0], minute=hms[1],
-                                        second=hms[2]))
-            # This works also when we have crossed 00:00:00.
-            # Jobs > 24 h will be wrong.
-            durations.append((end - start).seconds)
+            if not jobrow['ENDTIME']:  # A job that is not finished.
+                durations.append(numpy.nan)
+            else:
+                hms = map(int, jobrow['STARTTIME'].split(':'))
+                start = datetime.combine(date.today(),
+                                         time(hour=hms[0], minute=hms[1],
+                                              second=hms[2]))
+                hms = map(int, jobrow['ENDTIME'].split(':'))
+                end = datetime.combine(date.today(),
+                                       time(hour=hms[0], minute=hms[1],
+                                            second=hms[2]))
+                # This works also when we have crossed 00:00:00.
+                # Jobs > 24 h will be wrong.
+                durations.append((end - start).seconds)
         status['DURATION'] = durations
 
         # Augment data from jobs.json if that file is available:
@@ -228,16 +289,12 @@ class ScratchRealization(object):
 
     @property
     def parameters(self):
+<<<<<<< HEAD
         """Getter for get_parameters(convert_numeric=True)
         """
         return self.get_parameters(self)
 
-    def get_ok(self):
-        okfile = os.path.join(self._origpath, 'OK')
-        if os.path.exists(okfile):
-            return True
-        else:
-            return False
+
 
     def get_parameters(self, convert_numeric=True):
         """Return the contents of parameters.txt as a dict
@@ -248,21 +305,14 @@ class ScratchRealization(object):
         Parsing is aggressive, parameter values that are by chance
         integers in a particular realization will be integers,
         but should aggregate well with floats from other realizations.
+=======
+        """Access the data obtained from parameters.tx2t
+>>>>>>> upstream/master
 
         Returns:
-            dict: keys are the first column in parameters.txt, values from
-                the second column
+            dict with data from parameters.txt
         """
-        paramfile = self.files[self.files.LOCALPATH == 'parameters.txt']
-        params = pd.read_table(paramfile.FULLPATH.values[0], sep=r'\s+',
-                               index_col=0, dtype=str,
-                               header=None)[1].to_dict()
-        # pandas.read_table has its own numerics parsing, but this is turned
-        # off by dtype=str above.
-        if convert_numeric:
-            for key in params:
-                params[key] = parse_number(params[key])
-        return params
+        return self.keyvaluedata['parameters.txt']
 
     def get_eclsum(self):
         """
@@ -349,6 +399,12 @@ class ScratchRealization(object):
         pathsummary = self._origpath[-50:]
         return "<Realization, index={}, path=...{}>".format(self.index,
                                                             pathsummary)
+    def get_ok(self):
+        okfile = os.path.join(self._origpath, 'OK')
+        if os.path.exists(okfile):
+            return True
+        else:
+            return False
 
 
 def parse_number(value):
@@ -366,9 +422,13 @@ def parse_number(value):
     if isinstance(value, int):
         return value
     elif isinstance(value, float):
-        if int(value) == value:
-            return int(value)
-        return value
+        # int(afloat) fails on some, e.g. NaN
+        try:
+            if int(value) == value:
+                return int(value)
+            return value
+        except ValueError:
+            return value  # return float
     else:  # noqa
         try:
             return int(value)

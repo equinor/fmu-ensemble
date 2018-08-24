@@ -97,27 +97,36 @@ class EnsembleSet(object):
 
     @property
     def parameters(self):
-        """Getter for get_parameters(convert_numeric=True)
+        """Getter for ensemble.parameters(convert_numeric=True)
         """
-        return self.get_parameters(self)
+        return self.from_txt('parameters.txt')
 
-    def get_parameters(self, convert_numeric=True):
-        """Collect contents of the parameters.txt files
+    def from_txt(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Collect contents of txt files
         from each of the ensembles. Return as one dataframe
         tagged with realization index, columnname REAL,
         and ensemble name in ENSEMBLE
 
+        Wraps around ensemble.from_txt which wraps around
+        realization.from_txt
+
         Args:
+            localpath: path to the text file, relative to each realization
             convert_numeric: If set to True, numerical columns
                 will be searched for and have their dtype set
                 to integers or floats.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
         """
-        ensparamsdflist = []
+        enskeyvaluedflist = []
         for _, ensemble in self._ensembles.items():
-            params = ensemble.get_parameters(convert_numeric)
-            params.insert(0, 'ENSEMBLE', ensemble.name)
-            ensparamsdflist.append(params)
-        return pd.concat(ensparamsdflist)
+            keyvaluedf = ensemble.from_txt(localpath, convert_numeric,
+                                           force_reread)
+            keyvaluedf.insert(0, 'ENSEMBLE', ensemble.name)
+            enskeyvaluedflist.append(keyvaluedf)
+        return pd.concat(enskeyvaluedflist, sort=False)
 
     def get_csv(self, filename):
         """Load CSV data from each realization in each
@@ -135,7 +144,7 @@ class EnsembleSet(object):
             dframe = ensemble.get_csv(filename)
             dframe['ENSEMBLE'] = ensemble.name
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, sort=False)
 
     def get_smry(self, time_index=None, column_keys=None):
         """
@@ -163,7 +172,7 @@ class EnsembleSet(object):
                                        stacked=True)
             dframe['ENSEMBLE'] = name
             dflist.append(dframe)
-        return pd.concat(dflist)
+        return pd.concat(dflist, sort=False)
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes from an ensembleset

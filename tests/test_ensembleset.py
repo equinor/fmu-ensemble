@@ -47,8 +47,8 @@ def test_ensembleset_reek001():
 
     ensset = ensemble.EnsembleSet("reek001", [iter0, iter1])
     assert len(ensset) == 2
-    assert len(ensset['iter-0'].get_status_data()) == 250
-    assert len(ensset['iter-1'].get_status_data()) == 250
+    assert len(ensset['iter-0'].get_status()) == 250
+    assert len(ensset['iter-1'].get_status()) == 250
 
     # Try adding the same object over again
     ensset.add_ensemble(iter0)
@@ -70,9 +70,12 @@ def test_ensembleset_reek001():
     paramsdf.to_csv('enssetparams.csv', index=False)
     assert isinstance(paramsdf, pd.DataFrame)
     assert len(ensset3.parameters) == 10
-    assert len(ensset3.parameters.columns) == 26
+    assert len(ensset3.parameters.columns) == 27
     assert 'ENSEMBLE' in ensset3.parameters.columns
     assert 'REAL' in ensset3.parameters.columns
+
+    outputs = ensset3.from_txt('outputs.txt')
+    assert 'NPV' in outputs.columns
 
     # Test Eclipse summary handling:
     assert len(ensset3.get_smry_dates(freq='report')) == 641

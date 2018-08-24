@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import numpy
 
 from fmu import config
 from fmu import ensemble
@@ -41,20 +42,34 @@ def test_reek001():
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
 
-    statusdf = reekensemble.get_status_data()
+    statusdf = reekensemble.get_status()
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
-    assert int(statusdf.loc[249, 'DURATION']) == 150  # sample check
+    assert int(statusdf.loc[245, 'DURATION']) == 195  # sample check
+    # STATUS in real4 is modified to simulate that Eclipse never finished:
+    assert numpy.isnan(statusdf.loc[249, 'DURATION'])
 
     statusdf.to_csv('status.csv', index=False)
 
     # Parameters.txt
-    paramsdf = reekensemble.get_parameters(convert_numeric=False)
+    paramsdf = reekensemble.from_txt('parameters.txt')
     assert len(paramsdf) == 5  # 5 realizations
     paramsdf = reekensemble.parameters  # also test as property
-    assert len(paramsdf.columns) == 25  # 24 parameters, + REAL column
+    assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)
+
+    # The column FOO in parameters is only present in some, and
+    # is present with NaN in real0:
+    assert 'FOO' in reekensemble.parameters.columns
+    assert len(reekensemble.parameters['FOO'].dropna()) == 1
+    # (NaN ine one real, and non-existing in the others is the same thing)
+
+    # Test loading of another txt file:
+    reekensemble.from_txt('outputs.txt')
+    assert 'NPV' in reekensemble.from_txt('outputs.txt').columns
+    # Check implicit discovery
+    assert 'outputs.txt' in reekensemble.files['LOCALPATH'].values
 
     # File discovery:
     reekensemble.find_files('share/results/volumes/*csv',
@@ -81,17 +96,17 @@ def test_reek001():
                                    '/data/testensemble-reek001/' +
                                    'realization-3/iter-0'])
     assert len(reekensemble) == 5
-    assert len(reekensemble.files) == 17
+    assert len(reekensemble.files) == 19
     # File discovery must be repeated for the newly added realizations
     reekensemble.find_files('share/results/volumes/*csv',
                             metadata={'GRID': 'simgrid'})
-    assert len(reekensemble.files) == 18
+    assert len(reekensemble.files) == 20
     # Test addition of already added realization:
     reekensemble.add_realizations(testdir +
                                   '/data/testensemble-reek001/' +
                                   'realization-1/iter-0')
     assert len(reekensemble) == 5
-    assert len(reekensemble.files) == 17  # discovered files are lost!
+    assert len(reekensemble.files) == 19  # discovered files are lost!
 
 
 def test_ensemble_ecl():
