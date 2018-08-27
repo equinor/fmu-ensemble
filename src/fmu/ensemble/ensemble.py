@@ -258,12 +258,18 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def get_smry(self, time_index=None, column_keys=None, stacked=True):
+    def from_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
-        Aggregates summary data from all realizations.
+        Fetch summary data from all realizations.
 
-        Wraps around Realization.get_smry() which wraps around
+        The pr. realization results will be cached by each
+        realization object, and can be retrieved through get_df().
+
+        Wraps around Realization.from_smry() which wraps around
         ert.ecl.EclSum.pandas_frame()
+
+        Beware that the default time_index or ensembles is 'monthly',
+        differing from realizations which use raw dates by default.
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -283,26 +289,26 @@ class ScratchEnsemble(object):
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
-        if isinstance(time_index, str):
-            time_index = self.get_smry_dates(time_index)
-        if stacked:
-            dflist = []
-            for index, realization in self._realizations.items():
-                dframe = realization.get_smry(time_index=time_index,
-                                              column_keys=column_keys)
-                dframe.insert(0, 'REAL', index)
-                dframe.index.name = 'DATE'
-                dflist.append(dframe)
-            return pd.concat(dflist, sort=False).reset_index()
-        else:
+        if not stacked:
             raise NotImplementedError
+        # Future: Multithread this!
+        for index, realization in self._realizations.items():
+            # We do not store the returned DataFrames here,
+            # instead we look them up afterwards using get_df()
+            # Downside is that we have to compute the name of the
+            # cached object as it is not returned.
+            realization.from_smry(time_index=time_index,
+                                  column_keys=column_keys)
+        if isinstance(time_index, list):
+            time_index = 'custom'
+        return self.get_df('share/results/tables/unsmry-' + time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
            freq: string denoting requested frequency for
-               the returned list of datetime. 'report' will
+               the returned list of datetime. 'report' or 'raw' will
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
@@ -310,7 +316,7 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes.
         """
-        if freq == 'report':
+        if freq == 'report' or freq == 'raw':
             dates = set()
             for _, realization in self._realizations.items():
                 dates = dates.union(realization.get_eclsum().dates)

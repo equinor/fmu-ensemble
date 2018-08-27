@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import numpy
+import pandas as pd
 
 from fmu import config
 from fmu import ensemble
@@ -146,13 +147,27 @@ def test_ensemble_ecl():
 
     # reading ensemble dataframe
 
+    monthly = reekensemble.from_smry(column_keys=['F*'], time_index='monthly')
+    assert monthly.columns[0] == 'REAL'  # Enforce order of columns.
+    assert monthly.columns[1] == 'DATE'
+    assert len(monthly) == 185
+    # Check that the result was cached.
+    assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
+
     # When asking the ensemble for FOPR, we also get REAL as a column
-    # in return:
-    assert len(reekensemble.get_smry(column_keys=['FOPR']).columns) == 3
-    assert len(reekensemble.get_smry(column_keys=['FOP*']).columns) == 11
-    assert len(reekensemble.get_smry(column_keys=['FGPR',
+    # in return.
+    assert len(reekensemble.from_smry(column_keys=['FOPR']).columns) == 3
+    assert len(reekensemble.from_smry(column_keys=['FOP*']).columns) == 11
+    assert len(reekensemble.from_smry(column_keys=['FGPR',
                                                   'FOP*']).columns) == 12
-    assert len(reekensemble.get_smry(column_keys=['FGPR',
+
+    # Check that there is now a cached version with raw dates:
+    assert isinstance(reekensemble.get_df('unsmry-raw.csv'), pd.DataFrame)
+    # The columns are not similar, this is allowed!
+
+    # If you get 3205 here, it means that you are using the union of
+    # raw dates from all realizations, which is not correct
+    assert len(reekensemble.from_smry(column_keys=['FGPR',
                                                   'FOP*']).index) == 1700
 
     # Date list handling:
@@ -164,14 +179,19 @@ def test_ensemble_ecl():
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
-    assert len(reekensemble.get_smry(column_keys=['FOPT'],
+    assert len(reekensemble.from_smry(column_keys=['FOPT'],
                                      time_index=yearly)) == 20
+    # NB: This is cached in unsmry-custom.csv, not unsmry-yearly!
+    # This usage is discouraged. Use 'yearly' in such cases.
+
     # Check that we can shortcut get_smry_dates:
-    assert len(reekensemble.get_smry(column_keys=['FOPT'],
+    assert len(reekensemble.from_smry(column_keys=['FOPT'],
                                      time_index='yearly')) == 20
 
-    assert len(reekensemble.get_smry(column_keys=['FOPR'],
+    assert len(reekensemble.from_smry(column_keys=['FOPR'],
                                      time_index='last')) == 5
+    assert isinstance(reekensemble.get_df('unsmry-last.csv'), pd.DataFrame)
+
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
 

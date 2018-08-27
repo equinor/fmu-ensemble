@@ -416,7 +416,7 @@ class ScratchRealization(object):
         self._eclsum = ert.ecl.EclSum(unsmry_filename)
         return self._eclsum
 
-    def from_smry(self, time_index=None, column_keys=None):
+    def from_smry(self, time_index='raw', column_keys=None):
         """Produce dataframe from Summary data from the realization
 
         When this function is called, the dataframe will be cached.
@@ -425,33 +425,41 @@ class ScratchRealization(object):
 
           'share/results/tables/unsmry-<time_index>.csv'
 
-        where <time_index> is among 'yearly', 'monthly', 'daily' or
+        where <time_index> is among 'yearly', 'monthly', 'daily', 'last' or
         'raw' (meaning the raw dates in the SMRY file), depending
-        on the chosen time_index.
+        on the chosen time_index. If a custom time_index (list
+        of datetime) was supplied, <time_index> will be called 'custom'.
 
         Wraps ert.ecl.EclSum.pandas_frame()
 
         Args:
-            time_index: list of DateTime if interpolation is wanted
-               default is None, which returns the raw Eclipse report times
+            time_index: string indicating a resampling frequency,
+               'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
+               return the simulated report steps (also default).
+               If a list of DateTime is supplied, data will be resampled
+               to these.
             column_keys: list of column key wildcards.
 
         Returns:
             DataFrame with summary keys as columns and dates as indices
         """
+        time_index_path = time_index
         if time_index == 'raw':
-            time_index = None
-        df = self.get_eclsum().pandas_frame(time_index, column_keys)
+            time_index_arg = None
+        if isinstance(time_index, str):
+            time_index_arg = self.get_smry_dates(freq=time_index)
+        if isinstance(time_index, list):
+            time_index_arg = time_index
+            time_index_path = 'custom'
+        # Do the actual work:
+        df = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        df = df.reset_index()
+        df.rename(columns={'index': 'DATE'}, inplace=True)
 
-        timeindex2path = {'yearly': 'yearly',
-                          'monthly': 'monthly',
-                          'daily': 'daily',
-                          None: 'raw',
-                          'raw': 'raw'}
-        if time_index in timeindex2path:
-            localpath = 'share/results/tables/unsmry-' +\
-                        timeindex2path[time_index] + '.csv'
-            self.data[localpath] = df
+        # Cache the result:
+        localpath = 'share/results/tables/unsmry-' +\
+                    time_index_path + '.csv'
+        self.data[localpath] = df
         return df
 
     def get_smryvalues(self, props_wildcard=None):
@@ -496,14 +504,15 @@ class ScratchRealization(object):
             yield the sorted union of all valid timesteps for
             all realizations. Other valid options are
             'daily', 'monthly' and 'yearly'.
-            'last' will give out the last date (maximum).
+            'last' will give out the last date (maximum),
+            as a list with one element.
         Returns:
             list of datetimes.
         """
         if freq == 'raw':
             return self.get_eclsum().dates
         elif freq == 'last':
-            return self.get_eclsum().end_date
+            return [self.get_eclsum().end_date]
         else:
             start_date = self.get_eclsum().start_date
             end_date = self.get_eclsum().end_date
