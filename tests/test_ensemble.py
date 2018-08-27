@@ -113,7 +113,7 @@ def test_reek001():
     assert len(reekensemble) == 5
     assert len(reekensemble.files) == 19
     # File discovery must be repeated for the newly added realizations
-    reekensemble.find_files('share/results/volumes/*csv',
+    reekensemble.find_files('share/results/volumes/simulator_volume_fipnum.csv',
                             metadata={'GRID': 'simgrid'})
     assert len(reekensemble.files) == 20
     # Test addition of already added realization:
