@@ -51,6 +51,18 @@ class EnsembleSet(object):
         return "<EnsembleSet {}, {} ensembles:\n{}>".format(
             self.name, len(self), self._ensembles)
 
+    def keys(self):
+        """
+        Return the union of all keys available in the ensembles.
+
+        Keys refer to the realization datastore, a dictionary
+        of dataframes or dicts.
+        """
+        allkeys = set()
+        for ensemble in self._ensembles.values():
+            allkeys = allkeys.union(ensemble.keys())
+        return allkeys
+
     def add_ensembles_frompath(self, paths):
         """Convenience function for adding multiple ensembles.
 

@@ -111,6 +111,8 @@ def test_ensembleset_reek001():
     assert len(vol_df['REAL'].unique()) == 3
     assert len(vol_df['ENSEMBLE'].unique()) == 2
 
+    assert len(ensset3.keys()) == 6
+
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         os.remove(realizationdir + '/iter-1')
