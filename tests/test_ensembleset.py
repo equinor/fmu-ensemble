@@ -81,8 +81,21 @@ def test_ensembleset_reek001():
     # Test Eclipse summary handling:
     assert len(ensset3.get_smry_dates(freq='report')) == 641
     assert len(ensset3.get_smry_dates(freq='monthly')) == 37
-    assert len(ensset3.get_smry(column_keys=['FOPT'],
-                                time_index='yearly')) == 40
+    assert len(ensset3.from_smry(column_keys=['FOPT'],
+                                 time_index='yearly')) == 40
+    monthly = ensset3.from_smry(column_keys=['F*'],
+                                time_index='monthly')
+    assert 'ENSEMBLE' == monthly.columns[0]
+    assert 'REAL' == monthly.columns[1]
+    assert 'DATE' == monthly.columns[2]
+
+    # Check that we can retrieve cached versions
+    assert len(ensset3.get_df('unsmry-monthly')) == 370
+    assert len(ensset3.get_df('unsmry-yearly')) == 40
+    monthly.to_csv('ensset-monthly.csv', index=False)
+
+    with pytest.raises(ValueError):
+        ensset3.get_df('unsmry-weekly')
 
     # Check errors when we ask for stupid stuff
     with pytest.raises(ValueError):

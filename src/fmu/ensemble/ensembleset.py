@@ -155,12 +155,20 @@ class EnsembleSet(object):
             dflist.append(dframe)
         return pd.concat(dflist, sort=False)
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def from_smry(self, time_index=None, column_keys=None):
         """
-        Aggregates summary data from all ensembles.
+        Fetch summary data from all ensembles
 
-        Wraps around Ensemble.get_smry(stacked=True) which wraps
-        Realization.get_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+        Wraps around Ensemble.from_smry() which wraps
+        Realization.from_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+
+        The time index is determined at realization level. If you
+        ask for 'monthly', you will from each realization get its
+        months. At ensemble or ensembleset-level, the number of
+        monthly report dates between realization can vary
+
+        The pr. realization results will be cached by each
+        realization object, and can be retrieved through get_df().
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -172,16 +180,13 @@ class EnsembleSet(object):
             A DataFame of summary vectors for the ensembleset.
             The column 'ENSEMBLE' will denote each ensemble's name
         """
-        if isinstance(time_index, str):
-            time_index = self.get_smry_dates(time_index)
-        dflist = []
-        for name, ensemble in self._ensembles.items():
-            dframe = ensemble.get_smry(time_index=time_index,
-                                       column_keys=column_keys,
-                                       stacked=True)
-            dframe['ENSEMBLE'] = name
-            dflist.append(dframe)
-        return pd.concat(dflist, sort=False)
+        # Future: Multithread this:
+        for nam, ensemble in self._ensembles.items():
+            ensemble.from_smry(time_index=time_index,
+                               column_keys=column_keys)
+        if isinstance(time_index, list):
+            time_index = 'custom'
+        return self.get_df('share/results/tables/unsmry-' + time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes from an ensembleset
