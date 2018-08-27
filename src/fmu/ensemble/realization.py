@@ -487,6 +487,36 @@ class ScratchRealization(object):
         dates = self._eclsum.get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
 
+    def get_smry_dates(self, freq='monthly'):
+        """Return list of datetimes available in the realization
+
+        Args:
+        freq: string denoting requested frequency for
+            the returned list of datetime. 'report' will
+            yield the sorted union of all valid timesteps for
+            all realizations. Other valid options are
+            'daily', 'monthly' and 'yearly'.
+            'last' will give out the last date (maximum).
+        Returns:
+            list of datetimes.
+        """
+        if freq == 'raw':
+            return self.get_eclsum().dates
+        elif freq == 'last':
+            return self.get_eclsum().end_date
+        else:
+            start_date = self.get_eclsum().start_date
+            end_date = self.get_eclsum().end_date
+            pd_freq_mnenomics = {'monthly': 'MS',
+                                 'yearly': 'YS',
+                                 'daily': 'D'}
+            if freq not in pd_freq_mnenomics:
+                raise ValueError('Requested frequency %s not supported' % freq)
+            datetimes = pd.date_range(start_date, end_date,
+                                      freq=pd_freq_mnenomics[freq])
+            # Convert from Pandas' datetime64 to datetime.date:
+            return [x.date() for x in datetimes]
+
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]

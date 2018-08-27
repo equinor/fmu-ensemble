@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import datetime
 import pytest
 import pandas as pd
 import ert.ecl
@@ -106,11 +107,26 @@ def test_singlereal_ecl():
     assert real.from_smry(column_keys='FOP*')['FOPT'].max() > 6000000
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
 
+    # Test date functionality
+    assert isinstance(real.get_smry_dates(), list)
+    assert isinstance(real.get_smry_dates(freq='last'), datetime.date)
+    assert len(real.get_smry_dates()) == \
+        len(real.get_smry_dates(freq='monthly'))
+    monthly = real.get_smry_dates(freq='monthly')
+    assert monthly[-1] > monthly[0] # end date is later than start
+    assert len(real.get_smry_dates(freq='yearly')) == 4
+    assert len(monthly) == 37
+    assert len(real.get_smry_dates(freq='daily')) == 1098
+
     # Test caching/internalization of summary files
-    assert 'unsmry-raw.csv' in real.data.keys()
+
+    # This should be false, since only the full localpath is in keys():
+    assert 'unsmry-raw.csv' not in real.keys()
+    assert 'share/results/tables/unsmry-raw.csv' in real.keys()
     assert 'FOPT' in real['unsmry-raw']
     with pytest.raises(ValueError):
         # This does not exist before we have asked for it
         'FOPT' in real['unsmry-yearly']
     #real.from_smry(time_index='yearly')
     #assert 'FOPT' in real['unsmry-yearly'] # Not it exists
+
