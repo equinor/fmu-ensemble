@@ -117,7 +117,7 @@ class ScratchRealization(object):
         The parsed data is returned as a dict. At the ensemble level
         the same function returns a dataframe.
 
-        There is no get'er for the constructed data, access the 
+        There is no get'er for the constructed data, access the
         class variable keyvaluedata directly, or rerun this function.
         (except for parameters.txt, for which there is a property
         called 'parameters')
@@ -140,7 +140,8 @@ class ScratchRealization(object):
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
-            if fullpath in self.files['FULLPATH'].values and force_reread == False:
+            if fullpath in self.files['FULLPATH'].values and not force_reread:
+                # Return cached version
                 return self.keyvaluedata[localpath]
             elif fullpath not in self.files['FULLPATH'].values:
                 filerow = {'LOCALPATH': localpath,

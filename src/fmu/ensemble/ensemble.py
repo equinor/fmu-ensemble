@@ -153,7 +153,7 @@ class ScratchEnsemble(object):
         for index, realization in self._realizations.items():
             try:
                 keyvalues = realization.from_txt(localpath, convert_numeric,
-                                             force_reread)
+                                                 force_reread)
                 keyvalues['REAL'] = index
                 keyvaluesdictlist.append(keyvalues)
             except IOError:
