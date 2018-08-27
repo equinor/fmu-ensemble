@@ -36,6 +36,8 @@ def test_reek001():
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5
 
+    assert isinstance(reekensemble[0], ensemble.ScratchRealization)
+
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'jobs.json']) == 5
     assert len(reekensemble.files[

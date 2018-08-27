@@ -76,6 +76,12 @@ class ScratchEnsemble(object):
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
 
+    def __getitem__(self, realizationindex):
+        """Get one of the realizations.
+
+        Indexed by integers."""
+        return self._realizations[realizationindex]
+
     def add_realizations(self, paths):
         """Utility function to add realizations to the ensemble.
 
