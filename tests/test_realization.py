@@ -102,6 +102,15 @@ def test_singlereal_ecl():
 
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
-    assert real.get_smry().shape == (378, 470)  # 378 dates, 470 columns
-    assert real.get_smry(column_keys='FOP*')['FOPT'].max() > 6000000
+    assert real.from_smry().shape == (378, 470)  # 378 dates, 470 columns
+    assert real.from_smry(column_keys='FOP*')['FOPT'].max() > 6000000
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
+
+    # Test caching/internalization of summary files
+    assert 'unsmry-raw.csv' in real.data.keys()
+    assert 'FOPT' in real['unsmry-raw']
+    with pytest.raises(ValueError):
+        # This does not exist before we have asked for it
+        'FOPT' in real['unsmry-yearly']
+    #real.from_smry(time_index='yearly')
+    #assert 'FOPT' in real['unsmry-yearly'] # Not it exists

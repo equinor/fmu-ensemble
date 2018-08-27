@@ -69,7 +69,7 @@ class ScratchRealization(object):
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
 
-        # The datastore for internalized data. Dictionarly
+        # The datastore for internalized data. Dictionary
         # indexed by filenames (local to the realization).
         # values in the dictionary can be either dicts or dataframes
         self.data = {}
@@ -290,18 +290,30 @@ class ScratchRealization(object):
         self.data['STATUS'] = status
         return status
 
+    def __getitem__(self, localpath):
+        """Direct access to the realization data structure
+
+        Calls get_df(localpath).
+        """
+        return self.get_df(localpath)
+
+    def keys(self):
+        """Access the keys of the internal data structure
+        """
+        return self.data.keys()
+
     def get_df(self, localpath):
-        """Access the internal datastore which contains dataframes (or dicts)
+        """Access the internal datastore which contains dataframes or dicts
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
-
         then you can also get this dataframe returned with these alternatives:
          * simulator_volume_fipnum
          * simulator_volume_fipnum.csv
          * share/results/volumes/simulator_volume_fipnum
 
-        but only as long as there is no ambiguity!
+        but only as long as there is no ambiguity. In case of ambiguity, a
+        ValueError will be raised.
 
         Args:
             localpath: the idenfier of the data requested
@@ -346,7 +358,6 @@ class ScratchRealization(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
         """
-        logger.critical("find_files() is deprecated")
         if isinstance(paths, str):
             paths = [paths]
         for searchpath in paths:
@@ -366,7 +377,7 @@ class ScratchRealization(object):
 
     @property
     def parameters(self):
-        """Access the data obtained from parameters.tx2t
+        """Access the data obtained from parameters.txt
 
         Returns:
             dict with data from parameters.txt
@@ -405,10 +416,20 @@ class ScratchRealization(object):
         self._eclsum = ert.ecl.EclSum(unsmry_filename)
         return self._eclsum
 
-    def get_smry(self, time_index=None, column_keys=None):
-        """Return the Eclipse summary data from the realization
+    def from_smry(self, time_index=None, column_keys=None):
+        """Produce dataframe from Summary data from the realization
 
-        Convenience wrapper for ert.ecl.EclSum.pandas_frame()
+        When this function is called, the dataframe will be cached.
+        Caching supports different time_index, but there is no handling
+        of multiple sets of column_keys. The cached data will be called
+
+          'share/results/tables/unsmry-<time_index>.csv'
+
+        where <time_index> is among 'yearly', 'monthly', 'daily' or
+        'raw' (meaning the raw dates in the SMRY file), depending
+        on the chosen time_index.
+
+        Wraps ert.ecl.EclSum.pandas_frame()
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -418,7 +439,20 @@ class ScratchRealization(object):
         Returns:
             DataFrame with summary keys as columns and dates as indices
         """
-        return self.get_eclsum().pandas_frame(time_index, column_keys)
+        if time_index == 'raw':
+            time_index = None
+        df = self.get_eclsum().pandas_frame(time_index, column_keys)
+
+        timeindex2path = {'yearly': 'yearly',
+                          'monthly': 'monthly',
+                          'daily': 'daily',
+                          None: 'raw',
+                          'raw': 'raw'}
+        if time_index in timeindex2path:
+            localpath = 'share/results/tables/unsmry-' +\
+                        timeindex2path[time_index] + '.csv'
+            self.data[localpath] = df
+        return df
 
     def get_smryvalues(self, props_wildcard=None):
         """
