@@ -82,6 +82,18 @@ class ScratchEnsemble(object):
         Indexed by integers."""
         return self._realizations[realizationindex]
 
+    def keys(self):
+        """
+        Return the union of all keys available in realizations.
+
+        Keys refer to the realization datastore, a dictionary
+        of dataframes or dicts.
+        """
+        allkeys = set()
+        for realization in self._realizations.values():
+            allkeys = allkeys.union(realization.keys())
+        return allkeys
+
     def add_realizations(self, paths):
         """Utility function to add realizations to the ensemble.
 

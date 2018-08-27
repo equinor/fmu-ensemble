@@ -156,6 +156,8 @@ def test_ensemble_ecl():
     # Check that the result was cached.
     assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
 
+    assert len(reekensemble.keys()) == 3
+
     # When asking the ensemble for FOPR, we also get REAL as a column
     # in return.
     assert len(reekensemble.from_smry(column_keys=['FOPR']).columns) == 3
