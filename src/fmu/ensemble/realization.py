@@ -144,7 +144,8 @@ class ScratchRealization(object):
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
-            if fullpath in self.files['FULLPATH'].values and force_reread == False:
+            if fullpath in self.files['FULLPATH'].values and not force_reread:
+                # Return cached version
                 return self.data[localpath]
             elif fullpath not in self.files['FULLPATH'].values:
                 filerow = {'LOCALPATH': localpath,
