@@ -103,13 +103,17 @@ def test_singlereal_ecl():
 
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
-    assert real.from_smry().shape == (378, 470)  # 378 dates, 470 columns
+    real.from_smry().to_csv('real0smry.csv', index=False)
+    assert real.from_smry().shape == (378, 471)
+    # 378 dates, 470 columns + DATE column
+
     assert real.from_smry(column_keys='FOP*')['FOPT'].max() > 6000000
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
 
     # Test date functionality
     assert isinstance(real.get_smry_dates(), list)
-    assert isinstance(real.get_smry_dates(freq='last'), datetime.date)
+    assert isinstance(real.get_smry_dates(freq='last'), list)
+    assert isinstance(real.get_smry_dates(freq='last')[0], datetime.date)
     assert len(real.get_smry_dates()) == \
         len(real.get_smry_dates(freq='monthly'))
     monthly = real.get_smry_dates(freq='monthly')
