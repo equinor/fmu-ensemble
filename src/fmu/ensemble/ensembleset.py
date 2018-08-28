@@ -115,19 +115,19 @@ class EnsembleSet(object):
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
-        return self.from_file(localpath, convert_numeric,
+        return self._from_file(localpath, 'txt', convert_numeric,
                               force_reread)
 
     def from_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
-        return self.from_file(localpath, convert_numeric,
+        return self._from_file(localpath, 'csv', convert_numeric,
                               force_reread)
 
-    def from_file(self, localpath, convert_numeric=True,
+    def _from_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):
         for _, ensemble in self._ensembles.items():
-            ensemble.from_file(localpath, convert_numeric,
-                               force_reread)
+            ensemble._from_file(localpath, fformat, convert_numeric,
+                                force_reread)
         return self.get_df(localpath)
 
     def get_df(self, localpath):
