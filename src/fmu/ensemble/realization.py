@@ -397,7 +397,8 @@ class ScratchRealization(object):
         not help you (yet).
 
         Returns:
-           EclSum: object representing the summary file
+           EclSum: object representing the summary file. None if
+               nothing was found.
         """
         if self._eclsum:  # Return cached object if available
             return self._eclsum
@@ -409,7 +410,10 @@ class ScratchRealization(object):
         else:
             unsmry_fileguess = os.path.join(self._origpath, 'eclipse/model',
                                             '*.UNSMRY')
-            unsmry_filename = glob.glob(unsmry_fileguess)[0]
+            unsmry_filenamelist = glob.glob(unsmry_fileguess)
+        if not unsmry_filenamelist:
+            return None  # No filename matches
+        unsmry_filename = unsmry_filenamelist[0]
         if not os.path.exists(unsmry_filename):
             return None
         # Cache result
@@ -441,8 +445,13 @@ class ScratchRealization(object):
             column_keys: list of column key wildcards.
 
         Returns:
-            DataFrame with summary keys as columns and dates as indices
+            DataFrame with summary keys as columns and dates as indices.
+                Empty dataframe if no summary is available.
         """
+        if not self.get_eclsum():
+            # Return empty, but do not store the empty dataframe in self.data
+            return pd.DataFrame()
+
         time_index_path = time_index
         if time_index == 'raw':
             time_index_arg = None
@@ -507,8 +516,10 @@ class ScratchRealization(object):
             'last' will give out the last date (maximum),
             as a list with one element.
         Returns:
-            list of datetimes.
+            list of datetimes. None if no summary data is available.
         """
+        if not self.get_eclsum():
+            return None
         if freq == 'raw':
             return self.get_eclsum().dates
         elif freq == 'last':
