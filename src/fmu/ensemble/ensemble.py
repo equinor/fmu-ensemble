@@ -124,7 +124,7 @@ class ScratchEnsemble(object):
             realization = ScratchRealization(realdir)
             count += 1
             self._realizations[realization.index] = realization
-        logger.info('add_realization() found %d realizations',
+        logger.info('add_realizations() found %d realizations',
                     len(self._realizations))
         return count
 
@@ -275,12 +275,13 @@ class ScratchEnsemble(object):
                     dframe = pd.DataFrame(index=[1], data=dframe)
                 dflist[index] = dframe
             except ValueError:
-                logger.warning('No data %s for realization %d',
-                               localpath, index)
+                # No logging here, those error messages
+                # should have appeared at construction using from_*()
+                pass
         if len(dflist):
             # Merge a dictionary of dataframes. The dict key is
             # the realization index, and end up in a MultiIndex
-            df = pd.concat(dflist).reset_index()
+            df = pd.concat(dflist, sort=False).reset_index()
             df.rename(columns={'level_0': 'REAL'}, inplace=True)
             del df['level_1']  # This is the indices from each real
             return df
