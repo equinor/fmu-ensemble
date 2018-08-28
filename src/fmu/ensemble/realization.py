@@ -446,7 +446,7 @@ class ScratchRealization(object):
         time_index_path = time_index
         if time_index == 'raw':
             time_index_arg = None
-        if isinstance(time_index, str):
+        elif isinstance(time_index, str):
             time_index_arg = self.get_smry_dates(freq=time_index)
         if isinstance(time_index, list):
             time_index_arg = time_index
