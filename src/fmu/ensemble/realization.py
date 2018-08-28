@@ -81,7 +81,6 @@ class ScratchRealization(object):
         else:
             logger.warn('Realization %s not valid, skipping',
                         abspath)
-            raise ValueError
 
         # Now look for a minimal subset of files
         if os.path.exists(os.path.join(abspath, 'STATUS')):
@@ -93,7 +92,7 @@ class ScratchRealization(object):
         else:
             logger.warn("Invalid realization, no STATUS file, %s",
                         abspath)
-            raise ValueError
+            raise IOError('STATUS file missing')
 
         if os.path.exists(os.path.join(abspath, 'jobs.json')):
             filerow = {'LOCALPATH': 'jobs.json',
@@ -411,9 +410,9 @@ class ScratchRealization(object):
             unsmry_fileguess = os.path.join(self._origpath, 'eclipse/model',
                                             '*.UNSMRY')
             unsmry_filenamelist = glob.glob(unsmry_fileguess)
-        if not unsmry_filenamelist:
-            return None  # No filename matches
-        unsmry_filename = unsmry_filenamelist[0]
+            if not unsmry_filenamelist:
+                return None  # No filename matches
+            unsmry_filename = unsmry_filenamelist[0]
         if not os.path.exists(unsmry_filename):
             return None
         try:
