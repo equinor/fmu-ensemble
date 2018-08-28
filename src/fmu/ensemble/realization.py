@@ -416,8 +416,16 @@ class ScratchRealization(object):
         unsmry_filename = unsmry_filenamelist[0]
         if not os.path.exists(unsmry_filename):
             return None
+        try:
+            eclsum = ert.ecl.EclSum(unsmry_filename)
+        except IOError:
+            # This can happen if there is something wrong with the file
+            # or if SMSPEC is missing.
+            logger.warning('Failed to create summary instance from ' +
+                           unsmry_filename)
+            return None
         # Cache result
-        self._eclsum = ert.ecl.EclSum(unsmry_filename)
+        self._eclsum = eclsum
         return self._eclsum
 
     def from_smry(self, time_index='raw', column_keys=None):

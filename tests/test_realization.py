@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import datetime
 import pytest
+import shutil
 import pandas as pd
 import ert.ecl
 
@@ -131,3 +132,76 @@ def test_singlereal_ecl():
     with pytest.raises(ValueError):
         # This does not exist before we have asked for it
         'FOPT' in real['unsmry-yearly']
+
+def test_filesystem_picking():
+    """Test loading of sparse realization (random data missing)
+
+    Performed by filesystem manipulations from the original realizations.
+    Clean up from previous runs are attempted, and also done when it finishes.
+    (after a failed test run, filesystem is tainted)
+    """
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    datadir = testdir + '/data'
+    tmpensname = ".deleteme_ens"
+    # Clean up earlier failed runs:
+    if os.path.exists(datadir + '/' + tmpensname):
+        shutil.rmtree(datadir + '/' + tmpensname)
+    os.mkdir(datadir + '/' + tmpensname)
+    #os.mkdir(datadir + '/' + tmpensname + '/realization-0')
+    shutil.copytree(datadir + '/testensemble-reek001/realization-0',
+                    datadir + '/' + tmpensname + '/realization-0')
+
+    realdir = datadir + '/' + tmpensname + '/realization-0/iter-0'
+
+    # Load untainted realization
+    real = ensemble.ScratchRealization(realdir)
+
+    # Remove SMSPEC file and reload:
+    os.remove(realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC')
+    real = ensemble.ScratchRealization(realdir)  # this should go fine
+    # This should just return None
+    assert real.get_eclsum() == None
+    # This should return None
+    assert real.get_smry_dates() == None
+    # This should return empty dataframe:
+    assert isinstance(real.from_smry(), pd.DataFrame)
+    assert len(real.from_smry()) == 0
+
+    # Also delete UNSMRY and redo:
+    os.remove(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY')
+    real = ensemble.ScratchRealization(realdir)  # this should go fine
+    # This should just return None
+    assert real.get_eclsum() == None
+    # This should return None
+    assert real.get_smry_dates() == None
+    # This should return empty dataframe:
+    assert isinstance(real.from_smry(), pd.DataFrame)
+    assert len(real.from_smry()) == 0
+
+    # Remove jobs.json, this file should not be critical
+    statuscolumnswithjson = len(real.get_df('STATUS').columns)
+    os.remove(realdir + '/jobs.json')
+    real = ensemble.ScratchRealization(realdir)  # this should go fine
+
+    statuscolumnswithoutjson = len(real.get_df('STATUS').columns)
+    print(statuscolumnswithoutjson)
+    print(statuscolumnswithjson)
+    assert statuscolumnswithoutjson > 0
+    # Check that some STATUS info is missing.
+    assert statuscolumnswithoutjson < statuscolumnswithjson
+
+    # Remove parameters.txt
+    shutil.move(realdir + '/parameters.txt', realdir + '/parameter.text')
+    with pytest.raises(IOError):
+        real = ensemble.ScratchRealization(realdir)
+        # Discuss whether we should relax this requirement!!
+    shutil.move(realdir + '/parameters.text', realdir + '/parameter.txt')
+    
+
+    
