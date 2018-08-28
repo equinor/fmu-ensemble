@@ -271,7 +271,7 @@ class ScratchEnsemble(object):
             # the realization index, and end up in a MultiIndex
             df = pd.concat(dflist).reset_index()
             df.rename(columns={'level_0': 'REAL'}, inplace=True)
-            del df['level_1'] # This is the indices from each real
+            del df['level_1']  # This is the indices from each real
             return df
         else:
             raise ValueError("No data found for " + localpath)
@@ -319,7 +319,8 @@ class ScratchEnsemble(object):
                                   column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry-' + time_index + '.csv')
+        return self.get_df('share/results/tables/unsmry-' +
+                           time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes for an ensemble according to frequency

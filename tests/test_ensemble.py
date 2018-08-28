@@ -115,8 +115,10 @@ def test_reek001():
                                    'realization-3/iter-0'])
     assert len(reekensemble) == 5
     assert len(reekensemble.files) == 19
+
     # File discovery must be repeated for the newly added realizations
-    reekensemble.find_files('share/results/volumes/simulator_volume_fipnum.csv',
+    reekensemble.find_files('share/results/volumes/' +
+                            'simulator_volume_fipnum.csv',
                             metadata={'GRID': 'simgrid'})
     assert len(reekensemble.files) == 20
     # Test addition of already added realization:
@@ -163,7 +165,7 @@ def test_ensemble_ecl():
     assert len(reekensemble.from_smry(column_keys=['FOPR']).columns) == 3
     assert len(reekensemble.from_smry(column_keys=['FOP*']).columns) == 11
     assert len(reekensemble.from_smry(column_keys=['FGPR',
-                                                  'FOP*']).columns) == 12
+                                                   'FOP*']).columns) == 12
 
     # Check that there is now a cached version with raw dates:
     assert isinstance(reekensemble.get_df('unsmry-raw.csv'), pd.DataFrame)
@@ -172,7 +174,7 @@ def test_ensemble_ecl():
     # If you get 3205 here, it means that you are using the union of
     # raw dates from all realizations, which is not correct
     assert len(reekensemble.from_smry(column_keys=['FGPR',
-                                                  'FOP*']).index) == 1700
+                                                   'FOP*']).index) == 1700
 
     # Date list handling:
     assert len(reekensemble.get_smry_dates(freq='report')) == 641
@@ -184,16 +186,16 @@ def test_ensemble_ecl():
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
     assert len(reekensemble.from_smry(column_keys=['FOPT'],
-                                     time_index=yearly)) == 20
+                                      time_index=yearly)) == 20
     # NB: This is cached in unsmry-custom.csv, not unsmry-yearly!
     # This usage is discouraged. Use 'yearly' in such cases.
 
     # Check that we can shortcut get_smry_dates:
     assert len(reekensemble.from_smry(column_keys=['FOPT'],
-                                     time_index='yearly')) == 20
+                                      time_index='yearly')) == 20
 
     assert len(reekensemble.from_smry(column_keys=['FOPR'],
-                                     time_index='last')) == 5
+                                      time_index='last')) == 5
     assert isinstance(reekensemble.get_df('unsmry-last.csv'), pd.DataFrame)
 
     # eclipse well names list

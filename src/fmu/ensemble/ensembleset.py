@@ -198,7 +198,8 @@ class EnsembleSet(object):
                                column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry-' + time_index + '.csv')
+        return self.get_df('share/results/tables/unsmry-' +
+                           time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes from an ensembleset

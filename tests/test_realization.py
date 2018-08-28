@@ -117,7 +117,7 @@ def test_singlereal_ecl():
     assert len(real.get_smry_dates()) == \
         len(real.get_smry_dates(freq='monthly'))
     monthly = real.get_smry_dates(freq='monthly')
-    assert monthly[-1] > monthly[0] # end date is later than start
+    assert monthly[-1] > monthly[0]  # end date is later than start
     assert len(real.get_smry_dates(freq='yearly')) == 4
     assert len(monthly) == 37
     assert len(real.get_smry_dates(freq='daily')) == 1098
@@ -131,6 +131,3 @@ def test_singlereal_ecl():
     with pytest.raises(ValueError):
         # This does not exist before we have asked for it
         'FOPT' in real['unsmry-yearly']
-    #real.from_smry(time_index='yearly')
-    #assert 'FOPT' in real['unsmry-yearly'] # Not it exists
-

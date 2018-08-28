@@ -192,7 +192,7 @@ class ScratchRealization(object):
             raise IOError("File not found: " + fullpath)
         else:
             # Look for cached version
-            if localpath in self.data and force_reread == False:
+            if localpath in self.data and not force_reread:
                 return self.data[localpath]
             # Check the file store, append if not there
             if localpath not in self.files['LOCALPATH'].values:
