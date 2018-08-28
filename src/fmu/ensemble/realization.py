@@ -22,6 +22,8 @@ import pandas as pd
 import ert.ecl
 from fmu import config
 
+from .virtualrealization import VirtualRealization
+
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
@@ -103,6 +105,12 @@ class ScratchRealization(object):
 
         self.from_txt('parameters.txt')
         self.from_status()
+
+    def to_virtual(self, description=None):
+        """Convert the current ScratchRealization object
+        to a VirtualRealization"""
+        virtreal = VirtualRealization(description, self.data)
+        return virtreal
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -581,34 +589,3 @@ def parse_number(value):
                 return float(value)
             except ValueError:
                 return value
-
-
-class VirtualRealization(object):
-    """A computed or archived realization.
-
-    Computed or archived, one cannot assume to have access to the file
-    system containing original data.
-
-    Datatables that in a ScratchRealization was available through the
-    files dataframe, is now available as dataframes in a dict accessed
-    by the localpath in the files dataframe from ScratchRealization-
-
-    """
-    def __init__(self, description=None, origpath=None):
-        self._description = ''
-        self._origpath = None
-
-        if origpath:
-            self._origpath = origpath
-        if description:
-            self._description = description
-
-    def get_smryvalues(self, props_wildcard=None):
-        """Returns summary values for certain vectors.
-
-        Taken from stored dataframe.
-        """
-        raise NotImplementedError
-
-    def __len__(self):
-        raise NotImplementedError
