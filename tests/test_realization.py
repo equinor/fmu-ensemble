@@ -243,5 +243,6 @@ def test_filesystem_changes():
     real.find_files('eclipsedir/model/*.UNSMRY')
     # Non-empty dataframe:
     assert len(real.from_smry()) > 0
-    
 
+    # Clean up when finished
+    shutil.rmtree(datadir + '/' + tmpensname)
