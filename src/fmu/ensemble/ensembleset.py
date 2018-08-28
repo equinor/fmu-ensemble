@@ -115,16 +115,23 @@ class EnsembleSet(object):
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
+        """Parse and internalize a txt-file from disk
+
+        Parses text files on the form
+        <key> <value>
+        in each line."""
         return self._from_file(localpath, 'txt', convert_numeric,
                               force_reread)
 
     def from_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
+        """Parse and internalize a CSV file from disk"""
         return self._from_file(localpath, 'csv', convert_numeric,
                               force_reread)
 
     def _from_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):
+        """Internal function for from_*()"""
         for _, ensemble in self._ensembles.items():
             ensemble._from_file(localpath, fformat, convert_numeric,
                                 force_reread)

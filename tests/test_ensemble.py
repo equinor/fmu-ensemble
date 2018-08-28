@@ -155,13 +155,14 @@ def test_ensemble_ecl():
     assert monthly.columns[0] == 'REAL'  # Enforce order of columns.
     assert monthly.columns[1] == 'DATE'
     assert len(monthly) == 185
-    # Check that the result was cached.
+    # Check that the result was cached in memory, not necessarily on disk..
     assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
 
     assert len(reekensemble.keys()) == 3
 
     # When asking the ensemble for FOPR, we also get REAL as a column
-    # in return.
+    # in return. Note that the internal stored version will be
+    # overwritten by each from_smry()
     assert len(reekensemble.from_smry(column_keys=['FOPR']).columns) == 3
     assert len(reekensemble.from_smry(column_keys=['FOP*']).columns) == 11
     assert len(reekensemble.from_smry(column_keys=['FGPR',
@@ -178,6 +179,7 @@ def test_ensemble_ecl():
 
     # Date list handling:
     assert len(reekensemble.get_smry_dates(freq='report')) == 641
+    assert len(reekensemble.get_smry_dates(freq='raw')) == 641
     assert len(reekensemble.get_smry_dates(freq='yearly')) == 4
     assert len(reekensemble.get_smry_dates(freq='monthly')) == 37
     assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
