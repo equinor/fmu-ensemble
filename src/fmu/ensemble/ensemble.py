@@ -137,8 +137,11 @@ class ScratchEnsemble(object):
         """
         if isinstance(realindices, int):
             realindices = [realindices]
+        popped = 0
         for index in realindices:
             self._realizations.pop(index, None)
+            popped += 1
+        logger.info('removed %d realization(s)', popped)
 
     @property
     def parameters(self):
@@ -193,7 +196,8 @@ class ScratchEnsemble(object):
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
-                pass
+                logger.warn('Could not read %s for realization %d', localpath,
+                            index)
         return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None):
@@ -217,7 +221,8 @@ class ScratchEnsemble(object):
             realization.find_files(paths, metadata)
 
     def __repr__(self):
-        return "<Ensemble {}, {} realizations>".format(self.name, len(self))
+        return "<ScratchEnsemble {}, {} realizations>".format(self.name,
+                                                              len(self))
 
     def __len__(self):
         return len(self._realizations)
@@ -237,7 +242,7 @@ class ScratchEnsemble(object):
         if isinstance(vector_match, str):
             vector_match = [vector_match]
         result = set()
-        for _, realization in self._realizations.items():
+        for index, realization in self._realizations.items():
             eclsum = realization.get_eclsum()
             if eclsum:
                 if vector_match is None:
@@ -245,6 +250,8 @@ class ScratchEnsemble(object):
                 else:
                     for vector in vector_match:
                         result = result.union(set(eclsum.keys(vector)))
+            else:
+                logger.warn('No EclSum available for realization %d', index)
         return list(result)
 
     def get_df(self, localpath):
@@ -268,8 +275,8 @@ class ScratchEnsemble(object):
                     dframe = pd.DataFrame(index=[1], data=dframe)
                 dflist[index] = dframe
             except ValueError:
-                # Just skip realizations where this localpath is missing
-                pass
+                logger.warning('No data %s for realization %d',
+                               localpath, index)
         if len(dflist):
             # Merge a dictionary of dataframes. The dict key is
             # the realization index, and end up in a MultiIndex
