@@ -443,8 +443,11 @@ class ScratchEnsemble(object):
         Returns:
             VirtualRealization
         """
-        vreal = VirtualRealization(self.name + " " + aggregation)
+        vreal = VirtualRealization(self.name + " " + aggregation, data={})
+        print(vreal.keys())
+        print(vreal)
         paramdata = self.get_df('parameters.txt').agg(aggregation).to_dict()
+        
         del paramdata['REAL']
         print(paramdata['RMS_SEED'])
         vreal.append('parameters.txt', 
