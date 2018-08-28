@@ -69,7 +69,7 @@ class ScratchRealization(object):
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
 
-        self.keyvaluedata = {} # dict of dicts with any kind of data.
+        self.keyvaluedata = {}  # dict of dicts with any kind of data.
 
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
@@ -117,7 +117,7 @@ class ScratchRealization(object):
         The parsed data is returned as a dict. At the ensemble level
         the same function returns a dataframe.
 
-        There is no get'er for the constructed data, access the 
+        There is no get'er for the constructed data, access the
         class variable keyvaluedata directly, or rerun this function.
         (except for parameters.txt, for which there is a property
         called 'parameters')

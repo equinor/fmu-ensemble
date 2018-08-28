@@ -51,11 +51,15 @@ class Operations(object):
         ref = self.ref.get_smry(time_index=time_index, column_keys=column_keys,
                                 stacked=True)
         ref = ref[ref['REAL'].isin(self.combined)]
+        dates = ref['DATE']
+        real = ref['REAL']
+        ref.drop(columns=['DATE'], inplace=True)
         if self.subs:
             for sub in self.subs:
                 ior = sub.get_smry(time_index=time_index,
                                    column_keys=column_keys,
                                    stacked=True)
+                ior.drop(columns=['DATE'], inplace=True)
                 ior = ior[ior['REAL'].isin(self.combined)]
                 ref = ior - ref
         if self.adds:
@@ -63,15 +67,11 @@ class Operations(object):
                 ior = add.get_smry(time_index=time_index,
                                    column_keys=column_keys,
                                    stacked=True)
+                ior.drop(columns=['DATE'], inplace=True)
                 ior = ior[ior['REAL'].isin(self.combined)]
-                # must drop the date axis as you cannot add time, only sub
-                if 'DATE' in ref.columns:
-                    ref = ior.drop(columns=['DATE'])+ref.drop(columns=['DATE'])
-                else:
-                    ref = ior.drop(columns=['DATE'])+ref
-
-        ref['DATE'] = ior['DATE']
-        ref['REAL'] = ior['REAL']
+                ref = ior + ref
+        ref.insert(0, 'DATE', dates)
+        ref['REAL'] = real
 
         return ref
 
