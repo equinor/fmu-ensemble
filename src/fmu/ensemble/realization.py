@@ -208,13 +208,13 @@ class ScratchRealization(object):
                     dtype = None
                 else:
                     dtype = str
-                df = pd.read_csv(fullpath, dtype=dtype)
+                dframe = pd.read_csv(fullpath, dtype=dtype)
             except pd.errors.EmptyDataError:
-                df = None  # or empty dataframe?
+                dframe = None  # or empty dataframe?
 
             # Store parsed data:
-            self.data[localpath] = df
-            return df
+            self.data[localpath] = dframe
+            return dframe
 
     def from_status(self):
         """Collects the contents of the STATUS files and return
@@ -452,15 +452,15 @@ class ScratchRealization(object):
             time_index_arg = time_index
             time_index_path = 'custom'
         # Do the actual work:
-        df = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
-        df = df.reset_index()
-        df.rename(columns={'index': 'DATE'}, inplace=True)
+        dframe = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        dframe = dframe.reset_index()
+        dframe.rename(columns={'index': 'DATE'}, inplace=True)
 
         # Cache the result:
         localpath = 'share/results/tables/unsmry-' +\
                     time_index_path + '.csv'
-        self.data[localpath] = df
-        return df
+        self.data[localpath] = dframe
+        return dframe
 
     def get_smryvalues(self, props_wildcard=None):
         """
