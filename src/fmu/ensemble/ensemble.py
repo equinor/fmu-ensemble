@@ -16,6 +16,7 @@ import pandas as pd
 
 from fmu.config import etc
 from .realization import ScratchRealization
+from .virtualrealization import VirtualRealization
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -431,6 +432,25 @@ class ScratchEnsemble(object):
 
         return sorted(list(result))
 
+    def to_virtual(self, aggregation):
+        """Convert the ensemble to a VirtualRealization 
+        using the requested aggregator
+    
+        Arguments:
+            aggregation: string, supported modes are
+                'mean', 'median', 'p10', 'p90', 'min',
+                'max'
+        Returns:
+            VirtualRealization
+        """
+        vreal = VirtualRealization(self.name + " " + aggregation)
+        paramdata = self.get_df('parameters.txt').agg(aggregation).to_dict()
+        del paramdata['REAL']
+        print(paramdata['RMS_SEED'])
+        vreal.append('parameters.txt', 
+                     paramdata)
+        return vreal
+        
     @property
     def files(self):
         """Return a concatenation of files in each realization"""
