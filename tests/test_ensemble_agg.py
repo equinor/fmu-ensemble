@@ -42,6 +42,8 @@ def test_ensemble_aggregations():
         'p10' : reekensemble.agg('p90')
     }
 
+    stats['min'].to_disk('virtreal_min', delete=True)
+
     assert stats['min']['parameters.txt']['RMS_SEED'] < \
         stats['max']['parameters.txt']['RMS_SEED']
 
@@ -59,16 +61,14 @@ def test_ensemble_aggregations():
     assert stats['min']['parameters.txt']['RMS_SEED'] <= \
         stats['max']['parameters.txt']['RMS_SEED']
 
-    assert stats['min']['unsmry-monthly']['FOPT'][-1] < \
-        stats['max']['unsmry-monthly']['FOPT'][-1]
+    assert stats['min']['unsmry-monthly']['FOPT'].iloc[-1] < \
+        stats['max']['unsmry-monthly']['FOPT'].iloc[-1]
 
-    # The aggregated data of this is currently indexed by FIPNUM, so
-    # .loc[3] returns FIPNUM=3
-    # *Warning* this might change if we add a reset_index() to the code.
-    assert stats['min']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL'] < \
-        stats['mean']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL']
-    assert stats['mean']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL'] < \
-        stats['max']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL']
+    # .loc[2] corresponds to FIPNUM=3
+    assert stats['min']['simulator_volume_fipnum'].iloc[2]['STOIIP_OIL'] < \
+        stats['mean']['simulator_volume_fipnum'].iloc[2]['STOIIP_OIL']
+    assert stats['mean']['simulator_volume_fipnum'].loc[2]['STOIIP_OIL'] < \
+        stats['max']['simulator_volume_fipnum'].loc[2]['STOIIP_OIL']
 
     # Aggregation of STATUS also works. Note that min and max
     # works for string columns, so the available data will vary

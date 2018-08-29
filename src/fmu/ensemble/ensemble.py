@@ -509,11 +509,16 @@ class ScratchEnsemble(object):
                 aggobject = data
 
             if aggregation == 'p10':
-                vreal.append(key, aggobject.quantile(0.9))
+                aggregated = aggobject.quantile(0.9)
             elif aggregation == 'p90':
-                vreal.append(key, aggobject.quantile(0.1))
+                aggregated = aggobject.quantile(0.1)
             else:
-                vreal.append(key, aggobject.agg(aggregation))
+                aggregated = aggobject.agg(aggregation)
+
+            if len(groupby):
+                aggregated.reset_index(inplace=True)
+
+            vreal.append(key, aggregated)
         return vreal
 
     @property
