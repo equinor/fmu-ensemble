@@ -18,6 +18,7 @@ from collections import defaultdict
 from fmu.config import etc
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
+from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 
 xfmu = etc.Interaction()
@@ -164,6 +165,20 @@ class ScratchEnsemble(object):
             self._realizations.pop(index, None)
             popped += 1
         logger.info('removed %d realization(s)', popped)
+
+    def to_virtual(self, name=None):
+        """Convert the ScratchEnsemble to a VirtualEnsemble.
+
+        This means that all imported data in realizations is
+        aggregated and stored as dataframes in the virtual ensemble's
+        data store.
+        """
+        vens = VirtualEnsemble(name=name)
+
+        for key in self.keys():
+            vens.append(key, self.get_df(key))
+
+        return vens
 
     @property
     def parameters(self):
