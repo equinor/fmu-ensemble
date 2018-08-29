@@ -5,14 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import re
-import glob
-import json
-import shutil
-import numpy
-import pandas as pd
 
-import ert.ecl
 from fmu import config
 
 fmux = config.etc.Interaction()
@@ -20,6 +13,7 @@ logger = fmux.basiclogger(__name__)
 
 if not fmux.testsetup():
     raise SystemExit()
+
 
 class VirtualEnsemble(object):
     """A computed or archived ensemble
@@ -35,7 +29,6 @@ class VirtualEnsemble(object):
         self._name = name
         self._longdescription = longdescription
         self.data = data
-
 
     def keys(self):
         return self.data.keys()
@@ -109,7 +102,6 @@ class VirtualEnsemble(object):
                              for x in self.data.keys()}
             return self.data[shortcut2path[localpath]]
         raise ValueError(localpath)
-        
 
     @property
     def parameters(self):

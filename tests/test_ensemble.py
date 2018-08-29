@@ -10,13 +10,14 @@ import numpy
 import pandas as pd
 
 from fmu import config
-from fmu import ensemble
+from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
 if not fmux.testsetup():
     raise SystemExit()
+
 
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
@@ -27,15 +28,15 @@ def test_reek001():
     else:
         testdir = os.path.abspath('.')
 
-    reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            testdir +
-                                            '/data/testensemble-reek001/' +
-                                            'realization-*/iter-0')
-    assert isinstance(reekensemble, ensemble.ScratchEnsemble)
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+    assert isinstance(reekensemble, ScratchEnsemble)
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5
 
-    assert isinstance(reekensemble[0], ensemble.ScratchRealization)
+    assert isinstance(reekensemble[0], ScratchRealization)
 
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'jobs.json']) == 5
@@ -131,6 +132,7 @@ def test_reek001():
     reekensemble.remove_data('parameters.txt')
     assert len(reekensemble.keys()) == keycount - 1
 
+
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
 
@@ -140,10 +142,10 @@ def test_ensemble_ecl():
     else:
         testdir = os.path.abspath('.')
 
-    reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            testdir +
-                                            '/data/testensemble-reek001/' +
-                                            'realization-*/iter-0')
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
 
     # Eclipse summary keys:
     assert len(reekensemble.get_smrykeys('FOPT')) == 1

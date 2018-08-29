@@ -6,17 +6,16 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import numpy
-import pandas as pd
 
 from fmu import config
-from fmu import ensemble
+from fmu.ensemble import ScratchEnsemble
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
 if not fmux.testsetup():
     raise SystemExit()
+
 
 def test_ensemble_aggregations():
     if '__file__' in globals():
@@ -25,21 +24,21 @@ def test_ensemble_aggregations():
     else:
         testdir = os.path.abspath('.')
 
-    reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            testdir +
-                                            '/data/testensemble-reek001/' +
-                                            'realization-*/iter-0')
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
     reekensemble.from_smry(time_index='monthly', column_keys=['F*'])
     reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
     reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
 
     stats = {
         'mean': reekensemble.agg('mean'),
-        'median' : reekensemble.agg('median'),
-        'min' : reekensemble.agg('min'),
-        'max' : reekensemble.agg('max'),
-        'p90' : reekensemble.agg('p10'),
-        'p10' : reekensemble.agg('p90')
+        'median': reekensemble.agg('median'),
+        'min': reekensemble.agg('min'),
+        'max': reekensemble.agg('max'),
+        'p90': reekensemble.agg('p10'),
+        'p10': reekensemble.agg('p90')
     }
 
     stats['min'].to_disk('virtreal_min', delete=True)
@@ -78,4 +77,3 @@ def test_ensemble_aggregations():
     assert stats['p90']['STATUS'].iloc[49]['DURATION'] < \
         stats['max']['STATUS'].iloc[49]['DURATION']
     # job 49 is the Eclipse forward model
-

@@ -5,14 +5,9 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import re
-import glob
-import json
 import shutil
-import numpy
 import pandas as pd
 
-import ert.ecl
 from fmu import config
 
 fmux = config.etc.Interaction()
@@ -20,6 +15,7 @@ logger = fmux.basiclogger(__name__)
 
 if not fmux.testsetup():
     raise SystemExit()
+
 
 class VirtualRealization(object):
     """A computed or archived realization.
@@ -36,7 +32,6 @@ class VirtualRealization(object):
         self._description = description
         self._longdescription = longdescription
         self.data = data
-
 
     def keys(self):
         return self.data.keys()
@@ -66,7 +61,7 @@ class VirtualRealization(object):
 
         Args:
             filesystempath : string with a directory, absolute or
-                relative. If it exists already, it must be empty, 
+                relative. If it exists already, it must be empty,
                 otherwise we give up.
         """
         if os.path.exists(filesystempath):
@@ -81,10 +76,12 @@ class VirtualRealization(object):
         else:
             os.mkdir(filesystempath)
 
-        with open(os.path.join(filesystempath, '_description'), 'w') as fhandle:
+        with open(os.path.join(filesystempath, '_description'),
+                  'w') as fhandle:
             fhandle.write(self._description)
         if self._longdescription:
-            with open(os.path.join(filesystempath, '_longdescription'), 'w') as fhandle:
+            with open(os.path.join(filesystempath, '_longdescription'),
+                      'w') as fhandle:
                 fhandle.write(str(self._longdescription))
         with open(os.path.join(filesystempath, '__repr__'), 'w') as fhandle:
             fhandle.write(self.__repr__())
@@ -163,7 +160,6 @@ class VirtualRealization(object):
                              for x in self.data.keys()}
             return self.data[shortcut2path[localpath]]
         raise ValueError(localpath)
-        
 
     @property
     def parameters(self):

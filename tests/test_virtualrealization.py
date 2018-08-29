@@ -6,11 +6,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import datetime
-import pytest
-import shutil
-import pandas as pd
-import ert.ecl
 
 from fmu import config
 from fmu import ensemble
@@ -51,7 +46,8 @@ def test_virtual_realization():
     real = ensemble.ScratchRealization(realdir)
     vreal = real.to_virtual()
     assert real.keys() == vreal.keys()
-    
+
+
 def test_virtual_todisk():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
