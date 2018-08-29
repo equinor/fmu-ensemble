@@ -12,8 +12,9 @@ from __future__ import division
 from __future__ import print_function
 
 import glob
-import pandas as pd
 from collections import defaultdict
+import pandas as pd
+
 
 from fmu.config import etc
 from .realization import ScratchRealization
@@ -280,13 +281,13 @@ class ScratchEnsemble(object):
                 # No logging here, those error messages
                 # should have appeared at construction using from_*()
                 pass
-        if len(dflist):
+        if dflist:
             # Merge a dictionary of dataframes. The dict key is
             # the realization index, and end up in a MultiIndex
-            df = pd.concat(dflist, sort=False).reset_index()
-            df.rename(columns={'level_0': 'REAL'}, inplace=True)
-            del df['level_1']  # This is the indices from each real
-            return df
+            dframe = pd.concat(dflist, sort=False).reset_index()
+            dframe.rename(columns={'level_0': 'REAL'}, inplace=True)
+            del dframe['level_1']  # This is the indices from each real
+            return dframe
         else:
             raise ValueError("No data found for " + localpath)
 
@@ -332,7 +333,7 @@ class ScratchEnsemble(object):
         if not stacked:
             raise NotImplementedError
         # Future: Multithread this!
-        for index, realization in self._realizations.items():
+        for _, realization in self._realizations.items():
             # We do not store the returned DataFrames here,
             # instead we look them up afterwards using get_df()
             # Downside is that we have to compute the name of the
@@ -471,23 +472,6 @@ class ScratchEnsemble(object):
         result = EnsembleCombination(ref=self, adds=other)
         return result
 
-
-def _convert_numeric_columns(dataframe):
-    """Discovers and searches for numeric columns
-    among string columns in an incoming dataframe.
-    Columns with mostly integer
-
-    Args:
-        dataframe : any dataframe with strings as column datatypes
-
-    Returns:
-        A dataframe where some columns have had their datatypes
-        converted to numerical types (int/float). Some values
-        might contain numpy.nan.
-    """
-    logger.warn("_convert_numeric_columns() not implemented")
-    return dataframe
-
     def get_smry(self, time_index=None, column_keys=None, stacked=True):
         """
         Aggregates summary data from all realizations.
@@ -526,3 +510,20 @@ def _convert_numeric_columns(dataframe):
             return pd.concat(dflist, sort=False).reset_index()
         else:
             raise NotImplementedError
+
+
+def _convert_numeric_columns(dataframe):
+    """Discovers and searches for numeric columns
+    among string columns in an incoming dataframe.
+    Columns with mostly integer
+
+    Args:
+        dataframe : any dataframe with strings as column datatypes
+
+    Returns:
+        A dataframe where some columns have had their datatypes
+        converted to numerical types (int/float). Some values
+        might contain numpy.nan.
+    """
+    logger.warn("_convert_numeric_columns() not implemented")
+    return dataframe
