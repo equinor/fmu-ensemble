@@ -17,7 +17,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_operations():
+def test_ensemblecombination():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -29,12 +29,12 @@ def test_operations():
                                             '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
 
-    diff = ensemble.Operations(ref=reekensemble, subs=reekensemble)
+    diff = ensemble.EnsembleCombination(ref=reekensemble, subs=reekensemble)
 
     # example of several operations
     diff = diff + reekensemble - reekensemble
 
-    assert isinstance(diff, ensemble.Operations)
+    assert isinstance(diff, ensemble.EnsembleCombination)
 
     assert len(diff.get_smmry(column_keys=['FOPR', 'FGPR',
                               'FWCT']).columns) == 5

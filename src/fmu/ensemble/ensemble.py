@@ -17,7 +17,7 @@ from collections import defaultdict
 
 from fmu.config import etc
 from .realization import ScratchRealization
-from .operations import Operations
+from .ensemblecombination import EnsembleCombination
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -423,11 +423,11 @@ class ScratchEnsemble(object):
             raise ValueError('Name input is not a string')
 
     def __sub__(self, other):
-        result = Operations(ref=self, subs=other)
+        result = EnsembleCombination(ref=self, subs=other)
         return result
 
     def __add__(self, other):
-        result = Operations(ref=self, adds=other)
+        result = EnsembleCombination(ref=self, adds=other)
         return result
 
 

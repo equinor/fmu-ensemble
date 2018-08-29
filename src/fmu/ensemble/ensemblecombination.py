@@ -18,7 +18,7 @@ xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
 
 
-class Operations(object):
+class EnsembleCombination(object):
 
     def __init__(self, ref, adds=None, subs=None):
         """

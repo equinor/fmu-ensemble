@@ -10,4 +10,4 @@ del get_versions
 from .ensemble import ScratchEnsemble  # noqa
 from .realization import ScratchRealization  # noqa
 from .ensembleset import EnsembleSet  # noqa
-from .operations import Operations  # noqa
+from .ensemblecombination import EnsembleCombination # noqa
