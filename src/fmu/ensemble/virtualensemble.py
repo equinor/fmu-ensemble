@@ -48,12 +48,23 @@ class VirtualEnsemble(object):
 
     def remove_data(self, localpaths):
         raise NotImplementedError
-    
+
+    def agg(self, aggregation, keylist=[]):
+        raise NotImplementedError
+
     def append(self, key, dataframe, overwrite=False):
         if key in self.data.keys() and not overwrite:
             logger.warning('Ignoring ' + key + ', data already exists')
             return
         self.data[key] = dataframe
+
+    def to_disk(self):
+        # Mature analogue function in VirtualRealization before commencing this
+        raise NotImplementedError
+
+    def from_disk(self):
+        # Mature analogue function in VirtualRealization before commencing this
+        raise NotImplementedError
 
     def __repr__(self):
         """Representation of the object"""
