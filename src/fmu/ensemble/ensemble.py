@@ -488,8 +488,7 @@ class ScratchEnsemble(object):
         if not len(keylist):  # Empty list means all keys.
             keylist = self.keys()
         for key in keylist:
-            if key == 'STATUS':
-                pass
+
             # Aggregate over this ensemble:
             data = self.get_df(key)
 
@@ -498,7 +497,8 @@ class ScratchEnsemble(object):
 
             # Look for data we should group by. This would be beneficial
             # to get from a metadata file, and not by pure guesswork.
-            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION']
+            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
+                                       'JOBINDEX']
 
             groupby = [x for x in groupbycolumncandidates
                        if x in data.columns]

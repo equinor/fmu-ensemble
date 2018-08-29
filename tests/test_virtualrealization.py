@@ -69,3 +69,11 @@ def test_ensemble_aggregations():
         stats['mean']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL']
     assert stats['mean']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL'] < \
         stats['max']['simulator_volume_fipnum'].loc[3]['STOIIP_OIL']
+
+    # Aggregation of STATUS also works. Note that min and max
+    # works for string columns, so the available data will vary
+    # depending on aggregation method
+    assert stats['p90']['STATUS'].iloc[49]['DURATION'] < \
+        stats['max']['STATUS'].iloc[49]['DURATION']
+    # job 49 is the Eclipse forward model
+
