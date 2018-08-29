@@ -331,20 +331,20 @@ class ScratchRealization(object):
             return self.data[localpath]
 
         # Allow shorthand, but check ambiguity
-        basenames = [os.path.basename(x) for x in self.data.keys()]
+        basenames = map(os.path.basename, self.data.keys())
         if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
+            shortcut2path = {os.path.basename(x): x for x in self.data}
             return self.data[shortcut2path[localpath]]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.data.keys()]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.data]
         if noexts.count(localpath) == 1:
             shortcut2path = {''.join(x.split('.')[:-1]): x
-                             for x in self.data.keys()}
+                             for x in self.data}
             return self.data[shortcut2path[localpath]]
         basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.data.keys()]
+                          for x in self.data]
         if basenamenoexts.count(localpath) == 1:
             shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                             for x in self.data.keys()}
+                             for x in self.data}
             return self.data[shortcut2path[localpath]]
         raise ValueError(localpath)
 
@@ -427,7 +427,7 @@ class ScratchRealization(object):
         except IOError:
             # This can happen if there is something wrong with the file
             # or if SMSPEC is missing.
-            logger.warning('Failed to create summary instance from ' +
+            logger.warning('Failed to create summary instance from %s',
                            unsmry_filename)
             return None
         # Cache result
@@ -558,11 +558,12 @@ class ScratchRealization(object):
                                                             pathsummary)
 
     def get_ok(self):
+        """Tell if the realization has an OK file
+
+        This file is written by ERT when all FORWARD_MODELs
+        have completed successfully"""
         okfile = os.path.join(self._origpath, 'OK')
-        if os.path.exists(okfile):
-            return True
-        else:
-            return False
+        return os.path.exists(okfile)
 
 
 def parse_number(value):

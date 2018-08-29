@@ -200,7 +200,7 @@ class EnsembleSet(object):
             The column 'ENSEMBLE' will denote each ensemble's name
         """
         # Future: Multithread this:
-        for nam, ensemble in self._ensembles.items():
+        for _, ensemble in self._ensembles.items():
             ensemble.from_smry(time_index=time_index,
                                column_keys=column_keys)
         if isinstance(time_index, list):
