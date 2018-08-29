@@ -311,6 +311,18 @@ class ScratchRealization(object):
         """
         return self.get_df(localpath)
 
+    def __delitem__(self, localpath):
+        """Deletes components in the internal datastore.
+
+        Silently ignores data that is not found.
+
+        Args:
+            localpath: string, fully qualified name of key
+                (no shorthand as for get_df())
+        """
+        if localpath in self.keys():
+            del self.data[localpath]
+
     def keys(self):
         """Access the keys of the internal data structure
         """

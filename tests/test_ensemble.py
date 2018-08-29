@@ -127,6 +127,9 @@ def test_reek001():
     assert len(reekensemble) == 5
     assert len(reekensemble.files) == 24  # discovered files are lost!
 
+    keycount = len(reekensemble.keys())
+    reekensemble.remove_data('parameters.txt')
+    assert len(reekensemble.keys()) == keycount - 1
 
 def test_ensemble_ecl():
     """Eclipse specific functionality"""

@@ -88,6 +88,11 @@ def test_single_realization():
     with pytest.raises(ValueError):
         real.get_df('notexisting.csv')
 
+    # Test __delitem__()
+    keycount = len(real.keys())
+    del real['parameters.txt']
+    assert len(real.keys()) == keycount - 1
+
     # At realization level, wrong filenames should throw exceptions,
     # at ensemble level it is fine.
     with pytest.raises(IOError):

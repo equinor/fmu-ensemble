@@ -30,7 +30,8 @@ def test_ensemble_aggregations():
                                             '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
     reekensemble.from_smry(time_index='monthly', column_keys=['F*'])
-
+    reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    del reekensemble['parameters.txt']
     stats = {
         'mean': reekensemble.agg('mean'),
         'median' : reekensemble.agg('median'),
