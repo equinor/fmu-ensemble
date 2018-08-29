@@ -199,8 +199,6 @@ def test_filesystem_changes():
     real = ensemble.ScratchRealization(realdir)  # this should go fine
 
     statuscolumnswithoutjson = len(real.get_df('STATUS').columns)
-    print(statuscolumnswithoutjson)
-    print(statuscolumnswithjson)
     assert statuscolumnswithoutjson > 0
     # Check that some STATUS info is missing.
     assert statuscolumnswithoutjson < statuscolumnswithjson
@@ -244,5 +242,5 @@ def test_filesystem_changes():
     # Non-empty dataframe:
     assert len(real.from_smry()) > 0
 
-    # Clean up when finished
-    shutil.rmtree(datadir + '/' + tmpensname)
+    # Clean up when finished. This often fails on network drives..
+    shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
