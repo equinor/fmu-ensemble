@@ -43,6 +43,8 @@ def test_ensemble_aggregations():
     }
 
     stats['min'].to_disk('virtreal_min', delete=True)
+    stats['max'].to_disk('virtreal_max', delete=True)
+    stats['mean'].to_disk('virtreal_mean', delete=True)
 
     assert stats['min']['parameters.txt']['RMS_SEED'] < \
         stats['max']['parameters.txt']['RMS_SEED']
