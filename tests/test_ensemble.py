@@ -166,4 +166,4 @@ def test_ensemble_ecl():
     # delta between two ensembles
     diff = reekensemble - reekensemble
     assert len(diff.get_smmry(column_keys=['FOPR', 'FGPR',
-                                   'FWCT']).columns) == 5
+                              'FWCT']).columns) == 5
