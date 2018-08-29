@@ -1,6 +1,6 @@
-==========================
-The library *fmu.ensemble*
-==========================
+==============================
+Introduction to *fmu.ensemble*
+==============================
 
 FMU Ensemble is a Python module for handling simulation ensembles
 originating from an FMU (Fast Model Update) workflow.

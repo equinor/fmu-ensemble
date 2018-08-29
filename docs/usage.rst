@@ -1,17 +1,30 @@
 Usage
 =====
 
-fmu-ensemble is a library that can be used in several concepts:
+fmu-ensemble is designed for use in several scenarios:
 
 * Interactive use in the (i)python interpreter
 * Interactive usage inside a Jupyter environment
-* Part of other scripts or utilities, either for analysis
-  or preparatory work before a webviz instance is generated
+* Part of an ERT workflow, typically after the ensemble is finished as
+  a *POST_WORKFLOW_HOOK*
+* Part of other scripts or utilities, either for analysis or
+  preparatory work before f.ex. a webviz instance is generated
 
 As an introduction to the module, we will go through interactive usage
 in the python interpreter. Whether you use ipython or jupyter does not
 matter. It is recommended to choose ipython over python.
 
+
+Prerequisites
+-------------
+
+Basic knowlegde of Python is needed to use the module. For simple use,
+copy-paste from other projects will take you far. For something extra,
+it is strongly recommended to spend time learning the `Pandas`_
+library and understand how you can in very short Python code do a lot
+of data processing and handling.
+
+.. _Pandas: https://pandas.pydata.org/
 
 Basic interactive usage
 -----------------------
