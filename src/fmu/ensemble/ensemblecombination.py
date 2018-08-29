@@ -46,27 +46,27 @@ class EnsembleCombination(object):
             ref_ok = list(ref_ok & ior_ok)
         return ref_ok
 
-    def get_smmry(self, column_keys=None):
+    def from_smry(self, column_keys=None):
         time_index = self.ref.get_smry_dates(freq='daily')
-        ref = self.ref.get_smry(time_index=time_index, column_keys=column_keys,
-                                stacked=True)
+        ref = self.ref.from_smry(time_index=time_index, column_keys=column_keys,
+                                 stacked=True)
         ref = ref[ref['REAL'].isin(self.combined)]
         dates = ref['DATE']
         real = ref['REAL']
         ref.drop(columns=['DATE'], inplace=True)
         if self.subs:
             for sub in self.subs:
-                ior = sub.get_smry(time_index=time_index,
-                                   column_keys=column_keys,
-                                   stacked=True)
+                ior = sub.from_smry(time_index=time_index,
+                                    column_keys=column_keys,
+                                    stacked=True)
                 ior.drop(columns=['DATE'], inplace=True)
                 ior = ior[ior['REAL'].isin(self.combined)]
                 ref = ior - ref
         if self.adds:
             for add in self.adds:
-                ior = add.get_smry(time_index=time_index,
-                                   column_keys=column_keys,
-                                   stacked=True)
+                ior = add.from_smry(time_index=time_index,
+                                    column_keys=column_keys,
+                                    stacked=True)
                 ior.drop(columns=['DATE'], inplace=True)
                 ior = ior[ior['REAL'].isin(self.combined)]
                 ref = ior + ref

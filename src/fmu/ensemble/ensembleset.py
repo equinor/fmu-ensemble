@@ -51,6 +51,18 @@ class EnsembleSet(object):
         return "<EnsembleSet {}, {} ensembles:\n{}>".format(
             self.name, len(self), self._ensembles)
 
+    def keys(self):
+        """
+        Return the union of all keys available in the ensembles.
+
+        Keys refer to the realization datastore, a dictionary
+        of dataframes or dicts.
+        """
+        allkeys = set()
+        for ensemble in self._ensembles.values():
+            allkeys = allkeys.union(ensemble.keys())
+        return allkeys
+
     def add_ensembles_frompath(self, paths):
         """Convenience function for adding multiple ensembles.
 
@@ -99,17 +111,34 @@ class EnsembleSet(object):
     def parameters(self):
         """Getter for ensemble.parameters(convert_numeric=True)
         """
-        return self.from_txt('parameters.txt')
+        return self.get_df('parameters.txt')
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Collect contents of txt files
-        from each of the ensembles. Return as one dataframe
-        tagged with realization index, columnname REAL,
-        and ensemble name in ENSEMBLE
+        """Parse and internalize a txt-file from disk
 
-        Wraps around ensemble.from_txt which wraps around
-        realization.from_txt
+        Parses text files on the form
+        <key> <value>
+        in each line."""
+        return self._from_file(localpath, 'txt', convert_numeric,
+                              force_reread)
+
+    def from_csv(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Parse and internalize a CSV file from disk"""
+        return self._from_file(localpath, 'csv', convert_numeric,
+                              force_reread)
+
+    def _from_file(self, localpath, fformat, convert_numeric=True,
+                  force_reread=False):
+        """Internal function for from_*()"""
+        for _, ensemble in self._ensembles.items():
+            ensemble._from_file(localpath, fformat, convert_numeric,
+                                force_reread)
+        return self.get_df(localpath)
+
+    def get_df(self, localpath):
+        """Collect contents of dataframes from each ensemble
 
         Args:
             localpath: path to the text file, relative to each realization
@@ -120,15 +149,14 @@ class EnsembleSet(object):
                 False, repeated calls to this function will
                 returned cached results.
         """
-        enskeyvaluedflist = []
+        ensdflist = []
         for _, ensemble in self._ensembles.items():
-            keyvaluedf = ensemble.from_txt(localpath, convert_numeric,
-                                           force_reread)
-            keyvaluedf.insert(0, 'ENSEMBLE', ensemble.name)
-            enskeyvaluedflist.append(keyvaluedf)
-        return pd.concat(enskeyvaluedflist, sort=False)
+            ensdf = ensemble.get_df(localpath)
+            ensdf.insert(0, 'ENSEMBLE', ensemble.name)
+            ensdflist.append(ensdf)
+        return pd.concat(ensdflist, sort=False)
 
-    def get_csv(self, filename):
+    def get_csv_deprecated(self, filename):
         """Load CSV data from each realization in each
         ensemble, and aggregate.
 
@@ -146,12 +174,20 @@ class EnsembleSet(object):
             dflist.append(dframe)
         return pd.concat(dflist, sort=False)
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def from_smry(self, time_index=None, column_keys=None):
         """
-        Aggregates summary data from all ensembles.
+        Fetch summary data from all ensembles
 
-        Wraps around Ensemble.get_smry(stacked=True) which wraps
-        Realization.get_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+        Wraps around Ensemble.from_smry() which wraps
+        Realization.from_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+
+        The time index is determined at realization level. If you
+        ask for 'monthly', you will from each realization get its
+        months. At ensemble or ensembleset-level, the number of
+        monthly report dates between realization can vary
+
+        The pr. realization results will be cached by each
+        realization object, and can be retrieved through get_df().
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -163,16 +199,14 @@ class EnsembleSet(object):
             A DataFame of summary vectors for the ensembleset.
             The column 'ENSEMBLE' will denote each ensemble's name
         """
-        if isinstance(time_index, str):
-            time_index = self.get_smry_dates(time_index)
-        dflist = []
-        for name, ensemble in self._ensembles.items():
-            dframe = ensemble.get_smry(time_index=time_index,
-                                       column_keys=column_keys,
-                                       stacked=True)
-            dframe['ENSEMBLE'] = name
-            dflist.append(dframe)
-        return pd.concat(dflist, sort=False)
+        # Future: Multithread this:
+        for nam, ensemble in self._ensembles.items():
+            ensemble.from_smry(time_index=time_index,
+                               column_keys=column_keys)
+        if isinstance(time_index, list):
+            time_index = 'custom'
+        return self.get_df('share/results/tables/unsmry-' +
+                           time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes from an ensembleset

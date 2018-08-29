@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import numpy
+import pandas as pd
 
 from fmu import config
 from fmu import ensemble
@@ -35,6 +36,8 @@ def test_reek001():
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5
 
+    assert isinstance(reekensemble[0], ensemble.ScratchRealization)
+
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'jobs.json']) == 5
     assert len(reekensemble.files[
@@ -42,7 +45,7 @@ def test_reek001():
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'STATUS']) == 5
 
-    statusdf = reekensemble.get_status()
+    statusdf = reekensemble.get_df('STATUS')
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
@@ -56,8 +59,13 @@ def test_reek001():
     paramsdf = reekensemble.from_txt('parameters.txt')
     assert len(paramsdf) == 5  # 5 realizations
     paramsdf = reekensemble.parameters  # also test as property
+    paramsdf = reekensemble.get_df('parameters.txt')
+    assert len(paramsdf) == 5
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv('params.csv', index=False)
+
+    # Check that the ensemble object has not tainted the realization dataframe:
+    assert 'REAL' not in reekensemble._realizations[0].get_df('parameters.txt')
 
     # The column FOO in parameters is only present in some, and
     # is present with NaN in real0:
@@ -78,11 +86,21 @@ def test_reek001():
     reekensemble.files.to_csv('files.csv', index=False)
 
     # CSV files
-    vol_df = reekensemble.get_csv('share/results/volumes/' +
-                                  'simulator_volume_fipnum.csv')
+    csvpath = 'share/results/volumes/simulator_volume_fipnum.csv'
+    vol_df = reekensemble.from_csv(csvpath)
+
+    # Check that we have not tainted the realization dataframes:
+    assert 'REAL' not in reekensemble._realizations[0].get_df(csvpath)
+
     assert 'REAL' in vol_df
     assert len(vol_df['REAL'].unique()) == 3  # missing in 2 reals
     vol_df.to_csv('simulatorvolumes.csv', index=False)
+
+    # Test retrival of cached data
+    vol_df2 = reekensemble.get_df(csvpath)
+
+    assert 'REAL' in vol_df2
+    assert len(vol_df2['REAL'].unique()) == 3  # missing in 2 reals
 
     # Realization deletion:
     reekensemble.remove_realizations([1, 3])
@@ -96,17 +114,19 @@ def test_reek001():
                                    '/data/testensemble-reek001/' +
                                    'realization-3/iter-0'])
     assert len(reekensemble) == 5
-    assert len(reekensemble.files) == 19
+    assert len(reekensemble.files) == 24
+
     # File discovery must be repeated for the newly added realizations
-    reekensemble.find_files('share/results/volumes/*csv',
+    reekensemble.find_files('share/results/volumes/' +
+                            'simulator_volume_fipnum.csv',
                             metadata={'GRID': 'simgrid'})
-    assert len(reekensemble.files) == 20
+    assert len(reekensemble.files) == 25
     # Test addition of already added realization:
     reekensemble.add_realizations(testdir +
                                   '/data/testensemble-reek001/' +
                                   'realization-1/iter-0')
     assert len(reekensemble) == 5
-    assert len(reekensemble.files) == 19  # discovered files are lost!
+    assert len(reekensemble.files) == 24  # discovered files are lost!
 
 
 def test_ensemble_ecl():
@@ -131,17 +151,35 @@ def test_ensemble_ecl():
 
     # reading ensemble dataframe
 
+    monthly = reekensemble.from_smry(column_keys=['F*'], time_index='monthly')
+    assert monthly.columns[0] == 'REAL'  # Enforce order of columns.
+    assert monthly.columns[1] == 'DATE'
+    assert len(monthly) == 185
+    # Check that the result was cached in memory, not necessarily on disk..
+    assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
+
+    assert len(reekensemble.keys()) == 3
+
     # When asking the ensemble for FOPR, we also get REAL as a column
-    # in return:
-    assert len(reekensemble.get_smry(column_keys=['FOPR']).columns) == 3
-    assert len(reekensemble.get_smry(column_keys=['FOP*']).columns) == 11
-    assert len(reekensemble.get_smry(column_keys=['FGPR',
-                                                  'FOP*']).columns) == 12
-    assert len(reekensemble.get_smry(column_keys=['FGPR',
-                                                  'FOP*']).index) == 1700
+    # in return. Note that the internal stored version will be
+    # overwritten by each from_smry()
+    assert len(reekensemble.from_smry(column_keys=['FOPR']).columns) == 3
+    assert len(reekensemble.from_smry(column_keys=['FOP*']).columns) == 11
+    assert len(reekensemble.from_smry(column_keys=['FGPR',
+                                                   'FOP*']).columns) == 12
+
+    # Check that there is now a cached version with raw dates:
+    assert isinstance(reekensemble.get_df('unsmry-raw.csv'), pd.DataFrame)
+    # The columns are not similar, this is allowed!
+
+    # If you get 3205 here, it means that you are using the union of
+    # raw dates from all realizations, which is not correct
+    assert len(reekensemble.from_smry(column_keys=['FGPR',
+                                                   'FOP*']).index) == 1700
 
     # Date list handling:
     assert len(reekensemble.get_smry_dates(freq='report')) == 641
+    assert len(reekensemble.get_smry_dates(freq='raw')) == 641
     assert len(reekensemble.get_smry_dates(freq='yearly')) == 4
     assert len(reekensemble.get_smry_dates(freq='monthly')) == 37
     assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
@@ -149,14 +187,19 @@ def test_ensemble_ecl():
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
-    assert len(reekensemble.get_smry(column_keys=['FOPT'],
-                                     time_index=yearly)) == 20
-    # Check that we can shortcut get_smry_dates:
-    assert len(reekensemble.get_smry(column_keys=['FOPT'],
-                                     time_index='yearly')) == 20
+    assert len(reekensemble.from_smry(column_keys=['FOPT'],
+                                      time_index=yearly)) == 20
+    # NB: This is cached in unsmry-custom.csv, not unsmry-yearly!
+    # This usage is discouraged. Use 'yearly' in such cases.
 
-    assert len(reekensemble.get_smry(column_keys=['FOPR'],
-                                     time_index='last')) == 5
+    # Check that we can shortcut get_smry_dates:
+    assert len(reekensemble.from_smry(column_keys=['FOPT'],
+                                      time_index='yearly')) == 20
+
+    assert len(reekensemble.from_smry(column_keys=['FOPR'],
+                                      time_index='last')) == 5
+    assert isinstance(reekensemble.get_df('unsmry-last.csv'), pd.DataFrame)
+
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
 
@@ -165,5 +208,5 @@ def test_ensemble_ecl():
 
     # delta between two ensembles
     diff = reekensemble - reekensemble
-    assert len(diff.get_smmry(column_keys=['FOPR', 'FGPR',
+    assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
                               'FWCT']).columns) == 5

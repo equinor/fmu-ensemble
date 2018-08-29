@@ -69,7 +69,10 @@ class ScratchRealization(object):
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
 
-        self.keyvaluedata = {}  # dict of dicts with any kind of data.
+        # The datastore for internalized data. Dictionary
+        # indexed by filenames (local to the realization).
+        # values in the dictionary can be either dicts or dataframes
+        self.data = {}
 
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
@@ -99,7 +102,15 @@ class ScratchRealization(object):
                        'BASENAME': 'jobs.json'}
             self.files = self.files.append(filerow, ignore_index=True)
 
+        if os.path.exists(os.path.join(abspath, 'OK')):
+            filerow = {'LOCALPATH': 'OK',
+                       'FILETYPE': 'OK',
+                       'FULLPATH': os.path.join(abspath, 'OK'),
+                       'BASENAME': 'OK'}
+            self.files = self.files.append(filerow, ignore_index=True)
+
         self.from_txt('parameters.txt')
+        self.from_status()
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -140,8 +151,9 @@ class ScratchRealization(object):
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
-            if fullpath in self.files['FULLPATH'].values and force_reread == False:
-                return self.keyvaluedata[localpath]
+            if fullpath in self.files['FULLPATH'].values and not force_reread:
+                # Return cached version
+                return self.data[localpath]
             elif fullpath not in self.files['FULLPATH'].values:
                 filerow = {'LOCALPATH': localpath,
                            'FILETYPE': localpath.split('.')[-1],
@@ -157,17 +169,61 @@ class ScratchRealization(object):
             if convert_numeric:
                 for key in keyvalues:
                     keyvalues[key] = parse_number(keyvalues[key])
-            self.keyvaluedata[localpath] = keyvalues
+            self.data[localpath] = keyvalues
             return keyvalues
 
-        if os.path.exists(os.path.join(abspath, 'OK')):
-            filerow = {'LOCALPATH': 'OK',
-                       'FILETYPE': 'OK',
-                       'FULLPATH': os.path.join(abspath, 'OK'),
-                       'BASENAME': 'OK'}
-            self.files = self.files.append(filerow, ignore_index=True)
+    def from_csv(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Parse a CSV file as a DataFrame
 
-    def get_status(self):
+        Data will be stored as a DataFrame for later
+        access or storage.
+
+        Filename is relative to realization root.
+
+        Args:
+            localpath: path local the realization to the txt file
+            convert_numeric: defaults to True, will try to parse
+                all values as integers, if not, then floats, and
+                strings as the last resort.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+
+        Returns:
+            dataframe: The CSV file loaded. Empty dataframe
+                if file is not present.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise IOError("File not found: " + fullpath)
+        else:
+            # Look for cached version
+            if localpath in self.data and not force_reread:
+                return self.data[localpath]
+            # Check the file store, append if not there
+            if localpath not in self.files['LOCALPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            try:
+                if convert_numeric:
+                    # Trust that Pandas will determine sensible datatypes
+                    # faster than the convert_numeric() function
+                    dtype = None
+                else:
+                    dtype = str
+                dframe = pd.read_csv(fullpath, dtype=dtype)
+            except pd.errors.EmptyDataError:
+                dframe = None  # or empty dataframe?
+
+            # Store parsed data:
+            self.data[localpath] = dframe
+            return dframe
+
+    def from_status(self):
         """Collects the contents of the STATUS files and return
         as a dataframe, with information from jobs.json added if
         available.
@@ -238,7 +294,60 @@ class ScratchRealization(object):
                             jsonfilename)
         status.sort_values(['JOBINDEX'], ascending=True,
                            inplace=True)
+        self.data['STATUS'] = status
         return status
+
+    def __getitem__(self, localpath):
+        """Direct access to the realization data structure
+
+        Calls get_df(localpath).
+        """
+        return self.get_df(localpath)
+
+    def keys(self):
+        """Access the keys of the internal data structure
+        """
+        return self.data.keys()
+
+    def get_df(self, localpath):
+        """Access the internal datastore which contains dataframes or dicts
+
+        Shorthand is allowed, if the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+        then you can also get this dataframe returned with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity. In case of ambiguity, a
+        ValueError will be raised.
+
+        Args:
+            localpath: the idenfier of the data requested
+
+        Returns:
+            dataframe or dictionary
+        """
+        if localpath in self.data.keys():
+            return self.data[localpath]
+
+        # Allow shorthand, but check ambiguity
+        basenames = [os.path.basename(x) for x in self.data.keys()]
+        if basenames.count(localpath) == 1:
+            shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
+            return self.data[shortcut2path[localpath]]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.data.keys()]
+        if noexts.count(localpath) == 1:
+            shortcut2path = {''.join(x.split('.')[:-1]): x
+                             for x in self.data.keys()}
+            return self.data[shortcut2path[localpath]]
+        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
+                          for x in self.data.keys()]
+        if basenamenoexts.count(localpath) == 1:
+            shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
+                             for x in self.data.keys()}
+            return self.data[shortcut2path[localpath]]
+        raise ValueError(localpath)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframe
@@ -273,40 +382,14 @@ class ScratchRealization(object):
                 # Issue: Solve when file is discovered multiple times.
                 self.files = self.files.append(filerow, ignore_index=True)
 
-    def get_csv(self, filename):
-        """Load a CSV file as a DataFrame
-
-        Filename is relative to realization root.
-
-        Returns:
-            dataframe: The CSV file loaded. Empty dataframe
-                if file is not present.
-        """
-        absfilename = os.path.join(self._origpath, filename)
-        if os.path.exists(absfilename):
-            return pd.read_csv(absfilename)
-        return pd.DataFrame()
-
     @property
     def parameters(self):
-        """Getter for get_parameters(convert_numeric=True)
-        """
-        return self.get_parameters(self)
-
-    def get_parameters(self, convert_numeric=True):
-        """Return the contents of parameters.txt as a dict
-
-        Strings will attempted to be parsed as numeric, and
-        dictionary datatypes will be either int, float or string.
-
-        Parsing is aggressive, parameter values that are by chance
-        integers in a particular realization will be integers,
-        but should aggregate well with floats from other realizations.
+        """Access the data obtained from parameters.txt
 
         Returns:
             dict with data from parameters.txt
         """
-        return self.keyvaluedata['parameters.txt']
+        return self.data['parameters.txt']
 
     def get_eclsum(self):
         """
@@ -321,7 +404,8 @@ class ScratchRealization(object):
         not help you (yet).
 
         Returns:
-           EclSum: object representing the summary file
+           EclSum: object representing the summary file. None if
+               nothing was found.
         """
         if self._eclsum:  # Return cached object if available
             return self._eclsum
@@ -333,27 +417,66 @@ class ScratchRealization(object):
         else:
             unsmry_fileguess = os.path.join(self._origpath, 'eclipse/model',
                                             '*.UNSMRY')
-            unsmry_filename = glob.glob(unsmry_fileguess)[0]
+            unsmry_filenamelist = glob.glob(unsmry_fileguess)
+        if not unsmry_filenamelist:
+            return None  # No filename matches
+        unsmry_filename = unsmry_filenamelist[0]
         if not os.path.exists(unsmry_filename):
             return None
         # Cache result
         self._eclsum = ert.ecl.EclSum(unsmry_filename)
         return self._eclsum
 
-    def get_smry(self, time_index=None, column_keys=None):
-        """Return the Eclipse summary data from the realization
+    def from_smry(self, time_index='raw', column_keys=None):
+        """Produce dataframe from Summary data from the realization
 
-        Convenience wrapper for ert.ecl.EclSum.pandas_frame()
+        When this function is called, the dataframe will be cached.
+        Caching supports different time_index, but there is no handling
+        of multiple sets of column_keys. The cached data will be called
+
+          'share/results/tables/unsmry-<time_index>.csv'
+
+        where <time_index> is among 'yearly', 'monthly', 'daily', 'last' or
+        'raw' (meaning the raw dates in the SMRY file), depending
+        on the chosen time_index. If a custom time_index (list
+        of datetime) was supplied, <time_index> will be called 'custom'.
+
+        Wraps ert.ecl.EclSum.pandas_frame()
 
         Args:
-            time_index: list of DateTime if interpolation is wanted
-               default is None, which returns the raw Eclipse report times
+            time_index: string indicating a resampling frequency,
+               'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
+               return the simulated report steps (also default).
+               If a list of DateTime is supplied, data will be resampled
+               to these.
             column_keys: list of column key wildcards.
 
         Returns:
-            DataFrame with summary keys as columns and dates as indices
+            DataFrame with summary keys as columns and dates as indices.
+                Empty dataframe if no summary is available.
         """
-        return self.get_eclsum().pandas_frame(time_index, column_keys)
+        if not self.get_eclsum():
+            # Return empty, but do not store the empty dataframe in self.data
+            return pd.DataFrame()
+
+        time_index_path = time_index
+        if time_index == 'raw':
+            time_index_arg = None
+        elif isinstance(time_index, str):
+            time_index_arg = self.get_smry_dates(freq=time_index)
+        if isinstance(time_index, list):
+            time_index_arg = time_index
+            time_index_path = 'custom'
+        # Do the actual work:
+        dframe = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        dframe = dframe.reset_index()
+        dframe.rename(columns={'index': 'DATE'}, inplace=True)
+
+        # Cache the result:
+        localpath = 'share/results/tables/unsmry-' +\
+                    time_index_path + '.csv'
+        self.data[localpath] = dframe
+        return dframe
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -387,6 +510,39 @@ class ScratchRealization(object):
                     prop in props}
         dates = self._eclsum.get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
+
+    def get_smry_dates(self, freq='monthly'):
+        """Return list of datetimes available in the realization
+
+        Args:
+        freq: string denoting requested frequency for
+            the returned list of datetime. 'report' will
+            yield the sorted union of all valid timesteps for
+            all realizations. Other valid options are
+            'daily', 'monthly' and 'yearly'.
+            'last' will give out the last date (maximum),
+            as a list with one element.
+        Returns:
+            list of datetimes. None if no summary data is available.
+        """
+        if not self.get_eclsum():
+            return None
+        if freq == 'raw':
+            return self.get_eclsum().dates
+        elif freq == 'last':
+            return [self.get_eclsum().end_date]
+        else:
+            start_date = self.get_eclsum().start_date
+            end_date = self.get_eclsum().end_date
+            pd_freq_mnenomics = {'monthly': 'MS',
+                                 'yearly': 'YS',
+                                 'daily': 'D'}
+            if freq not in pd_freq_mnenomics:
+                raise ValueError('Requested frequency %s not supported' % freq)
+            datetimes = pd.date_range(start_date, end_date,
+                                      freq=pd_freq_mnenomics[freq])
+            # Convert from Pandas' datetime64 to datetime.date:
+            return [x.date() for x in datetimes]
 
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""

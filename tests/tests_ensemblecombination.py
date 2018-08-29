@@ -36,5 +36,5 @@ def test_ensemblecombination():
 
     assert isinstance(diff, ensemble.EnsembleCombination)
 
-    assert len(diff.get_smmry(column_keys=['FOPR', 'FGPR',
+    assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
                               'FWCT']).columns) == 5

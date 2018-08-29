@@ -78,6 +78,24 @@ class ScratchEnsemble(object):
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
 
+    def __getitem__(self, realizationindex):
+        """Get one of the realizations.
+
+        Indexed by integers."""
+        return self._realizations[realizationindex]
+
+    def keys(self):
+        """
+        Return the union of all keys available in realizations.
+
+        Keys refer to the realization datastore, a dictionary
+        of dataframes or dicts.
+        """
+        allkeys = set()
+        for realization in self._realizations.values():
+            allkeys = allkeys.union(realization.keys())
+        return allkeys
+
     def add_realizations(self, paths):
         """Utility function to add realizations to the ensemble.
 
@@ -132,16 +150,29 @@ class ScratchEnsemble(object):
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Wrap around ScratchRealization.from_txt()
+        """Parse a key-value text file from disk
 
         Parses text files on the form
         <key> <value>
         in each line.
+        """
+        return self._from_file(localpath, 'txt',
+                               convert_numeric, force_reread)
 
-        Aggregrates to ensemble level and returns as a dataframe
+    def from_csv(self, localpath, convert_numeric=True,
+                 force_reread=False):
+        """Parse a CSV file from disk"""
+        return self._from_file(localpath, 'csv',
+                               convert_numeric, force_reread)
+
+    def _from_file(self, localpath, fformat, convert_numeric=True,
+                   force_reread=False):
+        """Generalization of from_txt() and from_csv()
 
         Args:
             localpath: path to the text file, relative to each realization
+            fformat: string identifying the file format. Supports 'txt'
+                and 'csv'.
             convert_numeric: If set to True, numerical columns
                 will be searched for and have their dtype set
                 to integers or floats.
@@ -151,38 +182,21 @@ class ScratchEnsemble(object):
         Returns:
             Dataframe with all parameters, indexed by realization index.
         """
-        keyvaluesdictlist = []
         for index, realization in self._realizations.items():
             try:
-                keyvalues = realization.from_txt(localpath, convert_numeric,
-                                                 force_reread)
-                keyvalues['REAL'] = index
-                keyvaluesdictlist.append(keyvalues)
+                if fformat == 'csv':
+                    realization.from_csv(localpath, convert_numeric,
+                                         force_reread)
+                elif fformat == 'txt':
+                    realization.from_txt(localpath, convert_numeric,
+                                         force_reread)
+                else:
+                    raise ValueError('Unrecognized file format ' + fformat)
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
                 pass
-        return pd.DataFrame(keyvaluesdictlist)
-
-    def get_status(self):
-        """Collects the contents of the STATUS files and jobs.json
-        from all realizations.
-
-        Each row in the dataframe is a finished FORWARD_MODEL
-        The STATUS files are parsed and information is extracted.
-        Job duration is calculated, but jobs above 24 hours
-        get incorrect durations.
-
-        Returns:
-            A dataframe with information from the STATUS files.
-            Each row represents one job in one of the realizations.
-        """
-        statusdict = {}  # dict of status dataframes pr. realization
-        for realidx, realization in self._realizations.items():
-            statusdict[realidx] = realization.get_status()
-            # Tag it:
-            statusdict[realidx].insert(0, 'REAL', realidx)
-        return pd.concat(statusdict, ignore_index=True, sort=False)
+        return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframes
@@ -200,6 +214,7 @@ class ScratchEnsemble(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
         """
+        logger.warning("find_files() might become deprecated")
         for _, realization in self._realizations.items():
             realization.find_files(paths, metadata)
 
@@ -234,27 +249,38 @@ class ScratchEnsemble(object):
                         result = result.union(set(eclsum.keys(vector)))
         return list(result)
 
-    def get_csv(self, filename):
-        """Load CSV data from each realization and concatenated vertically
+    def get_df(self, localpath):
+        """Load data from each realization and concatenate vertically
 
         Each row is tagged by the realization index.
-        The loaded CSV files does not have to be discovered,
-        and will not be discovered either by this call.
 
         Args:
-            filename: string, filename local to realization
+            localpath: string, filename local to realization
         Returns:
-           dataframe: Merged CSV from each realization.
+           dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
                Empty dataframe if no data is found
 
         """
-        dflist = []
+        dflist = {}
         for index, realization in self._realizations.items():
-            dframe = realization.get_csv(filename)
-            dframe.insert(0, 'REAL', index)
-            dflist.append(dframe)
-        return pd.concat(dflist, ignore_index=True, sort=False)
+            try:
+                dframe = realization.get_df(localpath)
+                if isinstance(dframe, dict):
+                    dframe = pd.DataFrame(index=[1], data=dframe)
+                dflist[index] = dframe
+            except ValueError:
+                # Just skip realizations where this localpath is missing
+                pass
+        if len(dflist):
+            # Merge a dictionary of dataframes. The dict key is
+            # the realization index, and end up in a MultiIndex
+            df = pd.concat(dflist).reset_index()
+            df.rename(columns={'level_0': 'REAL'}, inplace=True)
+            del df['level_1']  # This is the indices from each real
+            return df
+        else:
+            raise ValueError("No data found for " + localpath)
 
     def get_ok(self):
         """ collate the ok status for the ensemble """
@@ -264,12 +290,18 @@ class ScratchEnsemble(object):
             ens_ok['OK'].append(realization.get_ok())
         return pd.DataFrame(ens_ok)
 
-    def get_smry(self, time_index=None, column_keys=None, stacked=True):
+    def from_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
-        Aggregates summary data from all realizations.
+        Fetch summary data from all realizations.
 
-        Wraps around Realization.get_smry() which wraps around
+        The pr. realization results will be cached by each
+        realization object, and can be retrieved through get_df().
+
+        Wraps around Realization.from_smry() which wraps around
         ert.ecl.EclSum.pandas_frame()
+
+        Beware that the default time_index or ensembles is 'monthly',
+        differing from realizations which use raw dates by default.
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -289,26 +321,27 @@ class ScratchEnsemble(object):
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
-        if isinstance(time_index, str):
-            time_index = self.get_smry_dates(time_index)
-        if stacked:
-            dflist = []
-            for index, realization in self._realizations.items():
-                dframe = realization.get_smry(time_index=time_index,
-                                              column_keys=column_keys)
-                dframe.insert(0, 'REAL', index)
-                dframe.index.name = 'DATE'
-                dflist.append(dframe)
-            return pd.concat(dflist, sort=False).reset_index()
-        else:
+        if not stacked:
             raise NotImplementedError
+        # Future: Multithread this!
+        for index, realization in self._realizations.items():
+            # We do not store the returned DataFrames here,
+            # instead we look them up afterwards using get_df()
+            # Downside is that we have to compute the name of the
+            # cached object as it is not returned.
+            realization.from_smry(time_index=time_index,
+                                  column_keys=column_keys)
+        if isinstance(time_index, list):
+            time_index = 'custom'
+        return self.get_df('share/results/tables/unsmry-' +
+                           time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
            freq: string denoting requested frequency for
-               the returned list of datetime. 'report' will
+               the returned list of datetime. 'report' or 'raw' will
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
@@ -316,7 +349,7 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes.
         """
-        if freq == 'report':
+        if freq == 'report' or freq == 'raw':
             dates = set()
             for _, realization in self._realizations.items():
                 dates = dates.union(realization.get_eclsum().dates)
