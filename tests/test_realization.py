@@ -133,7 +133,7 @@ def test_singlereal_ecl():
         # This does not exist before we have asked for it
         'FOPT' in real['unsmry-yearly']
 
-def test_filesystem_picking():
+def test_filesystem_changes():
     """Test loading of sparse realization (random data missing)
 
     Performed by filesystem manipulations from the original realizations.
@@ -159,11 +159,24 @@ def test_filesystem_picking():
 
     realdir = datadir + '/' + tmpensname + '/realization-0/iter-0'
 
-    # Load untainted realization
+    # Load untainted realization, nothing bad should happen
     real = ensemble.ScratchRealization(realdir)
 
     # Remove SMSPEC file and reload:
-    os.remove(realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC')
+    shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC',
+                realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC-FOOO')
+    real = ensemble.ScratchRealization(realdir)  # this should go fine
+    # This should just return None. Logging info is okay.
+    assert real.get_eclsum() == None
+    # This should return None
+    assert real.get_smry_dates() == None
+    # This should return empty dataframe:
+    assert isinstance(real.from_smry(), pd.DataFrame)
+    assert len(real.from_smry()) == 0
+
+    # Also move away UNSMRY and redo:
+    shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY',
+                realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY-FOOO')
     real = ensemble.ScratchRealization(realdir)  # this should go fine
     # This should just return None
     assert real.get_eclsum() == None
@@ -173,18 +186,14 @@ def test_filesystem_picking():
     assert isinstance(real.from_smry(), pd.DataFrame)
     assert len(real.from_smry()) == 0
 
-    # Also delete UNSMRY and redo:
-    os.remove(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY')
-    real = ensemble.ScratchRealization(realdir)  # this should go fine
-    # This should just return None
-    assert real.get_eclsum() == None
-    # This should return None
-    assert real.get_smry_dates() == None
-    # This should return empty dataframe:
-    assert isinstance(real.from_smry(), pd.DataFrame)
-    assert len(real.from_smry()) == 0
+    # Reinstate summary data:
+    shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY-FOOO',
+                realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY')
+    shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC-FOOO',
+                realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC')
 
     # Remove jobs.json, this file should not be critical
+    # but the status dataframe should have less information
     statuscolumnswithjson = len(real.get_df('STATUS').columns)
     os.remove(realdir + '/jobs.json')
     real = ensemble.ScratchRealization(realdir)  # this should go fine
@@ -197,11 +206,43 @@ def test_filesystem_picking():
     assert statuscolumnswithoutjson < statuscolumnswithjson
 
     # Remove parameters.txt
-    shutil.move(realdir + '/parameters.txt', realdir + '/parameter.text')
+    shutil.move(realdir + '/parameters.txt', realdir + '/parameters.text')
     with pytest.raises(IOError):
         real = ensemble.ScratchRealization(realdir)
         # Discuss whether we should relax this requirement!!
-    shutil.move(realdir + '/parameters.text', realdir + '/parameter.txt')
-    
 
-    
+    # Move it back so the realization is valid again
+    shutil.move(realdir + '/parameters.text', realdir + '/parameters.txt')
+
+    # Remove STATUS altogether:
+    shutil.move(realdir + '/STATUS', realdir + '/MOVEDSTATUS')
+    with pytest.raises(IOError):
+        real = ensemble.ScratchRealization(realdir)
+        # This is also currently a hard requirement.
+
+    # Try with an empty STATUS file:
+    fhandle = open(realdir + '/STATUS', 'w')
+    fhandle.close()
+    real = ensemble.ScratchRealization(realdir)
+    assert len(real.get_df('STATUS')) == 0
+    # This demonstrates we can fool the Realization object, and
+    # should perhaps leads to relaxation of the requirement..
+
+    # Check that we can move the Eclipse files to another place
+    # in the realization dir and still load summary data:
+    shutil.move(realdir + '/eclipse',
+                realdir + '/eclipsedir')
+    real = ensemble.ScratchRealization(realdir)
+
+    # from_smry() is now the same as no UNSMRY file found,
+    # an empty dataframe (and there would be some logging)
+    assert len(real.from_smry()) == 0
+
+    # Now discover the UNSMRY file explicitly, then from_smry()
+    # should work.
+    real.find_files('eclipsedir/model/*.UNSMRY')
+    # Non-empty dataframe:
+    assert len(real.from_smry()) > 0
+
+    # Clean up when finished
+    shutil.rmtree(datadir + '/' + tmpensname)

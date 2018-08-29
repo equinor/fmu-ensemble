@@ -18,7 +18,6 @@ logger = fmux.basiclogger(__name__)
 if not fmux.testsetup():
     raise SystemExit()
 
-
 def test_reek001():
     """Test import of a stripped 5 realization ensemble"""
 
