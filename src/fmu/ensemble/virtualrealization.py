@@ -70,14 +70,18 @@ class VirtualRealization(object):
         if os.path.exists(filesystempath):
             if delete:
                 shutil.rmtree(filesystempath)
+                os.mkdir(filesystempath)
             else:
                 if len(os.listdir(filesystempath)):
                     logger.critical("Refusing to write to non-empty directory")
                     raise IOError("Directory {} not " +
                                   "empty".format(filesystempath))
         else:
-            print("mkdir")
             os.mkdir(filesystempath)
+
+        with open(os.path.join(filesystempath, '__description__'), 'w') as fhandle:
+            fhandle.write(self._description)
+
         for key in self.keys():
             dirname = os.path.join(filesystempath, os.path.dirname(key))
             if len(dirname):
@@ -87,7 +91,7 @@ class VirtualRealization(object):
             data = self.get_df(key)
             filename = os.path.join(dirname, os.path.basename(key))
             if isinstance(data, pd.DataFrame):
-                logger.info("Dumping to csv")
+                logger.info("Dumping {}".format(key))
                 data.to_csv(filename, index=False)
             if isinstance(data, dict):
                 with open(filename, 'w') as fhandle:
