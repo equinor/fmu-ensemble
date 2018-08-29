@@ -383,6 +383,45 @@ class ScratchEnsemble(object):
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 
+    def get_smry_stats(self, column_keys=None, time_index=None):
+        """
+        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+        for a set of simulation summary vectors (column key).
+
+        Args:
+            column_keys: list of column key wildcards
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+        Returns:
+            A dictionary. Index by column key to the corresponding ensemble
+            summary statistics dataframe.
+        """
+        dframe = self.from_smry(time_index=time_index, column_keys=column_keys,
+                                stacked=True)
+        data = {}
+        for key in dframe.columns.drop(['DATE', 'REAL']):
+            dates = dframe.groupby('DATE').mean().index.tolist()
+            name = [key] * len(dates)
+            mean = dframe.groupby('DATE').mean()[key].values
+            p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
+            p90 = dframe.groupby('DATE').quantile(q=0.10)[key].values
+            maximum = dframe.groupby('DATE').max()[key].values
+            minimum = dframe.groupby('DATE').min()[key].values
+
+            data[key] = pd.DataFrame({
+              'index': dates,
+              'name':  name,
+              'mean':  mean,
+              'p10':   p10,
+              'p90':   p90,
+              'max':   maximum,
+              'min':   minimum
+            })
+
+        return data
+
     def get_wellnames(self, well_match=None):
         """
         Return a union of all Eclipse Summary well names
@@ -471,7 +510,6 @@ class ScratchEnsemble(object):
         result = EnsembleCombination(ref=self, adds=other)
         return result
 
-
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
     among string columns in an incoming dataframe.
@@ -526,3 +564,5 @@ def _convert_numeric_columns(dataframe):
             return pd.concat(dflist, sort=False).reset_index()
         else:
             raise NotImplementedError
+
+

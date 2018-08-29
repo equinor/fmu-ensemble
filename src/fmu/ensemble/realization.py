@@ -558,11 +558,11 @@ class ScratchRealization(object):
                                                             pathsummary)
 
     def get_ok(self):
+        """ check if the realization OK file exists """
         okfile = os.path.join(self._origpath, 'OK')
         if os.path.exists(okfile):
             return True
-        else:
-            return False
+        return False
 
 
 def parse_number(value):
