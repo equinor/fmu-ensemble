@@ -113,11 +113,21 @@ class ScratchRealization(object):
         self.from_txt('parameters.txt')
         self.from_status()
 
-    def to_virtual(self, description=None):
+    def to_virtual(self, description=None, deepcopy=True):
         """Convert the current ScratchRealization object
-        to a VirtualRealization"""
-        virtreal = VirtualRealization(description, self.data)
-        return virtreal
+        to a VirtualRealization
+
+        Args:
+            description: string, used as label
+            deepcopy: boolean. Set to true if you want to continue
+               to manipulate the ScratchRealization object
+               afterwards without affecting the virtual realization.
+               Defaults to True. False will give faster execution.
+        """
+        if deepcopy:
+            return VirtualRealization(description, copy.deepcopy(self.data))
+        else:
+            return VirtualRealization(description, self.data)
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
