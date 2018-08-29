@@ -492,20 +492,28 @@ class ScratchEnsemble(object):
                 pass
             # Aggregate over this ensemble:
             data = self.get_df(key)
-            if isinstance(data, pd.DataFrame) and 'DATE' in data.columns:
-                if aggregation == 'p10':
-                    vreal.append(key, data.groupby('DATE').quantile(0.9))
-                elif aggregation == 'p90':
-                    vreal.append(key, data.groupby('DATE').quantile(0.1))
-                else:
-                    vreal.append(key, data.groupby('DATE').agg(aggregation))
+
+            # This column should never appear in aggregated data
+            del data['REAL']
+
+            # Look for data we should group by. This would be beneficial
+            # to get from a metadata file, and not by pure guesswork.
+            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION']
+
+            groupby = [x for x in groupbycolumncandidates
+                       if x in data.columns]
+
+            if len(groupby):
+                aggobject = data.groupby(groupby)
             else:
-                if aggregation == 'p10':
-                    vreal.append(key, data.quantile(0.9))
-                elif aggregation == 'p90':
-                    vreal.append(key, data.quantile(0.1))
-                else:
-                    vreal.append(key, data.agg(aggregation))
+                aggobject = data
+
+            if aggregation == 'p10':
+                vreal.append(key, aggobject.quantile(0.9))
+            elif aggregation == 'p90':
+                vreal.append(key, aggobject.quantile(0.1))
+            else:
+                vreal.append(key, aggobject.agg(aggregation))
         return vreal
 
     @property
