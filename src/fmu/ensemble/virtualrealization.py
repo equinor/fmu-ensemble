@@ -8,6 +8,7 @@ import os
 import re
 import glob
 import json
+import shutil
 import numpy
 import pandas as pd
 
@@ -41,6 +42,10 @@ class VirtualRealization(object):
     def __getitem__(self, localpath):
         return self.get_df(localpath)
 
+    def __delitem__(self, localpath):
+        if localpath in self.keys():
+            del self.data[localpath]
+
     def append(self, key, dataframe, overwrite=False):
         if key in self.data.keys() and not overwrite:
             logger.warning('Ignoring ' + key + ', data already exists')
@@ -50,6 +55,63 @@ class VirtualRealization(object):
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
         return "<VirtualRealization, {}>".format(self._description)
+
+    def to_disk(self, filesystempath, delete=False):
+        """Write the virtual realization to the filesystem.
+
+        All data will be dumped to the requested directory according
+        to their localpaths (keys).
+
+        Args:
+            filesystempath : string with a directory, absolute or
+                relative. If it exists already, it must be empty, 
+                otherwise we give up.
+        """
+        if os.path.exists(filesystempath):
+            if delete:
+                shutil.rmtree(filesystempath)
+            else:
+                if len(os.listdir(filesystempath)):
+                    logger.critical("Refusing to write to non-empty directory")
+                    raise IOError("Directory {} not " +
+                                  "empty".format(filesystempath))
+        else:
+            print("mkdir")
+            os.mkdir(filesystempath)
+        for key in self.keys():
+            dirname = os.path.join(filesystempath, os.path.dirname(key))
+            if len(dirname):
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+
+            data = self.get_df(key)
+            filename = os.path.join(dirname, os.path.basename(key))
+            if isinstance(data, pd.DataFrame):
+                logger.info("Dumping to csv")
+                data.to_csv(filename, index=False)
+            if isinstance(data, dict):
+                with open(filename, 'w') as fhandle:
+                    for paramkey in data.keys():
+                        fhandle.write(paramkey + " " +
+                                      str(data[paramkey]) + "\n")
+
+    def from_disk(self, filesystempath):
+        """
+        Load data for a virtual realization from disk.
+
+        Existing data in the current object will be wiped,
+        this function is intended for initialization
+        """
+        raise NotImplementedError
+
+    def to_json(self):
+        """
+        Dump realization data to json.
+
+        Resulting json string is compatible with the
+        accompanying from_json() function
+        """
+        raise NotImplementedError
 
     def get_df(self, localpath):
         """Access the internal datastore which contains dataframes or dicts

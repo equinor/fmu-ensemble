@@ -14,6 +14,7 @@ from __future__ import print_function
 
 import os
 import re
+import copy
 import glob
 import json
 import numpy
