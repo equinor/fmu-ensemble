@@ -138,6 +138,7 @@ def test_singlereal_ecl():
         # This does not exist before we have asked for it
         'FOPT' in real['unsmry-yearly']
 
+
 def test_filesystem_changes():
     """Test loading of sparse realization (random data missing)
 
@@ -158,7 +159,6 @@ def test_filesystem_changes():
     if os.path.exists(datadir + '/' + tmpensname):
         shutil.rmtree(datadir + '/' + tmpensname)
     os.mkdir(datadir + '/' + tmpensname)
-    #os.mkdir(datadir + '/' + tmpensname + '/realization-0')
     shutil.copytree(datadir + '/testensemble-reek001/realization-0',
                     datadir + '/' + tmpensname + '/realization-0')
 
@@ -172,9 +172,9 @@ def test_filesystem_changes():
                 realdir + '/eclipse/model/2_R001_REEK-0.SMSPEC-FOOO')
     real = ensemble.ScratchRealization(realdir)  # this should go fine
     # This should just return None. Logging info is okay.
-    assert real.get_eclsum() == None
+    assert real.get_eclsum() is None
     # This should return None
-    assert real.get_smry_dates() == None
+    assert real.get_smry_dates() is None
     # This should return empty dataframe:
     assert isinstance(real.from_smry(), pd.DataFrame)
     assert len(real.from_smry()) == 0
@@ -184,9 +184,9 @@ def test_filesystem_changes():
                 realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY-FOOO')
     real = ensemble.ScratchRealization(realdir)  # this should go fine
     # This should just return None
-    assert real.get_eclsum() == None
+    assert real.get_eclsum() is None
     # This should return None
-    assert real.get_smry_dates() == None
+    assert real.get_smry_dates() is None
     # This should return empty dataframe:
     assert isinstance(real.from_smry(), pd.DataFrame)
     assert len(real.from_smry()) == 0
