@@ -294,7 +294,7 @@ class ScratchEnsemble(object):
         """ collate the ok status for the ensemble """
         ens_ok = defaultdict(list)
         for index, realization in self._realizations.items():
-            ens_ok['REAL'].append(index) 
+            ens_ok['REAL'].append(index)
             ens_ok['OK'].append(realization.get_ok())
         return pd.DataFrame(ens_ok)
 
