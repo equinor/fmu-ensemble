@@ -131,7 +131,7 @@ class ScratchEnsemble(object):
                     len(self._realizations))
         return count
 
-    def remove_data(self, localpath):
+    def remove_data(self, localpaths):
         """Remove certain datatypes from each realizations
         datastores. This modifies the underlying realization
         objects, and is equivalent to
@@ -142,10 +142,13 @@ class ScratchEnsemble(object):
 
         Args:
             localpath: string with full localpath to
-                the data
+                the data, or list of strings.
         """
-        for _, real in self._realizations.items():
-            del real[localpath]
+        if isinstance(localpaths, str):
+            localpaths = [localpaths]
+        for localpath in localpaths:
+            for _, real in self._realizations.items():
+                del real[localpath]
 
     def remove_realizations(self, realindices):
         """Remove specific realizations from the ensemble
