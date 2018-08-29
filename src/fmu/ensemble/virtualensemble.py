@@ -47,7 +47,7 @@ class VirtualEnsemble(object):
 
     def append(self, key, dataframe, overwrite=False):
         if key in self.data.keys() and not overwrite:
-            logger.warning('Ignoring ' + key + ', data already exists')
+            logger.warning('Ignoring %s data already exists', key)
             return
         self.data[key] = dataframe
 
@@ -109,4 +109,4 @@ class VirtualEnsemble(object):
 
     @property
     def name(self):
-        return self._description
+        return self._name

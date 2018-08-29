@@ -45,7 +45,7 @@ class VirtualRealization(object):
 
     def append(self, key, dataframe, overwrite=False):
         if key in self.data.keys() and not overwrite:
-            logger.warning('Ignoring ' + key + ', data already exists')
+            logger.warning('Ignoring %s, data already exists', key)
             return
         self.data[key] = dataframe
 
@@ -69,10 +69,9 @@ class VirtualRealization(object):
                 shutil.rmtree(filesystempath)
                 os.mkdir(filesystempath)
             else:
-                if len(os.listdir(filesystempath)):
+                if os.listdir(filesystempath):
                     logger.critical("Refusing to write to non-empty directory")
-                    raise IOError("Directory {} not " +
-                                  "empty".format(filesystempath))
+                    raise IOError("Directory %s not empty" % filesystempath)
         else:
             os.mkdir(filesystempath)
 
@@ -88,14 +87,14 @@ class VirtualRealization(object):
 
         for key in self.keys():
             dirname = os.path.join(filesystempath, os.path.dirname(key))
-            if len(dirname):
+            if dirname:
                 if not os.path.exists(dirname):
                     os.makedirs(dirname)
 
             data = self.get_df(key)
             filename = os.path.join(dirname, os.path.basename(key))
             if isinstance(data, pd.DataFrame):
-                logger.info("Dumping {}".format(key))
+                logger.info("Dumping %s", key)
                 data.to_csv(filename, index=False)
             if isinstance(data, dict):
                 with open(filename, 'w') as fhandle:
