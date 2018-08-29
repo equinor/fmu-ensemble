@@ -103,6 +103,13 @@ class ScratchRealization(object):
                        'BASENAME': 'jobs.json'}
             self.files = self.files.append(filerow, ignore_index=True)
 
+        if os.path.exists(os.path.join(abspath, 'OK')):
+            filerow = {'LOCALPATH': 'OK',
+                       'FILETYPE': 'OK',
+                       'FULLPATH': os.path.join(abspath, 'OK'),
+                       'BASENAME': 'OK'}
+            self.files = self.files.append(filerow, ignore_index=True)
+
         self.from_txt('parameters.txt')
         self.from_status()
 
@@ -557,6 +564,13 @@ class ScratchRealization(object):
         pathsummary = self._origpath[-50:]
         return "<Realization, index={}, path=...{}>".format(self.index,
                                                             pathsummary)
+
+    def get_ok(self):
+        okfile = os.path.join(self._origpath, 'OK')
+        if os.path.exists(okfile):
+            return True
+        else:
+            return False
 
 
 def parse_number(value):

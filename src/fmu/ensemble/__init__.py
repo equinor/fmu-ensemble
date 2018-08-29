@@ -11,3 +11,4 @@ from .ensemble import ScratchEnsemble  # noqa
 from .realization import ScratchRealization  # noqa
 from .ensembleset import EnsembleSet  # noqa
 from .virtualrealization import VirtualRealization # noqa
+from .ensemblecombination import EnsembleCombination # noqa

@@ -13,10 +13,12 @@ from __future__ import print_function
 
 import glob
 import pandas as pd
+from collections import defaultdict
 
 from fmu.config import etc
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
+from .ensemblecombination import EnsembleCombination
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -289,6 +291,14 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
+    def get_ok(self):
+        """ collate the ok status for the ensemble """
+        ens_ok = defaultdict(list)
+        for index, realization in self._realizations.items():
+            ens_ok['REAL'].append(index) 
+            ens_ok['OK'].append(realization.get_ok())
+        return pd.DataFrame(ens_ok)
+
     def from_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
         Fetch summary data from all realizations.
@@ -476,6 +486,14 @@ class ScratchEnsemble(object):
         else:
             raise ValueError('Name input is not a string')
 
+    def __sub__(self, other):
+        result = EnsembleCombination(ref=self, subs=other)
+        return result
+
+    def __add__(self, other):
+        result = EnsembleCombination(ref=self, adds=other)
+        return result
+
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
@@ -492,3 +510,42 @@ def _convert_numeric_columns(dataframe):
     """
     logger.warn("_convert_numeric_columns() not implemented")
     return dataframe
+
+    def get_smry(self, time_index=None, column_keys=None, stacked=True):
+        """
+        Aggregates summary data from all realizations.
+
+        Wraps around Realization.get_smry() which wraps around
+        ert.ecl.EclSum.pandas_frame()
+
+        Args:
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+            column_keys: list of column key wildcards
+            stacked: boolean determining the dataframe layout. If
+                true, the realization index is a column, and dates are repeated
+                for each realization in the DATES column.
+                If false, a dictionary of dataframes is returned, indexed
+                by vector name, and with realization index as columns.
+                This only works when time_index is the same for all
+                realizations. Not implemented yet!
+
+        Returns:
+            A DataFame of summary vectors for the ensemble, or
+            a dict of dataframes if stacked=False.
+        """
+        if isinstance(time_index, str):
+            time_index = self.get_smry_dates(time_index)
+        if stacked:
+            dflist = []
+            for index, realization in self._realizations.items():
+                dframe = realization.get_smry(time_index=time_index,
+                                              column_keys=column_keys)
+                dframe.insert(0, 'REAL', index)
+                dframe.index.name = 'DATE'
+                dflist.append(dframe)
+            return pd.concat(dflist, sort=False).reset_index()
+        else:
+            raise NotImplementedError

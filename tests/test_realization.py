@@ -29,7 +29,7 @@ def test_single_realization():
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
 
-    assert len(real.files) == 3
+    assert len(real.files) == 4
     assert 'parameters.txt' in real.data
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
@@ -40,14 +40,14 @@ def test_single_realization():
                       str)
     # We have rerun from_txt on parameters, but file count
     # should not increase:
-    assert len(real.files) == 3
+    assert len(real.files) == 4
 
     with pytest.raises(IOError):
         real.from_txt('nonexistingfile.txt')
 
     # Load more data from text files:
     assert 'NPV' in real.from_txt('outputs.txt')
-    assert len(real.files) == 4
+    assert len(real.files) == 5
     assert 'outputs.txt' in real.data
     assert 'top_structure' in real.data['outputs.txt']
 
@@ -60,7 +60,7 @@ def test_single_realization():
 
     # CSV file loading
     vol_df = real.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
-    assert len(real.files) == 5
+    assert len(real.files) == 6
     assert isinstance(vol_df, pd.DataFrame)
     assert vol_df['STOIIP_TOTAL'].sum() > 0
 
@@ -199,8 +199,6 @@ def test_filesystem_changes():
     real = ensemble.ScratchRealization(realdir)  # this should go fine
 
     statuscolumnswithoutjson = len(real.get_df('STATUS').columns)
-    print(statuscolumnswithoutjson)
-    print(statuscolumnswithjson)
     assert statuscolumnswithoutjson > 0
     # Check that some STATUS info is missing.
     assert statuscolumnswithoutjson < statuscolumnswithjson
@@ -244,5 +242,5 @@ def test_filesystem_changes():
     # Non-empty dataframe:
     assert len(real.from_smry()) > 0
 
-    # Clean up when finished
-    shutil.rmtree(datadir + '/' + tmpensname)
+    # Clean up when finished. This often fails on network drives..
+    shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)

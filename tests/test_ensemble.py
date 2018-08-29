@@ -113,19 +113,19 @@ def test_reek001():
                                    '/data/testensemble-reek001/' +
                                    'realization-3/iter-0'])
     assert len(reekensemble) == 5
-    assert len(reekensemble.files) == 19
+    assert len(reekensemble.files) == 24
 
     # File discovery must be repeated for the newly added realizations
     reekensemble.find_files('share/results/volumes/' +
                             'simulator_volume_fipnum.csv',
                             metadata={'GRID': 'simgrid'})
-    assert len(reekensemble.files) == 20
+    assert len(reekensemble.files) == 25
     # Test addition of already added realization:
     reekensemble.add_realizations(testdir +
                                   '/data/testensemble-reek001/' +
                                   'realization-1/iter-0')
     assert len(reekensemble) == 5
-    assert len(reekensemble.files) == 19  # discovered files are lost!
+    assert len(reekensemble.files) == 24  # discovered files are lost!
 
 
 def test_ensemble_ecl():
@@ -204,3 +204,8 @@ def test_ensemble_ecl():
 
     # eclipse well groups list
     assert len(reekensemble.get_groupnames()) == 3
+
+    # delta between two ensembles
+    diff = reekensemble - reekensemble
+    assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
+                              'FWCT']).columns) == 5
