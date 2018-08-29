@@ -32,9 +32,11 @@ class VirtualRealization(object):
     by the localpath in the files dataframe from ScratchRealization-
 
     """
-    def __init__(self, description=None, data={}):
+    def __init__(self, description=None, data={}, longdescription=None):
         self._description = description
+        self._longdescription = longdescription
         self.data = data
+
 
     def keys(self):
         return self.data.keys()
@@ -79,8 +81,13 @@ class VirtualRealization(object):
         else:
             os.mkdir(filesystempath)
 
-        with open(os.path.join(filesystempath, '__description__'), 'w') as fhandle:
+        with open(os.path.join(filesystempath, '_description'), 'w') as fhandle:
             fhandle.write(self._description)
+        if self._longdescription:
+            with open(os.path.join(filesystempath, '_longdescription'), 'w') as fhandle:
+                fhandle.write(str(self._longdescription))
+        with open(os.path.join(filesystempath, '__repr__'), 'w') as fhandle:
+            fhandle.write(self.__repr__())
 
         for key in self.keys():
             dirname = os.path.join(filesystempath, os.path.dirname(key))
