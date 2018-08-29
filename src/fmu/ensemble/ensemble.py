@@ -432,28 +432,53 @@ class ScratchEnsemble(object):
 
         return sorted(list(result))
 
-    def to_virtual(self, aggregation):
-        """Convert the ensemble to a VirtualRealization 
-        using the requested aggregator
-    
+    def agg(self, aggregation, keylist=[]):
+        """Aggregate the ensemble data into one VirtualRealization
+
         Arguments:
             aggregation: string, supported modes are
                 'mean', 'median', 'p10', 'p90', 'min',
                 'max'
+            keylist: list of strings, indicating which keys
+                in the internal datastore to include. If list is empty
+                (default), all data will be attempted included.
         Returns:
-            VirtualRealization
+            VirtualRealization. Its name will include the aggregation operator
         """
+        supported_aggs = ['mean', 'median', 'min', 'max', 'p10', 'p90']
+        if aggregation not in supported_aggs:
+            raise ValueError("{arg} is not supported for " +
+                             "ensemble aggregation".format(arg=aggregation))
+
+        # Generate a new empty object:
         vreal = VirtualRealization(self.name + " " + aggregation, data={})
-        print(vreal.keys())
-        print(vreal)
-        paramdata = self.get_df('parameters.txt').agg(aggregation).to_dict()
-        
-        del paramdata['REAL']
-        print(paramdata['RMS_SEED'])
-        vreal.append('parameters.txt', 
-                     paramdata)
+        # I *do not* understand why data={} is necessary here!
+        # Tests will fail if not, as the parameters data is duplicated(!?)
+
+        # Loop over all data
+        if not len(keylist):  # Empty list means all keys.
+            keylist = self.keys()
+        for key in keylist:
+            if key == 'STATUS':
+                pass
+            # Aggregate over this ensemble:
+            data = self.get_df(key)
+            if isinstance(data, pd.DataFrame) and 'DATE' in data.columns:
+                if aggregation == 'p10':
+                    vreal.append(key, data.groupby('DATE').quantile(0.9))
+                elif aggregation == 'p90':
+                    vreal.append(key, data.groupby('DATE').quantile(0.1))
+                else:
+                    vreal.append(key, data.groupby('DATE').agg(aggregation))
+            else:
+                if aggregation == 'p10':
+                    vreal.append(key, data.quantile(0.9))
+                elif aggregation == 'p90':
+                    vreal.append(key, data.quantile(0.1))
+                else:
+                    vreal.append(key, data.agg(aggregation))
         return vreal
-        
+
     @property
     def files(self):
         """Return a concatenation of files in each realization"""

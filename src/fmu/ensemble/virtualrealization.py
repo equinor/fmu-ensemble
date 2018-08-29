@@ -34,7 +34,7 @@ class VirtualRealization(object):
     def __init__(self, description=None, data={}):
         self._description = description
         self.data = data
-    
+
     def keys(self):
         return self.data.keys()
 
