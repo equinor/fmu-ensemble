@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Module containing a VirtualEnsemble class"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -36,6 +37,9 @@ class VirtualEnsemble(object):
         """
         self._name = name
         self._longdescription = longdescription
+
+        # At ensemble level, this dictionary has dataframes only.
+        # All dataframes have the column REAL.
         self.data = data
 
     def keys(self):
@@ -55,7 +59,22 @@ class VirtualEnsemble(object):
         Args:
             realindices: int or list of ints, realization indices to remove
         """
-        raise NotImplementedError
+        if not isinstance(realindices, list):
+            realindices = [realindices]
+
+        indicesknown = self.parameters['REAL'].unique()
+        indicestodelete = list(set(realindices) & set(indicesknown))
+        indicesnotknown = list(set(realindices) - set(indicestodelete))
+        if indicesnotknown:
+            logger.warn("Skipping undefined realization indices %s",
+                        str(indicesnotknown))
+        # There might be Pandas tricks to avoid this outer loop.
+        for realindex in indicestodelete:
+            for key in self.data:
+                self.data[key] = self.data[key][self.data[key]['REAL']
+                                                != realindex]
+        logger.info("Removed %s realization(s) from VirtualEnsemble",
+                    len(indicestodelete))
 
     def remove_data(self, localpaths):
         """Remove a certain datatype from the internal datastore
@@ -64,7 +83,14 @@ class VirtualEnsemble(object):
             localpaths: string or list of strings, fully qualified localpath
                 (no shorthand allowed)
         """
-        raise NotImplementedError
+        if not isinstance(localpaths, list):
+            localpaths = [localpaths]
+        for localpath in localpaths:
+            if localpath in self.data:
+                del self.data[localpath]
+                logger.info("Deleted %s from ensemble", localpath)
+            else:
+                logger.warning("Ensemble did not contain %s", localpath)
 
     def agg(self, aggregation, keylist=[]):
         """Aggregate the ensemble data into a VirtualRealization
