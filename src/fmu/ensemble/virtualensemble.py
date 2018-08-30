@@ -21,41 +21,84 @@ class VirtualEnsemble(object):
     Computed or archived, one cannot assume to have access to the file
     system containing original data.
 
-    Compared to a ScratchEnsemble, a VirtualEnsemble has dataframes stored
-    similarly to VirtualRealization, but with REAL added as a column
-    in all dataframes.
+    Contrary to a ScratchEnsemble, a VirtualEnsemble stores aggregated
+    dataframes. The column REAL signifies the realization index.
     """
     def __init__(self, name=None, data={}, longdescription=None):
+        """
+        Initialize a virtual ensemble.
+
+        Typical use of this constructor is from ScratchEnsemble.to_virtual()
+        Args:
+            name: string, can be chosen freely
+            data: dict with data to initialize with. Defaults to empty
+            longdescription: string, free form multiline description.
+        """
         self._name = name
         self._longdescription = longdescription
         self.data = data
 
     def keys(self):
+        """Return all keys in the internal datastore"""
         return self.data.keys()
 
     def __getitem__(self, localpath):
+        """Return a specific datatype, shorthands are allowed"""
         return self.get_df(localpath)
 
     def remove_realizations(self, realindices):
+        """Remove realizations from internal data
+
+        This will remove all rows in all internalized data belonging
+        to the set of supplied indices.
+
+        Args:
+            realindices: int or list of ints, realization indices to remove
+        """
         raise NotImplementedError
 
     def remove_data(self, localpaths):
+        """Remove a certain datatype from the internal datastore
+
+        Args:
+            localpaths: string or list of strings, fully qualified localpath
+                (no shorthand allowed)
+        """
         raise NotImplementedError
 
     def agg(self, aggregation, keylist=[]):
+        """Aggregate the ensemble data into a VirtualRealization
+
+        All data will be attempted aggregated. String data will typically
+        be dropped in the result.
+
+        An educated guess for groupby arguments wil be done for
+        dataframes.
+
+        Args:
+            aggregation: string, among supported aggregation operators
+                mean, p10, p90, min, max, median
+        """
         raise NotImplementedError
 
     def append(self, key, dataframe, overwrite=False):
+        """Append a dataframe to the internal datastore"""
         if key in self.data.keys() and not overwrite:
             logger.warning('Ignoring %s data already exists', key)
             return
         self.data[key] = dataframe
 
     def to_disk(self):
+        """Dump all data to disk, in a retrieveable manner"""
         # Mature analogue function in VirtualRealization before commencing this
         raise NotImplementedError
 
-    def from_disk(self):
+    def from_disk(self, directory):
+        """Load data from disk.
+
+        Data must be written like to_disk() would have
+        written it.
+        """
         # Mature analogue function in VirtualRealization before commencing this
         raise NotImplementedError
 
@@ -105,8 +148,10 @@ class VirtualEnsemble(object):
 
     @property
     def parameters(self):
+        """Quick access to parameters"""
         return self.data['parameters.txt']
 
     @property
     def name(self):
+        """The name of the virtual ensemble as set during initialization"""
         return self._name
