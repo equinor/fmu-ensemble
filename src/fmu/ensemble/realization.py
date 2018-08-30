@@ -111,6 +111,22 @@ class ScratchRealization(object):
         self.from_txt('parameters.txt')
         self.from_status()
 
+    def from_file(self, localpath, fformat, convert_numeric=True,
+                  force_reread=False):
+        """
+        Parse and internalize files from disk.
+
+        Several file formats are supported:
+        * txt (one key-value pair pr. line)
+        * csv
+        """
+        if fformat == 'txt':
+            self.from_txt(localpath, convert_numeric, force_reread)
+        elif fformat == 'csv':
+            self.from_csv(localpath, convert_numeric, force_reread)
+        else:
+            raise ValueError("Unsupported file format %s" % fformat)
+
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a txt file with

@@ -154,24 +154,30 @@ class ScratchEnsemble(object):
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Parse a key-value text file from disk
+        """Parse a key-value text file from disk and internalize data
 
         Parses text files on the form
         <key> <value>
         in each line.
+
+        Parsing is performed individually in eacn realization
         """
-        return self._from_file(localpath, 'txt',
-                               convert_numeric, force_reread)
+        return self.from_file(localpath, 'txt',
+                              convert_numeric, force_reread)
 
     def from_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Parse a CSV file from disk"""
-        return self._from_file(localpath, 'csv',
-                               convert_numeric, force_reread)
+        """Parse a CSV file from disk and internalize data in a dataframe
 
-    def _from_file(self, localpath, fformat, convert_numeric=True,
-                   force_reread=False):
-        """Generalization of from_txt() and from_csv()
+        Parsing is performed individually in each realization."""
+        return self.from_file(localpath, 'csv',
+                              convert_numeric, force_reread)
+
+    def from_file(self, localpath, fformat, convert_numeric=True,
+                  force_reread=False):
+        """Function for calling from_file() in every realization
+
+        This function may utilize multithreading.
 
         Args:
             localpath: path to the text file, relative to each realization
@@ -188,14 +194,13 @@ class ScratchEnsemble(object):
         """
         for index, realization in self._realizations.items():
             try:
-                if fformat == 'csv':
-                    realization.from_csv(localpath, convert_numeric,
-                                         force_reread)
-                elif fformat == 'txt':
-                    realization.from_txt(localpath, convert_numeric,
-                                         force_reread)
-                else:
-                    raise ValueError('Unrecognized file format ' + fformat)
+                realization.from_file(localpath, fformat,
+                                      convert_numeric, force_reread)
+            except ValueError:
+                # This would at least occur for unsupportd fileformat,
+                # and that we should not skip.
+                logger.critical('from_file() failed')
+                raise ValueError  # (this might hide traceback from try:)
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
