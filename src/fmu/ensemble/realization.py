@@ -262,7 +262,9 @@ class ScratchRealization(object):
                                header=None,
                                names=['FORWARD_MODEL', 'colon',
                                       'STARTTIME', 'dots', 'ENDTIME'],
-                               engine='python')
+                               engine='python',
+                               error_bad_lines=False,
+                               warn_bad_lines=True)
         # Delete potential unwanted row
         status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                            (status.colon == 'JOBID:'))]
