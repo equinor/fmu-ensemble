@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pytest
 
 from fmu import config
 from fmu import ensemble
@@ -47,6 +48,16 @@ def test_virtual_realization():
     vreal = real.to_virtual()
     assert real.keys() == vreal.keys()
 
+    # Test appending a random dictionary
+    vreal.append('betteroutput', {'NPV': 200000000, 'BREAKEVEN': 8.4})
+    assert vreal['betteroutput']['NPV'] > 0
+    # Appending to a key that exists should not help
+    vreal.append('betteroutput', {'NPV': -300, 'BREAKEVEN': 300})
+    assert vreal['betteroutput']['NPV'] > 0
+    # Unless we overwrite explicitly:
+    vreal.append('betteroutput', {'NPV': -300, 'BREAKEVEN': 300},
+                 overwrite=True)
+    assert vreal['betteroutput']['NPV'] < 0
 
 def test_virtual_todisk():
     if '__file__' in globals():
@@ -61,6 +72,9 @@ def test_virtual_todisk():
     real.from_smry(time_index='yearly', column_keys=['F*'])
 
     vreal = real.to_virtual()
+
+    with pytest.raises(IOError):
+        vreal.to_disk('.')
 
     vreal.to_disk('virtreal', delete=True)
     assert os.path.exists('virtreal/parameters.txt')
