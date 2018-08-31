@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pandas as pd
 
 from fmu import config
 from fmu.ensemble import ScratchEnsemble
@@ -47,3 +48,10 @@ def test_virtualensemble():
     vens.remove_data('parameters.txt')
     assert 'parameters.txt' not in vens.keys()
     vens.remove_data('bogus')
+
+    # Test data addition
+    vens.append('betterdata', pd.DataFrame({'REAL': [0, 1, 2, 3, 4, 5, 6],
+                                            'NPV': [1000, 2000, 1500,
+                                                    2300, 6000, 3000, 800]}))
+    #print(vens.agg('mean')['betterdata']['NPV'])
+    print(vens.get_realization(3)['betterdata']['NPV'])

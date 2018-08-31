@@ -50,6 +50,13 @@ class VirtualEnsemble(object):
         """Return a specific datatype, shorthands are allowed"""
         return self.get_df(localpath)
 
+    def get_realization(self, realindex):
+        """
+        Return a virtual realization object, with data
+        taken from the virtual ensemble.
+        """
+        raise NotImplementedError
+
     def remove_realizations(self, realindices):
         """Remove realizations from internal data
 
@@ -108,7 +115,13 @@ class VirtualEnsemble(object):
         raise NotImplementedError
 
     def append(self, key, dataframe, overwrite=False):
-        """Append a dataframe to the internal datastore"""
+        """Append a dataframe to the internal datastore
+
+        Incoming dataframe MUST have a column called 'REAL' which
+        refers to the realization indices already known to the object.
+        """
+        if 'REAL' not in dataframe.columns:
+            raise ValueError("REAL column not in incoming dataframe")
         if key in self.data.keys() and not overwrite:
             logger.warning('Ignoring %s data already exists', key)
             return
