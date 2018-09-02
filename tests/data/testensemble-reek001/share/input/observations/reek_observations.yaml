@@ -1,0 +1,50 @@
+summary_vectors::
+  # Mandatory elements per entry: key and observations
+  - key: WBP4:OP1
+    comment: "Shut-in pressures converted from well head conditions" # This is a global comment regarding this set of observations
+    observations:
+       # Mandatory elements per entry in ecl_vector observations: value, error, date
+       - {value: 251, error: 4, date: 2001-01-01}
+       - {value: 251, error: 10, date: 2002-01-01}
+       - {value: 251, error: 10, date: 2003-01-01, comment: First measurement after sensor drift correction} 
+  - key: WOPR:OP_1
+    observations:
+       - {value: 1500, error: 150, date: 2001-01-01}
+       - {value: 900, error: 90, date: 2002-01-01, comment: Multiphase-flow-meter re-calibrated}
+       - {value: 650, error: 65, date: 2003-01-01}
+  - key: WGOR:OP_1
+    observations:
+       - {value: 185, error: 19, date: 2001-01-01}
+       - {value: 184, error: 18, date: 2002-01-01, comment: Multiphase-flow-meter re-calibrated}
+       - {value: 184, error: 18, date: 2003-01-01}
+  - key: WWCT:OP_1
+    observations:
+       - {value: 0.34, error: 0.034, date: 2001-01-01}
+       - {value: 0.61, error: 0.061, date: 2002-01-01, comment: Multiphase-flow-meter re-calibrated}
+       - {value: 0.83, error: 0.083, date: 2003-01-01}
+  - key: FOPR
+    observations:
+       - {value: 5820, error: 582, date: 2001-01-01}
+       - {value: 5448, error: 100, date: 2002-01-01, comment: Good test point. Reek field alone on test separator}
+       - {value: 3166, error: 317, date: 2003-01-01} 
+  - key: FGOR
+    observations:
+       - {value: 185, error: 5, date: 2001-01-01}
+       - {value: 178, error: 10, date: 2002-01-01}
+       - {value: 180, error: 15, date: 2003-01-01} 
+  - key: FWCT
+    observations:
+       - {value: 0.15, error: 0.05, date: 2001-01-01}
+       - {value: 0.48, error: 0.05, date: 2002-01-01}
+       - {value: 0.72, error: 0.07, date: 2003-01-01}
+general_observations:
+  # Mandatory elements per entry: name, simulation_output, observations
+  - name: RFT pressure OP_1
+    category: rft_pressure # identifier for specialized post-processing/visualization software
+    simulation_output: ./share/results/rft_op_1.yaml # Where the simulation output to compare with is created on scratch
+    observations:
+      # Mandatory elements in general observations: value, error
+      - {value: 303.5, error: 3, date: 2001-09-10, zone: BelowTopReek, MDmsl: 2025}
+      - {value: 304.4, error: 3, date: 2001-09-10, zone: BelowMidReek , MDmsl: 2025}
+      - {value: 305.0, error: 3, date: 2001-09-10, zone: BelowMidReek , MDmsl: 2025}
+      - {value: 305.0, error: 3, date: 2001-09-10, zone: BelowLowReek, MDmsl: 2025}
