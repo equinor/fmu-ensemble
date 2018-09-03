@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import pandas as pd
+import pytest
 
 from fmu import config
 from fmu.ensemble import ScratchEnsemble
@@ -64,3 +65,5 @@ def test_virtualensemble():
     assert vens.get_realization(2)['betterdata']['NPV'] == 1500
     assert vens.get_realization(80)['betterdata']['NPV'] == 9
     
+    with pytest.raises(ValueError):
+        vens.get_realization(9999)
