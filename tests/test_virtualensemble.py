@@ -37,6 +37,10 @@ def test_virtualensemble():
     assert len(vens['unsmry-yearly']['REAL'].unique()) == 5
     assert len(vens['parameters.txt']) == 5
 
+    # Test virtrealization retrieval:
+    vreal = vens.get_realization(2)
+    assert vreal.keys() == vens.keys()
+
     # Test realization removal:
     vens.remove_realizations(3)
     assert len(vens.parameters['REAL'].unique()) == 4
@@ -47,11 +51,22 @@ def test_virtualensemble():
     # Test data removal:
     vens.remove_data('parameters.txt')
     assert 'parameters.txt' not in vens.keys()
-    vens.remove_data('bogus')
+    vens.remove_data('bogus') # This should only give warning
 
-    # Test data addition
-    vens.append('betterdata', pd.DataFrame({'REAL': [0, 1, 2, 3, 4, 5, 6],
+    # Test data addition. It should(?) work also for earlier nonexisting
+    vens.append('betterdata', pd.DataFrame({'REAL': [0, 1, 2, 3, 4, 5, 6, 80],
                                             'NPV': [1000, 2000, 1500,
-                                                    2300, 6000, 3000, 800]}))
+                                                    2300, 6000, 3000, 800, 9]}))
+    assert 'betterdata' in vens.keys()
     #print(vens.agg('mean')['betterdata']['NPV'])
-    print(vens.get_realization(3)['betterdata']['NPV'])
+    assert vens.get_realization(3)['betterdata']['NPV'] == 2300
+    print(vens.get_df('betterdata'))
+    print(vens.keys())
+    print("foo")
+    print(vens.get_realization(80).get_df('betterdata'))
+    print("BAr")
+    assert vens.get_realization(0)['betterdata']['NPV'] == 1000
+    assert vens.get_realization(1)['betterdata']['NPV'] == 2000
+    assert vens.get_realization(2)['betterdata']['NPV'] == 1500
+    assert vens.get_realization(80)['betterdata']['NPV'] == 9
+    

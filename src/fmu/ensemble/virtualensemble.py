@@ -6,8 +6,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pandas as pd
 
 from fmu import config
+from fmu.ensemble.virtualrealization import VirtualRealization
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -55,7 +57,29 @@ class VirtualEnsemble(object):
         Return a virtual realization object, with data
         taken from the virtual ensemble.
         """
-        raise NotImplementedError
+        vreal = VirtualRealization(description="Realization %d from %s" %
+                                   (realindex, self._name))
+        for key in self.keys():
+            data = self.get_df(key)
+            realizationdata = data[data['REAL'] == realindex]
+            if key == 'betterdata':
+                print(realizationdata)
+            if not len(realizationdata):
+                continue
+            if len(realizationdata) == 1:
+                # Convert scalar values to dictionaries, avoiding
+                # getting length-one-series returned later on access.
+                realizationdata = realizationdata.iloc[0].to_dict()
+                if key == 'betterdata':
+                    print(realizationdata)
+            else:
+                realizationdata.reset_index(inplace=True, drop=True)
+            del realizationdata['REAL']
+            vreal.append(key, realizationdata)
+        if len(vreal.keys()):
+            return vreal
+        else:
+            raise ValueError("No data for realization %d" % realindex)
 
     def remove_realizations(self, realindices):
         """Remove realizations from internal data
@@ -120,6 +144,8 @@ class VirtualEnsemble(object):
         Incoming dataframe MUST have a column called 'REAL' which
         refers to the realization indices already known to the object.
         """
+        if not isinstance(dataframe, pd.DataFrame):
+            raise ValueError("Can only append dataframes")
         if 'REAL' not in dataframe.columns:
             raise ValueError("REAL column not in incoming dataframe")
         if key in self.data.keys() and not overwrite:
