@@ -79,5 +79,7 @@ def test_ensemble_aggregations():
     # job 49 is the Eclipse forward model
 
     # Test agg(excludekeys=..)
-    assert 'STATUS' not in reekensemble.agg('mean', excludekeys='STATUS').keys()
-    assert 'STATUS' not in reekensemble.agg('mean', keylist=['parameters.txt']).keys()
+    assert 'STATUS' not in reekensemble.agg('mean',
+                                            excludekeys='STATUS').keys()
+    assert 'STATUS' not in reekensemble.agg('mean',
+                                            keylist=['parameters.txt']).keys()

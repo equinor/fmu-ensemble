@@ -106,13 +106,42 @@ class VirtualRealization(object):
                                       str(data[paramkey]) + "\n")
 
     def from_disk(self, filesystempath):
-        """
-        Load data for a virtual realization from disk.
+        """Load data for a virtual realization from disk.
 
         Existing data in the current object will be wiped,
         this function is intended for initialization
+
+        WARNING: This code is really shaky. We need metafiles written
+        by to_json() for robust parsing of files on disk, f.ex. are
+        txt files really key-value data (dicts) or csv files?
+
+        Args:
+            filesystempath: path to a directory that to_disk() has
+                written to (or a really careful user)
         """
-        raise NotImplementedError
+        logger.info("Loading virtual realization from %s", filesystempath)
+        for root, dirnames, filenames in os.walk(filesystempath):
+            for filename in filenames:
+                if filename == '_description':
+                    self._description = ' '.join(open(os.path.join(
+                        root, filename)).readlines())
+                    logger.info('got name as %s', self._description)
+                elif filename == 'STATUS':
+                    self.append('STATUS', pd.read_csv(os.path.join(root,
+                                                                   filename)))
+                    logger.info('got STATUS')
+                elif filename == '__repr__':
+                    continue
+                elif filename[-4:] == '.txt':
+                    self.append(filename,
+                                pd.read_table(os.path.join(root, filename),
+                                              sep=r'\s+', index_col=0,
+                                              header=None)[1].to_dict())
+                    logger.info('read txt file ' + filename)
+                else:
+                    self.append(filename,
+                                pd.read_csv(os.path.join(root, filename)))
+                    logger.info('read csv file ' + filename)
 
     def to_json(self):
         """

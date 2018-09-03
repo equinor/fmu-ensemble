@@ -52,18 +52,19 @@ def test_virtualensemble():
     # Test data removal:
     vens.remove_data('parameters.txt')
     assert 'parameters.txt' not in vens.keys()
-    vens.remove_data('bogus') # This should only give warning
+    vens.remove_data('bogus')  # This should only give warning
 
     # Test data addition. It should(?) work also for earlier nonexisting
     vens.append('betterdata', pd.DataFrame({'REAL': [0, 1, 2, 3, 4, 5, 6, 80],
                                             'NPV': [1000, 2000, 1500,
-                                                    2300, 6000, 3000, 800, 9]}))
+                                                    2300, 6000, 3000,
+                                                    800, 9]}))
     assert 'betterdata' in vens.keys()
     assert vens.get_realization(3)['betterdata']['NPV'] == 2300
     assert vens.get_realization(0)['betterdata']['NPV'] == 1000
     assert vens.get_realization(1)['betterdata']['NPV'] == 2000
     assert vens.get_realization(2)['betterdata']['NPV'] == 1500
     assert vens.get_realization(80)['betterdata']['NPV'] == 9
-    
+
     with pytest.raises(ValueError):
         vens.get_realization(9999)

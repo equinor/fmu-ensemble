@@ -58,6 +58,7 @@ def test_virtual_realization():
                  overwrite=True)
     assert vreal['betteroutput']['NPV'] < 0
 
+
 def test_virtual_todisk():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
@@ -79,3 +80,26 @@ def test_virtual_todisk():
     assert os.path.exists('virtreal/parameters.txt')
     assert os.path.exists('virtreal/STATUS')
     assert os.path.exists('virtreal/share/results/tables/unsmry-yearly.csv')
+
+
+def test_virtual_fromdisk():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.from_smry(time_index='yearly', column_keys=['F*'])
+    real.to_virtual().to_disk('virtreal', delete=True)
+    #
+    vreal = ensemble.VirtualRealization('foo')
+    vreal.from_disk('virtreal')
+    for key in vreal.keys():
+        assert len(real.get_df(key)) == len(vreal.get_df(key))
+    assert real.get_df('parameters')['FWL'] == \
+        vreal.get_df('parameters')['FWL']
+    assert real.get_df('unsmry-yearly').iloc[-1]['FGIP'] == \
+        vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']
