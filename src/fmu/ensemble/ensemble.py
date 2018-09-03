@@ -477,7 +477,7 @@ class ScratchEnsemble(object):
 
         return sorted(list(result))
 
-    def agg(self, aggregation, keylist=[]):
+    def agg(self, aggregation, keylist=[], excludekeys=[]):
         """Aggregate the ensemble data into one VirtualRealization
 
         Arguments:
@@ -487,6 +487,8 @@ class ScratchEnsemble(object):
             keylist: list of strings, indicating which keys
                 in the internal datastore to include. If list is empty
                 (default), all data will be attempted included.
+            excludekeys: list of strings that should be excluded if
+                keylist is empty, otherwise ignored
         Returns:
             VirtualRealization. Its name will include the aggregation operator
         """
@@ -498,10 +500,15 @@ class ScratchEnsemble(object):
         # Generate a new empty object:
         vreal = VirtualRealization(self.name + " " + aggregation)
 
-        # Loop over all data
+        # Determine keys to use
         if not len(keylist):  # Empty list means all keys.
-            keylist = self.keys()
-        for key in keylist:
+            if not isinstance(excludekeys, list):
+                excludekeys = [excludekeys]
+            keys = set(self.keys()) - set(excludekeys)
+        else:
+            keys = keylist
+
+        for key in keys:
 
             # Aggregate over this ensemble:
             data = self.get_df(key)

@@ -77,3 +77,7 @@ def test_ensemble_aggregations():
     assert stats['p90']['STATUS'].iloc[49]['DURATION'] < \
         stats['max']['STATUS'].iloc[49]['DURATION']
     # job 49 is the Eclipse forward model
+
+    # Test agg(excludekeys=..)
+    assert 'STATUS' not in reekensemble.agg('mean', excludekeys='STATUS').keys()
+    assert 'STATUS' not in reekensemble.agg('mean', keylist=['parameters.txt']).keys()
