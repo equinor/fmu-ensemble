@@ -496,9 +496,7 @@ class ScratchEnsemble(object):
                              "ensemble aggregation".format(arg=aggregation))
 
         # Generate a new empty object:
-        vreal = VirtualRealization(self.name + " " + aggregation, data={})
-        # I *do not* understand why data={} is necessary here!
-        # Tests will fail if not, as the parameters data is duplicated(!?)
+        vreal = VirtualRealization(self.name + " " + aggregation)
 
         # Loop over all data
         if not len(keylist):  # Empty list means all keys.
