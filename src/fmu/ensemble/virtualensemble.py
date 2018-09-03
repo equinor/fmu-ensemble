@@ -27,7 +27,7 @@ class VirtualEnsemble(object):
     Contrary to a ScratchEnsemble, a VirtualEnsemble stores aggregated
     dataframes. The column REAL signifies the realization index.
     """
-    def __init__(self, name=None, data={}, longdescription=None):
+    def __init__(self, name=None, data=None, longdescription=None):
         """
         Initialize a virtual ensemble.
 
@@ -42,7 +42,10 @@ class VirtualEnsemble(object):
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
-        self.data = data
+        if data:
+            self.data = data
+        else:
+            self.data = {}
 
     def keys(self):
         """Return all keys in the internal datastore"""
@@ -72,7 +75,7 @@ class VirtualEnsemble(object):
                 realizationdata.reset_index(inplace=True, drop=True)
             del realizationdata['REAL']
             vreal.append(key, realizationdata)
-        if len(vreal.keys()):
+        if vreal.keys():
             return vreal
         else:
             raise ValueError("No data for realization %d" % realindex)
@@ -119,7 +122,7 @@ class VirtualEnsemble(object):
             else:
                 logger.warning("Ensemble did not contain %s", localpath)
 
-    def agg(self, aggregation, keylist=[]):
+    def agg(self, aggregation, keylist=None):
         """Aggregate the ensemble data into a VirtualRealization
 
         All data will be attempted aggregated. String data will typically
@@ -132,6 +135,8 @@ class VirtualEnsemble(object):
             aggregation: string, among supported aggregation operators
                 mean, p10, p90, min, max, median
         """
+        if not keylist:
+            keylist = []
         raise NotImplementedError
 
     def append(self, key, dataframe, overwrite=False):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+"""Contains the VirtualRealization class"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -37,16 +37,26 @@ class VirtualRealization(object):
             self.data = {}
 
     def keys(self):
+        """Return the keys of all data in internal datastore"""
         return self.data.keys()
 
     def __getitem__(self, localpath):
+        """Retrieve data for a specific key. Wrapper for get_df(),
+        shorthands are allowed."""
         return self.get_df(localpath)
 
     def __delitem__(self, localpath):
+        """Delete a key from the internal datastore. The key must be fully
+        qualified, no shorthands."""
         if localpath in self.keys():
             del self.data[localpath]
 
     def append(self, key, dataframe, overwrite=False):
+        """Append data to the datastore.
+
+        No checks performed on the dataframe coming in. If key exists,
+        nothing will be appended unless overwrite is set to True
+        """
         if key in self.data.keys() and not overwrite:
             logger.warning('Ignoring %s, data already exists', key)
             return
@@ -120,7 +130,7 @@ class VirtualRealization(object):
                 written to (or a really careful user)
         """
         logger.info("Loading virtual realization from %s", filesystempath)
-        for root, dirnames, filenames in os.walk(filesystempath):
+        for root, _, filenames in os.walk(filesystempath):
             for filename in filenames:
                 if filename == '_description':
                     self._description = ' '.join(open(os.path.join(
@@ -133,15 +143,17 @@ class VirtualRealization(object):
                 elif filename == '__repr__':
                     continue
                 elif filename[-4:] == '.txt':
+                    # This will FAIL if dataframes are collected from
+                    # txt files. Need metadata system.
                     self.append(filename,
                                 pd.read_table(os.path.join(root, filename),
                                               sep=r'\s+', index_col=0,
                                               header=None)[1].to_dict())
-                    logger.info('read txt file ' + filename)
+                    logger.info('read txt file %s', filename)
                 else:
                     self.append(filename,
                                 pd.read_csv(os.path.join(root, filename)))
-                    logger.info('read csv file ' + filename)
+                    logger.info('read csv file %s', filename)
 
     def to_json(self):
         """
@@ -194,8 +206,10 @@ class VirtualRealization(object):
 
     @property
     def parameters(self):
+        """Convenience getter for parameters.txt"""
         return self.data['parameters.txt']
 
     @property
     def name(self):
+        """Return name of ensemble"""
         return self._description
