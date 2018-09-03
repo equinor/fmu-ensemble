@@ -58,13 +58,7 @@ def test_virtualensemble():
                                             'NPV': [1000, 2000, 1500,
                                                     2300, 6000, 3000, 800, 9]}))
     assert 'betterdata' in vens.keys()
-    #print(vens.agg('mean')['betterdata']['NPV'])
     assert vens.get_realization(3)['betterdata']['NPV'] == 2300
-    print(vens.get_df('betterdata'))
-    print(vens.keys())
-    print("foo")
-    print(vens.get_realization(80).get_df('betterdata'))
-    print("BAr")
     assert vens.get_realization(0)['betterdata']['NPV'] == 1000
     assert vens.get_realization(1)['betterdata']['NPV'] == 2000
     assert vens.get_realization(2)['betterdata']['NPV'] == 1500

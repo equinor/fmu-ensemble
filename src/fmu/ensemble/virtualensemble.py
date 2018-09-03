@@ -62,16 +62,12 @@ class VirtualEnsemble(object):
         for key in self.keys():
             data = self.get_df(key)
             realizationdata = data[data['REAL'] == realindex]
-            if key == 'betterdata':
-                print(realizationdata)
             if not len(realizationdata):
                 continue
             if len(realizationdata) == 1:
                 # Convert scalar values to dictionaries, avoiding
                 # getting length-one-series returned later on access.
                 realizationdata = realizationdata.iloc[0].to_dict()
-                if key == 'betterdata':
-                    print(realizationdata)
             else:
                 realizationdata.reset_index(inplace=True, drop=True)
             del realizationdata['REAL']
