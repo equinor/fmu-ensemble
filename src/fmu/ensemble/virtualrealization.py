@@ -28,10 +28,13 @@ class VirtualRealization(object):
     by the localpath in the files dataframe from ScratchRealization-
 
     """
-    def __init__(self, description=None, data={}, longdescription=None):
+    def __init__(self, description=None, data=None, longdescription=None):
         self._description = description
         self._longdescription = longdescription
-        self.data = data
+        if data:
+            self.data = data
+        else:
+            self.data = {}
 
     def keys(self):
         return self.data.keys()
