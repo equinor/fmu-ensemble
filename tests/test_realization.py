@@ -110,11 +110,20 @@ def test_singlereal_ecl():
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
     real.from_smry().to_csv('real0smry.csv', index=False)
-    assert real.from_smry().shape == (378, 471)
+    assert real.from_smry().shape == (378, 474)
     # 378 dates, 470 columns + DATE column
 
-    assert real.from_smry(column_keys='FOP*')['FOPT'].max() > 6000000
+    assert real.from_smry(column_keys=['FOP*'])['FOPT'].max() > 6000000
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
+
+    # get_smry() should be analogue to from_smry(), but it should
+    # not modify the internalized dataframes!
+    internalized_df = real['unsmry-raw']
+    df = real.get_smry(column_keys=['G*'])
+    assert 'GGIR:OP' in df.columns
+    assert 'GGIR:OP' not in internalized_df.columns
+    # Test that the internalized was not touched:
+    assert 'GGIR:OP' not in real['unsmry-raw'].columns
 
     # Test date functionality
     assert isinstance(real.get_smry_dates(), list)
