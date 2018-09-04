@@ -4,13 +4,13 @@ import yaml
 
 
 def observations_parser(path):
-    """This function parser the observation yaml file
+    """ Function to parse the observation yaml file
 
     Args:
     path: string. file path the observation yaml file
 
     Returns:
-        dictionary of containing dataframes for each observation type
+        dictionary containing a dataframe for each observation type
     """
 
     def read_obs_yaml(path):
