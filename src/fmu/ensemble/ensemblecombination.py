@@ -114,41 +114,44 @@ class EnsembleCombination(object):
             vens.append(key, self.get_df(key))
         return vens
 
-    def get_smry(self, column_keys=None):
+    def get_smry_dates(self, freq='monthly'):
+        """Create a union of dates available in the
+        involved ensembles
         """
-        This function performs airthmetic operations on the
-        ensembles and return the corresponding dataframe with the
-        requested simulation summary keys.
-        """
-        return None
-        time_index = self.ref.get_smry_dates(freq='daily')
-        ref = self.ref.from_smry(time_index=time_index,
-                                 column_keys=column_keys,
-                                 stacked=True)
-        ref = ref[ref['REAL'].isin(self.combined)]
-        dates = ref['DATE']
-        real = ref['REAL']
-        ref.drop(columns=['DATE'], inplace=True)
-        if self.subs:
-            for sub in self.subs:
-                ior = sub.from_smry(time_index=time_index,
-                                    column_keys=column_keys,
-                                    stacked=True)
-                ior.drop(columns=['DATE'], inplace=True)
-                ior = ior[ior['REAL'].isin(self.combined)]
-                ref = ior - ref
-        if self.adds:
-            for add in self.adds:
-                ior = add.from_smry(time_index=time_index,
-                                    column_keys=column_keys,
-                                    stacked=True)
-                ior.drop(columns=['DATE'], inplace=True)
-                ior = ior[ior['REAL'].isin(self.combined)]
-                ref = ior + ref
-        ref.insert(0, 'DATE', dates)
-        ref['REAL'] = real
+        dates = set(self.ref.get_smry_dates(freq))
+        if self.add:
+            dates = dates.union(set(self.add.get_smry_dates(freq)))
+        if self.sub:
+            dates = dates.union(set(self.add.get_smry_dates(freq)))
+        dates = list(dates)
+        dates.sort()
+        return dates
 
-        return ref
+    def get_smry(self, time_index=None, column_keys=None):
+        """
+        Loads the Eclipse summary data directly from the underlying
+        ensemble data, independent of whether you have issued
+        from_smry() first in the ensembles.
+
+        If you involve VirtualEnsembles in this operation, this
+        this will fail.
+
+        Later resampling of data in VirtualEnsembles might get implemented.
+        """
+        if isinstance(time_index, str):
+            time_index = self.get_smry_dates(time_index)
+        indexlist = ['REAL', 'DATE']
+        refdf = self.ref.get_smry(time_index, column_keys).set_index(indexlist)
+        result = refdf.mul(self.scale)
+        if self.add:
+            otherdf = self.add.get_smry(time_index,
+                                        column_keys).set_index(indexlist)
+            result = result.add(otherdf)
+        if self.sub:
+            otherdf = self.sub.get_df(time_index,
+                                      column_keys).set_index(indexlist)
+            result = result.sub(otherdf)
+        return result.reset_index()
 
     def __getitem__(self, localpath):
         return self.get_df(localpath)

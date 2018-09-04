@@ -39,13 +39,17 @@ def test_ensemblecombination():
     half = 0.5 * reekensemble
     assert half['unsmry-yearly']['FOPT'].sum() == 0.5 * foptsum
 
+    # This is only true since we only juggle one ensemble here:
+    assert len(half.get_smry_dates(freq='monthly')) == len(
+        reekensemble.get_smry_dates(freq='monthly'))
+
     # Test something long:
     zero = reekensemble + 4*reekensemble - reekensemble*2 -\
            (-1) * reekensemble - reekensemble * 4
     assert zero['parameters']['KRW1'].sum() == 0
 
-    # assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
-    #                                      'FWCT']).columns) == 5
+    assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
+                                          'FWCT']).columns) == 5
 
     # Virtualization of ensemble combinations
     # (equals comutation of everything)
