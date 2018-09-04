@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module for parsing an ensemble from FMU. This class represents an
-ensemble, which is nothing but a collection of realizations.
-
-The typical task of this class is book-keeping of each realization,
-and abilities to aggregate any information that each realization can
-provide.
+"""Module for handling linear combinations of ensembles.
 """
 
 from __future__ import absolute_import
@@ -19,28 +14,49 @@ logger = xfmu.functionlogger(__name__)
 
 
 class EnsembleCombination(object):
+    """The class is used to perform linear operations on ensembles.
+
+    When instantiated, the linear combination will not actually be
+    computed before the results are actually asked for - lazy
+    evaluation.
     """
-    The class is used to perform airithmetic operations on Ensembles.
-    Currently only simulation summary vectors are supported; howvever,
-    functionality will be added to perform operations on any data type.
-    """
-    def __init__(self, ref, adds=None, subs=None):
-        """
-        The Operations object is used to substract or add Ensembles.
+    def __init__(self, ref, scale=None, add=None, sub=None):
+        """Set up an object for a linear combination of ensembles.
+
+        Each instance of this object can only hold one operation,
+        either addition/substraction of two
+        ensembles/ensemblecombinations or a scaling of one.
+
+        ScratchEnsembles and VirtualEnsembles can be combined freely.
+
+        A long expression of ensembles will lead to an evaluation tree
+        consisting of instances of this class with actual ensembles
+        at the leaf nodes.
 
         Args:
-            ref (obj): Name identifier for the ensemble ref case.
-            ior (obj): Name identifier for the ensemble ior case.
+            scale: float for scaling the ensemble or ensemblecombination
+            add: ensemble or ensemblecombinaton with a positive sign
+            sub: ensemble or ensemblecombination with a negative sign.
+
         """
 
         self.ref = ref
-        self.adds = []
-        self.subs = []
-        if adds:
-            self.adds.append(adds)
-        if subs:
-            self.subs.append(subs)
-        self.combined = self.find_combined()
+        if scale:
+            self.scale = scale
+        else:
+            self.scale = 1
+
+        if add:
+            self.add = add
+        else:
+            self.add = None
+
+        # Alternatively, substraction could be implemented as a combination
+        # of __mult__ and __add__
+        if sub:
+            self.sub = sub
+        else:
+            self.sub = None
 
     def find_combined(self):
         """
@@ -54,12 +70,51 @@ class EnsembleCombination(object):
             ref_ok = list(ref_ok & ior_ok)
         return ref_ok
 
-    def from_smry(self, column_keys=None):
+    def keys(self):
+        """Return the intersection of all keys available in reference
+        ensemble(combination) and the other
+        """
+        combkeys = set()
+        combkeys = combkeys.union(self.ref.keys())
+        if self.add:
+            combkeys = combkeys.intersection(self.add.keys())
+        if self.sub:
+            combkeys = combkeys.intersection(self.sub.keys())
+        return combkeys
+
+    def get_df(self, localpath):
+        """Evaluate the ensemble combination on a specific dataset
+        """
+        # We can pandas.add when the index is set correct.
+        # WE MUST GUESS!
+        indexlist = []
+        indexcandidates = ['REAL', 'DATE', 'ZONE', 'REGION']
+        for index in indexcandidates:
+            if index in self.ref.get_df(localpath).columns:
+                indexlist.append(index)
+        refdf = self.ref.get(localpath).set_index(indexlist)
+        result = refdf.mul(self.scale)
+        if self.add:
+            result = result.add(self.add.get_df(
+                localpath).set_index(indexlist))
+        if self.sub:
+            result = result.sub(self.sub.get_df(
+                localpath).set_index(indexlist))
+        return result.reset_index()
+
+    def to_virtual(self):
+        """Evaluate the current linear combination and return as
+        a virtual ensemble.
+        """
+        raise NotImplementedError
+
+    def get_smry(self, column_keys=None):
         """
         This function performs airthmetic operations on the
         ensembles and return the corresponding dataframe with the
         requested simulation summary keys.
         """
+        return None
         time_index = self.ref.get_smry_dates(freq='daily')
         ref = self.ref.from_smry(time_index=time_index,
                                  column_keys=column_keys,
@@ -89,10 +144,38 @@ class EnsembleCombination(object):
 
         return ref
 
+    def __getitem__(self, localpath):
+        return self.get_df(localpath)
+
+    def __repr__(self):
+        """Try to give out a linear expression"""
+        # NB: Implementation in this method requires scaling not to happen
+        # simultaneously as adds or subs.
+        scalestring = ''
+        addstring = ''
+        substring = ''
+        if self.scale != 1:
+            scalestring = str(self.scale) + " * "
+        if self.add:
+            addstring = " + " + str(self.add)
+        if self.sub:
+            substring = " - " + str(self.sub)
+        return scalestring + str(self.ref) + addstring + substring
+
     def __sub__(self, other):
-        self.subs.append(other)
-        return self
+        return EnsembleCombination(self, sub=other)
 
     def __add__(self, other):
-        self.adds.append(other)
-        return self
+        return EnsembleCombination(self, add=other)
+
+    def __radd__(self, other):
+        return EnsembleCombination(self, add=other)
+
+    def __rsub__(self, other):
+        return EnsembleCombination(self, sub=other)
+
+    def __mul__(self, other):
+        return EnsembleCombination(self, scale=float(other))
+
+    def __rmul__(self, other):
+        return EnsembleCombination(self, scale=float(other))

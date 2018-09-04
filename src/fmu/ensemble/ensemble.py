@@ -609,11 +609,27 @@ class ScratchEnsemble(object):
             raise ValueError('Name input is not a string')
 
     def __sub__(self, other):
-        result = EnsembleCombination(ref=self, subs=other)
+        result = EnsembleCombination(ref=self, sub=other)
         return result
 
     def __add__(self, other):
-        result = EnsembleCombination(ref=self, adds=other)
+        result = EnsembleCombination(ref=self, add=other)
+        return result
+
+    def __mul__(self, other):
+        result = EnsembleCombination(ref=self, scale=float(other))
+        return result
+
+    def __rsub__(self, other):
+        result = EnsembleCombination(ref=self, sub=other)
+        return result
+
+    def __radd__(self, other):
+        result = EnsembleCombination(ref=self, add=other)
+        return result
+
+    def __rmul__(self, other):
+        result = EnsembleCombination(ref=self, scale=float(other))
         return result
 
     def get_smry(self, time_index=None, column_keys=None, stacked=True):

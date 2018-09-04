@@ -28,13 +28,21 @@ def test_ensemblecombination():
                                             testdir +
                                             '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
+    reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
 
-    diff = ensemble.EnsembleCombination(ref=reekensemble, subs=reekensemble)
+    # Difference with itself should give zero..
+    diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
+    assert diff['parameters']['KRW1'].sum() == 0
+    assert diff['unsmry-yearly']['FOPT'].sum() == 0
 
-    # example of several operations
-    diff = diff + reekensemble - reekensemble
+    foptsum = reekensemble.get_df('unsmry-yearly')['FOPT'].sum()
+    half = 0.5 * reekensemble
+    assert half['unsmry-yearly']['FOPT'].sum() == 0.5 * foptsum
 
-    assert isinstance(diff, ensemble.EnsembleCombination)
+    # Test something long:
+    zero = reekensemble + 4*reekensemble - reekensemble*2 -\
+           (-1) * reekensemble - reekensemble * 4
+    assert zero['parameters']['KRW1'].sum() == 0
 
-    assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
-                              'FWCT']).columns) == 5
+    # assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
+    #                                      'FWCT']).columns) == 5
