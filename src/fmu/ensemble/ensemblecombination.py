@@ -19,7 +19,11 @@ logger = xfmu.functionlogger(__name__)
 
 
 class EnsembleCombination(object):
-
+    """
+    The class is used to perform airithmetic operations on Ensembles.
+    Currently only simulation summary vectors are supported; howvever,
+    functionality will be added to perform operations on any data type.
+    """
     def __init__(self, ref, adds=None, subs=None):
         """
         The Operations object is used to substract or add Ensembles.
@@ -39,16 +43,26 @@ class EnsembleCombination(object):
         self.combined = self.find_combined()
 
     def find_combined(self):
+        """
+        The function finds the corresponding realizations
+        which have completed successfully in the all ensembles.
+        """
         ref_ok = set(self.ref.get_ok().query('OK == True')['REAL'].tolist())
         operations = self.subs + self.adds
         for operator in operations:
-            ior_ok = set(operator.get_ok().query('OK == True')['REAL'].tolist())
+            ior_ok = set(operator.get_ok().query('OK == True')['REAL'].tolist()) # noqa
             ref_ok = list(ref_ok & ior_ok)
         return ref_ok
 
     def from_smry(self, column_keys=None):
+        """
+        This function performs airthmetic operations on the
+        ensembles and return the corresponding dataframe with the
+        requested simulation summary keys.
+        """
         time_index = self.ref.get_smry_dates(freq='daily')
-        ref = self.ref.from_smry(time_index=time_index, column_keys=column_keys,
+        ref = self.ref.from_smry(time_index=time_index,
+                                 column_keys=column_keys,
                                  stacked=True)
         ref = ref[ref['REAL'].isin(self.combined)]
         dates = ref['DATE']

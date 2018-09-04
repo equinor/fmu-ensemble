@@ -132,6 +132,22 @@ class ScratchRealization(object):
         else:
             return VirtualRealization(name, self.data)
 
+    def from_file(self, localpath, fformat, convert_numeric=True,
+                  force_reread=False):
+        """
+        Parse and internalize files from disk.
+
+        Several file formats are supported:
+        * txt (one key-value pair pr. line)
+        * csv
+        """
+        if fformat == 'txt':
+            self.from_txt(localpath, convert_numeric, force_reread)
+        elif fformat == 'csv':
+            self.from_csv(localpath, convert_numeric, force_reread)
+        else:
+            raise ValueError("Unsupported file format %s" % fformat)
+
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a txt file with
@@ -267,7 +283,9 @@ class ScratchRealization(object):
                                header=None,
                                names=['FORWARD_MODEL', 'colon',
                                       'STARTTIME', 'dots', 'ENDTIME'],
-                               engine='python')
+                               engine='python',
+                               error_bad_lines=False,
+                               warn_bad_lines=True)
         # Delete potential unwanted row
         status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                            (status.colon == 'JOBID:'))]

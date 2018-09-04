@@ -189,24 +189,30 @@ class ScratchEnsemble(object):
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Parse a key-value text file from disk
+        """Parse a key-value text file from disk and internalize data
 
         Parses text files on the form
         <key> <value>
         in each line.
+
+        Parsing is performed individually in eacn realization
         """
-        return self._from_file(localpath, 'txt',
-                               convert_numeric, force_reread)
+        return self.from_file(localpath, 'txt',
+                              convert_numeric, force_reread)
 
     def from_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Parse a CSV file from disk"""
-        return self._from_file(localpath, 'csv',
-                               convert_numeric, force_reread)
+        """Parse a CSV file from disk and internalize data in a dataframe
 
-    def _from_file(self, localpath, fformat, convert_numeric=True,
-                   force_reread=False):
-        """Generalization of from_txt() and from_csv()
+        Parsing is performed individually in each realization."""
+        return self.from_file(localpath, 'csv',
+                              convert_numeric, force_reread)
+
+    def from_file(self, localpath, fformat, convert_numeric=True,
+                  force_reread=False):
+        """Function for calling from_file() in every realization
+
+        This function may utilize multithreading.
 
         Args:
             localpath: path to the text file, relative to each realization
@@ -223,14 +229,13 @@ class ScratchEnsemble(object):
         """
         for index, realization in self._realizations.items():
             try:
-                if fformat == 'csv':
-                    realization.from_csv(localpath, convert_numeric,
-                                         force_reread)
-                elif fformat == 'txt':
-                    realization.from_txt(localpath, convert_numeric,
-                                         force_reread)
-                else:
-                    raise ValueError('Unrecognized file format ' + fformat)
+                realization.from_file(localpath, fformat,
+                                      convert_numeric, force_reread)
+            except ValueError:
+                # This would at least occur for unsupportd fileformat,
+                # and that we should not skip.
+                logger.critical('from_file() failed')
+                raise ValueError  # (this might hide traceback from try:)
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
@@ -418,6 +423,45 @@ class ScratchEnsemble(object):
                                       freq=pd_freq_mnenomics[freq])
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
+
+    def get_smry_stats(self, column_keys=None, time_index=None):
+        """
+        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+        for a set of simulation summary vectors (column key).
+
+        Args:
+            column_keys: list of column key wildcards
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+        Returns:
+            A dictionary. Index by column key to the corresponding ensemble
+            summary statistics dataframe.
+        """
+        dframe = self.from_smry(time_index=time_index, column_keys=column_keys,
+                                stacked=True)
+        data = {}
+        for key in dframe.columns.drop(['DATE', 'REAL']):
+            dates = dframe.groupby('DATE').mean().index.tolist()
+            name = [key] * len(dates)
+            mean = dframe.groupby('DATE').mean()[key].values
+            p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
+            p90 = dframe.groupby('DATE').quantile(q=0.10)[key].values
+            maximum = dframe.groupby('DATE').max()[key].values
+            minimum = dframe.groupby('DATE').min()[key].values
+
+            data[key] = pd.DataFrame({
+              'index': dates,
+              'name':  name,
+              'mean':  mean,
+              'p10':   p10,
+              'p90':   p90,
+              'max':   maximum,
+              'min':   minimum
+            })
+
+        return data
 
     def get_wellnames(self, well_match=None):
         """

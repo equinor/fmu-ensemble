@@ -214,3 +214,10 @@ def test_ensemble_ecl():
     diff = reekensemble - reekensemble
     assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
                               'FWCT']).columns) == 5
+
+    # eclipse summary vector statistics for a given ensemble
+    df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],
+                                           time_index='monthly')
+    assert len(df_stats.keys()) == 2
+    assert isinstance(df_stats['FOPR'], pd.DataFrame)
+    assert len(df_stats['FOPR'].index) == 37

@@ -120,21 +120,21 @@ class EnsembleSet(object):
         Parses text files on the form
         <key> <value>
         in each line."""
-        return self._from_file(localpath, 'txt', convert_numeric,
-                               force_reread)
+        return self.from_file(localpath, 'txt', convert_numeric,
+                              force_reread)
 
     def from_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse and internalize a CSV file from disk"""
-        return self._from_file(localpath, 'csv', convert_numeric,
-                               force_reread)
+        return self.from_file(localpath, 'csv', convert_numeric,
+                              force_reread)
 
-    def _from_file(self, localpath, fformat, convert_numeric=True,
-                   force_reread=False):
+    def from_file(self, localpath, fformat, convert_numeric=True,
+                  force_reread=False):
         """Internal function for from_*()"""
         for _, ensemble in self._ensembles.items():
-            ensemble._from_file(localpath, fformat, convert_numeric,
-                                force_reread)
+            ensemble.from_file(localpath, fformat, convert_numeric,
+                               force_reread)
         return self.get_df(localpath)
 
     def get_df(self, localpath):
@@ -163,9 +163,9 @@ class EnsembleSet(object):
         Args:
             filename: string, filename local to realization
         Returns:
-           dataframe: Merged CSV from each realization.
-               Realizations with missing data are ignored.
-               Empty dataframe if no data is found
+            dataframe: Merged CSV from each realization.
+                Realizations with missing data are ignored.
+                Empty dataframe if no data is found
         """
         dflist = []
         for _, ensemble in self._ensembles.items():
