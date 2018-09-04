@@ -16,7 +16,7 @@ def observations_parser(path):
     def read_obs_yaml(path):
         """ Function returns the contents of the observation yaml """
         with open(path, 'r') as stream:
-                observations = yaml.load(stream)
+            observations = yaml.load(stream)
         return observations
 
     def summary_observations(obs_data):
@@ -28,9 +28,13 @@ def observations_parser(path):
                 data['date'].append(obs['date'])
                 data['value'].append(obs['value'])
                 data['error'].append(obs['error'])
-                data['comments_key'].append(obs_group['comment'] if 'comment' in obs_group.keys() else None)
-                data['comments_value'].append(obs['comment'] if 'comment' in obs.keys() else None)
-        columns = ['key', 'date', 'value', 'error', 'comments_value', 'comments_key']
+                data['comments_key'].append(
+                    obs_group['comment'] if 'comment' in obs_group.keys(
+                        ) else None)
+                data['comments_value'].append(
+                    obs['comment'] if 'comment' in obs.keys() else None)
+        columns = ['key', 'date', 'value', 'error',
+                   'comments_value', 'comments_key']
         dframe = pd.DataFrame(data)
         dframe = dframe[columns]
         return dframe
@@ -49,9 +53,12 @@ def observations_parser(path):
             data['x'].append(obs['x'])
             data['y'].append(obs['y'])
             data['z'].append(obs['z'])
-            data['comments_key'].append(gen_data['comment'] if 'comment' in gen_data.keys() else None)
-            data['comments_value'].append(obs['comment'] if 'comment' in obs.keys() else None)
-        columns = ['category', 'well', 'date', 'value', 'error', 'x', 'y', 'z', 'MDmsl', 'zone', 'comments_value', 'comments_key']
+            data['comments_key'].append(
+                gen_data['comment'] if 'comment' in gen_data.keys() else None)
+            data['comments_value'].append(
+                obs['comment'] if 'comment' in obs.keys() else None)
+        columns = ['category', 'well', 'date', 'value', 'error', 'x',
+                   'y', 'z', 'MDmsl', 'zone', 'comments_value', 'comments_key']
         dframe = pd.DataFrame(data)
         dframe = dframe[columns]
         return dframe
@@ -73,5 +80,3 @@ def observations_parser(path):
                     raise NotImplementedError
 
     return data
-
-
