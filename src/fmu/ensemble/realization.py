@@ -525,6 +525,10 @@ class ScratchRealization(object):
         if isinstance(time_index, list):
             time_index_arg = time_index
             time_index_path = 'custom'
+
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+
         # Do the actual work:
         dframe = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
         dframe = dframe.reset_index()
@@ -535,6 +539,16 @@ class ScratchRealization(object):
                     time_index_path + '.csv'
         self.data[localpath] = dframe
         return dframe
+
+    def get_smry(self, time_index=None, column_keys=None):
+        """Wrapper for EclSum.pandas_frame
+
+        This gives access to the underlying data on disk without
+        touching internalized dataframes.
+        """
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+        return self.get_eclsum().pandas_frame(time_index, column_keys)
 
     def get_smryvalues(self, props_wildcard=None):
         """
