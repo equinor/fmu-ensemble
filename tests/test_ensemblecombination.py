@@ -46,3 +46,8 @@ def test_ensemblecombination():
 
     # assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
     #                                      'FWCT']).columns) == 5
+
+    # Virtualization of ensemble combinations
+    # (equals comutation of everything)
+    vzero = zero.to_virtual()
+    assert len(vzero.keys()) == len(zero.keys())

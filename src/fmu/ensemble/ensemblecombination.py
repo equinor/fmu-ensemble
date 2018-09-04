@@ -7,7 +7,7 @@ from __future__ import division
 from __future__ import print_function
 
 from fmu.config import etc
-
+from fmu.ensemble.virtualensemble import VirtualEnsemble
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -92,21 +92,27 @@ class EnsembleCombination(object):
         for index in indexcandidates:
             if index in self.ref.get_df(localpath).columns:
                 indexlist.append(index)
-        refdf = self.ref.get(localpath).set_index(indexlist)
+        refdf = self.ref.get_df(localpath).set_index(indexlist)
+        refdf = refdf.select_dtypes(include='number')
         result = refdf.mul(self.scale)
         if self.add:
-            result = result.add(self.add.get_df(
-                localpath).set_index(indexlist))
+            otherdf = self.add.get_df(localpath).set_index(indexlist)
+            otherdf = otherdf.select_dtypes(include='number')
+            result = result.add(otherdf)
         if self.sub:
-            result = result.sub(self.sub.get_df(
-                localpath).set_index(indexlist))
+            otherdf = self.sub.get_df(localpath).set_index(indexlist)
+            otherdf = otherdf.select_dtypes(include='number')
+            result = result.sub(otherdf)
         return result.reset_index()
 
     def to_virtual(self):
         """Evaluate the current linear combination and return as
         a virtual ensemble.
         """
-        raise NotImplementedError
+        vens = VirtualEnsemble(name=str(self))
+        for key in self.keys():
+            vens.append(key, self.get_df(key))
+        return vens
 
     def get_smry(self, column_keys=None):
         """
