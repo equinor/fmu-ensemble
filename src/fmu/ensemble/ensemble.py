@@ -19,6 +19,7 @@ import pandas as pd
 from fmu.config import etc
 from .realization import ScratchRealization
 from .ensemblecombination import EnsembleCombination
+from .observation_parser import observations_parser
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -555,6 +556,9 @@ class ScratchEnsemble(object):
         else:
             raise NotImplementedError
 
+    def from_observation_yaml(self, localpath):
+        return observations_parser(localpath)
+
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
@@ -571,3 +575,4 @@ def _convert_numeric_columns(dataframe):
     """
     logger.warn("_convert_numeric_columns() not implemented")
     return dataframe
+
