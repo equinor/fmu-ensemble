@@ -212,8 +212,8 @@ def test_ensemble_ecl():
 
     # delta between two ensembles
     diff = reekensemble - reekensemble
-    assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
-                              'FWCT']).columns) == 5
+    assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
+                                          'FWCT']).columns) == 5
 
     # eclipse summary vector statistics for a given ensemble
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],
