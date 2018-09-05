@@ -103,6 +103,12 @@ class EnsembleCombination(object):
             otherdf = self.sub.get_df(localpath).set_index(indexlist)
             otherdf = otherdf.select_dtypes(include='number')
             result = result.sub(otherdf)
+        # Delete rows where everything is NaN, which will be case when
+        # realization (multi-)indices does not match up in both ensembles.
+        result.dropna(axis='index', how='all', inplace=True)
+        # Also delete columns where everything is NaN, happens when
+        # column data are not similar
+        result.dropna(axis='columns', how='all', inplace=True)
         return result.reset_index()
 
     def to_virtual(self):
@@ -141,15 +147,20 @@ class EnsembleCombination(object):
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)
         indexlist = ['REAL', 'DATE']
-        refdf = self.ref.get_smry(time_index, column_keys).set_index(indexlist)
+        refdf = self.ref.get_smry(time_index=time_index,
+                                  column_keys=column_keys).set_index(indexlist)
         result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add.get_smry(time_index,
-                                        column_keys).set_index(indexlist)
+            otherdf = self.add\
+                          .get_smry(time_index=time_index,
+                                    column_keys=column_keys)\
+                          .set_index(indexlist)
             result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub.get_df(time_index,
-                                      column_keys).set_index(indexlist)
+            otherdf = self.sub\
+                          .get_smry(time_index=time_index,
+                                    column_keys=column_keys)\
+                          .set_index(indexlist)
             result = result.sub(otherdf)
         return result.reset_index()
 
