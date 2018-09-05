@@ -24,6 +24,7 @@ import ert.ecl
 from fmu import config
 
 from .virtualrealization import VirtualRealization
+from .realizationcombination import RealizationCombination
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -621,6 +622,30 @@ class ScratchRealization(object):
         pathsummary = self._origpath[-50:]
         return "<Realization, index={}, path=...{}>".format(self.index,
                                                             pathsummary)
+
+    def __sub__(self, other):
+        result = RealizationCombination(ref=self, sub=other)
+        return result
+
+    def __add__(self, other):
+        result = RealizationCombination(ref=self, add=other)
+        return result
+
+    def __mul__(self, other):
+        result = RealizationCombination(ref=self, scale=float(other))
+        return result
+
+    def __rsub__(self, other):
+        result = RealizationCombination(ref=self, sub=other)
+        return result
+
+    def __radd__(self, other):
+        result = RealizationCombination(ref=self, add=other)
+        return result
+
+    def __rmul__(self, other):
+        result = RealizationCombination(ref=self, scale=float(other))
+        return result
 
     def get_ok(self):
         """Tell if the realization has an OK file
