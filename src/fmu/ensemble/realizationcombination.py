@@ -6,6 +6,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import pandas as pd
+
 from fmu.config import etc
 
 xfmu = etc.Interaction()
@@ -80,27 +82,42 @@ class RealizationCombination(object):
         # WE MUST GUESS!
         indexlist = []
         indexcandidates = ['DATE', 'ZONE', 'REGION']
-        for index in indexcandidates:
-            if index in self.ref.get_df(localpath).columns:
-                indexlist.append(index)
-        refdf = self.ref.get_df(localpath).set_index(indexlist)
-        refdf = refdf.select_dtypes(include='number')
+        refdf = self.ref.get_df(localpath)
+        if isinstance(refdf, pd.DataFrame):
+            for index in indexcandidates:
+                if index in refdf.columns:
+                    indexlist.append(index)
+            refdf = refdf.set_index(indexlist)
+            refdf = refdf.select_dtypes(include='number')
+        else:  # Convert from dict to Series
+            refdf = pd.Series(refdf)
         result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add.get_df(localpath).set_index(indexlist)
-            otherdf = otherdf.select_dtypes(include='number')
+            otherdf = self.add.get_df(localpath)
+            if isinstance(otherdf, pd.DataFrame):
+                otherdf = otherdf.set_index(indexlist)
+                otherdf = otherdf.select_dtypes(include='number')
+            else:
+                otherdf = pd.Series(otherdf)
             result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub.get_df(localpath).set_index(indexlist)
-            otherdf = otherdf.select_dtypes(include='number')
+            otherdf = self.sub.get_df(localpath)
+            if isinstance(otherdf, pd.DataFrame):
+                otherdf = otherdf.set_index(indexlist)
+                otherdf = otherdf.select_dtypes(include='number')
+            else:
+                otherdf = pd.Series(otherdf)
             result = result.sub(otherdf)
-        # Delete rows where everything is NaN, which will be case when
-        # some data row does not exist in all realizations.
-        result.dropna(axis='index', how='all', inplace=True)
-        # Also delete columns where everything is NaN, happens when
-        # column data are not similar
-        result.dropna(axis='columns', how='all', inplace=True)
-        return result.reset_index()
+        if isinstance(result, pd.DataFrame):
+            # Delete rows where everything is NaN, which will be case when
+            # some data row does not exist in all realizations.
+            result.dropna(axis='index', how='all', inplace=True)
+            # Also delete columns where everything is NaN, happens when
+            # column data are not similar
+            result.dropna(axis='columns', how='all', inplace=True)
+            return result.reset_index()
+        else:
+            return result.dropna().to_dict()
 
     def to_virtual(self):
         """Evaluate the current linear combination and return as

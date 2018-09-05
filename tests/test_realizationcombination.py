@@ -11,6 +11,7 @@ from fmu import config
 from fmu import ensemble
 
 from fmu.ensemble import RealizationCombination
+from fmu.ensemble import ScratchEnsemble
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -35,33 +36,29 @@ def test_realizationcombination_basic():
     real1 = ensemble.ScratchRealization(real1dir)
     real1.from_smry(time_index='yearly', column_keys=['F*'])
 
-    
-    print((real0 - real1)['unsmry-yearly'])
-    ##    
-    ### Difference with itself should give zero..
-    ##diff = realization.RealizationCombination(ref=reekrealization, sub=reekrealization)
-    ##assert diff['parameters']['KRW1'].sum() == 0
-    ##assert diff['unsmry-yearly']['FOPT'].sum() == 0
-   ##
-    ##foptsum = reekrealization.get_df('unsmry-yearly')['FOPT'].sum()
-    ##half = 0.5 * reekrealization
-    ##assert half['unsmry-yearly']['FOPT'].sum() == 0.5 * foptsum
-   ##
-    ### This is only true since we only juggle one realization here:
-    ##assert len(half.get_smry_dates(freq='monthly')) == len(
-    ##    reekrealization.get_smry_dates(freq='monthly'))
-   ##
-    ### Test something long:
-    ##zero = reekrealization + 4*reekrealization - reekrealization*2 -\
-    ##    (-1) * reekrealization - reekrealization * 4
-    ##assert zero['parameters']['KRW1'].sum() == 0
-   ##
-    ##assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
-    ##                                      'FWCT']).columns) == 5
-   ##
-    ### Virtualization of realization combinations
-    ### (equals comutation of everything)
-    ##vzero = zero.to_virtual()
-    ##assert len(vzero.keys()) == len(zero.keys())
+
+    assert 'FWPR' in ((real0 - real1)['unsmry-yearly']).columns
+    assert 'FWL' in ((real0 - real1)['parameters'])
 
 
+def test_manual_aggregation():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+    reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
+
+    mean = reekensemble.agg('mean')
+
+    manualmean = 1/5 * (reekensemble[0] + reekensemble[1] + reekensemble[2]
+                        + reekensemble[3] + reekensemble[4])
+
+    assert mean['parameters']['RMS_SEED'] == \
+        manualmean['parameters']['RMS_SEED']
