@@ -47,6 +47,7 @@ def test_reek001():
 
     statusdf = reekensemble.get_df('STATUS')
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
+    assert 'REAL' in statusdf.columns
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
     assert int(statusdf.loc[245, 'DURATION']) == 195  # sample check
