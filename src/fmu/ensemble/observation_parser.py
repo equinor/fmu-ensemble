@@ -39,25 +39,26 @@ def observations_parser(path):
         dframe = dframe[columns]
         return dframe
 
-    def rft_observations(gen_data):
+    def rft_observations(rfts):
         """ Function returns RFT observations in a dataframe  """
         data = defaultdict(list)
-        for obs in gen_data['observations']:
-            data['category'].append(gen_data['category'])
-            data['well'].append(gen_data['well'])
-            data['date'].append(gen_data['date'])
-            data['value'].append(obs['value'])
-            data['error'].append(obs['error'])
-            data['zone'].append(obs['zone'])
-            data['MDmsl'].append(obs['MDmsl'])
-            data['x'].append(obs['x'])
-            data['y'].append(obs['y'])
-            data['z'].append(obs['z'])
-            data['comments_key'].append(
-                gen_data['comment'] if 'comment' in gen_data.keys() else None)
-            data['comments_value'].append(
-                obs['comment'] if 'comment' in obs.keys() else None)
-        columns = ['category', 'well', 'date', 'value', 'error', 'x',
+        for rft in rfts:
+            for index, obs in enumerate(rft['observations']):
+                data['rft_index'].append(index)
+                data['well'].append(rft['well'])
+                data['date'].append(rft['date'])
+                data['value'].append(obs['value'])
+                data['error'].append(obs['error'])
+                data['zone'].append(obs['zone'])
+                data['MDmsl'].append(obs['MDmsl'])
+                data['x'].append(obs['x'])
+                data['y'].append(obs['y'])
+                data['z'].append(obs['z'])
+                data['comments_key'].append(
+                    rft['comment'] if 'comment' in rft.keys() else None)
+                data['comments_value'].append(
+                    obs['comment'] if 'comment' in obs.keys() else None)
+        columns = ['rft_index', 'well', 'date', 'value', 'error', 'x',
                    'y', 'z', 'MDmsl', 'zone', 'comments_value', 'comments_key']
         dframe = pd.DataFrame(data)
         dframe = dframe[columns]
@@ -71,12 +72,12 @@ def observations_parser(path):
             data['summary_vectors'] = summary_observations(obs_data)
 
         if obs_type == 'general_observations':
-            for gen_data in obs_data:
-                if gen_data['category'] == 'rft_pressure':
+            for gen_type, gen_data in obs_data.iteritems():
+                if gen_type == 'rft_pressure':
                     data['rft_observations'] = rft_observations(gen_data)
-                if gen_data['category'] == 'gravity':
+                if gen_type == 'gravity':
                     raise NotImplementedError
-                if gen_data['category'] == 'some_random_other_obserbations':
+                if gen_type == 'some_random_other_obserbations':
                     raise NotImplementedError
 
     return data
