@@ -9,6 +9,7 @@ from __future__ import print_function
 import pandas as pd
 
 from fmu.config import etc
+from fmu.ensemble import VirtualRealization
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -148,8 +149,8 @@ class RealizationCombination(object):
         from_smry() first in the realization.
 
         If you involve VirtualRealization in this operation, this
-        this will fail. You have to use internalized data, that is 
-        get_df(). 
+        this will fail. You have to use internalized data, that is
+        get_df().
 
         Later, resampling of data in VirtualRealization might get implemented.
         """

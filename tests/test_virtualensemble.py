@@ -38,7 +38,6 @@ def test_virtualensemble():
     assert len(vens['unsmry-yearly']['REAL'].unique()) == 5
     assert len(vens['parameters.txt']) == 5
 
-
     # Eclipse summary vector statistics for a given ensemble
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],
                                            time_index='yearly')

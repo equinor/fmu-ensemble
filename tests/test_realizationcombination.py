@@ -10,7 +10,6 @@ import os
 from fmu import config
 from fmu import ensemble
 
-from fmu.ensemble import RealizationCombination
 from fmu.ensemble import ScratchEnsemble
 
 fmux = config.etc.Interaction()
@@ -28,14 +27,13 @@ def test_realizationcombination_basic():
         testdir = os.path.abspath('.')
 
     real0dir = os.path.join(testdir, 'data/testensemble-reek001',
-                           'realization-0/iter-0')
+                            'realization-0/iter-0')
     real0 = ensemble.ScratchRealization(real0dir)
     real0.from_smry(time_index='yearly', column_keys=['F*'])
     real1dir = os.path.join(testdir, 'data/testensemble-reek001',
-                           'realization-1/iter-0')
+                            'realization-1/iter-0')
     real1 = ensemble.ScratchRealization(real1dir)
     real1.from_smry(time_index='yearly', column_keys=['F*'])
-
 
     assert 'FWPR' in ((real0 - real1)['unsmry-yearly']).columns
     assert 'FWL' in ((real0 - real1)['parameters'])
