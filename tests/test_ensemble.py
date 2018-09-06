@@ -234,4 +234,3 @@ def test_ensemble_ecl():
     assert 'p90' in df_stats['FOPR'].columns
     assert df_stats['FOPR']['min'].iloc[-1] < \
         df_stats['FOPR']['max'].iloc[-1]
-
