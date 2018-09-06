@@ -38,9 +38,17 @@ def test_virtualensemble():
     assert len(vens['unsmry-yearly']['REAL'].unique()) == 5
     assert len(vens['parameters.txt']) == 5
 
+    # Check that get_smry() works
+    fopt = vens.get_smry(column_keys=['FOPT'], time_index='yearly')
+    assert 'FOPT' in fopt.columns
+    assert 'DATE' in fopt.columns
+    assert 'REAL' in fopt.columns
+    assert 'FGPT' not in fopt.columns
+    assert len(fopt) == 20
+
     # Eclipse summary vector statistics for a given ensemble
-    df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],
-                                           time_index='yearly')
+    df_stats = vens.get_smry_stats(column_keys=['FOPR', 'FGPR'],
+                                   time_index='yearly')
     assert isinstance(df_stats, dict)
     assert len(df_stats.keys()) == 2
     assert isinstance(df_stats['FOPR'], pd.DataFrame)

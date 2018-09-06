@@ -9,7 +9,7 @@ from __future__ import print_function
 import pandas as pd
 
 from fmu.config import etc
-from fmu.ensemble import VirtualRealization
+from fmu.ensemble.virtualrealization import VirtualRealization
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)

@@ -6,6 +6,8 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import re
+import fnmatch
 import pandas as pd
 
 from fmu import config
@@ -65,7 +67,7 @@ class VirtualEnsemble(object):
         for key in self.keys():
             data = self.get_df(key)
             realizationdata = data[data['REAL'] == realindex]
-            if not realizationdata:
+            if not len(realizationdata):  # ignore pylint here!
                 continue
             if len(realizationdata) == 1:
                 # Convert scalar values to dictionaries, avoiding
@@ -211,6 +213,33 @@ class VirtualEnsemble(object):
                              for x in self.data.keys()}
             return self.data[shortcut2path[localpath]]
         raise ValueError(localpath)
+
+    def get_smry(self, column_keys=None, time_index='monthly'):
+        """
+        Function analoguous to the EclSum direct get'ters in ScratchEnsemble,
+        but here we have to resort to what we have internalized.
+
+        Resampling support can happen here, to be implemented later.
+        """
+        if time_index == 'monthly':
+            dataname = 'unsmry-monthly'
+        elif time_index == 'yearly':
+            dataname = 'unsmry-yearly'
+        elif time_index == 'daily':
+            dataname = 'unsmry-daily'
+        else:
+            raise ValueError("Unsupported time index " + str(time_index))
+        data = self.get_df(dataname)
+        if not len(data):
+            raise ValueError("No data found")
+
+        # We have to reproduce the column keys globbing support.
+        columns = []
+        for col_key in column_keys:
+            regexp = re.compile(fnmatch.translate(col_key)).match
+            if regexp:
+                columns = columns + filter(regexp, data.columns)
+        return data[['REAL', 'DATE'] + columns]
 
     def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
