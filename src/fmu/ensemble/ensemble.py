@@ -11,6 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import re
 import glob
 from collections import defaultdict
 import pandas as pd
@@ -540,7 +541,7 @@ class ScratchEnsemble(object):
         Arguments:
             aggregation: string, supported modes are
                 'mean', 'median', 'p10', 'p90', 'min',
-                'max'
+                'max', 'std, 'var', 'pXX' where X is a number
             keylist: list of strings, indicating which keys
                 in the internal datastore to include. If list is empty
                 (default), all data will be attempted included.
@@ -549,10 +550,12 @@ class ScratchEnsemble(object):
         Returns:
             VirtualRealization. Its name will include the aggregation operator
         """
-        supported_aggs = ['mean', 'median', 'min', 'max', 'p10', 'p90']
-        if aggregation not in supported_aggs:
-            raise ValueError("{arg} is not supported for " +
-                             "ensemble aggregation".format(arg=aggregation))
+        quantilematcher = re.compile('p(\d\d)')
+        supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
+        if aggregation not in supported_aggs and \
+           not quantilematcher.match(aggregation):
+            raise ValueError("{arg} is not a".format(arg=aggregation) +
+                             "supported ensemble aggregation")
 
         # Generate a new empty object:
         vreal = VirtualRealization(self.name + " " + aggregation)
@@ -566,7 +569,6 @@ class ScratchEnsemble(object):
             keys = keylist
 
         for key in keys:
-
             # Aggregate over this ensemble:
             data = self.get_df(key)
 
@@ -586,11 +588,13 @@ class ScratchEnsemble(object):
             else:
                 aggobject = data
 
-            if aggregation == 'p10':
-                aggregated = aggobject.quantile(0.9)
-            elif aggregation == 'p90':
-                aggregated = aggobject.quantile(0.1)
+            if quantilematcher.match(aggregation):
+                quantile = int(quantilematcher.match(aggregation).group(1))
+                aggregated = aggobject.quantile(1 - quantile/100.0)
             else:
+                # Passing through the variable 'aggregation' to
+                # Pandas, thus supporting more than we have listed in
+                # the docstring.
                 aggregated = aggobject.agg(aggregation)
 
             if len(groupby):

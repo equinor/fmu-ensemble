@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pytest
 
 from fmu import config
 from fmu.ensemble import ScratchEnsemble
@@ -33,12 +34,14 @@ def test_ensemble_aggregations():
     reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
 
     stats = {
+        # The ensemble class' agg function takes 'oil industry' quantile
+        # arguments, and translates them to numpys notion.
         'mean': reekensemble.agg('mean'),
         'median': reekensemble.agg('median'),
         'min': reekensemble.agg('min'),
         'max': reekensemble.agg('max'),
-        'p90': reekensemble.agg('p10'),
-        'p10': reekensemble.agg('p90')
+        'p90': reekensemble.agg('p90'),  # low estimate
+        'p10': reekensemble.agg('p10')  # high estimate
     }
 
     stats['min'].to_disk('virtreal_min', delete=True)
@@ -49,12 +52,12 @@ def test_ensemble_aggregations():
         stats['max']['parameters.txt']['RMS_SEED']
 
     assert stats['min']['parameters.txt']['RMS_SEED'] <= \
-        stats['p10']['parameters.txt']['RMS_SEED']
-    assert stats['p10']['parameters.txt']['RMS_SEED'] <= \
-        stats['median']['parameters.txt']['RMS_SEED']
-    assert stats['median']['parameters.txt']['RMS_SEED'] <= \
         stats['p90']['parameters.txt']['RMS_SEED']
     assert stats['p90']['parameters.txt']['RMS_SEED'] <= \
+        stats['median']['parameters.txt']['RMS_SEED']
+    assert stats['median']['parameters.txt']['RMS_SEED'] <= \
+        stats['p10']['parameters.txt']['RMS_SEED']
+    assert stats['p10']['parameters.txt']['RMS_SEED'] <= \
         stats['max']['parameters.txt']['RMS_SEED']
 
     assert stats['min']['parameters.txt']['RMS_SEED'] <= \
@@ -83,3 +86,9 @@ def test_ensemble_aggregations():
                                             excludekeys='STATUS').keys()
     assert 'STATUS' not in reekensemble.agg('mean',
                                             keylist=['parameters.txt']).keys()
+
+    assert reekensemble.agg('p99')['parameters']['RMS_SEED'] < \
+        reekensemble.agg('p01')['parameters']['RMS_SEED']
+
+    with pytest.raises(ValueError):
+        reekensemble.agg('foobar')
