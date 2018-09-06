@@ -377,27 +377,52 @@ class ScratchRealization(object):
 
         Returns:
             dataframe or dictionary
+
+        Raises:
+            ValueError if data is not found.
         """
         if localpath in self.data.keys():
             return self.data[localpath]
+        fullpath = self.shortcut2path(localpath)
+        if fullpath in self.data.keys():
+            return self.data[self.shortcut2path(localpath)]
+        # KeyError would also be valid or better here.
+        raise ValueError("Could not find {}".format(localpath))
 
-        # Allow shorthand, but check ambiguity
+    def shortcut2path(self, shortpath):
+        """
+        Convert short pathnames to fully qualified pathnames
+        within the datastore.
+
+        If the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+        then you can also access this with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity. In case
+        of ambiguity, the shortpath will be returned.
+        """
         basenames = map(os.path.basename, self.data.keys())
-        if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in self.data}
-            return self.data[shortcut2path[localpath]]
+        if basenames.count(shortpath) == 1:
+            short2path = {os.path.basename(x): x for x in self.data}
+            return short2path[shortpath]
         noexts = [''.join(x.split('.')[:-1]) for x in self.data]
-        if noexts.count(localpath) == 1:
-            shortcut2path = {''.join(x.split('.')[:-1]): x
-                             for x in self.data}
-            return self.data[shortcut2path[localpath]]
+        if noexts.count(shortpath) == 1:
+            short2path = {''.join(x.split('.')[:-1]): x
+                          for x in self.data}
+            return short2path[shortpath]
         basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
                           for x in self.data]
-        if basenamenoexts.count(localpath) == 1:
-            shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                             for x in self.data}
-            return self.data[shortcut2path[localpath]]
-        raise ValueError(localpath)
+        if basenamenoexts.count(shortpath) == 1:
+            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
+                          for x in self.data}
+            return short2path[shortpath]
+        # If we get here, we did not find anything that
+        # this shorthand could point to. Return as is, and let the
+        # calling function handle further errors.
+        return shortpath
 
     def find_files(self, paths, metadata=None):
         """Discover realization files. The files dataframe
