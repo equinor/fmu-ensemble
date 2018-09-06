@@ -117,14 +117,13 @@ class RealizationCombination(object):
             # column data are not similar
             result.dropna(axis='columns', how='all', inplace=True)
             return result.reset_index()
-        else:
-            return result.dropna().to_dict()
+        return result.dropna().to_dict()
 
     def to_virtual(self):
         """Evaluate the current linear combination and return as
         a virtualrealizatione.
         """
-        vreal = VirtualRealization(name=str(self))
+        vreal = VirtualRealization(description=str(self))
         for key in self.keys():
             vreal.append(key, self.get_df(key))
         return vreal

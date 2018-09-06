@@ -65,7 +65,7 @@ class VirtualEnsemble(object):
         for key in self.keys():
             data = self.get_df(key)
             realizationdata = data[data['REAL'] == realindex]
-            if not len(realizationdata):
+            if not realizationdata:
                 continue
             if len(realizationdata) == 1:
                 # Convert scalar values to dictionaries, avoiding

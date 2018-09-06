@@ -130,8 +130,7 @@ class ScratchRealization(object):
             name = self._origpath
         if deepcopy:
             return VirtualRealization(name, copy.deepcopy(self.data))
-        else:
-            return VirtualRealization(name, self.data)
+        return VirtualRealization(name, self.data)
 
     def from_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):

@@ -62,9 +62,13 @@ class EnsembleCombination(object):
         """
         The function finds the corresponding realizations
         which have completed successfully in the all ensembles.
+
+        DEPRECATED:
+        This function is not any longerneeded as dropna() is used after
+        combinatoin evaluation.
         """
         ref_ok = set(self.ref.get_ok().query('OK == True')['REAL'].tolist())
-        operations = self.subs + self.adds
+        operations = self.sub + self.add
         for operator in operations:
             ior_ok = set(operator.get_ok().query('OK == True')['REAL'].tolist()) # noqa
             ref_ok = list(ref_ok & ior_ok)
