@@ -55,10 +55,14 @@ def test_manual_aggregation():
     reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
     reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
 
+    # Aggregate an ensemble into a virtual "mean" realization
     mean = reekensemble.agg('mean')
 
+    # Combine the ensemble members directly into a mean computation.
+    # Also returns a virtual realization.
     manualmean = 1/5 * (reekensemble[0] + reekensemble[1] + reekensemble[2]
                         + reekensemble[3] + reekensemble[4])
 
+    # Commutativity proof:
     assert mean['parameters']['RMS_SEED'] == \
         manualmean['parameters']['RMS_SEED']
