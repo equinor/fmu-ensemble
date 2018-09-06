@@ -12,6 +12,7 @@ from __future__ import division
 from __future__ import print_function
 
 import re
+import os
 import glob
 from collections import defaultdict
 import pandas as pd
@@ -99,6 +100,43 @@ class ScratchEnsemble(object):
         for realization in self._realizations.values():
             allkeys = allkeys.union(realization.keys())
         return allkeys
+
+    def shortcut2path(self, shortpath):
+        """
+        Convert short pathnames to fully qualified pathnames
+        within the datastore.
+
+        If the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+        then you can also access this with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity. In case
+        of ambiguity, the shortpath will be returned.
+
+        CODE DUPLICATION from realization.py
+        """
+        basenames = map(os.path.basename, self.keys())
+        if basenames.count(shortpath) == 1:
+            short2path = {os.path.basename(x): x for x in self.keys()}
+            return short2path[shortpath]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        if noexts.count(shortpath) == 1:
+            short2path = {''.join(x.split('.')[:-1]): x
+                          for x in self.keys()}
+            return short2path[shortpath]
+        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
+                          for x in self.keys()]
+        if basenamenoexts.count(shortpath) == 1:
+            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
+                          for x in self.keys()}
+            return short2path[shortpath]
+        # If we get here, we did not find anything that
+        # this shorthand could point to. Return as is, and let the
+        # calling function handle further errors.
+        return shortpath
 
     def add_realizations(self, paths):
         """Utility function to add realizations to the ensemble.
@@ -535,8 +573,11 @@ class ScratchEnsemble(object):
 
         return sorted(list(result))
 
-    def agg(self, aggregation, keylist=[], excludekeys=[]):
+    def agg(self, aggregation, keylist=None, excludekeys=None):
         """Aggregate the ensemble data into one VirtualRealization
+
+        All data will be attempted aggregated. String data will typically
+        be dropped in the result.
 
         Arguments:
             aggregation: string, supported modes are
@@ -561,7 +602,9 @@ class ScratchEnsemble(object):
         vreal = VirtualRealization(self.name + " " + aggregation)
 
         # Determine keys to use
-        if not len(keylist):  # Empty list means all keys.
+        if isinstance(keylist, str):
+            keylist = [keylist]
+        if not keylist:  # Empty list means all keys.
             if not isinstance(excludekeys, list):
                 excludekeys = [excludekeys]
             keys = set(self.keys()) - set(excludekeys)
@@ -570,6 +613,8 @@ class ScratchEnsemble(object):
 
         for key in keys:
             # Aggregate over this ensemble:
+            # Ensure we operate on fully qualified localpath's
+            key = self.shortcut2path(key)
             data = self.get_df(key)
 
             # This column should never appear in aggregated data
