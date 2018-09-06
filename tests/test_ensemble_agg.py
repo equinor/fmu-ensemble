@@ -99,13 +99,17 @@ def test_ensemble_aggregations():
         reekensemble.agg('mean', excludekeys='parameters.txt').keys()
     assert 'parameters.txt' not in \
         reekensemble.agg('mean', excludekeys=['parameters.txt']).keys()
-    assert 'parameters.txt' not in reekensemble.agg('mean', keylist='STATUS').keys()
-    assert 'parameters.txt' not in reekensemble.agg('mean', keylist=['STATUS']).keys()
+    assert 'parameters.txt' not in \
+        reekensemble.agg('mean', keylist='STATUS').keys()
+    assert 'parameters.txt' not in \
+        reekensemble.agg('mean', keylist=['STATUS']).keys()
 
     # Shorthand notion works for keys to include, but they
     # should get returned with fully qualified paths.
-    assert 'share/results/tables/unsmry-yearly.csv' in reekensemble.agg('mean', keylist='unsmry-yearly').keys()
-    assert 'share/results/tables/unsmry-yearly.csv' in reekensemble.agg('mean', keylist=['unsmry-yearly']).keys()
-    assert isinstance(reekensemble.agg('mean', keylist='unsmry-yearly').get_df('unsmry-yearly'),
-                      pd.DataFrame)
-    
+    assert 'share/results/tables/unsmry-yearly.csv' in \
+        reekensemble.agg('mean', keylist='unsmry-yearly').keys()
+    assert 'share/results/tables/unsmry-yearly.csv' in \
+        reekensemble.agg('mean', keylist=['unsmry-yearly']).keys()
+    assert isinstance(reekensemble.agg('mean',
+                                       keylist='unsmry-yearly')
+                      .get_df('unsmry-yearly'), pd.DataFrame)

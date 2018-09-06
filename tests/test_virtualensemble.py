@@ -38,6 +38,14 @@ def test_virtualensemble():
     assert len(vens['unsmry-yearly']['REAL'].unique()) == 5
     assert len(vens['parameters.txt']) == 5
 
+    assert 'REAL' in vens['STATUS'].columns
+
+    # Check shorthand functionality:
+    assert vens.shortcut2path('unsmry-yearly') == \
+        'share/results/tables/unsmry-yearly.csv'
+    assert vens.shortcut2path('unsmry-yearly.csv') == \
+        'share/results/tables/unsmry-yearly.csv'
+
     # Check that get_smry() works
     fopt = vens.get_smry(column_keys=['FOPT'], time_index='yearly')
     assert 'FOPT' in fopt.columns
@@ -88,11 +96,29 @@ def test_virtualensemble():
                                                     2300, 6000, 3000,
                                                     800, 9]}))
     assert 'betterdata' in vens.keys()
+    assert 'REAL' in vens['betterdata'].columns
+    assert 'NPV' in vens['betterdata'].columns
+
     assert vens.get_realization(3)['betterdata']['NPV'] == 2300
     assert vens.get_realization(0)['betterdata']['NPV'] == 1000
     assert vens.get_realization(1)['betterdata']['NPV'] == 2000
-    assert vens.get_realization(2)['betterdata']['NPV'] == 1500
+    assert vens.get_(2)['betterdata']['NPV'] == 1500
     assert vens.get_realization(80)['betterdata']['NPV'] == 9
 
     with pytest.raises(ValueError):
         vens.get_realization(9999)
+
+    assert vens.shortcut2path('betterdata') == 'betterdata'
+    assert vens.agg('min')['betterdata']['NPV'] == 9
+    assert vens.agg('max')['betterdata']['NPV'] == 6000
+    assert vens.agg('min')['betterdata']['NPV'] < \
+        vens.agg('p93')['betterdata']['NPV']
+    assert vens.agg('p55')['betterdata']['NPV'] < \
+        vens.agg('p05')['betterdata']['NPV']
+    assert vens.agg('p54')['betterdata']['NPV'] < \
+        vens.agg('max')['betterdata']['NPV']
+
+    assert 'REAL' not in vens.agg('min')['STATUS'].columns
+
+    # Betterdata should be returned as a dictionary
+    assert isinstance(vens.agg('min')['betterdata'], dict)

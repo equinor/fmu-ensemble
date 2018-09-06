@@ -39,7 +39,11 @@ class VirtualEnsemble(object):
             data: dict with data to initialize with. Defaults to empty
             longdescription: string, free form multiline description.
         """
-        self._name = name
+        if name:
+            self._name = name
+        else:
+            self._name = "VirtualEnsemble"
+
         self._longdescription = longdescription
 
         # At ensemble level, this dictionary has dataframes only.
@@ -52,6 +56,43 @@ class VirtualEnsemble(object):
     def keys(self):
         """Return all keys in the internal datastore"""
         return self.data.keys()
+
+    def shortcut2path(self, shortpath):
+        """
+        Convert short pathnames to fully qualified pathnames
+        within the datastore.
+
+        If the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+        then you can also access this with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity. In case
+        of ambiguity, the shortpath will be returned.
+
+        CODE DUPLICATION.
+        """
+        basenames = map(os.path.basename, self.keys())
+        if basenames.count(shortpath) == 1:
+            short2path = {os.path.basename(x): x for x in self.keys()}
+            return short2path[shortpath]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        if noexts.count(shortpath) == 1:
+            short2path = {''.join(x.split('.')[:-1]): x
+                          for x in self.keys()}
+            return short2path[shortpath]
+        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
+                          for x in self.keys()]
+        if basenamenoexts.count(shortpath) == 1:
+            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
+                          for x in self.keys()}
+            return short2path[shortpath]
+        # If we get here, we did not find anything that
+        # this shorthand could point to. Return as is, and let the
+        # calling function handle further errors.
+        return shortpath
 
     def __getitem__(self, localpath):
         """Return a specific datatype, shorthands are allowed"""
@@ -124,22 +165,79 @@ class VirtualEnsemble(object):
             else:
                 logger.warning("Ensemble did not contain %s", localpath)
 
-    def agg(self, aggregation, keylist=None):
+    def agg(self, aggregation, keylist=None, excludekeys=None):
         """Aggregate the ensemble data into a VirtualRealization
 
         All data will be attempted aggregated. String data will typically
         be dropped in the result.
 
-        An educated guess for groupby arguments wil be done for
-        dataframes.
+        Arguments:
+            aggregation: string, supported modes are
+                'mean', 'median', 'p10', 'p90', 'min',
+                'max', 'std, 'var', 'pXX' where X is a number
+            keylist: list of strings, indicating which keys
+                in the internal datastore to include. If list is empty
+                (default), all data will be attempted included.
+            excludekeys: list of strings that should be excluded if
+                keylist is empty, otherwise ignored
+        Returns:
+            VirtualRealization. Its name will include the aggregation operator
 
-        Args:
-            aggregation: string, among supported aggregation operators
-                mean, p10, p90, min, max, median
+        WARNING: CODE DUPLICATION from ensemble.py
         """
-        if not keylist:
-            keylist = []
-        raise NotImplementedError
+        quantilematcher = re.compile('p(\d\d)')
+        supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
+        if aggregation not in supported_aggs and \
+           not quantilematcher.match(aggregation):
+            raise ValueError("{arg} is not a".format(arg=aggregation) +
+                             "supported ensemble aggregation")
+
+        # Generate a new empty object:
+        vreal = VirtualRealization(self._name + " " + aggregation)
+
+        # Determine keys to use
+        if isinstance(keylist, str):
+            keylist = [keylist]
+        if not keylist:  # Empty list means all keys.
+            if not isinstance(excludekeys, list):
+                excludekeys = [excludekeys]
+            keys = set(self.keys()) - set(excludekeys)
+        else:
+            keys = keylist
+
+        for key in keys:
+            # Aggregate over this ensemble:
+            # Ensure we operate on fully qualified localpath's
+            key = self.shortcut2path(key)
+            data = self.get_df(key).drop(columns='REAL')
+
+            # Look for data we should group by. This would be beneficial
+            # to get from a metadata file, and not by pure guesswork.
+            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
+                                       'JOBINDEX']
+
+            groupby = [x for x in groupbycolumncandidates
+                       if x in data.columns]
+
+            if len(groupby):
+                aggobject = data.groupby(groupby)
+            else:
+                aggobject = data
+
+            if quantilematcher.match(aggregation):
+                quantile = int(quantilematcher.match(aggregation).group(1))
+                aggregated = aggobject.quantile(1 - quantile/100.0)
+            else:
+                # Passing through the variable 'aggregation' to
+                # Pandas, thus supporting more than we have listed in
+                # the docstring.
+                aggregated = aggobject.agg(aggregation)
+
+            if len(groupby):
+                aggregated.reset_index(inplace=True)
+
+            vreal.append(key, aggregated)
+        return vreal
 
     def append(self, key, dataframe, overwrite=False):
         """Append a dataframe to the internal datastore
