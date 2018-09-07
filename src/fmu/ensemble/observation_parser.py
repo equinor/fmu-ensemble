@@ -24,6 +24,8 @@ def observations_parser(path):
         data = defaultdict(list)
         for obs_group in obs_data:
             for obs in obs_group['observations']:
+                data['id'].append(obs_group['key']+'_'+
+                                  obs['date'].strftime('%d_%m_%Y'))
                 data['key'].append(obs_group['key'])
                 data['date'].append(obs['date'])
                 data['value'].append(obs['value'])
@@ -33,7 +35,7 @@ def observations_parser(path):
                         ) else None)
                 data['comments_value'].append(
                     obs['comment'] if 'comment' in obs.keys() else None)
-        columns = ['key', 'date', 'value', 'error',
+        columns = ['id', 'key', 'date', 'value', 'error',
                    'comments_value', 'comments_key']
         dframe = pd.DataFrame(data)
         dframe = dframe[columns]
@@ -44,6 +46,9 @@ def observations_parser(path):
         data = defaultdict(list)
         for rft in rfts:
             for index, obs in enumerate(rft['observations']):
+                data['id'].append(rft['well'] +
+                                  rft['date'].strftime('%d_%m_%Y') +
+                                  str(index))
                 data['rft_index'].append(index)
                 data['well'].append(rft['well'])
                 data['date'].append(rft['date'])
@@ -58,7 +63,7 @@ def observations_parser(path):
                     rft['comment'] if 'comment' in rft.keys() else None)
                 data['comments_value'].append(
                     obs['comment'] if 'comment' in obs.keys() else None)
-        columns = ['rft_index', 'well', 'date', 'value', 'error', 'x',
+        columns = ['id', 'rft_index', 'well', 'date', 'value', 'error', 'x',
                    'y', 'z', 'MDmsl', 'zone', 'comments_value', 'comments_key']
         dframe = pd.DataFrame(data)
         dframe = dframe[columns]

@@ -21,6 +21,7 @@ import pandas as pd
 
 import ert.ecl
 from fmu import config
+from .realizationmismatch import mismatch
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -582,6 +583,9 @@ class ScratchRealization(object):
         have completed successfully"""
         okfile = os.path.join(self._origpath, 'OK')
         return os.path.exists(okfile)
+
+    def realization_mismatch(self, obs):
+        return mismatch(self, obs)
 
 
 def parse_number(value):
