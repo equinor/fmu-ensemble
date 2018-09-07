@@ -573,7 +573,13 @@ class ScratchRealization(object):
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
-        return self.get_eclsum().pandas_frame(time_index, column_keys)
+        if time_index == 'raw':
+            time_index_arg = None
+        elif isinstance(time_index, str):
+            time_index_arg = self.get_smry_dates(freq=time_index)
+        else:
+            time_index_arg = time_index
+        return self.get_eclsum().pandas_frame(time_index_arg, column_keys)
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -608,17 +614,20 @@ class ScratchRealization(object):
         dates = self._eclsum.get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
 
-    def get_smry_dates(self, freq='monthly'):
+    def get_smry_dates(self, freq='monthly', normalize=True):
         """Return list of datetimes available in the realization
 
         Args:
-        freq: string denoting requested frequency for
-            the returned list of datetime. 'report' will
-            yield the sorted union of all valid timesteps for
-            all realizations. Other valid options are
-            'daily', 'monthly' and 'yearly'.
-            'last' will give out the last date (maximum),
-            as a list with one element.
+            freq: string denoting requested frequency for
+                the returned list of datetime. 'report' will
+                yield the sorted union of all valid timesteps for
+                all realizations. Other valid options are
+                'daily', 'monthly' and 'yearly'.
+                'last' will give out the last date (maximum),
+                as a list with one element.
+            normalize: Whether to normalize backwards at the start
+                and forwards at the end to ensure the raw
+                date range is covered.
         Returns:
             list of datetimes. None if no summary data is available.
         """
@@ -634,6 +643,9 @@ class ScratchRealization(object):
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
+            if normalize:
+                (start_date, end_date) = normalize_dates(start_date, end_date,
+                                                         freq)
             if freq not in pd_freq_mnenomics:
                 raise ValueError('Requested frequency %s not supported' % freq)
             datetimes = pd.date_range(start_date, end_date,
@@ -654,6 +666,43 @@ class ScratchRealization(object):
         have completed successfully"""
         okfile = os.path.join(self._origpath, 'OK')
         return os.path.exists(okfile)
+
+
+def normalize_dates(start_date, end_date, freq):
+    """
+    Normalize start and end date according to frequency
+    by extending the time range.
+
+    So for [1997-11-5, 2020-03-02] and monthly freqency
+    this will transform your dates to
+    [1997-11-1, 2020-04-01]
+
+    For yearly frequency will be [1997-01-01, 2021-01-01].
+
+    Args:
+        start_date: datetime.date
+        end_date: datetime.date
+        freq: string with either 'monthly' or 'yearly'.
+            Anything else will return the input as is
+    Return:
+        Tuple of normalized (start_date, end_date)
+    """
+    from dateutil.relativedelta import relativedelta
+    if freq == 'monthly':
+        start_date = start_date.replace(day=1)
+
+        # Avoid rolling forward if we are already at day 1 in a month
+        if end_date != end_date.replace(day=1):
+            end_date = end_date.replace(day=1) + relativedelta(months=1)
+    elif freq == 'yearly':
+        start_date = start_date.replace(day=1, month=1)
+        # Avoid rolling forward if we are already at day 1 in a year
+        if end_date != end_date.replace(day=1, month=1):
+            end_date = end_date.replace(day=1, month=1)\
+                                             + relativedelta(years=1)
+    else:
+        logger.warning("Unrecognized frequency for date normalization")
+    return (start_date, end_date)
 
 
 def parse_number(value):

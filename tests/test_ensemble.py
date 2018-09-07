@@ -158,7 +158,7 @@ def test_ensemble_ecl():
     monthly = reekensemble.from_smry(column_keys=['F*'], time_index='monthly')
     assert monthly.columns[0] == 'REAL'  # Enforce order of columns.
     assert monthly.columns[1] == 'DATE'
-    assert len(monthly) == 185
+    assert len(monthly) == 190
     # Check that the result was cached in memory, not necessarily on disk..
     assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
 
@@ -198,7 +198,7 @@ def test_ensemble_ecl():
 
     # Check that we can shortcut get_smry_dates:
     assert len(reekensemble.from_smry(column_keys=['FOPT'],
-                                      time_index='yearly')) == 20
+                                      time_index='yearly')) == 25
 
     assert len(reekensemble.from_smry(column_keys=['FOPR'],
                                       time_index='last')) == 5
