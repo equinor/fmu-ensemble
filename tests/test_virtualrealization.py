@@ -1,0 +1,105 @@
+# -*- coding: utf-8 -*-
+"""Testing fmu-ensemble."""
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import os
+import pytest
+from fmu import config
+from fmu import ensemble
+
+fmux = config.etc.Interaction()
+logger = fmux.basiclogger(__name__)
+
+if not fmux.testsetup():
+    raise SystemExit()
+
+
+def test_virtual_realization():
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+
+    # Check deepcopy(), first prove a bad situation
+    vreal = real.to_virtual(deepcopy=False)
+    assert 'parameters.txt' in real.keys()
+    del vreal['parameters.txt']
+    # This is a bad situation:
+    assert 'parameters.txt' not in real.keys()
+
+    # Now confirm that we can fix the bad
+    # situation with the default to_virtual()
+    real = ensemble.ScratchRealization(realdir)
+    vreal = real.to_virtual()
+    del vreal['parameters.txt']
+    assert 'parameters.txt' in real.keys()
+
+    real = ensemble.ScratchRealization(realdir)
+    vreal = real.to_virtual()
+    assert real.keys() == vreal.keys()
+
+    # Test appending a random dictionary
+    vreal.append('betteroutput', {'NPV': 200000000, 'BREAKEVEN': 8.4})
+    assert vreal['betteroutput']['NPV'] > 0
+    # Appending to a key that exists should not help
+    vreal.append('betteroutput', {'NPV': -300, 'BREAKEVEN': 300})
+    assert vreal['betteroutput']['NPV'] > 0
+    # Unless we overwrite explicitly:
+    vreal.append('betteroutput', {'NPV': -300, 'BREAKEVEN': 300},
+                 overwrite=True)
+    assert vreal['betteroutput']['NPV'] < 0
+
+
+def test_virtual_todisk():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.from_smry(time_index='yearly', column_keys=['F*'])
+
+    vreal = real.to_virtual()
+
+    with pytest.raises(IOError):
+        vreal.to_disk('.')
+
+    vreal.to_disk('virtreal', delete=True)
+    assert os.path.exists('virtreal/parameters.txt')
+    assert os.path.exists('virtreal/STATUS')
+    assert os.path.exists('virtreal/share/results/tables/unsmry-yearly.csv')
+
+
+def test_virtual_fromdisk():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.from_smry(time_index='yearly', column_keys=['F*'])
+    real.to_virtual().to_disk('virtreal', delete=True)
+    #
+    vreal = ensemble.VirtualRealization('foo')
+    vreal.from_disk('virtreal')
+    for key in vreal.keys():
+        assert len(real.get_df(key)) == len(vreal.get_df(key))
+    assert real.get_df('parameters')['FWL'] == \
+        vreal.get_df('parameters')['FWL']
+    assert real.get_df('unsmry-yearly').iloc[-1]['FGIP'] == \
+        vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']

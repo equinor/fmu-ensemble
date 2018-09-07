@@ -18,6 +18,8 @@ import pandas as pd
 
 from fmu.config import etc
 from .realization import ScratchRealization
+from .virtualrealization import VirtualRealization
+from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .observation_parser import observations_parser
 
@@ -133,6 +135,25 @@ class ScratchEnsemble(object):
                     len(self._realizations))
         return count
 
+    def remove_data(self, localpaths):
+        """Remove certain datatypes from each realizations
+        datastores. This modifies the underlying realization
+        objects, and is equivalent to
+
+        >>> del realization[localpath]
+
+        on each realization in the ensemble.
+
+        Args:
+            localpath: string with full localpath to
+                the data, or list of strings.
+        """
+        if isinstance(localpaths, str):
+            localpaths = [localpaths]
+        for localpath in localpaths:
+            for _, real in self._realizations.items():
+                del real[localpath]
+
     def remove_realizations(self, realindices):
         """Remove specific realizations from the ensemble
 
@@ -147,6 +168,20 @@ class ScratchEnsemble(object):
             self._realizations.pop(index, None)
             popped += 1
         logger.info('removed %d realization(s)', popped)
+
+    def to_virtual(self, name=None):
+        """Convert the ScratchEnsemble to a VirtualEnsemble.
+
+        This means that all imported data in realizations is
+        aggregated and stored as dataframes in the virtual ensemble's
+        data store.
+        """
+        vens = VirtualEnsemble(name=name)
+
+        for key in self.keys():
+            vens.append(key, self.get_df(key))
+
+        return vens
 
     @property
     def parameters(self):
@@ -391,10 +426,18 @@ class ScratchEnsemble(object):
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 
-    def get_smry_stats(self, column_keys=None, time_index=None):
+    def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
+
+        Output format of the function is tailored towards webviz_fan_chart
+        (data layout and column naming)
+
+        Compared to the agg() function, this function only works on summary
+        data (time series), and will only operate on actually requested data,
+        independent of what is internalized. It accesses the summary files
+        directly and can thus obtain data at any time frequency.
 
         Args:
             column_keys: list of column key wildcards
@@ -404,13 +447,18 @@ class ScratchEnsemble(object):
                via get_smry_dates() in order to obtain a time index.
         Returns:
             A dictionary. Index by column key to the corresponding ensemble
-            summary statistics dataframe.
+            summary statistics dataframe. Each dataframe has the dates in a
+        column called 'index', and statistical data in 'min', 'max', 'mean',
+        'p10', 'p90'. The column 'p10' contains the oil industry version of
+        'p10', and is calculated using the Pandas p90 functionality.
         """
-        dframe = self.from_smry(time_index=time_index, column_keys=column_keys,
-                                stacked=True)
-        data = {}
-        for key in dframe.columns.drop(['DATE', 'REAL']):
-            dates = dframe.groupby('DATE').mean().index.tolist()
+        # Obtain an aggregated dataframe for only the needed columns over
+        # the entire ensemble.
+        dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
+
+        data = {}  # dict to be returned
+        for key in column_keys:
+            dates = dframe.groupby('DATE').first().index.values
             name = [key] * len(dates)
             mean = dframe.groupby('DATE').mean()[key].values
             p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
@@ -419,13 +467,13 @@ class ScratchEnsemble(object):
             minimum = dframe.groupby('DATE').min()[key].values
 
             data[key] = pd.DataFrame({
-              'index': dates,
-              'name':  name,
-              'mean':  mean,
-              'p10':   p10,
-              'p90':   p90,
-              'max':   maximum,
-              'min':   minimum
+                'index': dates,
+                'name': name,
+                'mean': mean,
+                'p10': p10,
+                'p90': p90,
+                'max': maximum,
+                'min': minimum
             })
 
         return data
@@ -487,6 +535,71 @@ class ScratchEnsemble(object):
                         result = result.union(set(eclsum.groups(group)))
 
         return sorted(list(result))
+
+    def agg(self, aggregation, keylist=[], excludekeys=[]):
+        """Aggregate the ensemble data into one VirtualRealization
+
+        Arguments:
+            aggregation: string, supported modes are
+                'mean', 'median', 'p10', 'p90', 'min',
+                'max'
+            keylist: list of strings, indicating which keys
+                in the internal datastore to include. If list is empty
+                (default), all data will be attempted included.
+            excludekeys: list of strings that should be excluded if
+                keylist is empty, otherwise ignored
+        Returns:
+            VirtualRealization. Its name will include the aggregation operator
+        """
+        supported_aggs = ['mean', 'median', 'min', 'max', 'p10', 'p90']
+        if aggregation not in supported_aggs:
+            raise ValueError("{arg} is not supported for " +
+                             "ensemble aggregation".format(arg=aggregation))
+
+        # Generate a new empty object:
+        vreal = VirtualRealization(self.name + " " + aggregation)
+
+        # Determine keys to use
+        if not len(keylist):  # Empty list means all keys.
+            if not isinstance(excludekeys, list):
+                excludekeys = [excludekeys]
+            keys = set(self.keys()) - set(excludekeys)
+        else:
+            keys = keylist
+
+        for key in keys:
+
+            # Aggregate over this ensemble:
+            data = self.get_df(key)
+
+            # This column should never appear in aggregated data
+            del data['REAL']
+
+            # Look for data we should group by. This would be beneficial
+            # to get from a metadata file, and not by pure guesswork.
+            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
+                                       'JOBINDEX']
+
+            groupby = [x for x in groupbycolumncandidates
+                       if x in data.columns]
+
+            if len(groupby):
+                aggobject = data.groupby(groupby)
+            else:
+                aggobject = data
+
+            if aggregation == 'p10':
+                aggregated = aggobject.quantile(0.9)
+            elif aggregation == 'p90':
+                aggregated = aggobject.quantile(0.1)
+            else:
+                aggregated = aggobject.agg(aggregation)
+
+            if len(groupby):
+                aggregated.reset_index(inplace=True)
+
+            vreal.append(key, aggregated)
+        return vreal
 
     @property
     def files(self):

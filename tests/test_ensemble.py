@@ -10,7 +10,7 @@ import numpy
 import pandas as pd
 
 from fmu import config
-from fmu import ensemble
+from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -28,15 +28,15 @@ def test_reek001():
     else:
         testdir = os.path.abspath('.')
 
-    reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            testdir +
-                                            '/data/testensemble-reek001/' +
-                                            'realization-*/iter-0')
-    assert isinstance(reekensemble, ensemble.ScratchEnsemble)
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+    assert isinstance(reekensemble, ScratchEnsemble)
     assert reekensemble.name == 'reektest'
     assert len(reekensemble) == 5
 
-    assert isinstance(reekensemble[0], ensemble.ScratchRealization)
+    assert isinstance(reekensemble[0], ScratchRealization)
 
     assert len(reekensemble.files[
         reekensemble.files.LOCALPATH == 'jobs.json']) == 5
@@ -128,6 +128,10 @@ def test_reek001():
     assert len(reekensemble) == 5
     assert len(reekensemble.files) == 24  # discovered files are lost!
 
+    keycount = len(reekensemble.keys())
+    reekensemble.remove_data('parameters.txt')
+    assert len(reekensemble.keys()) == keycount - 1
+
 
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
@@ -138,10 +142,10 @@ def test_ensemble_ecl():
     else:
         testdir = os.path.abspath('.')
 
-    reekensemble = ensemble.ScratchEnsemble('reektest',
-                                            testdir +
-                                            '/data/testensemble-reek001/' +
-                                            'realization-*/iter-0')
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
 
     # Eclipse summary keys:
     assert len(reekensemble.get_smrykeys('FOPT')) == 1
@@ -214,6 +218,20 @@ def test_ensemble_ecl():
     # eclipse summary vector statistics for a given ensemble
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],
                                            time_index='monthly')
+    assert isinstance(df_stats, dict)
     assert len(df_stats.keys()) == 2
     assert isinstance(df_stats['FOPR'], pd.DataFrame)
     assert len(df_stats['FOPR'].index) == 37
+
+    # Check webviz requirements for dataframe
+    assert 'min' in df_stats['FOPR'].columns
+    assert 'max' in df_stats['FOPR'].columns
+    assert 'name' in df_stats['FOPR'].columns
+    assert df_stats['FOPR']['name'].unique() == 'FOPR'
+    assert 'index' in df_stats['FOPR'].columns  # This is DATE (!)
+    assert 'mean' in df_stats['FOPR'].columns
+    assert 'p10' in df_stats['FOPR'].columns
+    assert 'p90' in df_stats['FOPR'].columns
+    assert df_stats['FOPR']['min'].iloc[-1] < \
+        df_stats['FOPR']['max'].iloc[-1]
+

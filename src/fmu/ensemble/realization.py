@@ -14,6 +14,7 @@ from __future__ import print_function
 
 import os
 import re
+import copy
 import glob
 import json
 import numpy
@@ -22,6 +23,8 @@ import pandas as pd
 import ert.ecl
 from fmu import config
 from .realizationmismatch import mismatch
+
+from .virtualrealization import VirtualRealization
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -111,6 +114,24 @@ class ScratchRealization(object):
 
         self.from_txt('parameters.txt')
         self.from_status()
+
+    def to_virtual(self, name=None, deepcopy=True):
+        """Convert the current ScratchRealization object
+        to a VirtualRealization
+
+        Args:
+            description: string, used as label
+            deepcopy: boolean. Set to true if you want to continue
+               to manipulate the ScratchRealization object
+               afterwards without affecting the virtual realization.
+               Defaults to True. False will give faster execution.
+        """
+        if not name:
+            name = self._origpath
+        if deepcopy:
+            return VirtualRealization(name, copy.deepcopy(self.data))
+        else:
+            return VirtualRealization(name, self.data)
 
     def from_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):
@@ -322,6 +343,18 @@ class ScratchRealization(object):
         """
         return self.get_df(localpath)
 
+    def __delitem__(self, localpath):
+        """Deletes components in the internal datastore.
+
+        Silently ignores data that is not found.
+
+        Args:
+            localpath: string, fully qualified name of key
+                (no shorthand as for get_df())
+        """
+        if localpath in self.keys():
+            del self.data[localpath]
+
     def keys(self):
         """Access the keys of the internal data structure
         """
@@ -493,6 +526,10 @@ class ScratchRealization(object):
         if isinstance(time_index, list):
             time_index_arg = time_index
             time_index_path = 'custom'
+
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+
         # Do the actual work:
         dframe = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
         dframe = dframe.reset_index()
@@ -503,6 +540,16 @@ class ScratchRealization(object):
                     time_index_path + '.csv'
         self.data[localpath] = dframe
         return dframe
+
+    def get_smry(self, time_index=None, column_keys=None):
+        """Wrapper for EclSum.pandas_frame
+
+        This gives access to the underlying data on disk without
+        touching internalized dataframes.
+        """
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+        return self.get_eclsum().pandas_frame(time_index, column_keys)
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -618,34 +665,3 @@ def parse_number(value):
                 return float(value)
             except ValueError:
                 return value
-
-
-class VirtualRealization(object):
-    """A computed or archived realization.
-
-    Computed or archived, one cannot assume to have access to the file
-    system containing original data.
-
-    Datatables that in a ScratchRealization was available through the
-    files dataframe, is now available as dataframes in a dict accessed
-    by the localpath in the files dataframe from ScratchRealization-
-
-    """
-    def __init__(self, description=None, origpath=None):
-        self._description = ''
-        self._origpath = None
-
-        if origpath:
-            self._origpath = origpath
-        if description:
-            self._description = description
-
-    def get_smryvalues(self, props_wildcard=None):
-        """Returns summary values for certain vectors.
-
-        Taken from stored dataframe.
-        """
-        raise NotImplementedError
-
-    def __len__(self):
-        raise NotImplementedError
