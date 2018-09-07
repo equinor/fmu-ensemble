@@ -235,3 +235,12 @@ def test_ensemble_ecl():
     assert df_stats['FOPR']['min'].iloc[-1] < \
         df_stats['FOPR']['max'].iloc[-1]
 
+    obs = reekensemble.from_obs_yaml(testdir +
+                                     '/data/testensemble-reek001/' +
+                                     '/share/observations/observations.yaml')
+
+    assert len(obs.keys()) == 2
+    df_mismatch = reekensemble.ensemble_mismatch()
+
+    assert len(df_mismatch.columns) == 7
+

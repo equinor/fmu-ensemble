@@ -670,7 +670,7 @@ class ScratchEnsemble(object):
         else:
             raise NotImplementedError
 
-    def from_observation_yaml(self, localpath):
+    def from_obs_yaml(self, localpath):
         self.obs = observations_parser(localpath)
         return self.obs
 
