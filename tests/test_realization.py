@@ -125,6 +125,12 @@ def test_singlereal_ecl():
     # Test that the internalized was not touched:
     assert 'GGIR:OP' not in real['unsmry-raw'].columns
 
+    # 'string' as time_index should be supported - fix this
+    #assert 'FOPT' in real.get_smry(column_keys['F*'], time_index='monthly')
+    #assert 'FOPT' in real.get_smry(column_keys='F*', time_index='yearlyy')
+    #assert 'FOPT' in real.get_smry(column_keys='FOPT', time_index='daily')
+    #assert 'FOPT' in real.get_smry(column_keys='FOPT', time_index='raw')
+
     # Test date functionality
     assert isinstance(real.get_smry_dates(), list)
     assert isinstance(real.get_smry_dates(freq='last'), list)
