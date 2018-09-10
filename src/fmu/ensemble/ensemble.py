@@ -22,6 +22,8 @@ from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
+from .observation_parser import observations_parser
+
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -308,7 +310,7 @@ class ScratchEnsemble(object):
         Returns:
            dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
-               Empty dataframe if no data is found
+               Empty dataframe if no data lis found
 
         """
         dflist = {}
@@ -672,6 +674,18 @@ class ScratchEnsemble(object):
         else:
             raise NotImplementedError
 
+    def from_obs_yaml(self, localpath):
+        self.obs = observations_parser(localpath)
+        return self.obs
+
+    def ensemble_mismatch(self):
+        dflist = []
+        for index, realization in self._realizations.items():
+
+            dframe = realization.realization_mismatch(self.obs)
+            dflist.append(dframe)
+
+        return pd.concat(dflist, sort=False).reset_index()
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
@@ -688,3 +702,4 @@ def _convert_numeric_columns(dataframe):
     """
     logger.warn("_convert_numeric_columns() not implemented")
     return dataframe
+
