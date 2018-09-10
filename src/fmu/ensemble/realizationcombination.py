@@ -1,42 +1,46 @@
 # -*- coding: utf-8 -*-
-"""Module for handling linear combinations of ensembles.
+"""Module for handling linear combinations of realizations.
 """
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import pandas as pd
+
 from fmu.config import etc
-from fmu.ensemble.virtualensemble import VirtualEnsemble
+from fmu.ensemble.virtualrealization import VirtualRealization
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
 
 
-class EnsembleCombination(object):
-    """The class is used to perform linear operations on ensembles.
+class RealizationCombination(object):
+    """The class is used to perform linear operations on realizations.
 
     When instantiated, the linear combination will not actually be
     computed before the results are actually asked for - lazy
     evaluation.
     """
     def __init__(self, ref, scale=None, add=None, sub=None):
-        """Set up an object for a linear combination of ensembles.
+        """Set up an object for a linear combination of realizations.
 
         Each instance of this object can only hold one operation,
         either addition/substraction of two
         ensembles/ensemblecombinations or a scaling of one.
 
-        ScratchEnsembles and VirtualEnsembles can be combined freely.
+        ScratchRealization and VirtualRealization can be combined freely.
 
         A long expression of ensembles will lead to an evaluation tree
-        consisting of instances of this class with actual ensembles
+        consisting of instances of this class with actual realizations
         at the leaf nodes.
 
+        See https://en.wikipedia.org/wiki/Binary_expression_tree
+
         Args:
-            scale: float for scaling the ensemble or ensemblecombination
-            add: ensemble or ensemblecombinaton with a positive sign
-            sub: ensemble or ensemblecombination with a negative sign.
+            scale: float for scaling the realization(combination)
+            add: something to add
+            sub: something to substract
 
         """
 
@@ -58,25 +62,9 @@ class EnsembleCombination(object):
         else:
             self.sub = None
 
-    def find_combined(self):
-        """
-        The function finds the corresponding realizations
-        which have completed successfully in the all ensembles.
-
-        DEPRECATED:
-        This function is not any longerneeded as dropna() is used after
-        combinatoin evaluation.
-        """
-        ref_ok = set(self.ref.get_ok().query('OK == True')['REAL'].tolist())
-        operations = self.sub + self.add
-        for operator in operations:
-            ior_ok = set(operator.get_ok().query('OK == True')['REAL'].tolist()) # noqa
-            ref_ok = list(ref_ok & ior_ok)
-        return ref_ok
-
     def keys(self):
         """Return the intersection of all keys available in reference
-        ensemble(combination) and the other
+        realization(combination) and the other
         """
         combkeys = set()
         combkeys = combkeys.union(self.ref.keys())
@@ -87,42 +75,58 @@ class EnsembleCombination(object):
         return combkeys
 
     def get_df(self, localpath):
-        """Evaluate the ensemble combination on a specific dataset
+        """Evaluate the realization combination on a specific dataset
+
+        On realizations, some datatypes can be dictionaries!
         """
         # We can pandas.add when the index is set correct.
         # WE MUST GUESS!
         indexlist = []
-        indexcandidates = ['REAL', 'DATE', 'ZONE', 'REGION']
-        for index in indexcandidates:
-            if index in self.ref.get_df(localpath).columns:
-                indexlist.append(index)
-        refdf = self.ref.get_df(localpath).set_index(indexlist)
-        refdf = refdf.select_dtypes(include='number')
+        indexcandidates = ['DATE', 'ZONE', 'REGION']
+        refdf = self.ref.get_df(localpath)
+        if isinstance(refdf, pd.DataFrame):
+            for index in indexcandidates:
+                if index in refdf.columns:
+                    indexlist.append(index)
+            refdf = refdf.set_index(indexlist)
+            refdf = refdf.select_dtypes(include='number')
+        else:  # Convert from dict to Series
+            refdf = pd.Series(refdf)
         result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add.get_df(localpath).set_index(indexlist)
-            otherdf = otherdf.select_dtypes(include='number')
+            otherdf = self.add.get_df(localpath)
+            if isinstance(otherdf, pd.DataFrame):
+                otherdf = otherdf.set_index(indexlist)
+                otherdf = otherdf.select_dtypes(include='number')
+            else:
+                otherdf = pd.Series(otherdf)
             result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub.get_df(localpath).set_index(indexlist)
-            otherdf = otherdf.select_dtypes(include='number')
+            otherdf = self.sub.get_df(localpath)
+            if isinstance(otherdf, pd.DataFrame):
+                otherdf = otherdf.set_index(indexlist)
+                otherdf = otherdf.select_dtypes(include='number')
+            else:
+                otherdf = pd.Series(otherdf)
             result = result.sub(otherdf)
-        # Delete rows where everything is NaN, which will be case when
-        # realization (multi-)indices does not match up in both ensembles.
-        result.dropna(axis='index', how='all', inplace=True)
-        # Also delete columns where everything is NaN, happens when
-        # column data are not similar
-        result.dropna(axis='columns', how='all', inplace=True)
-        return result.reset_index()
+        if isinstance(result, pd.DataFrame):
+            # Delete rows where everything is NaN, which will be case when
+            # some data row does not exist in all realizations.
+            result.dropna(axis='index', how='all', inplace=True)
+            # Also delete columns where everything is NaN, happens when
+            # column data are not similar
+            result.dropna(axis='columns', how='all', inplace=True)
+            return result.reset_index()
+        return result.dropna().to_dict()
 
     def to_virtual(self):
         """Evaluate the current linear combination and return as
-        a virtual ensemble.
+        a virtualrealizatione.
         """
-        vens = VirtualEnsemble(name=str(self))
+        vreal = VirtualRealization(description=str(self))
         for key in self.keys():
-            vens.append(key, self.get_df(key))
-        return vens
+            vreal.append(key, self.get_df(key))
+        return vreal
 
     def get_smry_dates(self, freq='monthly'):
         """Create a union of dates available in the
@@ -140,17 +144,18 @@ class EnsembleCombination(object):
     def get_smry(self, time_index=None, column_keys=None):
         """
         Loads the Eclipse summary data directly from the underlying
-        ensemble data, independent of whether you have issued
-        from_smry() first in the ensembles.
+        realization data, independent of whether you have issued
+        from_smry() first in the realization.
 
-        If you involve VirtualEnsembles in this operation, this
-        this will fail.
+        If you involve VirtualRealization in this operation, this
+        this will fail. You have to use internalized data, that is
+        get_df().
 
-        Later resampling of data in VirtualEnsembles might get implemented.
+        Later, resampling of data in VirtualRealization might get implemented.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)
-        indexlist = ['REAL', 'DATE']
+        indexlist = ['DATE']
         refdf = self.ref.get_smry(time_index=time_index,
                                   column_keys=column_keys).set_index(indexlist)
         result = refdf.mul(self.scale)
@@ -187,19 +192,19 @@ class EnsembleCombination(object):
         return scalestring + str(self.ref) + addstring + substring
 
     def __sub__(self, other):
-        return EnsembleCombination(self, sub=other)
+        return RealizationCombination(self, sub=other)
 
     def __add__(self, other):
-        return EnsembleCombination(self, add=other)
+        return RealizationCombination(self, add=other)
 
     def __radd__(self, other):
-        return EnsembleCombination(self, add=other)
+        return RealizationCombination(self, add=other)
 
     def __rsub__(self, other):
-        return EnsembleCombination(self, sub=other)
+        return RealizationCombination(self, sub=other)
 
     def __mul__(self, other):
-        return EnsembleCombination(self, scale=float(other))
+        return RealizationCombination(self, scale=float(other))
 
     def __rmul__(self, other):
-        return EnsembleCombination(self, scale=float(other))
+        return RealizationCombination(self, scale=float(other))
