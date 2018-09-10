@@ -52,7 +52,7 @@ def test_virtualensemble():
     assert 'DATE' in fopt.columns
     assert 'REAL' in fopt.columns
     assert 'FGPT' not in fopt.columns
-    assert len(fopt) == 20
+    assert len(fopt) == 25
 
     # Eclipse summary vector statistics for a given ensemble
     df_stats = vens.get_smry_stats(column_keys=['FOPR', 'FGPR'],
@@ -60,7 +60,7 @@ def test_virtualensemble():
     assert isinstance(df_stats, dict)
     assert len(df_stats.keys()) == 2
     assert isinstance(df_stats['FOPR'], pd.DataFrame)
-    assert len(df_stats['FOPR'].index) == 4
+    assert len(df_stats['FOPR'].index) == 5
 
     # Check webviz requirements for dataframe
     assert 'min' in df_stats['FOPR'].columns
@@ -71,8 +71,8 @@ def test_virtualensemble():
     assert 'mean' in df_stats['FOPR'].columns
     assert 'p10' in df_stats['FOPR'].columns
     assert 'p90' in df_stats['FOPR'].columns
-    assert df_stats['FOPR']['min'].iloc[-1] < \
-        df_stats['FOPR']['max'].iloc[-1]
+    assert df_stats['FOPR']['min'].iloc[-2] < \
+        df_stats['FOPR']['max'].iloc[-2]
 
     # Test virtrealization retrieval:
     vreal = vens.get_realization(2)
@@ -102,7 +102,7 @@ def test_virtualensemble():
     assert vens.get_realization(3)['betterdata']['NPV'] == 2300
     assert vens.get_realization(0)['betterdata']['NPV'] == 1000
     assert vens.get_realization(1)['betterdata']['NPV'] == 2000
-    assert vens.get_(2)['betterdata']['NPV'] == 1500
+    assert vens.get_realization(2)['betterdata']['NPV'] == 1500
     assert vens.get_realization(80)['betterdata']['NPV'] == 9
 
     with pytest.raises(ValueError):

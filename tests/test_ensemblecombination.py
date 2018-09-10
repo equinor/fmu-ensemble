@@ -100,7 +100,7 @@ def test_ensemblecombination_sparse():
     assert 3 not in (ior - vref)['unsmry-yearly'].REAL.unique()
     assert '2002-01-01' not in list((ior - vref)['unsmry-yearly.csv']
                                     .DATE.unique())
-    assert len((ior - vref)['unsmry-yearly']) == 15
+    assert len((ior - vref)['unsmry-yearly']) == 19 
 
     unsmry = vref.data['share/results/tables/unsmry-yearly.csv']
     del unsmry['FWIR']
