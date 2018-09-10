@@ -99,6 +99,29 @@ def test_single_realization():
         real.from_csv('bogus.csv')
 
 
+def test_datenormalization():
+    from fmu.ensemble.realization import normalize_dates
+    from datetime import date
+
+    start = date(1997, 11, 5)
+    end = date(2020, 3, 2)
+
+    print(normalize_dates(start, end, 'monthly'))
+
+    assert normalize_dates(start, end, 'monthly') == \
+        (date(1997, 11, 1), date(2020, 4, 1))
+    assert normalize_dates(start, end, 'yearly') == \
+        (date(1997, 1, 1), date(2021, 1, 1))
+
+    # Check it does not touch already aligned dates
+    assert normalize_dates(date(1997, 11, 1),
+                           date(2020, 4, 1), 'monthly') == \
+        (date(1997, 11, 1), date(2020, 4, 1))
+    assert normalize_dates(date(1997, 1, 1),
+                           date(2021, 1, 1), 'yearly') == \
+        (date(1997, 1, 1), date(2021, 1, 1))
+
+
 def test_singlereal_ecl():
     """Test Eclipse specific functionality for realizations"""
 
@@ -125,6 +148,11 @@ def test_singlereal_ecl():
     # Test that the internalized was not touched:
     assert 'GGIR:OP' not in real['unsmry-raw'].columns
 
+    assert 'FOPT' in real.get_smry(column_keys=['F*'], time_index='monthly')
+    assert 'FOPT' in real.get_smry(column_keys='F*', time_index='yearly')
+    assert 'FOPT' in real.get_smry(column_keys='FOPT', time_index='daily')
+    assert 'FOPT' in real.get_smry(column_keys='FOPT', time_index='raw')
+
     # Test date functionality
     assert isinstance(real.get_smry_dates(), list)
     assert isinstance(real.get_smry_dates(freq='last'), list)
@@ -133,8 +161,8 @@ def test_singlereal_ecl():
         len(real.get_smry_dates(freq='monthly'))
     monthly = real.get_smry_dates(freq='monthly')
     assert monthly[-1] > monthly[0]  # end date is later than start
-    assert len(real.get_smry_dates(freq='yearly')) == 4
-    assert len(monthly) == 37
+    assert len(real.get_smry_dates(freq='yearly')) == 5
+    assert len(monthly) == 38
     assert len(real.get_smry_dates(freq='daily')) == 1098
 
     # Test caching/internalization of summary files
