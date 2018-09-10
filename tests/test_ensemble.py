@@ -235,6 +235,19 @@ def test_ensemble_ecl():
     assert df_stats['FOPR']['min'].iloc[-1] < \
         df_stats['FOPR']['max'].iloc[-1]
 
+
+def test_observation_import():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+
     obs = reekensemble.from_obs_yaml(testdir +
                                      '/data/testensemble-reek001/' +
                                      '/share/observations/observations.yaml')
