@@ -65,15 +65,56 @@ arithmetic operations on realizations are done.
 Ensemble
 --------
 
+An ensemble is a collection of realizations, where the realizations
+share some common features making it relevant to do statistical
+aggregations over them. This does not necessarily exclude random
+collections of realizations, but if the realizations do not share
+anything, they can always be collected in simple Python lists as well.
+
+A requirement is that each member of the ensembled are referred to by
+an *integer*, and will always be present in the column `REAL` in
+aggregated dataframes.
+
 ScratchEnsemble
 ^^^^^^^^^^^^^^^
+
+A `ScratchEnsemble` is an ensemble that is initialized from a
+directory of realization-runs on the file system, typically on
+`/scratch`. This object can do a full initialization of all
+`ScratchRealization` in a specific directory, and collect them into a
+Ensemble object.
 
 
 VirtualEnsemble
 ^^^^^^^^^^^^^^^
 
+Analogous to the relationship between `ScratchRealization` and
+`VirtualRealization`, a `VirtualEnsemble` holds a list of
+`VirtualRealization` objects, with limitations imposed by those of
+`VirtualRealization`.
+
 
 EnsembleCombination
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+
+Whenever you try do add or substract ensembles, the objects you get in
+return are of type `EnsembleCombination`. These objects act as
+ensembles, but its data is always a combination of the data in two or
+more ensembles (or a single ensemble scaled by a scalar).
+
+Calculating a combination of ensembles can be computationally
+expensive, depending on the amount of data requested and included. The
+actual combination of numbers is *not* done until you actually ask for
+it. That means that initialization of `EnsembleCombination` is fast,
+but when you ask for its data, it might take time. If you want all
+data to be evaluated in one go, you ask the object for a
+`VirtualEnsemble` using the function `to_virtual()`, which means that
+all internalized data is evaluated and returned to you for further
+access and/or storage.
+
+The implementation of the linear algebra over ensembles and
+realizations is accomplished using a `Binary Expression Tree`_, with
+`ScratchEnsemble` or `VirtualEnsemble` at the leaf nodes.
 
 
+.. _Binary Expression Tree: https://en.wikipedia.org/wiki/Binary_expression_tree
