@@ -47,6 +47,7 @@ def test_reek001():
 
     statusdf = reekensemble.get_df('STATUS')
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
+    assert 'REAL' in statusdf.columns
     assert 'DURATION' in statusdf.columns  # calculated
     assert 'argList' in statusdf.columns  # from jobs.json
     assert int(statusdf.loc[245, 'DURATION']) == 195  # sample check
@@ -212,8 +213,8 @@ def test_ensemble_ecl():
 
     # delta between two ensembles
     diff = reekensemble - reekensemble
-    assert len(diff.from_smry(column_keys=['FOPR', 'FGPR',
-                              'FWCT']).columns) == 5
+    assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
+                                          'FWCT']).columns) == 5
 
     # eclipse summary vector statistics for a given ensemble
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],

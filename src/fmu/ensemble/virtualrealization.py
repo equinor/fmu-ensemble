@@ -183,26 +183,59 @@ class VirtualRealization(object):
         Returns:
             dataframe or dictionary
         """
-        if localpath in self.data.keys():
-            return self.data[localpath]
+        data = None
+        if localpath in self.keys():
+            data = self.data[localpath]
+        fullpath = self.shortcut2path(localpath)
 
-        # Allow shorthand, but check ambiguity
-        basenames = [os.path.basename(x) for x in self.data.keys()]
-        if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.data.keys()]
-        if noexts.count(localpath) == 1:
+        if fullpath in self.keys():
+            data = self.data[fullpath]
+        else:
+            raise ValueError("Could not find {}".format(localpath))
+
+        if isinstance(data, pd.DataFrame):
+            return data
+        elif isinstance(data, pd.Series):
+            return data.to_dict()
+        elif isinstance(data, dict):
+            return data
+        else:
+            raise ValueError("BUG: Unknown datatype")
+
+    def shortcut2path(self, shortpath):
+        """
+        Convert short pathnames to fully qualified pathnames
+        within the datastore.
+
+        If the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+        then you can also access this with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity. In case
+        of ambiguity, the shortpath will be returned.
+        """
+        basenames = [os.path.basename(x) for x in self.keys()]
+        if basenames.count(shortpath) == 1:
+            shortcut2path = {os.path.basename(x): x for x in self.keys()}
+            return shortcut2path[shortpath]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        if noexts.count(shortpath) == 1:
             shortcut2path = {''.join(x.split('.')[:-1]): x
-                             for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
+                             for x in self.keys()}
+            return shortcut2path[shortpath]
         basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.data.keys()]
-        if basenamenoexts.count(localpath) == 1:
+                          for x in self.keys()]
+        if basenamenoexts.count(shortpath) == 1:
             shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                             for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
-        raise ValueError(localpath)
+                             for x in self.keys()}
+            return shortcut2path[shortpath]
+        # If we get here, we did not find anything that
+        # this shorthand could point to. Return as is, and let the
+        # calling function handle further errors.
+        return shortpath
 
     @property
     def parameters(self):

@@ -126,6 +126,7 @@ Text files in this concept is a special case of text files arranged
 similarly to the already mentioned ``parameters.txt``
 
 .. code-block:: text
+
     <key1> <value1>
     <key2> <value2>
     etc..
@@ -151,31 +152,3 @@ key, and you can get back the aggregated data set using
 In aggregations from ensembles, the first column will always be
 ``REAL`` which is the realization index. The next columns will be from
 the CSV data you loaded.
-
-
-Advanced usage
---------------
-
-Merging data
-^^^^^^^^^^^^
-
-The ``CSV_EXPORT1`` workflow built into ERT is performing one of the
-specific tasks that can now be accomplished using this module. That
-CSV export is just a merge of the dataframes coming from
-``parameters.txt`` and the Eclipse summary data.
-
-.. code-block:: python
-
-    import pandas as pd
-    smry = reekensemble.from_smry(time_index='monthly')
-    params = reekensemble.parameters
-    # Match the two tables where the value of REAL is identical:
-    smry_params = pd.merge(smry, params)
-    smry_params.to_csv('smry_params.csv', index=False)
-
-For finer control, you can specify exactly which summary vectors you
-want to include, the time resolution, and perhaps also a subset of the
-parameters. For example, if you have computed any kind of scalar data
-pr. realization and put that into ``outputs.txt``, you can merge with
-``from_txt('outputs.txt')`` instead of ``params`` in the code above.
-
