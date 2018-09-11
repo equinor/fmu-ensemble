@@ -9,6 +9,8 @@ Contents:
    readme
    installation
    usage
+   concepts
+   advancedusage
    modules
    contributing
    authors

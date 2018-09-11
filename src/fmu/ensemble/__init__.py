@@ -13,3 +13,4 @@ from .ensembleset import EnsembleSet  # noqa
 from .virtualrealization import VirtualRealization  # noqa
 from .virtualensemble import VirtualEnsemble  # noqa
 from .ensemblecombination import EnsembleCombination  # noqa
+from .realizationcombination import RealizationCombination  # noqa

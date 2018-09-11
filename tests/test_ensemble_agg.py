@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pandas as pd
 import pytest
 
 from fmu import config
@@ -92,3 +93,23 @@ def test_ensemble_aggregations():
 
     with pytest.raises(ValueError):
         reekensemble.agg('foobar')
+
+    # Check that include/exclude functionality in agg() works:
+    assert 'parameters.txt' not in \
+        reekensemble.agg('mean', excludekeys='parameters.txt').keys()
+    assert 'parameters.txt' not in \
+        reekensemble.agg('mean', excludekeys=['parameters.txt']).keys()
+    assert 'parameters.txt' not in \
+        reekensemble.agg('mean', keylist='STATUS').keys()
+    assert 'parameters.txt' not in \
+        reekensemble.agg('mean', keylist=['STATUS']).keys()
+
+    # Shorthand notion works for keys to include, but they
+    # should get returned with fully qualified paths.
+    assert 'share/results/tables/unsmry-yearly.csv' in \
+        reekensemble.agg('mean', keylist='unsmry-yearly').keys()
+    assert 'share/results/tables/unsmry-yearly.csv' in \
+        reekensemble.agg('mean', keylist=['unsmry-yearly']).keys()
+    assert isinstance(reekensemble.agg('mean',
+                                       keylist='unsmry-yearly')
+                      .get_df('unsmry-yearly'), pd.DataFrame)
