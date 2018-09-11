@@ -286,3 +286,31 @@ def test_filesystem_changes():
 
     # Clean up when finished. This often fails on network drives..
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
+
+
+def test_drop():
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+
+    parametercount = len(real.parameters)
+    real.drop('parameters', key='RMS_SEED')
+    assert len(real.parameters) == parametercount - 1
+
+    real.drop('parameters', keys=['L_1GO', 'E_1GO'])
+    assert len(real.parameters) == parametercount - 3
+
+    real.drop('parameters', key='notexistingkey')
+    # This will go unnoticed
+    assert len(real.parameters) == parametercount - 3
+
+    real.from_smry(column_keys='FOPT', time_index='monthly')
+    real.get_df('unsmry-monthly').to_csv('foo.csv', index=False)
+    datecount = len(real.get_df('unsmry-monthly'))
+    real.drop('unsmry-monthly', rowcontains='2000-01-01')
+    assert len(real.get_df('unsmry-monthly')) == datecount - 1
+
+    real.drop('parameters')
+    assert 'parameters.txt' not in real.keys()
