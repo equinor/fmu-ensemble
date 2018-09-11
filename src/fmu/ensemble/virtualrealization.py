@@ -190,7 +190,7 @@ class VirtualRealization(object):
 
         if fullpath in self.keys():
             data = self.data[fullpath]
-        if not len(data):  # don't remove len() pylint!
+        else:
             raise ValueError("Could not find {}".format(localpath))
 
         if isinstance(data, pd.DataFrame):

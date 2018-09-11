@@ -58,6 +58,9 @@ def test_virtual_realization():
                  overwrite=True)
     assert vreal['betteroutput']['NPV'] < 0
 
+    with pytest.raises(ValueError):
+        vreal.get_df('bogusdataname')
+
 
 def test_virtual_todisk():
     if '__file__' in globals():
