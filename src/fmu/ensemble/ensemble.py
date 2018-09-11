@@ -426,6 +426,31 @@ class ScratchEnsemble(object):
         return self.get_df('share/results/tables/unsmry-' +
                            time_index + '.csv')
 
+    def drop(self, localpath, **kwargs):
+        """Delete elements from internalized data.
+
+        Shortcuts are allowed for localpath. If the data pointed to is
+        a DataFrame, you can delete columns, or rows containing certain
+        elements
+
+        If the data pointed to is a dictionary, keys can be deleted.
+
+        Args:
+            localpath: string, path to internalized data. If no other options
+                are supplied, that dataset is deleted in its entirety
+            column: string with a column name to drop. Only for dataframes
+            columns: list of strings with column names to delete
+            rowcontains: rows where one column contains this string will be
+                dropped. The comparison is on strings only, and all cells in
+                the dataframe is converted to strings for the comparison.
+                Thus it might work on dates, but be careful with numbers.
+            key: string with a keyname in a dictionary. Will not work for
+                dataframes
+            keys: list of strings of keys to delete from a dictionary
+        """
+        for _, realization in self._realizations.items():
+            realization.drop(localpath, **kwargs)
+
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes for an ensemble according to frequency
 
