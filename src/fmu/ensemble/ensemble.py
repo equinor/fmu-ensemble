@@ -580,7 +580,7 @@ class ScratchEnsemble(object):
             # Look for data we should group by. This would be beneficial
             # to get from a metadata file, and not by pure guesswork.
             groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
-                                       'JOBINDEX']
+                                       'JOBINDEX', 'Zone', 'Region_index']
 
             groupby = [x for x in groupbycolumncandidates
                        if x in data.columns]
