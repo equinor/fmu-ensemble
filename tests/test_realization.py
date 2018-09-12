@@ -247,18 +247,16 @@ def test_filesystem_changes():
 
     # Remove parameters.txt
     shutil.move(realdir + '/parameters.txt', realdir + '/parameters.text')
-    with pytest.raises(IOError):
-        real = ensemble.ScratchRealization(realdir)
-        # Discuss whether we should relax this requirement!!
+    real = ensemble.ScratchRealization(realdir)
+    # Should not fail
 
     # Move it back so the realization is valid again
     shutil.move(realdir + '/parameters.text', realdir + '/parameters.txt')
 
     # Remove STATUS altogether:
     shutil.move(realdir + '/STATUS', realdir + '/MOVEDSTATUS')
-    with pytest.raises(IOError):
-        real = ensemble.ScratchRealization(realdir)
-        # This is also currently a hard requirement.
+    real = ensemble.ScratchRealization(realdir)
+    # Should not fail
 
     # Try with an empty STATUS file:
     fhandle = open(realdir + '/STATUS', 'w')
