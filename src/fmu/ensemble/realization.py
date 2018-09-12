@@ -678,7 +678,7 @@ class ScratchRealization(object):
         """
         fullpath = self.shortcut2path(localpath)
         if fullpath not in self.keys():
-            raise ValueError('{} not found' % localpath)
+            raise ValueError('%s not found' % localpath)
 
         data = self.data[fullpath]
 
