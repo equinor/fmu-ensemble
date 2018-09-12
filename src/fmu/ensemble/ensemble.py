@@ -101,7 +101,7 @@ class ScratchEnsemble(object):
         allkeys = set()
         for realization in self._realizations.values():
             allkeys = allkeys.union(realization.keys())
-        return allkeys
+        return list(allkeys)
 
     def shortcut2path(self, shortpath):
         """
