@@ -127,10 +127,11 @@ Ready to contribute? Here's how to set up `fmu-ensemble` for local development.
 2. Clone your fork locally::
 
      $ git clone git@git.equinor.com:<your-user>/fmu-ensemble.git
+     $ cd fmu-ensemble
      $ git remote add upstream git@git.equinor.no:fmu-utilities/fmu-ensemble.git
 
    This means your `origin` is now your personal fork, while the actual master
    is at `upstream`.
 
-3. See the rest of recipee here:
+3. See the rest of recipe here:
    https://git.equinor.com/fmu-utilities/fmu-coding-practice/blob/master/developer-guide.md
