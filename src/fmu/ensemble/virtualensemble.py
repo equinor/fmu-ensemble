@@ -185,7 +185,7 @@ class VirtualEnsemble(object):
 
         WARNING: CODE DUPLICATION from ensemble.py
         """
-        quantilematcher = re.compile('p(\d\d)')
+        quantilematcher = re.compile(r'p(\d\d)')
         supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
         if aggregation not in supported_aggs and \
            not quantilematcher.match(aggregation):
