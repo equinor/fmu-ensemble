@@ -7,6 +7,7 @@ from __future__ import division
 from __future__ import print_function
 
 import re
+import os
 import glob
 import pandas as pd
 
@@ -155,6 +156,73 @@ class EnsembleSet(object):
             ensdf.insert(0, 'ENSEMBLE', ensemble.name)
             ensdflist.append(ensdf)
         return pd.concat(ensdflist, sort=False)
+
+    def drop(self, localpath, **kwargs):
+        """Delete elements from internalized data.
+
+        Shortcuts are allowed for localpath. If the data pointed to is
+        a DataFrame, you can delete columns, or rows containing certain
+        elements
+
+        If the data pointed to is a dictionary, keys can be deleted.
+
+        Args:
+            localpath: string, path to internalized data. If no other options
+                are supplied, that dataset is deleted in its entirety
+            column: string with a column name to drop. Only for dataframes
+            columns: list of strings with column names to delete
+            rowcontains: rows where one column contains this string will be
+                dropped. The comparison is on strings only, and all cells in
+                the dataframe is converted to strings for the comparison.
+                Thus it might work on dates, but be careful with numbers.
+            key: string with a keyname in a dictionary. Will not work for
+                dataframes
+            keys: list of strings of keys to delete from a dictionary
+        """
+        if self.shortcut2path(localpath) not in self.keys():
+            raise ValueError("%s not found" % localpath)
+        for _, ensemble in self._ensembles.items():
+            try:
+                ensemble.drop(localpath, **kwargs)
+            except ValueError:
+                pass  # Allow localpath to be missing in some ensembles.
+
+    def shortcut2path(self, shortpath):
+        """
+        Convert short pathnames to fully qualified pathnames
+        within the datastore.
+
+        If the fully qualified localpath is
+            'share/results/volumes/simulator_volume_fipnum.csv'
+        then you can also access this with these alternatives:
+         * simulator_volume_fipnum
+         * simulator_volume_fipnum.csv
+         * share/results/volumes/simulator_volume_fipnum
+
+        but only as long as there is no ambiguity. In case
+        of ambiguity, the shortpath will be returned.
+
+        CODE DUPLICATION from realization.py
+        """
+        basenames = map(os.path.basename, self.keys())
+        if basenames.count(shortpath) == 1:
+            short2path = {os.path.basename(x): x for x in self.keys()}
+            return short2path[shortpath]
+        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        if noexts.count(shortpath) == 1:
+            short2path = {''.join(x.split('.')[:-1]): x
+                          for x in self.keys()}
+            return short2path[shortpath]
+        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
+                          for x in self.keys()]
+        if basenamenoexts.count(shortpath) == 1:
+            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
+                          for x in self.keys()}
+            return short2path[shortpath]
+        # If we get here, we did not find anything that
+        # this shorthand could point to. Return as is, and let the
+        # calling function handle further errors.
+        return shortpath
 
     def get_csv_deprecated(self, filename):
         """Load CSV data from each realization in each
