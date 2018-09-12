@@ -87,17 +87,17 @@ class ScratchRealization(object):
             logger.warn('Realization %s not valid, skipping',
                         abspath)
 
-        # Now look for a minimal subset of files
+        # Now look for some common files, but don't require any
         if os.path.exists(os.path.join(abspath, 'STATUS')):
             filerow = {'LOCALPATH': 'STATUS',
                        'FILETYPE': 'STATUS',
                        'FULLPATH': os.path.join(abspath, 'STATUS'),
                        'BASENAME': 'STATUS'}
             self.files = self.files.append(filerow, ignore_index=True)
+            self.from_status()
         else:
-            logger.warn("Invalid realization, no STATUS file, %s",
+            logger.warn("No STATUS file, %s",
                         abspath)
-            raise IOError('STATUS file missing')
 
         if os.path.exists(os.path.join(abspath, 'jobs.json')):
             filerow = {'LOCALPATH': 'jobs.json',
@@ -113,8 +113,14 @@ class ScratchRealization(object):
                        'BASENAME': 'OK'}
             self.files = self.files.append(filerow, ignore_index=True)
 
-        self.from_txt('parameters.txt')
-        self.from_status()
+        if os.path.exists(os.path.join(abspath, 'parameters.txt')):
+            filerow = {'LOCALPATH': 'parameters.txt',
+                       'FILETYPE': 'txt',
+                       'FULLPATH': os.path.join(abspath, 'parameters.txt'),
+                       'BASENAME': 'parameters.txt'}
+            self.files = self.files.append(filerow, ignore_index=True)
+            self.from_txt('parameters.txt')
+
 
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
