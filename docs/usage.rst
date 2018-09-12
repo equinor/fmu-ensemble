@@ -93,6 +93,23 @@ written to disk as CSV files quite easily using e.g.
 ``smry.to_csv('summaryvectors.csv', index=False)``. Look up Pandas
 documentation for further possibilities.
 
+By default, Eclipse summary files will be searched for in
+`eclipse/model`, and then files with the suffix `*.UNSMRY`. In case
+you either have multiple `UNSMRY` files in that directory, or if you
+have them in a different directory you need to hint to the exact
+location beforehand, using the *file discovery* feature. If your
+Eclipse output files is at the realization root (the old standard),
+you only need to issue
+
+.. code-block:: python
+
+    ens.find_files("*.UNSMRY")
+
+prior to running `from_smry()`. If your problem is multiple Eclipse
+run in the same directory, you have to explicitly discover the full
+path for the file in the call to `find_files()`.
+
+
 Internalized data
 ^^^^^^^^^^^^^^^^^
 
