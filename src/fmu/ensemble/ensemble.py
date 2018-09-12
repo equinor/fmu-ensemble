@@ -618,7 +618,7 @@ class ScratchEnsemble(object):
         Returns:
             VirtualRealization. Its name will include the aggregation operator
         """
-        quantilematcher = re.compile('p(\d\d)')
+        quantilematcher = re.compile(r'p(\d\d)')
         supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
         if aggregation not in supported_aggs and \
            not quantilematcher.match(aggregation):
@@ -788,4 +788,3 @@ def _convert_numeric_columns(dataframe):
     """
     logger.warn("_convert_numeric_columns() not implemented")
     return dataframe
-
