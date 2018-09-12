@@ -426,6 +426,54 @@ class ScratchEnsemble(object):
         return self.get_df('share/results/tables/unsmry-' +
                            time_index + '.csv')
 
+    def filter(self, localpath, **kwargs):
+        """Filter realizations or data within realizations
+
+        Calling this function can return a copy with fewer
+        realizations, or remove realizations from the current object.
+
+        Typical usage is to require that parameters.txt is present, or
+        that the OK file is present.
+
+        It is also possible to require a certain scalar to have a specific
+        value, for example filtering on a specific sensitivity case.
+
+        Args:
+            localpath: string pointing to the data for which the filtering
+                applies. If no other arguments, only realizations containing
+                this data key is kept.
+            key: A certain key within a realization dictionary that is
+                required to be present. If a value is also provided, this
+                key must be equal to this value
+            value: The value a certain key must equal. Floating point
+                comparisons are not robust.
+            inplace: Boolean indicating if the current object should have its
+                realizations stripped, or if a copy should be returned.
+                Default true.
+
+         Return: 
+            If inplace=True, then nothing will be returned.
+            If inplace=False, a VirtualEnsemble fulfilling the filter
+            will be returned.
+       """
+        deletethese = []
+        keepthese = []
+        for realidx, realization in self.realizations.items():
+            if kwargs['inplace']:
+                if not realization.filter(localpath, **kwargs):
+                    deletethese.append(realidx)
+            else:
+                if realization.filter(localpath, **kwargs):
+                    keepthese.append(realidx)
+        if kwargs['inplace']:
+            logger.info("Removing realizations %s", deletethese)
+            self.remove_realizations(deletethese)
+        else:
+            filtered = VirtualEnsemble(self.name + " filtered")
+            for realidx in keepthese:
+                filtered.add(self._realizations[realidx].to_virtual())
+            return filtered
+
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
 
