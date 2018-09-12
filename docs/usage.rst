@@ -93,6 +93,23 @@ written to disk as CSV files quite easily using e.g.
 ``smry.to_csv('summaryvectors.csv', index=False)``. Look up Pandas
 documentation for further possibilities.
 
+By default, Eclipse summary files will be searched for in
+`eclipse/model`, and then files with the suffix `*.UNSMRY`. In case
+you either have multiple `UNSMRY` files in that directory, or if you
+have them in a different directory you need to hint to the exact
+location beforehand, using the *file discovery* feature. If your
+Eclipse output files is at the realization root (the old standard),
+you only need to issue
+
+.. code-block:: python
+
+    ens.find_files("*.UNSMRY")
+
+prior to running `from_smry()`. If your problem is multiple Eclipse
+run in the same directory, you have to explicitly discover the full
+path for the file in the call to `find_files()`.
+
+
 Internalized data
 ^^^^^^^^^^^^^^^^^
 
@@ -152,3 +169,17 @@ key, and you can get back the aggregated data set using
 In aggregations from ensembles, the first column will always be
 ``REAL`` which is the realization index. The next columns will be from
 the CSV data you loaded.
+
+In case you need to clean up imported files, it is possible to delete columns and rows from internalized dataframes through the `drop()` functionality. For an ensemble object called `ens` you may issue the following:
+
+.. code-block:: python
+
+    ens.drop('parameters.txt', key='BOGUSDATA')
+    ens.drop('parameters.txt', keys=['FOO1', 'FOO2', 'FOO3'])
+    ens.drop('geo_gas_volumes.csv', rowcontains='Totals') # Deletes all rows with 'Totals' anywhere.
+    ens.drop('geo_oil_volumes.csv', column='Giip')
+    ens.drop('unsmry-monthly', rowcontains='2000-01-01') # Enter dates as strings
+
+When called on `ScratchEnsemble` object the drops occur in each linked
+realization object, while on virtual ensembles, it occurs directly in
+its dataframe.

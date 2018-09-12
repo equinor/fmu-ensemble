@@ -654,6 +654,57 @@ class ScratchRealization(object):
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 
+    def drop(self, localpath, **kwargs):
+        """Delete elements from internalized data.
+
+        Shortcuts are allowed for localpath. If the data pointed to is
+        a DataFrame, you can delete columns, or rows containing certain
+        elements
+
+        If the data pointed to is a dictionary, keys can be deleted.
+
+        Args:
+            localpath: string, path to internalized data. If no other options
+                are supplied, that dataset is deleted in its entirety
+            column: string with a column name to drop. Only for dataframes
+            columns: list of strings with column names to delete
+            rowcontains: rows where one column contains this string will be
+                dropped. The comparison is on strings only, and all cells in
+                the dataframe is converted to strings for the comparison.
+                Thus it might work on dates, but be careful with numbers.
+            key: string with a keyname in a dictionary. Will not work for
+                dataframes
+            keys: list of strings of keys to delete from a dictionary
+        """
+        fullpath = self.shortcut2path(localpath)
+        if fullpath not in self.keys():
+            raise ValueError('{} not found' % localpath)
+
+        data = self.data[fullpath]
+
+        if not kwargs:
+            # This will remove the entire dataset
+            self.data.pop(fullpath, None)
+
+        if isinstance(data, pd.DataFrame):
+            if 'column' in kwargs:
+                data.drop(labels=kwargs['column'], axis='columns',
+                          inplace=True)
+            if 'columns' in kwargs:
+                data.drop(labels=kwargs['columns'], axis='columns',
+                          inplace=True)
+            if 'rowcontains' in kwargs:
+                # Construct boolean series for those rows that have a match
+                boolseries = (data.astype(str) ==
+                              str(kwargs['rowcontains'])).any(axis='columns')
+                self.data[fullpath] = data[~boolseries]
+        if isinstance(data, dict):
+            if 'keys' in kwargs:
+                for key in kwargs['keys']:
+                    data.pop(key, None)
+            if 'key' in kwargs:
+                data.pop(kwargs['key'], None)
+
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]
