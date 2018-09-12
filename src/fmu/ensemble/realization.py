@@ -114,13 +114,7 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
-            filerow = {'LOCALPATH': 'parameters.txt',
-                       'FILETYPE': 'txt',
-                       'FULLPATH': os.path.join(abspath, 'parameters.txt'),
-                       'BASENAME': 'parameters.txt'}
-            self.files = self.files.append(filerow, ignore_index=True)
             self.from_txt('parameters.txt')
-
 
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
