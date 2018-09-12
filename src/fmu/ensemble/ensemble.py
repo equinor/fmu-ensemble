@@ -448,8 +448,13 @@ class ScratchEnsemble(object):
                 dataframes
             keys: list of strings of keys to delete from a dictionary
         """
+        if self.shortcut2path(localpath) not in self.keys():
+            raise ValueError("%s not found" % localpath)
         for _, realization in self._realizations.items():
-            realization.drop(localpath, **kwargs)
+            try:
+                realization.drop(localpath, **kwargs)
+            except ValueError:
+                pass  # Allow localpath to be missing in some realizations
 
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes for an ensemble according to frequency
