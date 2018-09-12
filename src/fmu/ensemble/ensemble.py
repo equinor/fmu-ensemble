@@ -652,10 +652,22 @@ class ScratchEnsemble(object):
             groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
                                        'JOBINDEX', 'Zone', 'Region_index']
 
+            # Pick up string columns (or non-numeric values)
+            # (when strings are used as values, this breaks, but it is also
+            # meaningless to aggregate them. Most likely, strings in columns
+            # is a label we should group over)
+            stringcolumns = [x for x in data.columns if
+                             data.dtypes[x] == 'object']
+
             groupby = [x for x in groupbycolumncandidates
                        if x in data.columns]
 
+            # Add string columns
+            if key != 'STATUS':  # STATUS dataframe contains too many strings..
+                groupby = list(set(groupby + stringcolumns))
+
             if len(groupby):
+                logger.info("Grouping %s by %s", key, groupby)
                 aggobject = data.groupby(groupby)
             else:
                 aggobject = data
