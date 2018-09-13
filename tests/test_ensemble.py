@@ -237,6 +237,47 @@ def test_ensemble_ecl():
         df_stats['FOPR']['max'].iloc[-1]
 
 
+def test_filter():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    dirs =  testdir + '/data/testensemble-reek001/' + \
+        'realization-*/iter-0'
+    reekensemble = ScratchEnsemble('reektest', dirs)
+
+    reekensemble.filter('parameters.txt', key='RMS_SEED', value='723121249',
+                        inplace=True)
+    assert len(reekensemble) == 2
+
+    reekensemble = ScratchEnsemble('reektest', dirs)
+    reekensemble.filter('parameters.txt', key='RMS_SEED', value=723121249,
+                        inplace=True)
+    assert len(reekensemble) == 2
+    assert reekensemble.agg('mean')['parameters']['RMS_SEED'] == 723121248
+
+    reekensemble = ScratchEnsemble('reektest', dirs)
+    filtered = reekensemble.filter('parameters.txt', key='FOO',
+                                   inplace=False)
+    assert len(filtered) == 1
+    filtered = reekensemble.filter('parameters.txt', key='MULTFLT_F1',
+                                   value=0.001, inplace=False)
+    assert len(filtered) == 4
+    assert len(reekensemble.filter('parameters.txt', key='FWL',
+                                   value=1700, inplace=False)) == 3
+    assert len(reekensemble.filter('parameters.txt', key='FWL',
+                                   value='1700', inplace=False)) == 3
+    # This one is tricky, the empty string should correspond to
+    # missing data
+    assert len(reekensemble.filter('parameters.txt', key='FOO',
+                                   value='', inplace=False) == 4)
+    # while no value means that the key must be present
+    assert len(reekensemble.filter('parameters.txt', key='FOO',
+                                   inplace=False)) == 1
+
+
 def test_observation_import():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions

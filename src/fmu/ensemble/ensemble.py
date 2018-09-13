@@ -458,7 +458,7 @@ class ScratchEnsemble(object):
        """
         deletethese = []
         keepthese = []
-        for realidx, realization in self.realizations.items():
+        for realidx, realization in self._realizations.items():
             if kwargs['inplace']:
                 if not realization.filter(localpath, **kwargs):
                     deletethese.append(realidx)

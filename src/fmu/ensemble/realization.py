@@ -684,22 +684,35 @@ class ScratchRealization(object):
             boolean: True if the data is present and fulfilling any
             criteria.
         """
-        localpath = shortcut2path(localpath)
+        localpath = self.shortcut2path(localpath)
         if 'key' not in kwargs and 'value' not in kwargs:
             if localpath not in self.keys():
                 return False
             else:
                 return True
         if 'key' in kwargs and 'value' not in kwargs:
-            if len(self.data[localpath][kwargs[key]]) < 1:
-                return False
-            else:
-                return True
+            if isinstance(self.data[localpath], dict):
+                if kwargs['key'] in self.data[localpath]:
+                    return True
+                else:
+                    return False
+            if isinstance(self.data[localpath], pd.DataFrame):
+                if kwargs['key'] in self.data[localpath].columns:
+                    return True
+                else:
+                    return False
         if 'key' in kwargs and 'value' in kwargs:
-            if self.data[localpath][kwargs['key']] == kwargs['value']:
-                return True
-            else:
-                return False
+            if isinstance(kwargs['value'], str):
+                if str(self.data[localpath][kwargs['key']]) == kwargs['value']:
+                    return True
+                else:
+                    return False
+            else: # non-string, then don't convert the internalized data
+                if self.data[localpath][kwargs['key']] == kwargs['value']:
+                    return True
+                else:
+                    return False
+
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
