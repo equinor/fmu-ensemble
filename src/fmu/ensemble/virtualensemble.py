@@ -53,6 +53,9 @@ class VirtualEnsemble(object):
         else:
             self.data = {}
 
+        # Get a list of known indices from the first datatable.
+        self.realindices = self.data[self.data.keys()[0]]['REAL'].unique()
+            
     def keys(self):
         """Return all keys in the internal datastore"""
         return self.data.keys()
@@ -123,21 +126,54 @@ class VirtualEnsemble(object):
         else:
             raise ValueError("No data for realization %d" % realindex)
 
-    def remove_realizations(self, realindices):
+    def add_realization(self, virtreal, overwrite=False, realidxoverride=None):
+        """Add a realization. A ScratchRealization will be effectively
+        converted to a virtual realization.
+
+        Unless overwrite is True, a ValueError will be raised
+        if the realization index already exists.
+
+        Args:
+            overwrite: boolean whether an existing realization with the same
+                index should be removed prior to adding
+            realidxoverwrite: Ignore the index of the incoming virtual
+                realization and use the provided. The overwrite option
+                still applies.
+        """
+        if not realidxoverride:
+            realidx = real.index
+        else:
+            realidx = realidxoverride
+        if not overwrite and realidx in self.realindices:
+            raise ValueError("Error, realization index already present")
+        if overwrite and realidx in self.realindices:
+            self.remove_realization(realidx)
+
+        # Add the data from the incoming realization key by keycount
+        for key in virtreal.keys():
+            df = real.get_df(key)
+            if not isinstance(df, pd.DataFrame):
+                df = pd.DataFrame(df)
+            df['REAL'] = realidx
+            self.data[key].append(df) # Sorting is irrelevant.
+        self.realindices.append(realidx)
+        self.realindices.sort()
+
+    def remove_realizations(self, deleteindices):
         """Remove realizations from internal data
 
         This will remove all rows in all internalized data belonging
         to the set of supplied indices.
 
         Args:
-            realindices: int or list of ints, realization indices to remove
+            deleteindices: int or list of ints, realization indices to remove
         """
-        if not isinstance(realindices, list):
-            realindices = [realindices]
+        if not isinstance(deleteindices, list):
+            deleteindices = [deleteindices]
 
-        indicesknown = self.parameters['REAL'].unique()
-        indicestodelete = list(set(realindices) & set(indicesknown))
-        indicesnotknown = list(set(realindices) - set(indicestodelete))
+        indicesknown = self.realindices
+        indicestodelete = list(set(deleteindices) & set(indicesknown))
+        indicesnotknown = list(set(deleteindices) - set(indicestodelete))
         if indicesnotknown:
             logger.warn("Skipping undefined realization indices %s",
                         str(indicesnotknown))
@@ -145,7 +181,8 @@ class VirtualEnsemble(object):
         for realindex in indicestodelete:
             for key in self.data:
                 self.data[key] = self.data[key][self.data[key]['REAL']
-                                                != realindex]
+                                                != realindex
+            self.realindices.remove(realindex)
         logger.info("Removed %s realization(s) from VirtualEnsemble",
                     len(indicestodelete))
 
