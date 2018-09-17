@@ -85,6 +85,14 @@ class ScratchEnsemble(object):
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
 
+        # remove failed realization from the ensemble
+        list_of_failed = self.get_ok().query("OK == False")['REAL'].values
+        if list_of_failed.size:
+            print ('The following failed realizations and were removed from ' +
+                   self._name)
+            print (list_of_failed)
+            self.remove_realizations(list_of_failed)
+
     def __getitem__(self, realizationindex):
         """Get one of the realizations.
 
@@ -522,9 +530,12 @@ class ScratchEnsemble(object):
         column called 'index', and statistical data in 'min', 'max', 'mean',
         'p10', 'p90'. The column 'p10' contains the oil industry version of
         'p10', and is calculated using the Pandas p90 functionality.
+
+        TODO: add warning message when failed realizations are removed
         """
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
+
         dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
 
         data = {}  # dict to be returned
