@@ -113,6 +113,9 @@ def test_ensembleset_reek001():
 
     assert len(ensset3.keys()) == 6
 
+    ensset3.drop('parameters.txt')
+    assert len(ensset3.keys()) == 5
+
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         os.remove(realizationdir + '/iter-1')
