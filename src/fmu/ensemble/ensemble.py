@@ -89,6 +89,14 @@ class ScratchEnsemble(object):
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
 
+        # remove failed realization from the ensemble
+        list_of_failed = self.get_ok().query("OK == False")['REAL'].values
+        if list_of_failed.size:
+            print ('The following failed realizations and were removed from ' +
+                   self._name)
+            print (list_of_failed)
+            self.remove_realizations(list_of_failed)
+
     def __getitem__(self, realizationindex):
         """Get one of the realizations.
 
@@ -473,22 +481,24 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes.
         """
+        # Build list of eclsum objects that are not None
+        eclsums = []
+        for _, realization in self._realizations.items():
+            if realization.get_eclsum():
+                eclsums.append(realization.get_eclsum())
         if freq == 'report' or freq == 'raw':
             dates = set()
-            for _, realization in self._realizations.items():
-                dates = dates.union(realization.get_eclsum().dates)
+            for eclsum in eclsums:
+                dates = dates.union(eclsum.dates)
             dates = list(dates)
             dates.sort()
             return dates
         elif freq == 'last':
-            end_date = max([real[1].get_eclsum().end_date
-                            for real in self._realizations.items()])
+            end_date = max([eclsum.end_date for eclsum in eclsums])
             return [end_date]
         else:
-            start_date = min([real[1].get_eclsum().start_date
-                              for real in self._realizations.items()])
-            end_date = max([real[1].get_eclsum().end_date
-                            for real in self._realizations.items()])
+            start_date = min([eclsum.start_date for eclsum in eclsums])
+            end_date = max([eclsum.end_date for eclsum in eclsums])
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
@@ -524,9 +534,12 @@ class ScratchEnsemble(object):
         column called 'index', and statistical data in 'min', 'max', 'mean',
         'p10', 'p90'. The column 'p10' contains the oil industry version of
         'p10', and is calculated using the Pandas p90 functionality.
+
+        TODO: add warning message when failed realizations are removed
         """
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
+
         dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
 
         data = {}  # dict to be returned
