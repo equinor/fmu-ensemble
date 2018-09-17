@@ -69,6 +69,7 @@ class ScratchEnsemble(object):
         self._ens_df = pd.DataFrame()
         self._global_active = None
         self._global_size = None
+        self._global_grid = None
 
         if isinstance(paths, str):
             paths = [paths]
@@ -794,17 +795,34 @@ class ScratchEnsemble(object):
         return pd.concat(dflist, sort=False).reset_index()
 
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
+        """
+        Returns the grid (i,j,k) and (x,y), and any requested init
+        and/or unrst property. The values are aggregated over the
+        ensemble (mean/ std currently supported).
 
-        data = {}
-        data['cells'] = self.cell_layers(active_only=active_only)
+        Args:
+            props: list of column key wildcards
+            report: int. for unrst props only. Report step for given date.
+                    Use the function get_unrst_report_dates to get an overview
+                    of the report steps availible.
+            agg: String. "mean" or "std".
+            active_only: bool. True if activate cells only.
+        Returns:
+            A dictionary. Index by grid attribute, and contains a list
+            corresponding to a set of values for each grid cells.
+        """
+        if not self._global_grid:
+            self._global_grid = self.cell_layers(active_only=active_only)
 
+        grid = self._global_grid
+        grid = self._unwrap_grid(grid)
         for prop in props:
             print('Reading the grid property: '+prop)
             if prop in self.init_keys:
-                data[prop] = self.get_init(prop, agg=agg)
+                grid[prop] = self.get_init(prop, agg=agg)
             if prop in self.unrst_keys:
-                data[prop] = self.get_unrst(prop, agg=agg, report=report)
-        return data
+                grid[prop] = self.get_unrst(prop, agg=agg, report=report)
+        return grid
 
     @property
     def global_active(self):
@@ -858,7 +876,7 @@ class ScratchEnsemble(object):
         :param active_only: `optional parameter`. Only return cells
             active in at least one realization.
         :returns: All cells in the grid, see
-                see :func:`fmu_postprocessing.ecl.Realization.cell_layers()`.
+                see :func:`fmu.ensemble.Realization.cell_layers()`.
         """
         if not self._realizations:
             return None
@@ -870,6 +888,7 @@ class ScratchEnsemble(object):
 
     @property
     def init_keys(self):
+        """ Keys availible in the eclipse init file """
         if not self._realizations:
             return None
         all_keys = set.union(
@@ -879,6 +898,7 @@ class ScratchEnsemble(object):
 
     @property
     def unrst_keys(self):
+        """ Keys availible in the eclipse unrst file """
         if not self._realizations:
             return None
         all_keys = set.union(
@@ -887,6 +907,7 @@ class ScratchEnsemble(object):
         return all_keys
 
     def get_unrst_report_dates(self):
+        """ returns unrst report step and the corresponding date """
         if not self._realizations:
             return None
         all_report_dates = set.union(
@@ -972,6 +993,30 @@ class ScratchEnsemble(object):
         std_dev.isqrt()
         return std_dev
 
+    def _unwrap_grid(self, data):
+        """
+        code from fmu_postprocessing returns grid rows and coloumns,
+        per grid layer. This function unwraps grid points to make a
+        dictionary of lists, where each list corresponds to
+        i,j,k,x0,y0,x1,y1,x2,y2,x3,y3
+        """
+        grid = defaultdict(list)
+        for layer in data:
+            for cell in layer:
+                grid['i'].append(cell['i'])
+                grid['j'].append(cell['j'])
+                grid['k'].append(cell['k'])
+                points = cell['points']
+                grid['x0'].append(points[0][0])
+                grid['y0'].append(points[0][1])
+                grid['x1'].append(points[1][0])
+                grid['y1'].append(points[1][1])
+                grid['x2'].append(points[2][0])
+                grid['y2'].append(points[2][1])
+                grid['x3'].append(points[3][0])
+                grid['y3'].append(points[3][1])
+
+        return grid
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
