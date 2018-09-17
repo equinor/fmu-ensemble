@@ -469,22 +469,24 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes.
         """
+        # Build list of eclsum objects that are not None
+        eclsums = []
+        for _, realization in self._realizations.items():
+            if realization.get_eclsum():
+                eclsums.append(realization.get_eclsum())
         if freq == 'report' or freq == 'raw':
             dates = set()
-            for _, realization in self._realizations.items():
-                dates = dates.union(realization.get_eclsum().dates)
+            for eclsum in eclsums:
+                dates = dates.union(eclsum.dates)
             dates = list(dates)
             dates.sort()
             return dates
         elif freq == 'last':
-            end_date = max([real[1].get_eclsum().end_date
-                            for real in self._realizations.items()])
+            end_date = max([eclsum.end_date for eclsum in eclsums])
             return [end_date]
         else:
-            start_date = min([real[1].get_eclsum().start_date
-                              for real in self._realizations.items()])
-            end_date = max([real[1].get_eclsum().end_date
-                            for real in self._realizations.items()])
+            start_date = min([eclsum.start_date for eclsum in eclsums])
+            end_date = max([eclsum.end_date for eclsum in eclsums])
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
