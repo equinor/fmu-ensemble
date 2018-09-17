@@ -835,7 +835,7 @@ class ScratchEnsemble(object):
                 grid[prop] = self.get_init(prop, agg=agg)
             if prop in self.unrst_keys:
                 grid[prop] = self.get_unrst(prop, agg=agg, report=report)
-        return grid
+        return pd.DataFrame(grid)
 
     @property
     def global_active(self):
@@ -861,7 +861,7 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return 0
         if self._global_size is None:
-            self._global_size = self._realizations[1].global_size
+            self._global_size = self._realizations.values()[0].global_size
         return self._global_size
 
     @property
@@ -926,7 +926,9 @@ class ScratchEnsemble(object):
         all_report_dates = set.union(
             *[set(realization.report_dates)
               for _, realization in self._realizations.iteritems()])
-        return all_report_dates
+        dframe = pd.DataFrame(list(all_report_dates), columns=['Dates'])
+        dframe.index.names = ['Report']
+        return dframe
 
     def get_init(self, prop, agg):
         """
