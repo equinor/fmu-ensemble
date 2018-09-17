@@ -258,3 +258,13 @@ def test_observation_import():
 
     assert len(df_mismatch.columns) == 7
 
+
+def test_read_eclgrid():
+    ensemble_path = '/scratch/fmu/akia/3_r001_reek/realization-*1/iter-0'
+    reekensemble = ScratchEnsemble('ensemblename',
+                                   ensemble_path)
+    grid_df = reekensemble.get_eclgrid(['PERMX', 'FLOWATI+', 'FLOWATJ+'],
+                                       report=4)
+
+    assert len(grid_df.columns) == 14
+    assert len(grid_df['i']) == 35840

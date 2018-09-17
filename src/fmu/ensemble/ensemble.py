@@ -16,7 +16,8 @@ import os
 import glob
 from collections import defaultdict
 import pandas as pd
-
+from ecl import EclDataType
+from ecl.eclfile import EclKW
 
 from fmu.config import etc
 from .realization import ScratchRealization
@@ -66,6 +67,9 @@ class ScratchEnsemble(object):
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
         self._ens_df = pd.DataFrame()
+        self._global_active = None
+        self._global_size = None
+        self._global_grid = None
 
         if isinstance(paths, str):
             paths = [paths]
@@ -802,6 +806,232 @@ class ScratchEnsemble(object):
             dflist.append(dframe)
 
         return pd.concat(dflist, sort=False).reset_index()
+
+    def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
+        """
+        Returns the grid (i,j,k) and (x,y), and any requested init
+        and/or unrst property. The values are aggregated over the
+        ensemble (mean/ std currently supported).
+
+        Args:
+            props: list of column key wildcards
+            report: int. for unrst props only. Report step for given date.
+                    Use the function get_unrst_report_dates to get an overview
+                    of the report steps availible.
+            agg: String. "mean" or "std".
+            active_only: bool. True if activate cells only.
+        Returns:
+            A dictionary. Index by grid attribute, and contains a list
+            corresponding to a set of values for each grid cells.
+        """
+        if not self._global_grid:
+            self._global_grid = self.cell_layers(active_only=active_only)
+
+        grid = self._global_grid
+        grid = self._unwrap_grid(grid)
+        for prop in props:
+            print('Reading the grid property: '+prop)
+            if prop in self.init_keys:
+                grid[prop] = self.get_init(prop, agg=agg)
+            if prop in self.unrst_keys:
+                grid[prop] = self.get_unrst(prop, agg=agg, report=report)
+        return pd.DataFrame(grid)
+
+    @property
+    def global_active(self):
+        """
+        :returns: An EclKw with, for each cell,
+            the number of realizations where the cell is active.
+        """
+        if not self._global_active:
+            self._global_active = EclKW('eactive',
+                                        self.global_size,
+                                        EclDataType.ECL_INT)
+            for realization in self._realizations.values():
+                self._global_active += realization.actnum
+
+        return self._global_active
+
+    @property
+    def global_size(self):
+        """
+        :returns: global size of the realizations in the Ensemble.  see
+            :func:`fmu_postprocessing.modelling.Realization.global_size()`.
+        """
+        if not self._realizations:
+            return 0
+        if self._global_size is None:
+            self._global_size = self._realizations.values()[0].global_size
+        return self._global_size
+
+    @property
+    def grid(self):
+        """
+        :returns: The grid of the ensemble, see
+            :func:`fmu.ensemble.Realization.get_grid()`.
+        """
+        if not self._realizations:
+            return None
+        return self._realizations.values()[0].get_grid()
+
+    def _is_active_cell(self, cell):
+        """
+        :returns: true if the given cell is an active cell
+            in all self._realizations.
+        """
+        grid = self.grid
+        active = self.global_active
+        ijk = (cell['i'], cell['j'], cell['k'])
+        return active[grid.get_global_index(ijk=ijk)] > 0
+
+    def cell_layers(self, active_only=False):
+        """
+        :param active_only: `optional parameter`. Only return cells
+            active in at least one realization.
+        :returns: All cells in the grid, see
+                see :func:`fmu.ensemble.Realization.cell_layers()`.
+        """
+        if not self._realizations:
+            return None
+        all_cells = self._realizations.values()[0].cell_layers(active_only=active_only)
+        if active_only:
+            return [filter(self._is_active_cell, layer) for layer in all_cells]
+
+        return all_cells
+
+    @property
+    def init_keys(self):
+        """ Keys availible in the eclipse init file """
+        if not self._realizations:
+            return None
+        all_keys = set.union(
+            *[set(realization.get_init().keys())
+              for _, realization in self._realizations.iteritems()])
+        return all_keys
+
+    @property
+    def unrst_keys(self):
+        """ Keys availible in the eclipse unrst file """
+        if not self._realizations:
+            return None
+        all_keys = set.union(
+            *[set(realization.get_unrst().keys())
+              for _, realization in self._realizations.iteritems()])
+        return all_keys
+
+    def get_unrst_report_dates(self):
+        """ returns unrst report step and the corresponding date """
+        if not self._realizations:
+            return None
+        all_report_dates = set.union(
+            *[set(realization.report_dates)
+              for _, realization in self._realizations.iteritems()])
+        dframe = pd.DataFrame(list(all_report_dates), columns=['Dates'])
+        dframe.index.names = ['Report']
+        return dframe
+
+    def get_init(self, prop, agg):
+        """
+        :param prop: A time independent property,
+        :returns: Dictionary with ``mean`` or ``std_dev`` as keys,
+            and corresponding values for given property as values.
+        :raises ValueError: If prop is not found.
+        """
+
+        keywords = [(realization.get_global_init_keyword(prop))
+                    for _, realization in self._realizations.iteritems()]
+
+        if agg == 'mean':
+            mean = self._keyword_mean(prop,
+                                      keywords,
+                                      self.global_active)
+            return pd.Series(mean.numpy_copy(), name=prop)
+        if agg == 'std':
+            std_dev = self._keyword_std_dev(prop,
+                                            keywords,
+                                            self.global_active,
+                                            mean)
+            return pd.Series(std_dev.numpy_copy(), name=prop)
+
+    def get_unrst(self, prop, report, agg):
+        """
+        :param prop: A time dependent property, see
+            `fmu_postprocessing.modelling.SimulationGrid.TIME_DEPENDENT`.
+        :returns: Dictionary with ``mean`` and ``std_dev`` as keys,
+            and corresponding values for given property as values.
+        :raises ValueError: If prop is not in `TIME_DEPENDENT`.
+        """
+
+        keywords = [realization.get_global_unrst_keyword(prop, report)
+                    for _, realization in self._realizations.iteritems()]
+
+        if agg == 'mean':
+            mean = self._keyword_mean(prop,
+                                      keywords,
+                                      self.global_active)
+            return pd.Series(mean.numpy_copy(), name=prop)
+        if agg == 'std':
+            std_dev = self._keyword_std_dev(prop,
+                                            keywords,
+                                            self.global_active,
+                                            mean)
+            return pd.Series(std_dev.numpy_copy(), name=prop)
+
+    def _keyword_mean(self, name, keywords, num_realizations):
+        """
+        :returns: Mean values of keywords.
+        :param name: Name of resulting Keyword.
+        :param keywords: List of keywords.
+        :param num_realizations: A EclKW with, for each cell, The number of
+            realizations where the cell is active.
+        """
+        mean = EclKW(name, len(num_realizations), EclDataType.ECL_FLOAT)
+        for keyword in keywords:
+            mean += keyword
+        mean.safe_div(num_realizations)
+        return mean
+
+    def _keyword_std_dev(self, name, keywords, num_realizations, mean):
+        """
+        :returns: Standard deviation of keywords.
+        :param name: Name of resulting Keyword.
+        :param keywords: List of pairs of keywords and list of active cell
+        :param num_realizations: A EclKW with, for each cell, The number of
+            realizations where the cell is active.
+        :param mean: Mean of keywords.
+        """
+        std_dev = EclKW(name, len(num_realizations), EclDataType.ECL_FLOAT)
+        for keyword in keywords:
+            std_dev.add_squared(keyword - mean)
+
+        std_dev.safe_div(num_realizations)
+        std_dev.isqrt()
+        return std_dev
+
+    def _unwrap_grid(self, data):
+        """
+        code from fmu_postprocessing returns grid rows and coloumns,
+        per grid layer. This function unwraps grid points to make a
+        dictionary of lists, where each list corresponds to
+        i,j,k,x0,y0,x1,y1,x2,y2,x3,y3
+        """
+        grid = defaultdict(list)
+        for layer in data:
+            for cell in layer:
+                grid['i'].append(cell['i'])
+                grid['j'].append(cell['j'])
+                grid['k'].append(cell['k'])
+                points = cell['points']
+                grid['x0'].append(points[0][0])
+                grid['y0'].append(points[0][1])
+                grid['x1'].append(points[1][0])
+                grid['y1'].append(points[1][1])
+                grid['x2'].append(points[2][0])
+                grid['y2'].append(points[2][1])
+                grid['x3'].append(points[3][0])
+                grid['y3'].append(points[3][1])
+
+        return grid
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
