@@ -53,9 +53,24 @@ class VirtualEnsemble(object):
         else:
             self.data = {}
 
-        # Get a list of known indices from the first datatable.
-        self.realindices = self.data[self.data.keys()[0]]['REAL'].unique()
-            
+        self.realindices = []
+
+    def update_realindices(self):
+        """Update the internal list of known realization indices
+
+        Anything that adds or removes realizations must
+        take responsibility for having that list consistent.
+
+        If there is a dataframe missing the REAL column, this 
+        will intentionally error.
+        """
+
+        # Check all dataframes:
+        idxset = set()
+        for key in self.data.keys():
+            idxset = set(idxset) | \
+                     set(self.data[key]['REAL'].unique())      self.realindices = list(idxset)
+
     def keys(self):
         """Return all keys in the internal datastore"""
         return self.data.keys()
@@ -168,6 +183,7 @@ class VirtualEnsemble(object):
         Args:
             deleteindices: int or list of ints, realization indices to remove
         """
+        self.update_realindices()
         if not isinstance(deleteindices, list):
             deleteindices = [deleteindices]
 
@@ -181,8 +197,8 @@ class VirtualEnsemble(object):
         for realindex in indicestodelete:
             for key in self.data:
                 self.data[key] = self.data[key][self.data[key]['REAL']
-                                                != realindex
-            self.realindices.remove(realindex)
+                                                != realindex]
+                self.realindices.remove(realindex)
         logger.info("Removed %s realization(s) from VirtualEnsemble",
                     len(indicestodelete))
 
