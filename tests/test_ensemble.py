@@ -9,6 +9,8 @@ import os
 import numpy
 import pandas as pd
 
+import pytest
+
 from fmu import config
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
@@ -300,7 +302,7 @@ def test_filedescriptors():
 def test_read_eclgrid():
 
     if not os.path.exists('/scratch/fmu/akia/3_r001_reek/realization-1'):
-        return
+	pytest.skip("Only works on Stavanger Linux")
 
     ensemble_path = '/scratch/fmu/akia/3_r001_reek/realization-*1/iter-0'
     reekensemble = ScratchEnsemble('ensemblename',
