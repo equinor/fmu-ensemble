@@ -233,7 +233,7 @@ class ScratchEnsemble(object):
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
-
+        vens.update_realindices()
         return vens
 
     @property
@@ -474,18 +474,20 @@ class ScratchEnsemble(object):
         keepthese = []
         for realidx, realization in self._realizations.items():
             if kwargs['inplace']:
-                if not realization.filter(localpath, **kwargs):
+                if not realization.contains(localpath, **kwargs):
                     deletethese.append(realidx)
             else:
-                if realization.filter(localpath, **kwargs):
+                if realization.contains(localpath, **kwargs):
                     keepthese.append(realidx)
+
         if kwargs['inplace']:
             logger.info("Removing realizations %s", deletethese)
             self.remove_realizations(deletethese)
         else:
             filtered = VirtualEnsemble(self.name + " filtered")
+            print("keep these: " + str(keepthese))
             for realidx in keepthese:
-                filtered.add(self._realizations[realidx].to_virtual())
+                filtered.add_realization(self._realizations[realidx])
             return filtered
 
     def drop(self, localpath, **kwargs):

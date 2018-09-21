@@ -662,21 +662,12 @@ class ScratchRealization(object):
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 
-
-    def filter(self, localpath, **kwargs):
-        """Filter realizations or data within realizations
-
-        Calling this function can return a copy with fewer
-        realizations, or remove realizations from the current object.
-
-        Typical usage is to require that parameters.txt is present, or
-        that the OK file is present.
-
-        It is also possible to require a certain scalar to have a specific
-        value, for example filtering on a specific sensitivity case.
+    def contains(self, localpath, **kwargs):
+        """Boolean function for asking the realization for presence
+        of certain data types and possibly data values.
 
         Args:
-            localpath: string pointing to the data for which the filtering
+            localpath: string pointing to the data for which the query
                 applies. If no other arguments, only realizations containing
                 this data key is kept.
             key: A certain key within a realization dictionary that is
@@ -684,10 +675,7 @@ class ScratchRealization(object):
                 key must be equal to this value
             value: The value a certain key must equal. Floating point
                 comparisons are not robust. Only relevant for dictionaries
-            inplace: Boolean indicating if the current object should have its
-                realizations stripped, or if a copy should be returned.
-                Default true.
- 
+
         Returns:
             boolean: True if the data is present and fulfilling any
             criteria.
@@ -711,16 +699,19 @@ class ScratchRealization(object):
                     return False
         if 'key' in kwargs and 'value' in kwargs:
             if isinstance(kwargs['value'], str):
-                if str(self.data[localpath][kwargs['key']]) == kwargs['value']:
-                    return True
+                if kwargs['key'] in self.data[localpath]:
+                    if str(self.data[localpath][kwargs['key']]) \
+                       == kwargs['value']:
+                        return True
+                    else:
+                        return False
                 else:
                     return False
-            else: # non-string, then don't convert the internalized data
+            else:  # non-string, then don't convert the internalized data
                 if self.data[localpath][kwargs['key']] == kwargs['value']:
                     return True
                 else:
                     return False
-
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

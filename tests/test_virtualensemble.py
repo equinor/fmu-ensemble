@@ -81,9 +81,11 @@ def test_virtualensemble():
     # Test realization removal:
     vens.remove_realizations(3)
     assert len(vens.parameters['REAL'].unique()) == 4
+    assert len(vens) == 4
     vens.remove_realizations(3)  # This will give warning
     assert len(vens.parameters['REAL'].unique()) == 4
     assert len(vens['unsmry-yearly']['REAL'].unique()) == 4
+    assert len(vens) == 4
 
     # Test data removal:
     vens.remove_data('parameters.txt')
