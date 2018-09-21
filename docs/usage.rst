@@ -183,3 +183,23 @@ In case you need to clean up imported files, it is possible to delete columns an
 When called on `ScratchEnsemble` object the drops occur in each linked
 realization object, while on virtual ensembles, it occurs directly in
 its dataframe.
+
+Reading simulation grid data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Simulation static and dynamic grid data can be read and aggreagted from the ensemble 
+and returned as a DataFrame. The current implementation can be slow for large grid model 
+and/or ensembles with many realizations.
+
+
+.. code-block:: python
+    
+    # find of the report number corresponding to the date you are interested to extract from
+    ens.get_unrst_report_dates()
+    # extract the mean of following properties at the report step 4
+    ens.get_eclgrid(props=['PERMX', 'FLOWATI+', 'FLOWATJ+'], report=4, agg='mean')
+
+When called `get_eclgrid` reads the grid from one realization. Then depending if the
+properties requested are static or dynamic, the corresponding *INIT or *UNRST file
+will be read for all successful realization in the ensemble. The user can specify how 
+the results should be aggregated. Currently the options support are `mean` or `std`.
