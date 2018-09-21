@@ -295,3 +295,18 @@ def test_filedescriptors():
     # print(fd_count1, fd_count2, fd_count3, fd_count4)
 
     assert fd_count1 == fd_count4
+
+
+def test_read_eclgrid():
+
+    if not os.path.exists('/scratch/fmu/akia/3_r001_reek/realization-1'):
+        return
+
+    ensemble_path = '/scratch/fmu/akia/3_r001_reek/realization-*1/iter-0'
+    reekensemble = ScratchEnsemble('ensemblename',
+                                   ensemble_path)
+    grid_df = reekensemble.get_eclgrid(['PERMX', 'FLOWATI+', 'FLOWATJ+'],
+                                        report=4)
+
+     assert len(grid_df.columns) == 14
+     assert len(grid_df['i']) == 35840

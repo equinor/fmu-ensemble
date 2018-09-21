@@ -21,6 +21,9 @@ import numpy
 import pandas as pd
 
 import ert.ecl
+from ecl.eclfile import EclFile
+from ecl.grid import EclGrid
+from ecl import EclFileFlagEnum
 from fmu import config
 from .realizationmismatch import mismatch
 
@@ -78,6 +81,11 @@ class ScratchRealization(object):
         # indexed by filenames (local to the realization).
         # values in the dictionary can be either dicts or dataframes
         self.data = {}
+        self._eclinit = None
+        self._eclunrst = None
+        self._eclgrid = None
+        self._ecldata = None
+        self._actnum = None
 
         abspath = os.path.abspath(path)
         realidxmatch = re.match(realidxregexp, abspath)
@@ -472,7 +480,7 @@ class ScratchRealization(object):
         Fetch the Eclipse Summary file from the realization
         and return as a libecl EclSum object
 
-        Unless the UNSMRY file has been discovered, it will
+        Unless the UNSMRY lfile has been discovered, it will
         pick the file from the glob eclipse/model/*UNSMRY
 
         Warning: If you have multiple UNSMRY files and have not
@@ -745,6 +753,163 @@ class ScratchRealization(object):
 
     def realization_mismatch(self, obs):
         return mismatch(self, obs)
+
+    def get_init(self):
+        """
+        :returns: init file of the realization.
+        """
+        init_file_row = self.files[self.files.FILETYPE == 'INIT']
+        init_filename = None
+        if len(init_file_row) == 1:
+            init_filename = init_file_row.FULLPATH.values[0]
+        else:
+            init_fileguess = os.path.join(self._origpath, 'eclipse/model',
+                                          '*.INIT')
+            init_filenamelist = glob.glob(init_fileguess)
+            if not init_filenamelist:
+                return None  # No filename matches
+            init_filename = init_filenamelist[0]
+        if not os.path.exists(init_filename):
+            return None
+
+        if not self._eclinit:
+            return EclFile(init_filename,
+                           flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
+        return self._eclinit
+
+    def get_unrst(self):
+        """
+        :returns: restart file of the realization.
+        """
+        unrst_file_row = self.files[self.files.FILETYPE == 'UNRST']
+        unrst_filename = None
+        if len(unrst_file_row) == 1:
+            unrst_filename = unrst_file_row.FULLPATH.values[0]
+        else:
+            unrst_fileguess = os.path.join(self._origpath, 'eclipse/model',
+                                           '*.UNRST')
+            unrst_filenamelist = glob.glob(unrst_fileguess)
+            if not unrst_filenamelist:
+                return None  # No filename matches
+            unrst_filename = unrst_filenamelist[0]
+        if not os.path.exists(unrst_filename):
+            return None
+        if not self._eclunrst:
+            return EclFile(unrst_filename,
+                           flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
+        return self._eclunrst
+
+    def get_grid(self):
+        """
+        :returns: grid file of the realization.
+        """
+        grid_file_row = self.files[self.files.FILETYPE == 'EGRID']
+        grid_filename = None
+        if len(grid_file_row) == 1:
+            grid_filename = grid_file_row.FULLPATH.values[0]
+        else:
+            grid_fileguess = os.path.join(self._origpath, 'eclipse/model',
+                                          '*.EGRID')
+            grid_filenamelist = glob.glob(grid_fileguess)
+            if not grid_filenamelist:
+                return None  # No filename matches
+            grid_filename = grid_filenamelist[0]
+        if not os.path.exists(grid_filename):
+            return None
+        if not self._eclgrid:
+            self._eclgrid = EclGrid(grid_filename)
+        return self._eclgrid
+
+    @property
+    def global_size(self):
+        """
+        :returns: Number of cells in the realization.
+        """
+        return self.get_grid().get_global_size()
+
+    @property
+    def actnum(self):
+        """
+        :returns: EclKw of ints showing which cells are active,
+            Active cells are given value 1, while
+            inactive cells have value 1.
+        """
+        if not self._actnum:
+            self._actnum = self.get_init()['PORV'][0].create_actnum()
+        return self._actnum
+
+    @property
+    def report_dates(self):
+        """
+        :returns: List of DateTime.DateTime for which values are reported.
+        """
+        return self.get_unrst().report_dates
+
+    def get_global_init_keyword(self, prop):
+        """
+        :param prop: A name of a keyword in the realization's init file.
+        :returns: The EclKw of given name. Length is global_size.
+            non-active cells are given value 0.
+        """
+        return self.get_init()[prop][0].scatter_copy(self.actnum)
+
+    def get_global_unrst_keyword(self, prop, report):
+        """
+        :param prop: A name of a keyword in the realization's restart file.
+        :returns: The EclKw of given name. Length is global_size.
+            non-active cells are given value 0.
+        """
+        prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
+        return prop_values
+
+    def _get_cell(self, ijk):
+        """
+        :parameter ijk: Triple of ijk coordinates of a cell in the grid.
+        :returns: A dictionary of the upper corner points and depth of the cell
+            at ijk.
+        """
+        points = []
+        for idx in [4, 5, 7, 6]:
+            x, y, _ = self.get_grid().get_cell_corner(idx, ijk=ijk)
+            points.append((x, y))
+        i, j, k = ijk
+        return {'points': points,
+                'i': i,
+                'j': j,
+                'k': k,
+                'depth': self.get_grid().get_xyz(ijk=ijk)[2]}
+
+    def _is_active_cell(self, cell):
+        """
+        :returns: true if the given cell is an active cell.
+        """
+        grid = self.get_grid()
+        ijk = (cell['i'], cell['j'], cell['k'])
+        return grid.active(ijk=ijk)
+
+    def cell_layers(self, active_only=False):
+        """
+        :param active_only: `optional parameter`. Only return cells
+            active in this realization.
+        :returns: A list of layers. Each layer is a list of cells. Each
+            cell is a dictionary containing the coordinates of its four upper
+            points in that layer and its depth.
+        ::
+            realization = Realization('reek/ECLIPSE')
+            cell_layers = realization.ecl_grid_cell_layers()
+            # cell_layers[layer][cell]['points'] = [(x1,y1), (x2, y2), ...]
+            # cell_layers[layer][cell]['depth']  = 3.14
+        """
+        all_cells = [[self._get_cell((i, j, k))
+                      for i in range(self.get_grid().get_nx())
+                      for j in range(self.get_grid().get_ny())]
+                     for k in range(self.get_grid().get_nz())]
+
+        if active_only:
+            return [filter(self._is_active_cell, layer)
+                    for layer in all_cells]
+
+        return all_cells
 
 
 def normalize_dates(start_date, end_date, freq):
