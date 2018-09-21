@@ -258,3 +258,40 @@ def test_observation_import():
 
     assert len(df_mismatch.columns) == 7
 
+
+def test_filedescriptors():
+    """Test how filedescriptors are used.
+
+    The lazy_load option to EclSum affects this, if it is set to True
+    file descriptors are not closed (and True is the default).
+    In order to be able to open thousands of smry files, we need
+    to always close the file descriptors when possible, and therefore
+    lazy_load should be set to False in realization.py"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    fd_dir = '/proc/' + str(os.getpid()) + '/fd'
+    if not os.path.exists(fd_dir):
+        print("Counting file descriptors on non-Linux not supported")
+        return
+    fd_count1 = len(os.listdir(fd_dir))
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+
+    fd_count2 = len(os.listdir(fd_dir))
+    reekensemble.from_smry()
+    fd_count3 = len(os.listdir(fd_dir))
+    del reekensemble
+    fd_count4 = len(os.listdir(fd_dir))
+
+    # As long as lazy_load = False, we should have 5,5,5,5 from this
+    # If lazy_load is True (default), then we get 15, 15, 25, 20
+    # print(fd_count1, fd_count2, fd_count3, fd_count4)
+
+    assert fd_count1 == fd_count4

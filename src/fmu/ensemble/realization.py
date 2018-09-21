@@ -500,7 +500,7 @@ class ScratchRealization(object):
         if not os.path.exists(unsmry_filename):
             return None
         try:
-            eclsum = ert.ecl.EclSum(unsmry_filename)
+            eclsum = ert.ecl.EclSum(unsmry_filename, lazy_load=False)
         except IOError:
             # This can happen if there is something wrong with the file
             # or if SMSPEC is missing.
