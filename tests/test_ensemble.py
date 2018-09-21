@@ -250,6 +250,10 @@ def test_filter():
         'realization-*/iter-0'
     reekensemble = ScratchEnsemble('reektest', dirs)
 
+    # This should just require a STATUS file to be there
+    # for every realization
+    assert len(reekensemble.filter('STATUS')) == 5
+
     # Test string equivalence on numeric data:
     reekensemble.filter('parameters.txt', key='RMS_SEED', value='723121249',
                         inplace=True)
@@ -285,6 +289,50 @@ def test_filter():
     # while no value means that the key must be present
     assert len(reekensemble.filter('parameters.txt', key='FOO',
                                    inplace=False)) == 2
+
+    # 'key' is not accepted for things that are tables.
+    with pytest.raises(ValueError):
+        reekensemble.filter('STATUS', key='ECLIPSE')
+    with pytest.raises(ValueError):
+        reekensemble.filter('STATUS', value='ECLIPSE')
+
+    # Check column presence
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL')) == 5
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+                                   inplace=False)) == 5
+    assert len(reekensemble.filter('STATUS', column='FOOBAR',
+                                   inplace=False)) == 0
+    with pytest.raises(ValueError):
+        reekensemble.filter('STATUS', wrongarg='FOOBAR',
+                            inplace=False)
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+                                   columncontains='ECLIPSE100_2014.2')) == 5
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+                                   columncontains='ECLIPSE100_2010.2',
+                                   inplace=False)) == 0
+    reekensemble.from_smry()
+    assert len(reekensemble.filter('unsmry-raw')) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT')) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='FOOBAR',
+                                   inplace=False)) == 0
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=0)) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=-1000, inplace=False)) == 0
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=6025523.0,
+                                   inplace=False)) == 1
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=6025523, inplace=False)) == 1
+
+    # We do not support strings here (not yet)
+    # assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+    #                                columncontains='6025523.0',
+    #                                inplace=False)) == 1
+
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2002-11-25 00:00:00',
+                                   inplace=False)) == 1
 
 
 def test_observation_import():

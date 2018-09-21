@@ -174,7 +174,6 @@ class VirtualEnsemble(object):
         if overwrite and realidx in self.realindices:
             self.remove_realization(realidx)
 
-        print("Legger til realisasjon " + str(realidx))
         # Add the data from the incoming realization key by key
         for key in realization.keys():
             df = realization.get_df(key)

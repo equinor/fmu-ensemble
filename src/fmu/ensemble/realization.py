@@ -672,31 +672,52 @@ class ScratchRealization(object):
                 this data key is kept.
             key: A certain key within a realization dictionary that is
                 required to be present. If a value is also provided, this
-                key must be equal to this value
+                key must be equal to this value. If localpath is not
+                a dictionary, this will raise a ValueError
             value: The value a certain key must equal. Floating point
                 comparisons are not robust. Only relevant for dictionaries
+            column: Name of a column in tabular data. If columncontains is
+                not specified, this means that this column must be present
+            columncontains:
+                A value that the specific column must include.
 
         Returns:
             boolean: True if the data is present and fulfilling any
             criteria.
         """
+        kwargs.pop('inplace', 0)
         localpath = self.shortcut2path(localpath)
-        if 'key' not in kwargs and 'value' not in kwargs:
+        if localpath not in self.keys():
+            return False
+        if not len(kwargs):
             if localpath not in self.keys():
                 return False
             else:
                 return True
-        if 'key' in kwargs and 'value' not in kwargs:
-            if isinstance(self.data[localpath], dict):
+        if isinstance(self.data[localpath], dict):
+            if 'key' in kwargs and 'value' not in kwargs:
                 if kwargs['key'] in self.data[localpath]:
                     return True
                 else:
                     return False
-            if isinstance(self.data[localpath], pd.DataFrame):
-                if kwargs['key'] in self.data[localpath].columns:
+        if isinstance(self.data[localpath], pd.DataFrame):
+            if 'key' in kwargs:
+                raise ValueError("Don't use key for tabular data")
+            if 'value' in kwargs:
+                raise ValueError("Don't use value for tabular data")
+            if 'column' in kwargs and 'columncontains' not in kwargs:
+                # Only asking for column presence
+                if kwargs['column'] in self.data[localpath].columns:
                     return True
                 else:
                     return False
+            if 'column' in kwargs and 'columncontains' in kwargs:
+                if kwargs['columncontains'] in \
+                   self.data[localpath][kwargs['column']].values:
+                    return True
+                else:
+                    return False
+
         if 'key' in kwargs and 'value' in kwargs:
             if isinstance(kwargs['value'], str):
                 if kwargs['key'] in self.data[localpath]:
@@ -712,6 +733,7 @@ class ScratchRealization(object):
                     return True
                 else:
                     return False
+        raise ValueError("Wrong arguments to contains()")
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

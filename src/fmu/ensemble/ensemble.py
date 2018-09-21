@@ -465,11 +465,14 @@ class ScratchEnsemble(object):
                 realizations stripped, or if a copy should be returned.
                 Default true.
 
-         Return: 
+         Return:
             If inplace=True, then nothing will be returned.
             If inplace=False, a VirtualEnsemble fulfilling the filter
             will be returned.
-       """
+        """
+        if 'inplace' not in kwargs:
+            kwargs['inplace'] = True
+
         deletethese = []
         keepthese = []
         for realidx, realization in self._realizations.items():
@@ -482,10 +485,11 @@ class ScratchEnsemble(object):
 
         if kwargs['inplace']:
             logger.info("Removing realizations %s", deletethese)
-            self.remove_realizations(deletethese)
+            if len(deletethese):
+                self.remove_realizations(deletethese)
+            return self
         else:
             filtered = VirtualEnsemble(self.name + " filtered")
-            print("keep these: " + str(keepthese))
             for realidx in keepthese:
                 filtered.add_realization(self._realizations[realidx])
             return filtered
