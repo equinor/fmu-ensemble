@@ -216,6 +216,9 @@ def test_filesystem_changes():
     assert isinstance(real.from_smry(), pd.DataFrame)
     assert len(real.from_smry()) == 0
 
+    assert isinstance(real.get_smry(), pd.DataFrame)
+    assert len(real.get_smry()) == 0
+
     # Also move away UNSMRY and redo:
     shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY',
                 realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY-FOOO')
