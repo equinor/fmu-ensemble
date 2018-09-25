@@ -817,6 +817,7 @@ class ScratchRealization(object):
         if not os.path.exists(grid_filename):
             return None
         if not self._eclgrid:
+            print ("reading the grid file 1")
             self._eclgrid = EclGrid(grid_filename)
         return self._eclgrid
 
@@ -883,7 +884,7 @@ class ScratchRealization(object):
         """
         :returns: true if the given cell is an active cell.
         """
-        grid = self.get_grid()
+        grid = self._eclgrid
         ijk = (cell['i'], cell['j'], cell['k'])
         return grid.active(ijk=ijk)
 
@@ -900,6 +901,9 @@ class ScratchRealization(object):
             # cell_layers[layer][cell]['points'] = [(x1,y1), (x2, y2), ...]
             # cell_layers[layer][cell]['depth']  = 3.14
         """
+        if not self._eclgrid:
+            self.get_grid()
+
         all_cells = [[self._get_cell((i, j, k))
                       for i in range(self.get_grid().get_nx())
                       for j in range(self.get_grid().get_ny())]
