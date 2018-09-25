@@ -799,13 +799,19 @@ class ScratchEnsemble(object):
         return self.obs
 
     def ensemble_mismatch(self):
-        dflist = []
-        for index, realization in self._realizations.items():
+        """
+        This function returns the mismatch for each observation
+        in each realization in an ensemble.
 
-            dframe = realization.realization_mismatch(self.obs)
-            dflist.append(dframe)
-
-        return pd.concat(dflist, sort=False).reset_index()
+        """
+        if self.obs:
+            dflist = []
+            for index, realization in self._realizations.items():
+                dframe = realization.realization_mismatch(self.obs)
+                dflist.append(dframe)
+            return pd.concat(dflist, sort=False).reset_index()
+        else:
+            pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
         """
@@ -926,6 +932,7 @@ class ScratchEnsemble(object):
         all_report_dates = set.union(
             *[set(realization.report_dates)
               for _, realization in self._realizations.iteritems()])
+        all_report_dates.sort()
         dframe = pd.DataFrame(list(all_report_dates), columns=['Dates'])
         dframe.index.names = ['Report']
         return dframe
