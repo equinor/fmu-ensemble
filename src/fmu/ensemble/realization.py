@@ -157,6 +157,40 @@ class ScratchRealization(object):
         else:
             raise ValueError("Unsupported file format %s" % fformat)
 
+    def from_scalar(self, localpath, convert_numeric=True,
+                    comment=None, skip_blank_lines=True,
+                    skipinitialspace=True, force_reread=False):
+        """Parse a single value from a file.
+
+        The value can be a string or a number.
+
+        Empty files are treated as existing, with an empty string as
+        the value, different from non-existing files.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise IOError("File not found: " + fullpath)
+        else:
+            if fullpath in self.files['FULLPATH'].values and not force_reread:
+                # Return cached version
+                return self.data[localpath]
+            elif fullpath not in self.files['FULLPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            try:
+                value = pd.read_table(fullpath, header=None,
+                                      skip_blank_lines=skip_blank_lines,
+                                      skipinitialspace=skipinitialspace,
+                                      comment=comment)\
+                          .iloc[0,0]
+            except pd.errors.EmptyDataError:
+                value = ""
+            self.data[localpath] = value
+            return value
+
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a txt file with

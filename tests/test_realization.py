@@ -73,15 +73,19 @@ def test_single_realization():
     assert real.get_df('npv.txt') == 3444
     assert real['npv.txt'] == 3444
     assert isinstance(real.data['npv.txt'], int)
-    assert 'npv.txt' in self.files.LOCALPATH.values
-    assert self.files[self.files.LOCALPATH == 'npv.txt']['FILETYPE'] \
+    assert 'npv.txt' in real.files.LOCALPATH.values
+    assert real.files[real.files.LOCALPATH == 'npv.txt']\
+        ['FILETYPE'].values[0] \
         == 'txt'
 
-    emptyfile = real.from_scalar('emptyfile')
+    emptyfile = real.from_scalar('emptyscalarfile')
     # Activate this test when filter() is merged:
     #assert real.contains('emptyfile')
-    assert 'emptyfile' in self.data
-    assert 'emptyfile' in self.files.LOCALPATH.values
+    assert 'emptyscalarfile' in real.data
+    assert 'emptyscalarfile' in real.files.LOCALPATH.values
+    
+    with pytest.raises(IOError):
+        real.from_scalar('notexisting.txt')
 
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
