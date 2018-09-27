@@ -475,7 +475,7 @@ class ScratchEnsemble(object):
 
         if kwargs['inplace']:
             logger.info("Removing realizations %s", deletethese)
-            if len(deletethese):
+            if deletethese:
                 self.remove_realizations(deletethese)
             return self
         else:

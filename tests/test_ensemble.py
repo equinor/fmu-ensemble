@@ -331,8 +331,21 @@ def test_filter():
     #                                inplace=False)) == 1
 
     assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2002-11-25',
+                                   inplace=False)) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
                                    columncontains='2002-11-25 00:00:00',
-                                   inplace=False)) == 1
+                                   inplace=False)) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2002-11-25 00:00:01',
+                                   inplace=False)) == 0
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2000-01-07 02:26:15',
+                                   inplace=False)) == 3
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2000-01-07',
+                                   inplace=False)) == 0
+    # Last one is zero because it implies 00:00:00, it does not round!
 
 
 def test_observation_import():
@@ -390,6 +403,7 @@ def test_filedescriptors():
 
     # As long as lazy_load = False, we should have 5,5,5,5 from this
     # If lazy_load is True (default), then we get 15, 15, 25, 20
+    # (that last number pattern reveals a (now fixed) bug in EclSum)
     # print(fd_count1, fd_count2, fd_count3, fd_count4)
 
     assert fd_count1 == fd_count4
@@ -404,7 +418,7 @@ def test_read_eclgrid():
     reekensemble = ScratchEnsemble('ensemblename',
                                    ensemble_path)
     grid_df = reekensemble.get_eclgrid(['PERMX', 'FLOWATI+', 'FLOWATJ+'],
-                                        report=4)
+                                       report=4)
 
     assert len(grid_df.columns) == 14
     assert len(grid_df['i']) == 35840
