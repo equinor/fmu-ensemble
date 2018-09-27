@@ -226,6 +226,15 @@ def test_ensemble_ecl():
     assert isinstance(df_stats['FOPR'], pd.DataFrame)
     assert len(df_stats['FOPR'].index) == 37
 
+    # Check wildcard for get_smry_stats()
+    df_stats = reekensemble.get_smry_stats(column_keys=['F*PR'],
+                                           time_index='yearly')
+    assert isinstance(df_stats, dict)
+    assert len(df_stats.keys()) == 7
+    assert 'FOPR' in df_stats
+    assert 'FGPR' in df_stats
+    assert len(df_stats['FOPR']) == 4
+
     # Check webviz requirements for dataframe
     assert 'min' in df_stats['FOPR'].columns
     assert 'max' in df_stats['FOPR'].columns
