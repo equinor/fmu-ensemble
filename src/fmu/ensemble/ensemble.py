@@ -928,7 +928,9 @@ class ScratchEnsemble(object):
         all_report_dates = set.union(
             *[set(realization.report_dates)
               for _, realization in self._realizations.iteritems()])
-        dframe = pd.DataFrame(list(all_report_dates), columns=['Dates'])
+        all_report_dates = list(all_report_dates)
+        all_report_dates.sort()
+        dframe = pd.DataFrame(all_report_dates, columns=['Dates'])
         dframe.index.names = ['Report']
         return dframe
 
