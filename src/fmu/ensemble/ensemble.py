@@ -266,7 +266,7 @@ class ScratchEnsemble(object):
 
         Parsing is performed individually in each realization
         """
-        return self.from_file(localpath, 'scalar',
+        return self.from_file(localpath, 'txt',
                               convert_numeric, force_reread)
 
     def from_csv(self, localpath, convert_numeric=True,
