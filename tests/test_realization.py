@@ -73,6 +73,13 @@ def test_single_realization():
     assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
     assert isinstance(real['OK'], str)
 
+    # Check that we can "reimport" the OK file
+    real.from_scalar('OK', force_reread=True)
+    assert 'OK' in real.keys()  # Imported in __init__
+    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert isinstance(real['OK'], str)
+    assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
+
     scalar_npv = real.from_scalar('npv.txt')
     assert real.get_df('npv.txt') == 3444
     assert real['npv.txt'] == 3444
