@@ -214,11 +214,15 @@ class VirtualEnsemble(object):
             # Look for data we should group by. This would be beneficial
             # to get from a metadata file, and not by pure guesswork.
             groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
-                                       'JOBINDEX']
+                                       'JOBINDEX', 'Zone', 'Region_index']
 
             groupby = [x for x in groupbycolumncandidates
                        if x in data.columns]
 
+            dtypes = data.dtypes.unique()
+            if not (int in dtypes or float in dtypes):
+                logger.info("No numerical data to aggregate in %s", key)
+                continue
             if len(groupby):
                 aggobject = data.groupby(groupby)
             else:

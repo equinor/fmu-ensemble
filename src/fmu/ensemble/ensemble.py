@@ -664,6 +664,8 @@ class ScratchEnsemble(object):
                 keylist is empty, otherwise ignored
         Returns:
             VirtualRealization. Its name will include the aggregation operator
+
+        WARNING: This code is duplicated in virtualensemble.py
         """
         quantilematcher = re.compile(r'p(\d\d)')
         supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
