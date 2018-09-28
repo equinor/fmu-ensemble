@@ -71,6 +71,7 @@ def test_single_realization():
     # Test scalar import
     assert 'OK' in real.keys()  # Imported in __init__
     assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert isinstance(real['OK'], str)
 
     scalar_npv = real.from_scalar('npv.txt')
     assert real.get_df('npv.txt') == 3444
@@ -85,6 +86,7 @@ def test_single_realization():
     # Activate this test when filter() is merged:
     #assert real.contains('emptyfile')
     assert 'emptyscalarfile' in real.data
+    assert isinstance(real['emptyscalarfile'], str)
     assert 'emptyscalarfile' in real.files.LOCALPATH.values
 
     with pytest.raises(IOError):
