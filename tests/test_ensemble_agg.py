@@ -83,6 +83,9 @@ def test_ensemble_aggregations():
         stats['max']['STATUS'].iloc[49]['DURATION']
     # job 49 is the Eclipse forward model
 
+    assert 'npv.txt' in stats['mean'].keys()
+    assert stats['mean']['npv.txt'] == 3382.5
+
     # Test agg(excludekeys=..)
     assert 'STATUS' not in reekensemble.agg('mean',
                                             excludekeys='STATUS').keys()
@@ -114,3 +117,4 @@ def test_ensemble_aggregations():
     assert isinstance(reekensemble.agg('mean',
                                        keylist='unsmry-yearly')
                       .get_df('unsmry-yearly'), pd.DataFrame)
+
