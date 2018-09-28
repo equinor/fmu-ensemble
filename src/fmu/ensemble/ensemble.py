@@ -89,12 +89,14 @@ class ScratchEnsemble(object):
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
 
-        # remove failed realization from the ensemble
+        # Remove failed realization from the ensemble
         list_of_failed = self.get_ok().query("OK == False")['REAL'].values
         if list_of_failed.size:
-            print ('The following failed realizations and were removed from ' +
-                   self._name)
-            print (list_of_failed)
+            logger.warning('The following failed realizations and were ' +
+                           'removed from %s\n%s',  self._name,
+                           ",".join(list_of_failed))
+            logger.warning('This behaviour will change in the future, then ' +
+                           'you need to explicitly filter non-OK away')
             self.remove_realizations(list_of_failed)
 
     def __getitem__(self, realizationindex):

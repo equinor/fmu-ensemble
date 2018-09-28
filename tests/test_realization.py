@@ -68,6 +68,25 @@ def test_single_realization():
     vol_df2 = real.get_df('share/results/volumes/simulator_volume_fipnum.csv')
     assert vol_df2['STOIIP_TOTAL'].sum() > 0
 
+    # Test scalar import
+    scalar_npv = real.from_scalar('npv.txt')
+    assert real.get_df('npv.txt') == 3444
+    assert real['npv.txt'] == 3444
+    assert isinstance(real.data['npv.txt'], int)
+    assert 'npv.txt' in real.files.LOCALPATH.values
+    assert real.files[real.files.LOCALPATH == 'npv.txt']\
+        ['FILETYPE'].values[0] \
+        == 'txt'
+
+    emptyfile = real.from_scalar('emptyscalarfile')
+    # Activate this test when filter() is merged:
+    #assert real.contains('emptyfile')
+    assert 'emptyscalarfile' in real.data
+    assert 'emptyscalarfile' in real.files.LOCALPATH.values
+    
+    with pytest.raises(IOError):
+        real.from_scalar('notexisting.txt')
+
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
     assert localpath in real.data

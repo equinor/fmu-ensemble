@@ -231,7 +231,6 @@ def test_ensemble_ecl():
                                            time_index='monthly')
     assert len(df_stats.keys()) == len(reekensemble.get_smrykeys(['FOP*',
                                                                  'FGP*']))
-
     # Check webviz requirements for dataframe
     assert 'min' in df_stats['FOPR'].columns
     assert 'max' in df_stats['FOPR'].columns
