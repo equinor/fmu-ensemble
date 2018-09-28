@@ -545,9 +545,7 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
 
         data = {}  # dict to be returned
-        for key in dframe.keys():  # get_smry() has done wildcard expansion
-            if key == 'DATE' or key == 'REAL':
-                continue
+        for key in column_keys:
             dates = dframe.groupby('DATE').first().index.values
             name = [key] * len(dates)
             mean = dframe.groupby('DATE').mean()[key].values
