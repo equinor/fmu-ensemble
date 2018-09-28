@@ -70,6 +70,7 @@ def test_single_realization():
 
     # Test scalar import
     assert 'OK' in real.keys()  # Imported in __init__
+    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
 
     scalar_npv = real.from_scalar('npv.txt')
     assert real.get_df('npv.txt') == 3444
@@ -85,7 +86,7 @@ def test_single_realization():
     #assert real.contains('emptyfile')
     assert 'emptyscalarfile' in real.data
     assert 'emptyscalarfile' in real.files.LOCALPATH.values
-    
+
     with pytest.raises(IOError):
         real.from_scalar('notexisting.txt')
 
