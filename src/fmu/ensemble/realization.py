@@ -115,11 +115,7 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'OK')):
-            filerow = {'LOCALPATH': 'OK',
-                       'FILETYPE': 'OK',
-                       'FULLPATH': os.path.join(abspath, 'OK'),
-                       'BASENAME': 'OK'}
-            self.files = self.files.append(filerow, ignore_index=True)
+            self.from_scalar('OK')
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
             self.from_txt('parameters.txt')

@@ -69,6 +69,8 @@ def test_single_realization():
     assert vol_df2['STOIIP_TOTAL'].sum() > 0
 
     # Test scalar import
+    assert 'OK' in real.keys()  # Imported in __init__
+
     scalar_npv = real.from_scalar('npv.txt')
     assert real.get_df('npv.txt') == 3444
     assert real['npv.txt'] == 3444
