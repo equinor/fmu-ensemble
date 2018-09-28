@@ -25,7 +25,7 @@ from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .observation_parser import observations_parser
-
+from .realization import parse_number
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -737,6 +737,11 @@ class ScratchEnsemble(object):
             if len(groupby):
                 aggregated.reset_index(inplace=True)
 
+            # We have to recognize scalars.
+            if len(aggregated) == 1 and aggregated.index.values[0] == key:
+                aggregated = parse_number(aggregated.values[0])
+                print(aggregated)
+                print(type(aggregated))
             vreal.append(key, aggregated)
         return vreal
 

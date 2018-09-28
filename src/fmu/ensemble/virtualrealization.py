@@ -165,7 +165,8 @@ class VirtualRealization(object):
         raise NotImplementedError
 
     def get_df(self, localpath):
-        """Access the internal datastore which contains dataframes or dicts
+        """Access the internal datastore which contains dataframes, dicts
+        or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
@@ -198,6 +199,9 @@ class VirtualRealization(object):
         elif isinstance(data, pd.Series):
             return data.to_dict()
         elif isinstance(data, dict):
+            return data
+        elif isinstance(data, str) or isinstance(data, int) \
+            or isinstance(data, float):
             return data
         else:
             raise ValueError("BUG: Unknown datatype")

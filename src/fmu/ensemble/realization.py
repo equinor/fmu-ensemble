@@ -423,6 +423,7 @@ class ScratchRealization(object):
 
     def get_df(self, localpath):
         """Access the internal datastore which contains dataframes or dicts
+        or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
