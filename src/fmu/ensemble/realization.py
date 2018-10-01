@@ -194,7 +194,7 @@ class ScratchRealization(object):
                 value = pd.read_table(fullpath, header=None, engine='python',
                                       skip_blank_lines=skip_blank_lines,
                                       skipinitialspace=skipinitialspace,
-                                      comment=comment).iloc[0,0]
+                                      comment=comment).iloc[0, 0]
             except pd.errors.EmptyDataError:
                 value = ""
             if convert_numeric:

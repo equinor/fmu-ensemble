@@ -80,18 +80,17 @@ def test_single_realization():
     assert isinstance(real['OK'], str)
     assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
 
-    scalar_npv = real.from_scalar('npv.txt')
+    real.from_scalar('npv.txt')
     assert real.get_df('npv.txt') == 3444
     assert real['npv.txt'] == 3444
     assert isinstance(real.data['npv.txt'], int)
     assert 'npv.txt' in real.files.LOCALPATH.values
-    assert real.files[real.files.LOCALPATH == 'npv.txt']\
-        ['FILETYPE'].values[0] \
+    assert real.files[real.files.LOCALPATH == 'npv.txt']['FILETYPE'].values[0]\
         == 'txt'
 
-    emptyfile = real.from_scalar('emptyscalarfile')
+    real.from_scalar('emptyscalarfile')
     # Activate this test when filter() is merged:
-    #assert real.contains('emptyfile')
+    # assert real.contains('emptyfile')
     assert 'emptyscalarfile' in real.data
     assert isinstance(real['emptyscalarfile'], str)
     assert 'emptyscalarfile' in real.files.LOCALPATH.values
