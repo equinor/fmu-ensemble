@@ -110,11 +110,23 @@ def test_ensembleset_reek001():
     assert 'ENSEMBLE' in vol_df
     assert len(vol_df['REAL'].unique()) == 3
     assert len(vol_df['ENSEMBLE'].unique()) == 2
-
     assert len(ensset3.keys()) == 7
 
+    # Test scalar imports:
+    ensset3.from_scalar('npv.txt')
+    npv = ensset3.get_df('npv.txt')
+    assert 'ENSEMBLE' in npv
+    assert 'REAL' in npv
+    assert 'npv.txt' in npv
+    assert len(npv) == 10
+    # Scalar import with forced numerics:
+    ensset3.from_scalar('npv.txt', convert_numeric=True, force_reread=True)
+    npv = ensset3.get_df('npv.txt')
+    assert len(npv) == 8
+
+    predel_len = len(ensset3.keys())
     ensset3.drop('parameters.txt')
-    assert len(ensset3.keys()) == 6
+    assert len(ensset3.keys()) == predel_len - 1
 
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
