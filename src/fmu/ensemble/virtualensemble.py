@@ -108,14 +108,14 @@ class VirtualEnsemble(object):
         for key in self.keys():
             data = self.get_df(key)
             realizationdata = data[data['REAL'] == realindex]
-            if not len(realizationdata):  # ignore pylint here!
-                continue
             if len(realizationdata) == 1:
                 # Convert scalar values to dictionaries, avoiding
                 # getting length-one-series returned later on access.
                 realizationdata = realizationdata.iloc[0].to_dict()
-            else:
+            elif len(realizationdata) > 1:
                 realizationdata.reset_index(inplace=True, drop=True)
+            else:
+                continue
             del realizationdata['REAL']
             vreal.append(key, realizationdata)
         if vreal.keys():
@@ -219,7 +219,7 @@ class VirtualEnsemble(object):
             groupby = [x for x in groupbycolumncandidates
                        if x in data.columns]
 
-            if len(groupby):
+            if groupby:
                 aggobject = data.groupby(groupby)
             else:
                 aggobject = data
@@ -233,7 +233,7 @@ class VirtualEnsemble(object):
                 # the docstring.
                 aggregated = aggobject.agg(aggregation)
 
-            if len(groupby):
+            if groupby:
                 aggregated.reset_index(inplace=True)
 
             vreal.append(key, aggregated)
@@ -328,7 +328,7 @@ class VirtualEnsemble(object):
         else:
             raise ValueError("Unsupported time index " + str(time_index))
         data = self.get_df(dataname)
-        if not len(data):
+        if not len(data):  # pylint: disable=len-as-condition
             raise ValueError("No data found")
 
         # We have to reproduce the column keys globbing support.

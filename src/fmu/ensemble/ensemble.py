@@ -93,7 +93,7 @@ class ScratchEnsemble(object):
         list_of_failed = self.get_ok().query("OK == False")['REAL'].values
         if list_of_failed.size:
             logger.warning('The following failed realizations and were ' +
-                           'removed from %s\n%s',  self._name,
+                           'removed from %s\n%s', self._name,
                            ",".join(list_of_failed))
             logger.warning('This behaviour will change in the future, then ' +
                            'you need to explicitly filter non-OK away')
@@ -690,7 +690,7 @@ class ScratchEnsemble(object):
             if key != 'STATUS':  # STATUS dataframe contains too many strings..
                 groupby = list(set(groupby + stringcolumns))
 
-            if len(groupby):
+            if groupby:
                 logger.info("Grouping %s by %s", key, groupby)
                 aggobject = data.groupby(groupby)
             else:
@@ -705,7 +705,7 @@ class ScratchEnsemble(object):
                 # the docstring.
                 aggregated = aggobject.agg(aggregation)
 
-            if len(groupby):
+            if groupby:
                 aggregated.reset_index(inplace=True)
 
             vreal.append(key, aggregated)
@@ -802,8 +802,7 @@ class ScratchEnsemble(object):
 
     def ensemble_mismatch(self):
         dflist = []
-        for index, realization in self._realizations.items():
-
+        for _, realization in self._realizations.items():
             dframe = realization.realization_mismatch(self.obs)
             dflist.append(dframe)
 
