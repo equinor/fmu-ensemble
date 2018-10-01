@@ -292,9 +292,9 @@ def test_filedescriptors():
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
 
-    fd_count2 = len(os.listdir(fd_dir))
+    # fd_count2 = len(os.listdir(fd_dir))
     reekensemble.from_smry()
-    fd_count3 = len(os.listdir(fd_dir))
+    # fd_count3 = len(os.listdir(fd_dir))
     del reekensemble
     fd_count4 = len(os.listdir(fd_dir))
 
@@ -306,15 +306,14 @@ def test_filedescriptors():
 
 
 def test_read_eclgrid():
-
     if not os.path.exists('/scratch/fmu/akia/3_r001_reek/realization-1'):
-	pytest.skip("Only works on Stavanger Linux")
+        pytest.skip("Only works on Stavanger Linux")
 
     ensemble_path = '/scratch/fmu/akia/3_r001_reek/realization-*1/iter-0'
     reekensemble = ScratchEnsemble('ensemblename',
                                    ensemble_path)
     grid_df = reekensemble.get_eclgrid(['PERMX', 'FLOWATI+', 'FLOWATJ+'],
-                                        report=4)
+                                       report=4)
 
     assert len(grid_df.columns) == 14
     assert len(grid_df['i']) == 35840

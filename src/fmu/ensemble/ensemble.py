@@ -895,7 +895,8 @@ class ScratchEnsemble(object):
         """
         if not self._realizations:
             return None
-        all_cells = self._realizations.values()[0].cell_layers(active_only=active_only)
+        all_cells = self._realizations.values()[0]\
+                                      .cell_layers(active_only=active_only)
         if active_only:
             return [filter(self._is_active_cell, layer) for layer in all_cells]
 
@@ -1036,6 +1037,7 @@ class ScratchEnsemble(object):
                 grid['y3'].append(points[3][1])
 
         return grid
+
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns

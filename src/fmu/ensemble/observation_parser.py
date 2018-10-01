@@ -24,7 +24,7 @@ def observations_parser(path):
         data = defaultdict(list)
         for obs_group in obs_data:
             for obs in obs_group['observations']:
-                data['id'].append(obs_group['key']+'_'+
+                data['id'].append(obs_group['key'] + '_' +
                                   obs['date'].strftime('%d_%m_%Y'))
                 data['key'].append(obs_group['key'])
                 data['date'].append(obs['date'])
