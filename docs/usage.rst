@@ -156,6 +156,31 @@ produce though any code into a file called ``outputs.txt`` in every
 realization directory, and call
 ``myensembleobject.from_txt('outputs.txt')``.
 
+Scalar data
+^^^^^^^^^^^
+
+There is support for text files containing only one value, either
+string or numeric. There should be nothing else than the value itself
+in the text file, except for comments after a comment characters.
+
+.. code-block:: python
+    ens.from_scalar('npv.txt')
+
+You are advised to add the option `convert_numeric=True` when the
+values are actually numeric. This ensures that the loaded data is
+interpreted as numbers, and thrown away if not. When strings are
+present in in erroneous realizations, it will break aggregation as all
+the data for all realizations will be treated as strings.
+
+Scalar data will be aggregated to ensembles and ensemble sets. When
+aggregated, a dataframe with the realization index in the first column
+and the values in the second column. This value column has the same
+name as the filename.
+
+.. code-block:: python
+    npv = ens.get_df('npv.txt')  # A DataFrame is returned, with the columns 'REAL' and 'npv.txt'
+    npv_values = npv['npv.txt']  # Need to say 'npv.txt' once more to get to the column values.
+
 
 Reading tabular data from CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -170,7 +195,10 @@ In aggregations from ensembles, the first column will always be
 ``REAL`` which is the realization index. The next columns will be from
 the CSV data you loaded.
 
-In case you need to clean up imported files, it is possible to delete columns and rows from internalized dataframes through the `drop()` functionality. For an ensemble object called `ens` you may issue the following:
+In case you need to clean up imported files, it is possible to delete
+columns and rows from internalized dataframes through the `drop()`
+functionality. For an ensemble object called `ens` you may issue the
+following:
 
 .. code-block:: python
 
