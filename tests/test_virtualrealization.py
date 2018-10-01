@@ -73,8 +73,10 @@ def test_virtual_todisk():
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
     real.from_smry(time_index='yearly', column_keys=['F*'])
+    real.from_scalar('npv.txt')
 
     vreal = real.to_virtual()
+    assert 'npv.txt' in vreal.keys()
 
     with pytest.raises(IOError):
         vreal.to_disk('.')
@@ -83,6 +85,7 @@ def test_virtual_todisk():
     assert os.path.exists('virtreal/parameters.txt')
     assert os.path.exists('virtreal/STATUS')
     assert os.path.exists('virtreal/share/results/tables/unsmry-yearly.csv')
+    assert os.path.exists('virtreal/npv.txt')
 
 
 def test_virtual_fromdisk():
