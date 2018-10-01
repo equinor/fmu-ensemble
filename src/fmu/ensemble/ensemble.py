@@ -543,7 +543,7 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
 
         data = {}  # dict to be returned
-        for key in column_keys:
+        for key in dframe.columns.drop('DATE').drop('REAL'):
             dates = dframe.groupby('DATE').first().index.values
             name = [key] * len(dates)
             mean = dframe.groupby('DATE').mean()[key].values
@@ -926,7 +926,9 @@ class ScratchEnsemble(object):
         all_report_dates = set.union(
             *[set(realization.report_dates)
               for _, realization in self._realizations.iteritems()])
-        dframe = pd.DataFrame(list(all_report_dates), columns=['Dates'])
+        all_report_dates = list(all_report_dates)
+        all_report_dates.sort()
+        dframe = pd.DataFrame(all_report_dates, columns=['Dates'])
         dframe.index.names = ['Report']
         return dframe
 

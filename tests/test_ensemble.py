@@ -9,6 +9,8 @@ import os
 import numpy
 import pandas as pd
 
+import pytest
+
 from fmu import config
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
@@ -224,6 +226,12 @@ def test_ensemble_ecl():
     assert isinstance(df_stats['FOPR'], pd.DataFrame)
     assert len(df_stats['FOPR'].index) == 37
 
+    # check if wild cards also work for get_smry_stats
+    df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
+                                           time_index='monthly')
+    assert len(df_stats.keys()) == len(reekensemble.get_smrykeys(['FOP*',
+                                                                 'FGP*']))
+
     # Check webviz requirements for dataframe
     assert 'min' in df_stats['FOPR'].columns
     assert 'max' in df_stats['FOPR'].columns
@@ -300,7 +308,7 @@ def test_filedescriptors():
 def test_read_eclgrid():
 
     if not os.path.exists('/scratch/fmu/akia/3_r001_reek/realization-1'):
-        return
+	pytest.skip("Only works on Stavanger Linux")
 
     ensemble_path = '/scratch/fmu/akia/3_r001_reek/realization-*1/iter-0'
     reekensemble = ScratchEnsemble('ensemblename',

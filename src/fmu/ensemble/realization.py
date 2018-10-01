@@ -579,6 +579,8 @@ class ScratchRealization(object):
 
         This gives access to the underlying data on disk without
         touching internalized dataframes.
+
+        Returns empty dataframe if there is no summary file
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
@@ -588,7 +590,11 @@ class ScratchRealization(object):
             time_index_arg = self.get_smry_dates(freq=time_index)
         else:
             time_index_arg = time_index
-        return self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+
+        if self.get_eclsum():
+            return self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        else:
+            return pd.DataFrame()
 
     def get_smryvalues(self, props_wildcard=None):
         """
