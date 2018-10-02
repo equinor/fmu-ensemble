@@ -203,3 +203,37 @@ When called `get_eclgrid` reads the grid from one realization. Then depending if
 properties requested are static or dynamic, the corresponding *INIT or *UNRST file
 will be read for all successful realization in the ensemble. The user can specify how 
 the results should be aggregated. Currently the options support are `mean` or `std`.
+
+
+Filtering realizations
+^^^^^^^^^^^^^^^^^^^^^^
+
+In an ensemble, realizations can be filtered out based on certain
+properties. Filtering is relevant both for removing realizations that
+have failed somewhere in the process, and it is also relevant for
+extracting subsets with certain properties (by values).
+
+Generally, fmu.ensemble is very permissive of realizations with close
+to no data. It is the user responsibility to filter those out if
+needed. The filtering function `filter()` can be used both do to
+in-place filtering, but also return VirtualEnsemble objects containing
+those realizations that matched the criterion.
+
+Examples:
+
+.. code-block:: python
+
+    # Assuming an ensemble where yearly summary data is loaded,
+    # throw away all realizations that did not reach a certain date
+    ens.filter('unsmry-yearly', column='DATE',
+               columncontains='2030-01-01')
+
+    # Extract the subset for a specific sensitivity.
+    vens = ens.filter('parameters.txt', key='DRAINAGE_STRATEGY',
+                      value='Depletion', inplace=False)
+    
+    # Remove all realizations where a specific output file
+    # (that we have tried to internalize) is missing
+    ens.filter('geo_oil_1.csv')
+
+Filtering with other comparators than equivalence is not implemented.

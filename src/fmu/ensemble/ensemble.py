@@ -89,16 +89,6 @@ class ScratchEnsemble(object):
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
 
-        # Remove failed realization from the ensemble
-        list_of_failed = self.get_ok().query("OK == False")['REAL'].values
-        if list_of_failed.size:
-            logger.warning('The following failed realizations and were ' +
-                           'removed from %s\n%s', self._name,
-                           ",".join(list_of_failed))
-            logger.warning('This behaviour will change in the future, then ' +
-                           'you need to explicitly filter non-OK away')
-            self.remove_realizations(list_of_failed)
-
     def __getitem__(self, realizationindex):
         """Get one of the realizations.
 
@@ -233,7 +223,7 @@ class ScratchEnsemble(object):
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
-
+        vens.update_realindices()
         return vens
 
     @property
@@ -439,6 +429,60 @@ class ScratchEnsemble(object):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry-' +
                            time_index + '.csv')
+
+    def filter(self, localpath, **kwargs):
+        """Filter realizations or data within realizations
+
+        Calling this function can return a copy with fewer
+        realizations, or remove realizations from the current object.
+
+        Typical usage is to require that parameters.txt is present, or
+        that the OK file is present.
+
+        It is also possible to require a certain scalar to have a specific
+        value, for example filtering on a specific sensitivity case.
+
+        Args:
+            localpath: string pointing to the data for which the filtering
+                applies. If no other arguments, only realizations containing
+                this data key is kept.
+            key: A certain key within a realization dictionary that is
+                required to be present. If a value is also provided, this
+                key must be equal to this value
+            value: The value a certain key must equal. Floating point
+                comparisons are not robust.
+            inplace: Boolean indicating if the current object should have its
+                realizations stripped, or if a copy should be returned.
+                Default true.
+
+         Return:
+            If inplace=True, then nothing will be returned.
+            If inplace=False, a VirtualEnsemble fulfilling the filter
+            will be returned.
+        """
+        if 'inplace' not in kwargs:
+            kwargs['inplace'] = True
+
+        deletethese = []
+        keepthese = []
+        for realidx, realization in self._realizations.items():
+            if kwargs['inplace']:
+                if not realization.contains(localpath, **kwargs):
+                    deletethese.append(realidx)
+            else:
+                if realization.contains(localpath, **kwargs):
+                    keepthese.append(realidx)
+
+        if kwargs['inplace']:
+            logger.info("Removing realizations %s", deletethese)
+            if deletethese:
+                self.remove_realizations(deletethese)
+            return self
+        else:
+            filtered = VirtualEnsemble(self.name + " filtered")
+            for realidx in keepthese:
+                filtered.add_realization(self._realizations[realidx])
+            return filtered
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

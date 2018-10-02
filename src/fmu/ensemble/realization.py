@@ -18,6 +18,8 @@ import copy
 import glob
 import json
 import numpy
+from datetime import datetime, date, time
+import dateutil
 import pandas as pd
 
 import ert.ecl
@@ -282,7 +284,6 @@ class ScratchRealization(object):
             A dataframe with information from the STATUS files.
             Each row represents one job in one of the realizations.
         """
-        from datetime import datetime, date, time
         statusfile = os.path.join(self._origpath, 'STATUS')
         if not os.path.exists(statusfile):
             # This should not happen as long as __init__ requires STATUS
@@ -667,6 +668,67 @@ class ScratchRealization(object):
                                       freq=pd_freq_mnenomics[freq])
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
+
+    def contains(self, localpath, **kwargs):
+        """Boolean function for asking the realization for presence
+        of certain data types and possibly data values.
+
+        Args:
+            localpath: string pointing to the data for which the query
+                applies. If no other arguments, only realizations containing
+                this data key is kept.
+            key: A certain key within a realization dictionary that is
+                required to be present. If a value is also provided, this
+                key must be equal to this value. If localpath is not
+                a dictionary, this will raise a ValueError
+            value: The value a certain key must equal. Floating point
+                comparisons are not robust. Only relevant for dictionaries
+            column: Name of a column in tabular data. If columncontains is
+                not specified, this means that this column must be present
+            columncontains:
+                A value that the specific column must include.
+
+        Returns:
+            boolean: True if the data is present and fulfilling any
+            criteria.
+        """
+        kwargs.pop('inplace', 0)
+        localpath = self.shortcut2path(localpath)
+        if localpath not in self.keys():
+            return False
+        if not kwargs:
+            return localpath in self.keys()
+        if isinstance(self.data[localpath], dict):
+            if 'key' in kwargs and 'value' not in kwargs:
+                return kwargs['key'] in self.data[localpath]
+        if isinstance(self.data[localpath], pd.DataFrame):
+            if 'key' in kwargs:
+                raise ValueError("Don't use key for tabular data")
+            if 'value' in kwargs:
+                raise ValueError("Don't use value for tabular data")
+            if 'column' in kwargs and 'columncontains' not in kwargs:
+                # Only asking for column presence
+                return kwargs['column'] in self.data[localpath].columns
+            if 'column' in kwargs and 'columncontains' in kwargs:
+                # Treat 'DATE' column specifically
+                if kwargs['column'] == 'DATE':
+                    return dateutil.parser.parse(kwargs['columncontains']) in \
+                        self.data[localpath][kwargs['column']]\
+                            .astype(datetime).values
+                else:
+                    return kwargs['columncontains'] in \
+                        self.data[localpath][kwargs['column']].values
+
+        if 'key' in kwargs and 'value' in kwargs:
+            if isinstance(kwargs['value'], str):
+                if kwargs['key'] in self.data[localpath]:
+                    return str(self.data[localpath][kwargs['key']]) \
+                        == kwargs['value']
+                else:
+                    return False
+            else:  # non-string, then don't convert the internalized data
+                return self.data[localpath][kwargs['key']] == kwargs['value']
+        raise ValueError("Wrong arguments to contains()")
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

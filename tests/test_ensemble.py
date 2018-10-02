@@ -245,6 +245,115 @@ def test_ensemble_ecl():
         df_stats['FOPR']['max'].iloc[-1]
 
 
+def test_filter():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    dirs = testdir + '/data/testensemble-reek001/' + \
+        'realization-*/iter-0'
+    reekensemble = ScratchEnsemble('reektest', dirs)
+
+    # This should just require a STATUS file to be there
+    # for every realization
+    assert len(reekensemble.filter('STATUS')) == 5
+
+    # Test string equivalence on numeric data:
+    reekensemble.filter('parameters.txt', key='RMS_SEED', value='723121249',
+                        inplace=True)
+    assert len(reekensemble) == 2
+    assert reekensemble.agg('mean')['parameters']['RMS_SEED'] == 723121249
+
+    # Test numeric equivalence
+    reekensemble = ScratchEnsemble('reektest', dirs)
+    reekensemble.filter('parameters.txt', key='RMS_SEED', value=723121249,
+                        inplace=True)
+    assert len(reekensemble) == 2
+    assert reekensemble.agg('mean')['parameters']['RMS_SEED'] == 723121249
+
+    reekensemble = ScratchEnsemble('reektest', dirs)
+    filtered = reekensemble.filter('parameters.txt', key='FOO',
+                                   inplace=False)
+    assert len(filtered) == 2
+    # (NaN in one of the parameters.txt is True in this context)
+
+    filtered = reekensemble.filter('parameters.txt', key='MULTFLT_F1',
+                                   value=0.001, inplace=False)
+    assert len(filtered) == 4
+    assert len(reekensemble.filter('parameters.txt', key='FWL',
+                                   value=1700, inplace=False)) == 3
+    assert len(reekensemble.filter('parameters.txt', key='FWL',
+                                   value='1700', inplace=False)) == 3
+
+    # This one is tricky, the empty string should correspond to
+    # missing data - NOT IMPLEMENTED
+    # assert len(reekensemble.filter('parameters.txt', key='FOO',
+    #                               value='', inplace=False) == 4)
+
+    # while no value means that the key must be present
+    assert len(reekensemble.filter('parameters.txt', key='FOO',
+                                   inplace=False)) == 2
+
+    # 'key' is not accepted for things that are tables.
+    with pytest.raises(ValueError):
+        reekensemble.filter('STATUS', key='ECLIPSE')
+    with pytest.raises(ValueError):
+        reekensemble.filter('STATUS', value='ECLIPSE')
+
+    # Check column presence
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL')) == 5
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+                                   inplace=False)) == 5
+    assert len(reekensemble.filter('STATUS', column='FOOBAR',
+                                   inplace=False)) == 0
+    with pytest.raises(ValueError):
+        reekensemble.filter('STATUS', wrongarg='FOOBAR',
+                            inplace=False)
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+                                   columncontains='ECLIPSE100_2014.2')) == 5
+    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+                                   columncontains='ECLIPSE100_2010.2',
+                                   inplace=False)) == 0
+    reekensemble.from_smry()
+    assert len(reekensemble.filter('unsmry-raw')) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT')) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='FOOBAR',
+                                   inplace=False)) == 0
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=0)) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=-1000, inplace=False)) == 0
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=6025523.0,
+                                   inplace=False)) == 1
+    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=6025523, inplace=False)) == 1
+
+    # We do not support strings here (not yet)
+    # assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+    #                                columncontains='6025523.0',
+    #                                inplace=False)) == 1
+
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2002-11-25',
+                                   inplace=False)) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2002-11-25 00:00:00',
+                                   inplace=False)) == 5
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2002-11-25 00:00:01',
+                                   inplace=False)) == 0
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2000-01-07 02:26:15',
+                                   inplace=False)) == 3
+    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+                                   columncontains='2000-01-07',
+                                   inplace=False)) == 0
+    # Last one is zero because it implies 00:00:00, it does not round!
+
+
 def test_observation_import():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
@@ -300,6 +409,7 @@ def test_filedescriptors():
 
     # As long as lazy_load = False, we should have 5,5,5,5 from this
     # If lazy_load is True (default), then we get 15, 15, 25, 20
+    # (that last number pattern reveals a (now fixed) bug in EclSum)
     # print(fd_count1, fd_count2, fd_count3, fd_count4)
 
     assert fd_count1 == fd_count4
