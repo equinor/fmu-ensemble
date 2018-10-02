@@ -79,8 +79,12 @@ class ScratchEnsemble(object):
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
-        logger.info("Loading ensemble from dirs: %s",
-                    " ".join(globbedpaths))
+        if not globbedpaths:
+            logger.warning("No files found, or no access")
+            return
+        else:
+            logger.info("Loading ensemble from dirs: %s",
+                        " ".join(globbedpaths))
 
         # Search and locate minimal set of files
         # representing the realizations.
