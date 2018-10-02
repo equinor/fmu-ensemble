@@ -245,6 +245,17 @@ def test_ensemble_ecl():
         df_stats['FOPR']['max'].iloc[-1]
 
 
+def test_nonexisting():
+    empty = ScratchEnsemble('nothing', '/foo/bar/com/not_existing')
+    assert not empty
+
+    # This ensemble does not exist, but we should ensure no crash
+    # when we encounter Permission Denied on /scratch/johan_sverdrup
+    nopermission = ScratchEnsemble('noaccess',
+                                   '/scratch/johan_sverdrup/js_phase5/' +
+                                   'foo/realization-*/iter-0')
+    assert not nopermission
+
 def test_observation_import():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions

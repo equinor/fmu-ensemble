@@ -79,8 +79,12 @@ class ScratchEnsemble(object):
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
-        logger.info("Loading ensemble from dirs: %s",
-                    " ".join(globbedpaths))
+        if not globbedpaths:
+            logger.warning("No files found, or no access")
+            return
+        else:
+            logger.info("Loading ensemble from dirs: %s",
+                        " ".join(globbedpaths))
 
         # Search and locate minimal set of files
         # representing the realizations.
@@ -90,14 +94,15 @@ class ScratchEnsemble(object):
                     count)
 
         # Remove failed realization from the ensemble
-        list_of_failed = self.get_ok().query("OK == False")['REAL'].values
-        if list_of_failed.size:
-            logger.warning('The following failed realizations and were ' +
-                           'removed from %s\n%s', self._name,
-                           ",".join(list_of_failed))
-            logger.warning('This behaviour will change in the future, then ' +
-                           'you need to explicitly filter non-OK away')
-            self.remove_realizations(list_of_failed)
+        if count:
+            list_of_failed = self.get_ok().query("OK == False")['REAL'].values
+            if list_of_failed.size:
+                logger.warning('The following failed realizations and were ' +
+                               'removed from %s\n%s', self._name,
+                               ",".join(list_of_failed))
+                logger.warning('This behaviour will change in the future, then'
+                               + ' you need to explicitly filter non-OK away')
+                self.remove_realizations(list_of_failed)
 
     def __getitem__(self, realizationindex):
         """Get one of the realizations.
