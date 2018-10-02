@@ -291,7 +291,6 @@ def test_ensemble_ecl():
         df_stats['FOPR']['max'].iloc[-1]
 
 
-<<<<<<< HEAD
 def test_filter():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
