@@ -135,6 +135,52 @@ def test_reek001():
     reekensemble.remove_data('parameters.txt')
     assert len(reekensemble.keys()) == keycount - 1
 
+def test_reek001_scalars():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+
+    assert 'OK' in reekensemble.keys()
+    assert isinstance(reekensemble.get_df('OK'), pd.DataFrame)
+    assert len(reekensemble.get_df('OK')) == 5
+
+    # One of the npv.txt files contains the string "error!"
+    reekensemble.from_scalar('npv.txt')
+    npv = reekensemble.get_df('npv.txt')
+    assert isinstance(npv, pd.DataFrame)
+    assert 'REAL' in npv
+    assert 'npv.txt' in npv  # filename is the column name
+    assert len(npv) == 5
+    assert npv.dtypes['REAL'] == int
+    assert npv.dtypes['npv.txt'] == object
+    # This is undesirable, can cause trouble with aggregation
+    # Try again:
+    reekensemble.from_scalar('npv.txt', force_reread=True, convert_numeric=True)
+    npv = reekensemble.get_df('npv.txt')
+    assert npv.dtypes['npv.txt'] == int or npv.dtypes['npv.txt'] == float
+    assert len(npv) == 4  # the error should now be removed
+
+    reekensemble.from_scalar('emptyscalarfile')  # missing in real-4
+    assert len(reekensemble.get_df('emptyscalarfile')) == 4
+    assert 'emptyscalarfile' in reekensemble.keys()
+    # Use when filter is merged.
+    # assert len(reekensemble.filter('emptyscalarfile', inplace=True)) == 4
+
+    # If we try to read the empty files as numerical values, we should get
+    # nothing back:
+    with pytest.raises(ValueError):
+        reekensemble.from_scalar('emptyscalarfile', force_reread=True,
+                                 convert_numeric=True)
+
+    with pytest.raises(ValueError):
+        reekensemble.from_scalar('nonexistingfile')
 
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
@@ -165,7 +211,7 @@ def test_ensemble_ecl():
     # Check that the result was cached in memory, not necessarily on disk..
     assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
 
-    assert len(reekensemble.keys()) == 3
+    assert len(reekensemble.keys()) == 4
 
     # When asking the ensemble for FOPR, we also get REAL as a column
     # in return. Note that the internal stored version will be

@@ -25,7 +25,7 @@ from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .observation_parser import observations_parser
-
+from .realization import parse_number
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -232,6 +232,20 @@ class ScratchEnsemble(object):
         """
         return self.from_txt('parameters.txt')
 
+    def from_scalar(self, localpath, convert_numeric=False,
+                    force_reread=False):
+        """Parse a single value from a file.
+
+        The value can be a string or a number.
+
+        Empty files are treated as existing, with an empty string as
+        the value, different from non-existing files.
+
+        Parsing is performed individually in each realization
+        """
+        return self.from_file(localpath, 'scalar',
+                              convert_numeric, force_reread)
+
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a key-value text file from disk and internalize data
@@ -240,7 +254,7 @@ class ScratchEnsemble(object):
         <key> <value>
         in each line.
 
-        Parsing is performed individually in eacn realization
+        Parsing is performed individually in each realization
         """
         return self.from_file(localpath, 'txt',
                               convert_numeric, force_reread)
@@ -253,7 +267,7 @@ class ScratchEnsemble(object):
         return self.from_file(localpath, 'csv',
                               convert_numeric, force_reread)
 
-    def from_file(self, localpath, fformat, convert_numeric=True,
+    def from_file(self, localpath, fformat, convert_numeric=False,
                   force_reread=False):
         """Function for calling from_file() in every realization
 
@@ -265,7 +279,8 @@ class ScratchEnsemble(object):
                 and 'csv'.
             convert_numeric: If set to True, numerical columns
                 will be searched for and have their dtype set
-                to integers or floats.
+                to integers or floats. If scalars, only numerical
+                data will be loaded.
             force_reread: Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
@@ -343,25 +358,33 @@ class ScratchEnsemble(object):
         return list(result)
 
     def get_df(self, localpath):
-        """Load data from each realization and concatenate vertically
+        """Load data from each realization and aggregate vertically
 
-        Each row is tagged by the realization index.
+        Each row is tagged by the realization index in the column 'REAL'
 
         Args:
-            localpath: string, filename local to realization
+            localpath: string, filename local to the realizations
         Returns:
            dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
-               Empty dataframe if no data lis found
+               Empty dataframe if no data is found
 
         """
         dflist = {}
         for index, realization in self._realizations.items():
             try:
-                dframe = realization.get_df(localpath)
-                if isinstance(dframe, dict):
-                    dframe = pd.DataFrame(index=[1], data=dframe)
-                dflist[index] = dframe
+                data = realization.get_df(localpath)
+                if isinstance(data, dict):
+                    data = pd.DataFrame(index=[1], data=data)
+                elif isinstance(data, str) or isinstance(data, int) \
+                     or isinstance(data, float):
+                    data = pd.DataFrame(index=[1], columns=[localpath],
+                                        data=data)
+                if isinstance(data, pd.DataFrame):
+                    dflist[index] = data
+                else:
+                    raise ValueError("Unkown datatype returned " +
+                                     "from realization")
             except ValueError:
                 # No logging here, those error messages
                 # should have appeared at construction using from_*()
@@ -685,6 +708,8 @@ class ScratchEnsemble(object):
                 keylist is empty, otherwise ignored
         Returns:
             VirtualRealization. Its name will include the aggregation operator
+
+        WARNING: This code is duplicated in virtualensemble.py
         """
         quantilematcher = re.compile(r'p(\d\d)')
         supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
@@ -734,7 +759,11 @@ class ScratchEnsemble(object):
             if key != 'STATUS':  # STATUS dataframe contains too many strings..
                 groupby = list(set(groupby + stringcolumns))
 
-            if groupby:
+            dtypes = data.dtypes.unique()
+            if not (int in dtypes or float in dtypes):
+                logger.info("No numerical data to aggregate in %s", key)
+                continue
+            if len(groupby):
                 logger.info("Grouping %s by %s", key, groupby)
                 aggobject = data.groupby(groupby)
             else:
@@ -752,6 +781,11 @@ class ScratchEnsemble(object):
             if groupby:
                 aggregated.reset_index(inplace=True)
 
+            # We have to recognize scalars.
+            if len(aggregated) == 1 and aggregated.index.values[0] == key:
+                aggregated = parse_number(aggregated.values[0])
+                print(aggregated)
+                print(type(aggregated))
             vreal.append(key, aggregated)
         return vreal
 

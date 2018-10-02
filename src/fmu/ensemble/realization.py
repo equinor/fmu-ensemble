@@ -117,11 +117,7 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'OK')):
-            filerow = {'LOCALPATH': 'OK',
-                       'FILETYPE': 'OK',
-                       'FULLPATH': os.path.join(abspath, 'OK'),
-                       'BASENAME': 'OK'}
-            self.files = self.files.append(filerow, ignore_index=True)
+            self.from_scalar('OK')
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
             self.from_txt('parameters.txt')
@@ -151,13 +147,70 @@ class ScratchRealization(object):
         Several file formats are supported:
         * txt (one key-value pair pr. line)
         * csv
+        * scalar (one number or one string in the first line)
         """
         if fformat == 'txt':
             self.from_txt(localpath, convert_numeric, force_reread)
         elif fformat == 'csv':
             self.from_csv(localpath, convert_numeric, force_reread)
+        elif fformat == 'scalar':
+            self.from_scalar(localpath, convert_numeric, force_reread)
         else:
             raise ValueError("Unsupported file format %s" % fformat)
+
+    def from_scalar(self, localpath, convert_numeric=False,
+                    force_reread=False, comment=None, skip_blank_lines=True,
+                    skipinitialspace=True):
+        """Parse a single value from a file.
+
+        The value can be a string or a number.
+
+        Empty files are treated as existing, with an empty string as
+        the value, different from non-existing files.
+
+        pandas.read_table() is used to parse the contents, the args
+        'comment', 'skip_blank_lines', and 'skipinitialspace' is passed on
+        to that function.
+
+        Args:
+            localpath: path to the file, local to the realization
+            convert_numeric: If True, non-numerical content will be thrown away
+            force_reread: Reread the data from disk.
+        Returns:
+            the value read from the file.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise IOError("File not found: " + fullpath)
+        else:
+            if fullpath in self.files['FULLPATH'].values and not force_reread:
+                # Return cached version
+                return self.data[localpath]
+            elif fullpath not in self.files['FULLPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            try:
+                value = pd.read_table(fullpath, header=None, engine='python',
+                                      skip_blank_lines=skip_blank_lines,
+                                      skipinitialspace=skipinitialspace,
+                                      comment=comment).iloc[0,0]
+            except pd.errors.EmptyDataError:
+                value = ""
+            if convert_numeric:
+                value = parse_number(value)
+                if not isinstance(value, str):
+                    self.data[localpath] = value
+                else:
+                    # In case we are re-reading, we must
+                    # ensure there is no value present now:
+                    if localpath in self.data:
+                        del self.data[localpath]
+            else:
+                self.data[localpath] = value
+            return value
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -371,6 +424,7 @@ class ScratchRealization(object):
 
     def get_df(self, localpath):
         """Access the internal datastore which contains dataframes or dicts
+        or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'

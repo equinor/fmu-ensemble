@@ -109,11 +109,18 @@ class VirtualRealization(object):
             if isinstance(data, pd.DataFrame):
                 logger.info("Dumping %s", key)
                 data.to_csv(filename, index=False)
-            if isinstance(data, dict):
+            elif isinstance(data, dict):
                 with open(filename, 'w') as fhandle:
                     for paramkey in data.keys():
                         fhandle.write(paramkey + " " +
                                       str(data[paramkey]) + "\n")
+            elif isinstance(data, str) or isinstance(data, float) or \
+                 isinstance(data, int):
+                with open(filename, 'w') as fhandle:
+                    fhandle.write(str(data))
+            else:
+                logger.warning("Don't know how to dump %s " +
+                               "of type %s to disk", key, type(key))
 
     def from_disk(self, filesystempath):
         """Load data for a virtual realization from disk.
@@ -124,6 +131,8 @@ class VirtualRealization(object):
         WARNING: This code is really shaky. We need metafiles written
         by to_json() for robust parsing of files on disk, f.ex. are
         txt files really key-value data (dicts) or csv files?
+
+        Scalar files are currently NOT SUPPORTED
 
         Args:
             filesystempath: path to a directory that to_disk() has
@@ -165,7 +174,8 @@ class VirtualRealization(object):
         raise NotImplementedError
 
     def get_df(self, localpath):
-        """Access the internal datastore which contains dataframes or dicts
+        """Access the internal datastore which contains dataframes, dicts
+        or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
@@ -198,6 +208,9 @@ class VirtualRealization(object):
         elif isinstance(data, pd.Series):
             return data.to_dict()
         elif isinstance(data, dict):
+            return data
+        elif isinstance(data, str) or isinstance(data, int) \
+            or isinstance(data, float):
             return data
         else:
             raise ValueError("BUG: Unknown datatype")
