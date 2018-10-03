@@ -97,11 +97,11 @@ class ScratchEnsemble(object):
         if count:
             list_of_failed = self.get_ok().query("OK == False")['REAL'].values
             if list_of_failed.size:
-                logger.warning('The following failed realizations and were ' +
-                               'removed from %s\n%s', self._name,
-                               ",".join(list_of_failed))
-                logger.warning('This behaviour will change in the future, then'
-                               + ' you need to explicitly filter non-OK away')
+                #logger.warning('The following failed realizations and were ' +
+                #               'removed from %s\n%s', self._name,
+                #               ",".join(list_of_failed))
+                #logger.warning('This behaviour will change in the future, then'
+                #               + ' you need to explicitly filter non-OK away')
                 self.remove_realizations(list_of_failed)
 
     def __getitem__(self, realizationindex):
