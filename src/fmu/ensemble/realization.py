@@ -805,6 +805,26 @@ class ScratchRealization(object):
                            flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclunrst
 
+    def get_grid_index(self, active_only):
+        """
+        Return the grid index in a pandas dataframe.
+        """
+        return self.get_grid().export_index(active_only=active_only)
+
+    def get_grid_corners(self, grid_index):
+        corners = self.get_grid().export_corners(grid_index)
+        columns = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'x3', 'y3', 'z3', 'x4',
+                   'y4', 'z4', 'x5', 'y5', 'z5', 'x6', 'y6', 'z6', 'x7', 'y7',
+                   'z7', 'x8', 'y8', 'z8']
+
+        return pd.DataFrame(data=corners,
+                            columns=columns)
+
+    def get_grid_centre(self, grid_index):
+        grid_cell_centre = self.get_grid().export_position(grid_index)
+        return pd.DataFrame(data=grid_cell_centre,
+                            columns=['cell_x', 'cell_y', 'cell_z'])
+
     def get_grid(self):
         """
         :returns: grid file of the realization.
@@ -823,7 +843,6 @@ class ScratchRealization(object):
         if not os.path.exists(grid_filename):
             return None
         if not self._eclgrid:
-            print ("reading the grid file 1")
             self._eclgrid = EclGrid(grid_filename)
         return self._eclgrid
 
@@ -852,21 +871,25 @@ class ScratchRealization(object):
         """
         return self.get_unrst().report_dates
 
-    def get_global_init_keyword(self, prop):
+    def get_global_init_keyword(self, prop, grid_index):
         """
         :param prop: A name of a keyword in the realization's init file.
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        return self.get_init()[prop][0].scatter_copy(self.actnum)
+        prop = self.get_init()[prop][0]
+        return self.get_grid().export_data(grid_index, prop)
 
-    def get_global_unrst_keyword(self, prop, report):
+    def get_global_unrst_keyword(self, prop, grid_index, report):
         """
         :param prop: A name of a keyword in the realization's restart file.
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
+        prop = self.get_unrst()[prop][0][report]
+        print(prop)
+        prop_values = self.get_grid().export_data(grid_index, prop)
+        #prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
         return prop_values
 
     def _get_cell(self, ijk):

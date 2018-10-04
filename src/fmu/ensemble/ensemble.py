@@ -14,6 +14,7 @@ from __future__ import print_function
 import re
 import os
 import glob
+import numpy as np
 from collections import defaultdict
 import pandas as pd
 from ecl import EclDataType
@@ -824,18 +825,26 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
-        if not self._global_grid:
-            self._global_grid = self.cell_layers(active_only=active_only)
 
-        grid = self._global_grid
-        grid = self._unwrap_grid(grid)
+        grid_index = self._realizations.values()[0].get_grid_index(active_only=active_only)
+        self._global_active = len(grid_index.index)
+
+        corners = self._realizations.values()[0].get_grid_corners(grid_index)
+
+        centre = self._realizations.values()[0].get_grid_centre(grid_index)
+
+        full = grid_index.reset_index().join(corners).join(centre)
+
         for prop in props:
             print('Reading the grid property: '+prop)
+
             if prop in self.init_keys:
-                grid[prop] = self.get_init(prop, agg=agg)
+                full[prop] = self.get_init(prop, grid_index, agg=agg)
             if prop in self.unrst_keys:
-                grid[prop] = self.get_unrst(prop, agg=agg, report=report)
-        return pd.DataFrame(grid)
+                full[prop] = self.get_unrst(prop, grid_index, agg=agg, report=report)
+        full.drop('index', axis=1, inplace=True)
+        full.set_index(['i', 'j', 'k', 'active'])
+        return full
 
     @property
     def global_active(self):
@@ -864,15 +873,18 @@ class ScratchEnsemble(object):
             self._global_size = self._realizations.values()[0].global_size
         return self._global_size
 
-    @property
-    def grid(self):
+    def _get_grid_index(self, active=True):
         """
         :returns: The grid of the ensemble, see
             :func:`fmu.ensemble.Realization.get_grid()`.
         """
         if not self._realizations:
             return None
-        return self._realizations.values()[0].get_grid()
+        return self._realizations.values()[0].get_grid_index(active=active)
+
+    def _get_grid_attributes(self,  active=True):
+        self.grid_index = self._get_grid_index(active=active)
+
 
     def _is_active_cell(self, cell):
         """
@@ -932,7 +944,7 @@ class ScratchEnsemble(object):
         dframe.index.names = ['Report']
         return dframe
 
-    def get_init(self, prop, agg):
+    def get_init(self, prop, grid_index, agg):
         """
         :param prop: A time independent property,
         :returns: Dictionary with ``mean`` or ``std_dev`` as keys,
@@ -940,22 +952,23 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not found.
         """
 
-        keywords = [(realization.get_global_init_keyword(prop))
-                    for _, realization in self._realizations.iteritems()]
+        keywords = np.vstack([realization.get_global_init_keyword(prop, grid_index)
+                             for _, realization in self._realizations.iteritems()])
 
+        print(keywords.shape, 'the shape vector')
         if agg == 'mean':
             mean = self._keyword_mean(prop,
                                       keywords,
-                                      self.global_active)
+                                      self._global_active)
             return pd.Series(mean.numpy_copy(), name=prop)
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
                                             keywords,
-                                            self.global_active,
+                                            self._global_active,
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def get_unrst(self, prop, report, agg):
+    def get_unrst(self, prop, grid_index, report, agg):
         """
         :param prop: A time dependent property, see
             `fmu_postprocessing.modelling.SimulationGrid.TIME_DEPENDENT`.
@@ -964,7 +977,8 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
 
-        keywords = [realization.get_global_unrst_keyword(prop, report)
+        keywords = [realization.get_global_unrst_keyword(prop, grid_index,
+                                                         report)
                     for _, realization in self._realizations.iteritems()]
 
         if agg == 'mean':
@@ -979,7 +993,7 @@ class ScratchEnsemble(object):
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def _keyword_mean(self, name, keywords, num_realizations):
+    def _keyword_mean(self, name, keywords, active):
         """
         :returns: Mean values of keywords.
         :param name: Name of resulting Keyword.
@@ -987,13 +1001,16 @@ class ScratchEnsemble(object):
         :param num_realizations: A EclKW with, for each cell, The number of
             realizations where the cell is active.
         """
-        mean = EclKW(name, len(num_realizations), EclDataType.ECL_FLOAT)
-        for keyword in keywords:
-            mean += keyword
-        mean.safe_div(num_realizations)
+        print ('the keyword', len(keywords))
+        data = np.vstack(keywords)
+        print (data.shape, 'the shape')
+        mean = np.mean(data, axis=0)
+        print (mean.shape)
+
+
         return mean
 
-    def _keyword_std_dev(self, name, keywords, num_realizations, mean):
+    def _keyword_std_dev(self, name, keywords, active, mean):
         """
         :returns: Standard deviation of keywords.
         :param name: Name of resulting Keyword.
@@ -1002,11 +1019,11 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
-        std_dev = EclKW(name, len(num_realizations), EclDataType.ECL_FLOAT)
+        std_dev = EclKW(name, active, EclDataType.ECL_FLOAT)
         for keyword in keywords:
             std_dev.add_squared(keyword - mean)
 
-        std_dev.safe_div(num_realizations)
+        std_dev.safe_div(active)
         std_dev.isqrt()
         return std_dev
 
