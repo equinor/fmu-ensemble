@@ -38,7 +38,7 @@ def mismatch(real, data):
         if obs_type == 'summary_vectors':
             for index, smry in obs_data.iterrows():
                 sim_value = read_sim_smry_obs(real, smry)
-                mismatch_data['id'].append(smry['id'])
+                mismatch_data['key'].append(smry['key'])
                 mismatch_data['sim_value'].append(sim_value)
                 mismatch_data['REAL'].append(real.index)
                 mismatch_data['Mismatch'].append(smry['value'] - sim_value)

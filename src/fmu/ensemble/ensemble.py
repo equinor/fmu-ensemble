@@ -810,7 +810,6 @@ class ScratchEnsemble(object):
         for _, realization in self._realizations.items():
             dframe = realization.realization_mismatch(self.obs)
             dflist.append(dframe)
-
         return pd.concat(dflist, sort=False).reset_index()
 
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
