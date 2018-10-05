@@ -68,6 +68,36 @@ def test_single_realization():
     vol_df2 = real.get_df('share/results/volumes/simulator_volume_fipnum.csv')
     assert vol_df2['STOIIP_TOTAL'].sum() > 0
 
+    # Test scalar import
+    assert 'OK' in real.keys()  # Imported in __init__
+    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert isinstance(real['OK'], str)
+
+    # Check that we can "reimport" the OK file
+    real.from_scalar('OK', force_reread=True)
+    assert 'OK' in real.keys()  # Imported in __init__
+    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert isinstance(real['OK'], str)
+    assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
+
+    real.from_scalar('npv.txt')
+    assert real.get_df('npv.txt') == 3444
+    assert real['npv.txt'] == 3444
+    assert isinstance(real.data['npv.txt'], int)
+    assert 'npv.txt' in real.files.LOCALPATH.values
+    assert real.files[real.files.LOCALPATH == 'npv.txt']['FILETYPE'].values[0]\
+        == 'txt'
+
+    real.from_scalar('emptyscalarfile')
+    # Activate this test when filter() is merged:
+    # assert real.contains('emptyfile')
+    assert 'emptyscalarfile' in real.data
+    assert isinstance(real['emptyscalarfile'], str)
+    assert 'emptyscalarfile' in real.files.LOCALPATH.values
+
+    with pytest.raises(IOError):
+        real.from_scalar('notexisting.txt')
+
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
     assert localpath in real.data

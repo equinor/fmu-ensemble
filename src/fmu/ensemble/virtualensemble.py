@@ -53,6 +53,29 @@ class VirtualEnsemble(object):
         else:
             self.data = {}
 
+        self.realindices = []
+
+    def __len__(self):
+        """Return the number of realizations included in the ensemble"""
+        return len(self.realindices)
+
+    def update_realindices(self):
+        """Update the internal list of known realization indices
+
+        Anything that adds or removes realizations must
+        take responsibility for having that list consistent.
+
+        If there is a dataframe missing the REAL column, this
+        will intentionally error.
+        """
+
+        # Check all dataframes:
+        idxset = set()
+        for key in self.data.keys():
+            idxset = idxset | \
+                set(self.data[key]['REAL'].unique())
+        self.realindices = list(idxset)
+
     def keys(self):
         """Return all keys in the internal datastore"""
         return self.data.keys()
@@ -105,7 +128,7 @@ class VirtualEnsemble(object):
         """
         vreal = VirtualRealization(description="Realization %d from %s" %
                                    (realindex, self._name))
-        for key in self.keys():
+        for key in self.data.keys():
             data = self.get_df(key)
             realizationdata = data[data['REAL'] == realindex]
             if len(realizationdata) == 1:
@@ -123,21 +146,66 @@ class VirtualEnsemble(object):
         else:
             raise ValueError("No data for realization %d" % realindex)
 
-    def remove_realizations(self, realindices):
+    def add_realization(self, realization, realidx=None, overwrite=False):
+        """Add a realization. A ScratchRealization will be effectively
+        converted to a virtual realization.
+
+        A ScratchRealization knows its realization index, and that index
+        will be used unless realidx is not None. A VirtualRealization does
+        not always have a index, so then it must be supplied.
+
+        Unless overwrite is True, a ValueError will be raised
+        if the realization index already exists.
+
+        Args:
+            overwrite: boolean whether an existing realization with the same
+                index should be removed prior to adding
+            realidx: Override the realization index for incoming realization.
+                Necessary for VirtualRealization.
+        """
+        if realidx is None and isinstance(realization, VirtualRealization):
+            raise ValueError("Can't add virtual realizations " +
+                             "without specifying index")
+        if not realidx:
+            realidx = realization.index
+
+        if not overwrite and realidx in self.realindices:
+            raise ValueError("Error, realization index already present")
+        if overwrite and realidx in self.realindices:
+            self.remove_realization(realidx)
+
+        # Add the data from the incoming realization key by key
+        for key in realization.keys():
+            df = realization.get_df(key)
+            if isinstance(df, dict):  # dicts to go to one-row dataframes
+                df = pd.DataFrame(index=[1], data=df)
+            if (isinstance(df, str) or isinstance(df, int) or
+                isinstance(df, float)):
+                df = pd.DataFrame(index=[1], columns=[key], data=df)
+            df['REAL'] = realidx
+            if key not in self.data.keys():
+                self.data[key] = df
+            else:
+                self.data[key] = \
+                    self.data[key].append(df, ignore_index=True,
+                                          sort=True)
+        self.update_realindices()
+
+    def remove_realizations(self, deleteindices):
         """Remove realizations from internal data
 
         This will remove all rows in all internalized data belonging
         to the set of supplied indices.
 
         Args:
-            realindices: int or list of ints, realization indices to remove
+            deleteindices: int or list of ints, realization indices to remove
         """
-        if not isinstance(realindices, list):
-            realindices = [realindices]
+        if not isinstance(deleteindices, list):
+            deleteindices = [deleteindices]
 
-        indicesknown = self.parameters['REAL'].unique()
-        indicestodelete = list(set(realindices) & set(indicesknown))
-        indicesnotknown = list(set(realindices) - set(indicestodelete))
+        indicesknown = self.realindices
+        indicestodelete = list(set(deleteindices) & set(indicesknown))
+        indicesnotknown = list(set(deleteindices) - set(indicestodelete))
         if indicesnotknown:
             logger.warn("Skipping undefined realization indices %s",
                         str(indicesnotknown))
@@ -146,6 +214,7 @@ class VirtualEnsemble(object):
             for key in self.data:
                 self.data[key] = self.data[key][self.data[key]['REAL']
                                                 != realindex]
+        self.update_realindices()
         logger.info("Removed %s realization(s) from VirtualEnsemble",
                     len(indicestodelete))
 
@@ -201,7 +270,7 @@ class VirtualEnsemble(object):
         if not keylist:  # Empty list means all keys.
             if not isinstance(excludekeys, list):
                 excludekeys = [excludekeys]
-            keys = set(self.keys()) - set(excludekeys)
+            keys = set(self.data.keys()) - set(excludekeys)
         else:
             keys = keylist
 
@@ -214,12 +283,16 @@ class VirtualEnsemble(object):
             # Look for data we should group by. This would be beneficial
             # to get from a metadata file, and not by pure guesswork.
             groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
-                                       'JOBINDEX']
+                                       'JOBINDEX', 'Zone', 'Region_index']
 
             groupby = [x for x in groupbycolumncandidates
                        if x in data.columns]
 
-            if groupby:
+            dtypes = data.dtypes.unique()
+            if not (int in dtypes or float in dtypes):
+                logger.info("No numerical data to aggregate in %s", key)
+                continue
+            if len(groupby):
                 aggobject = data.groupby(groupby)
             else:
                 aggobject = data

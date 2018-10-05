@@ -109,11 +109,18 @@ class VirtualRealization(object):
             if isinstance(data, pd.DataFrame):
                 logger.info("Dumping %s", key)
                 data.to_csv(filename, index=False)
-            if isinstance(data, dict):
+            elif isinstance(data, dict):
                 with open(filename, 'w') as fhandle:
                     for paramkey in data.keys():
                         fhandle.write(paramkey + " " +
                                       str(data[paramkey]) + "\n")
+            elif (isinstance(data, str) or isinstance(data, float) or
+                  isinstance(data, int)):
+                with open(filename, 'w') as fhandle:
+                    fhandle.write(str(data))
+            else:
+                logger.warning("Don't know how to dump %s " +
+                               "of type %s to disk", key, type(key))
 
     def from_disk(self, filesystempath):
         """Load data for a virtual realization from disk.
@@ -124,6 +131,12 @@ class VirtualRealization(object):
         WARNING: This code is really shaky. We need metafiles written
         by to_json() for robust parsing of files on disk, f.ex. are
         txt files really key-value data (dicts) or csv files?
+
+        Currently, the file format is guessed based on the contents
+        of the two first lines:
+        * CSV files contains commas, and more than one line
+        * key-value files contains two space-separated values, and at least one line
+        * scalar files contain only one item and one line
 
         Args:
             filesystempath: path to a directory that to_disk() has
@@ -141,19 +154,45 @@ class VirtualRealization(object):
                                                                    filename)))
                     logger.info('got STATUS')
                 elif filename == '__repr__':
+                    # Not implemented..
                     continue
-                elif filename[-4:] == '.txt':
-                    # This will FAIL if dataframes are collected from
-                    # txt files. Need metadata system.
-                    self.append(filename,
-                                pd.read_table(os.path.join(root, filename),
-                                              sep=r'\s+', index_col=0,
-                                              header=None)[1].to_dict())
-                    logger.info('read txt file %s', filename)
                 else:
-                    self.append(filename,
-                                pd.read_csv(os.path.join(root, filename)))
-                    logger.info('read csv file %s', filename)
+                    # GUESS scalar, key-value txt or CSV from the first
+                    # two lines. SHAKY!
+                    commafields = 0
+                    spacefields = 0
+                    linecount = 0
+                    with open(os.path.join(root, filename)) as realfile:
+                        line1 = realfile.next()
+                        commafields = len(line1.split(','))
+                        spacefields = len(line1.split())
+                        try:
+                            realfile.next()
+                            linecount = 2
+                        except StopIteration:
+                            linecount = 1
+                    print(filename, commafields, spacefields, linecount)
+                    if spacefields == 2 and commafields == 1:
+                        # key-value txt file!
+                        self.append(filename,
+                                    pd.read_table(os.path.join(root, filename),
+                                                  sep=r'\s+', index_col=0,
+                                                  header=None)[1].to_dict())
+                        logger.info('Read txt file %s', filename)
+                    elif (spacefields == 1 and linecount == 1 and
+                          commafields == 1):
+                        # scalar file
+                        value = pd.read_table(os.path.join(root, filename),
+                                              header=None,
+                                              engine='python').iloc[0, 0]
+                        logger.info('Read scalar file %s', filename)
+                        self.append(filename, value)
+                    elif (spacefields == 1 and linecount > 1 and
+                          commafields > 1):
+                        # CSV file!
+                        self.append(filename,
+                                    pd.read_csv(os.path.join(root, filename)))
+                        logger.info('Read csv file %s', filename)
 
     def to_json(self):
         """
@@ -165,7 +204,8 @@ class VirtualRealization(object):
         raise NotImplementedError
 
     def get_df(self, localpath):
-        """Access the internal datastore which contains dataframes or dicts
+        """Access the internal datastore which contains dataframes, dicts
+        or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
@@ -198,6 +238,9 @@ class VirtualRealization(object):
         elif isinstance(data, pd.Series):
             return data.to_dict()
         elif isinstance(data, dict):
+            return data
+        elif (isinstance(data, str) or isinstance(data, int) or
+              isinstance(data, float)):
             return data
         else:
             raise ValueError("BUG: Unknown datatype")
