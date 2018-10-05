@@ -291,6 +291,22 @@ def test_ensemble_ecl():
     assert df_stats['FOPR']['min'].iloc[-1] < \
         df_stats['FOPR']['max'].iloc[-1]
 
+def test_deprecation():
+    """Eclipse specific functionality"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+
+    # Load summary using deprecated function call
+    monthly = reekensemble.from_smry(time_index='monthly')
 
 def test_filter():
     if '__file__' in globals():

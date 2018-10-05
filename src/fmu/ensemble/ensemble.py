@@ -14,6 +14,7 @@ from __future__ import print_function
 import re
 import os
 import glob
+import warnings
 from collections import defaultdict
 import pandas as pd
 from ecl import EclDataType
@@ -410,6 +411,11 @@ class ScratchEnsemble(object):
             ens_ok['REAL'].append(index)
             ens_ok['OK'].append(realization.get_ok())
         return pd.DataFrame(ens_ok)
+
+    def from_smry(self, *args, **kwargs):
+        warnings.warn("from_smry() is deprecated. Use load_smry()",
+                      DeprecationWarning)
+        return self.load_smry(*args, **kwargs)
 
     def load_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
