@@ -884,7 +884,13 @@ class ScratchEnsemble(object):
         else:
             raise NotImplementedError
 
-    def load_obs_yaml(self, localpath):
+
+    def from_obs_yaml(self, localpath):
+        warnings.warn("from_obs_yaml() is deprecated. Use load_observations()",
+                      DeprecationWarning)
+        return self.load_obs_yaml(localpath)
+
+    def load_observations(self, localpath):
         self.obs = observations_parser(localpath)
         return self.obs
 
