@@ -122,6 +122,8 @@ class ScratchRealization(object):
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
             self.from_txt('parameters.txt')
 
+        logger.info('Initialized %s', abspath)
+
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
         to a VirtualRealization
@@ -352,12 +354,10 @@ class ScratchRealization(object):
         # Delete potential unwanted row
         status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                            (status.colon == 'JOBID:'))]
-        status.reset_index(inplace=True)
-        del status['colon']
-        del status['dots']
+        status = status.reset_index().drop('colon', axis=1).drop('dots', axis=1)
         # Index the jobs, this makes it possible to match with jobs.json:
         status.insert(0, 'JOBINDEX', status.index.astype(int))
-        del status['index']
+        status = status.drop('index', axis=1)
         # Calculate duration. Only Python 3.6 has time.fromisoformat().
         # Warning: Unpandaic code..
         durations = []
