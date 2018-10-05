@@ -203,6 +203,7 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smrykeys('BOGUS')) == 0
 
     # reading ensemble dataframe
+    monthly = reekensemble.from_smry(time_index='monthly')
 
     monthly = reekensemble.from_smry(column_keys=['F*'], time_index='monthly')
     assert monthly.columns[0] == 'REAL'  # Enforce order of columns.

@@ -605,7 +605,7 @@ class ScratchRealization(object):
         if not self.get_eclsum():
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
-
+        print(self)
         time_index_path = time_index
         if time_index == 'raw':
             time_index_arg = None
