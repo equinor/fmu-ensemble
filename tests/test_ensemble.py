@@ -59,7 +59,7 @@ def test_reek001():
     statusdf.to_csv('status.csv', index=False)
 
     # Parameters.txt
-    paramsdf = reekensemble.from_txt('parameters.txt')
+    paramsdf = reekensemble.load_txt('parameters.txt')
     assert len(paramsdf) == 5  # 5 realizations
     paramsdf = reekensemble.parameters  # also test as property
     paramsdf = reekensemble.get_df('parameters.txt')
@@ -77,8 +77,8 @@ def test_reek001():
     # (NaN ine one real, and non-existing in the others is the same thing)
 
     # Test loading of another txt file:
-    reekensemble.from_txt('outputs.txt')
-    assert 'NPV' in reekensemble.from_txt('outputs.txt').columns
+    reekensemble.load_txt('outputs.txt')
+    assert 'NPV' in reekensemble.load_txt('outputs.txt').columns
     # Check implicit discovery
     assert 'outputs.txt' in reekensemble.files['LOCALPATH'].values
 
@@ -90,7 +90,7 @@ def test_reek001():
 
     # CSV files
     csvpath = 'share/results/volumes/simulator_volume_fipnum.csv'
-    vol_df = reekensemble.from_csv(csvpath)
+    vol_df = reekensemble.load_csv(csvpath)
 
     # Check that we have not tainted the realization dataframes:
     assert 'REAL' not in reekensemble._realizations[0].get_df(csvpath)
@@ -152,7 +152,7 @@ def test_reek001_scalars():
     assert len(reekensemble.get_df('OK')) == 5
 
     # One of the npv.txt files contains the string "error!"
-    reekensemble.from_scalar('npv.txt')
+    reekensemble.load_scalar('npv.txt')
     npv = reekensemble.get_df('npv.txt')
     assert isinstance(npv, pd.DataFrame)
     assert 'REAL' in npv
@@ -162,12 +162,12 @@ def test_reek001_scalars():
     assert npv.dtypes['npv.txt'] == object
     # This is undesirable, can cause trouble with aggregation
     # Try again:
-    reekensemble.from_scalar('npv.txt', force_reread=True, convert_numeric=True)
+    reekensemble.load_scalar('npv.txt', force_reread=True, convert_numeric=True)
     npv = reekensemble.get_df('npv.txt')
     assert npv.dtypes['npv.txt'] == int or npv.dtypes['npv.txt'] == float
     assert len(npv) == 4  # the error should now be removed
 
-    reekensemble.from_scalar('emptyscalarfile')  # missing in real-4
+    reekensemble.load_scalar('emptyscalarfile')  # missing in real-4
     assert len(reekensemble.get_df('emptyscalarfile')) == 4
     assert 'emptyscalarfile' in reekensemble.keys()
     # Use when filter is merged.
@@ -176,11 +176,11 @@ def test_reek001_scalars():
     # If we try to read the empty files as numerical values, we should get
     # nothing back:
     with pytest.raises(ValueError):
-        reekensemble.from_scalar('emptyscalarfile', force_reread=True,
+        reekensemble.load_scalar('emptyscalarfile', force_reread=True,
                                  convert_numeric=True)
 
     with pytest.raises(ValueError):
-        reekensemble.from_scalar('nonexistingfile')
+        reekensemble.load_scalar('nonexistingfile')
 
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
@@ -203,9 +203,9 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smrykeys('BOGUS')) == 0
 
     # reading ensemble dataframe
-    monthly = reekensemble.from_smry(time_index='monthly')
+    monthly = reekensemble.load_smry(time_index='monthly')
 
-    monthly = reekensemble.from_smry(column_keys=['F*'], time_index='monthly')
+    monthly = reekensemble.load_smry(column_keys=['F*'], time_index='monthly')
     assert monthly.columns[0] == 'REAL'  # Enforce order of columns.
     assert monthly.columns[1] == 'DATE'
     assert len(monthly) == 190
@@ -216,10 +216,10 @@ def test_ensemble_ecl():
 
     # When asking the ensemble for FOPR, we also get REAL as a column
     # in return. Note that the internal stored version will be
-    # overwritten by each from_smry()
-    assert len(reekensemble.from_smry(column_keys=['FOPR']).columns) == 3
-    assert len(reekensemble.from_smry(column_keys=['FOP*']).columns) == 11
-    assert len(reekensemble.from_smry(column_keys=['FGPR',
+    # overwritten by each load_smry()
+    assert len(reekensemble.load_smry(column_keys=['FOPR']).columns) == 3
+    assert len(reekensemble.load_smry(column_keys=['FOP*']).columns) == 11
+    assert len(reekensemble.load_smry(column_keys=['FGPR',
                                                    'FOP*']).columns) == 12
 
     # Check that there is now a cached version with raw dates:
@@ -228,7 +228,7 @@ def test_ensemble_ecl():
 
     # If you get 3205 here, it means that you are using the union of
     # raw dates from all realizations, which is not correct
-    assert len(reekensemble.from_smry(column_keys=['FGPR',
+    assert len(reekensemble.load_smry(column_keys=['FGPR',
                                                    'FOP*']).index) == 1700
 
     # Date list handling:
@@ -241,16 +241,16 @@ def test_ensemble_ecl():
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
-    assert len(reekensemble.from_smry(column_keys=['FOPT'],
+    assert len(reekensemble.load_smry(column_keys=['FOPT'],
                                       time_index=yearly)) == 20
     # NB: This is cached in unsmry-custom.csv, not unsmry-yearly!
     # This usage is discouraged. Use 'yearly' in such cases.
 
     # Check that we can shortcut get_smry_dates:
-    assert len(reekensemble.from_smry(column_keys=['FOPT'],
+    assert len(reekensemble.load_smry(column_keys=['FOPT'],
                                       time_index='yearly')) == 25
 
-    assert len(reekensemble.from_smry(column_keys=['FOPR'],
+    assert len(reekensemble.load_smry(column_keys=['FOPR'],
                                       time_index='last')) == 5
     assert isinstance(reekensemble.get_df('unsmry-last.csv'), pd.DataFrame)
 
@@ -363,7 +363,7 @@ def test_filter():
     assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
                                    columncontains='ECLIPSE100_2010.2',
                                    inplace=False)) == 0
-    reekensemble.from_smry()
+    reekensemble.load_smry()
     assert len(reekensemble.filter('unsmry-raw')) == 5
     assert len(reekensemble.filter('unsmry-raw', column='FOPT')) == 5
     assert len(reekensemble.filter('unsmry-raw', column='FOOBAR',
@@ -425,7 +425,7 @@ def test_observation_import():
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
 
-    obs = reekensemble.from_obs_yaml(testdir +
+    obs = reekensemble.load_obs_yaml(testdir +
                                      '/data/testensemble-reek001/' +
                                      '/share/observations/observations.yaml')
 
@@ -461,7 +461,7 @@ def test_filedescriptors():
                                    'realization-*/iter-0')
 
     # fd_count2 = len(os.listdir(fd_dir))
-    reekensemble.from_smry()
+    reekensemble.load_smry()
     # fd_count3 = len(os.listdir(fd_dir))
     del reekensemble
     fd_count4 = len(os.listdir(fd_dir))

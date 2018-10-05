@@ -34,19 +34,19 @@ def test_single_realization():
     assert isinstance(real.parameters['RMS_SEED'], int)
     assert real.parameters['RMS_SEED'] == 422851785
     assert isinstance(real.parameters['MULTFLT_F1'], float)
-    assert isinstance(real.from_txt('parameters.txt',
+    assert isinstance(real.load_txt('parameters.txt',
                                     convert_numeric=False,
                                     force_reread=True)['RMS_SEED'],
                       str)
-    # We have rerun from_txt on parameters, but file count
+    # We have rerun load_txt on parameters, but file count
     # should not increase:
     assert len(real.files) == 4
 
     with pytest.raises(IOError):
-        real.from_txt('nonexistingfile.txt')
+        real.load_txt('nonexistingfile.txt')
 
     # Load more data from text files:
-    assert 'NPV' in real.from_txt('outputs.txt')
+    assert 'NPV' in real.load_txt('outputs.txt')
     assert len(real.files) == 5
     assert 'outputs.txt' in real.data
     assert 'top_structure' in real.data['outputs.txt']
@@ -59,7 +59,7 @@ def test_single_realization():
     assert int(status.loc[49, 'DURATION']) == 141
 
     # CSV file loading
-    vol_df = real.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    vol_df = real.load_csv('share/results/volumes/simulator_volume_fipnum.csv')
     assert len(real.files) == 6
     assert isinstance(vol_df, pd.DataFrame)
     assert vol_df['STOIIP_TOTAL'].sum() > 0
@@ -74,13 +74,13 @@ def test_single_realization():
     assert isinstance(real['OK'], str)
 
     # Check that we can "reimport" the OK file
-    real.from_scalar('OK', force_reread=True)
+    real.load_scalar('OK', force_reread=True)
     assert 'OK' in real.keys()  # Imported in __init__
     assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
     assert isinstance(real['OK'], str)
     assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
 
-    real.from_scalar('npv.txt')
+    real.load_scalar('npv.txt')
     assert real.get_df('npv.txt') == 3444
     assert real['npv.txt'] == 3444
     assert isinstance(real.data['npv.txt'], int)
@@ -88,7 +88,7 @@ def test_single_realization():
     assert real.files[real.files.LOCALPATH == 'npv.txt']['FILETYPE'].values[0]\
         == 'txt'
 
-    real.from_scalar('emptyscalarfile')
+    real.load_scalar('emptyscalarfile')
     # Activate this test when filter() is merged:
     # assert real.contains('emptyfile')
     assert 'emptyscalarfile' in real.data
@@ -96,7 +96,7 @@ def test_single_realization():
     assert 'emptyscalarfile' in real.files.LOCALPATH.values
 
     with pytest.raises(IOError):
-        real.from_scalar('notexisting.txt')
+        real.load_scalar('notexisting.txt')
 
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
@@ -126,7 +126,7 @@ def test_single_realization():
     # At realization level, wrong filenames should throw exceptions,
     # at ensemble level it is fine.
     with pytest.raises(IOError):
-        real.from_csv('bogus.csv')
+        real.load_csv('bogus.csv')
 
 
 def test_datenormalization():
@@ -162,14 +162,14 @@ def test_singlereal_ecl():
 
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
-    real.from_smry().to_csv('real0smry.csv', index=False)
-    assert real.from_smry().shape == (378, 474)
+    real.load_smry().to_csv('real0smry.csv', index=False)
+    assert real.load_smry().shape == (378, 474)
     # 378 dates, 470 columns + DATE column
 
-    assert real.from_smry(column_keys=['FOP*'])['FOPT'].max() > 6000000
+    assert real.load_smry(column_keys=['FOP*'])['FOPT'].max() > 6000000
     assert real.get_smryvalues('FOPT')['FOPT'].max() > 6000000
 
-    # get_smry() should be analogue to from_smry(), but it should
+    # get_smry() should be analogue to load_smry(), but it should
     # not modify the internalized dataframes!
     internalized_df = real['unsmry-raw']
     df = real.get_smry(column_keys=['G*'])
@@ -243,8 +243,8 @@ def test_filesystem_changes():
     # This should return None
     assert real.get_smry_dates() is None
     # This should return empty dataframe:
-    assert isinstance(real.from_smry(), pd.DataFrame)
-    assert len(real.from_smry()) == 0
+    assert isinstance(real.load_smry(), pd.DataFrame)
+    assert len(real.load_smry()) == 0
 
     assert isinstance(real.get_smry(), pd.DataFrame)
     assert len(real.get_smry()) == 0
@@ -258,8 +258,8 @@ def test_filesystem_changes():
     # This should return None
     assert real.get_smry_dates() is None
     # This should return empty dataframe:
-    assert isinstance(real.from_smry(), pd.DataFrame)
-    assert len(real.from_smry()) == 0
+    assert isinstance(real.load_smry(), pd.DataFrame)
+    assert len(real.load_smry()) == 0
 
     # Reinstate summary data:
     shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY-FOOO',
@@ -305,15 +305,15 @@ def test_filesystem_changes():
                 realdir + '/eclipsedir')
     real = ensemble.ScratchRealization(realdir)
 
-    # from_smry() is now the same as no UNSMRY file found,
+    # load_smry() is now the same as no UNSMRY file found,
     # an empty dataframe (and there would be some logging)
-    assert len(real.from_smry()) == 0
+    assert len(real.load_smry()) == 0
 
-    # Now discover the UNSMRY file explicitly, then from_smry()
+    # Now discover the UNSMRY file explicitly, then load_smry()
     # should work.
     real.find_files('eclipsedir/model/*.UNSMRY')
     # Non-empty dataframe:
-    assert len(real.from_smry()) > 0
+    assert len(real.load_smry()) > 0
 
     # Clean up when finished. This often fails on network drives..
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
@@ -337,7 +337,7 @@ def test_drop():
     # This will go unnoticed
     assert len(real.parameters) == parametercount - 3
 
-    real.from_smry(column_keys='FOPT', time_index='monthly')
+    real.load_smry(column_keys='FOPT', time_index='monthly')
     real.get_df('unsmry-monthly').to_csv('foo.csv', index=False)
     datecount = len(real.get_df('unsmry-monthly'))
     real.drop('unsmry-monthly', rowcontains='2000-01-01')

@@ -141,7 +141,7 @@ class EnsembleCombination(object):
         """
         Loads the Eclipse summary data directly from the underlying
         ensemble data, independent of whether you have issued
-        from_smry() first in the ensembles.
+        load_smry() first in the ensembles.
 
         If you involve VirtualEnsembles in this operation, this
         this will fail.
