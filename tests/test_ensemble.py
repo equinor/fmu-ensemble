@@ -441,9 +441,10 @@ def test_observation_import():
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
 
-    obs = reekensemble.load_obs_yaml(testdir +
-                                     '/data/testensemble-reek001/' +
-                                     '/share/observations/observations.yaml')
+    obs = reekensemble.load_observations(testdir +
+                                         '/data/testensemble-reek001/' +
+                                         '/share/observations/' +
+                                         'observations.yaml')
 
     assert len(obs.keys()) == 2
     df_mismatch = reekensemble.ensemble_mismatch()
@@ -500,5 +501,5 @@ def test_read_eclgrid():
     grid_df = reekensemble.get_eclgrid(['PERMX', 'FLOWATI+', 'FLOWATJ+'],
                                        report=4)
 
-    assert len(grid_df.columns) == 14
+    assert len(grid_df.columns) == 35
     assert len(grid_df['i']) == 35840

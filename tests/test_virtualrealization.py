@@ -82,11 +82,11 @@ def test_virtual_todisk():
     with pytest.raises(IOError):
         vreal.to_disk('.')
 
-    vreal.to_disk('virtreal', delete=True)
-    assert os.path.exists('virtreal/parameters.txt')
-    assert os.path.exists('virtreal/STATUS')
-    assert os.path.exists('virtreal/share/results/tables/unsmry-yearly.csv')
-    assert os.path.exists('virtreal/npv.txt')
+    vreal.to_disk('virtreal1', delete=True)
+    assert os.path.exists('virtreal1/parameters.txt')
+    assert os.path.exists('virtreal1/STATUS')
+    assert os.path.exists('virtreal1/share/results/tables/unsmry-yearly.csv')
+    assert os.path.exists('virtreal1/npv.txt')
 
 
 def test_virtual_fromdisk():
@@ -101,10 +101,11 @@ def test_virtual_fromdisk():
     real = ensemble.ScratchRealization(realdir)
     real.load_smry(time_index='yearly', column_keys=['F*'])
     real.load_scalar('npv.txt')
-    real.to_virtual().to_disk('virtreal', delete=True)
+    real.to_virtual().to_disk('virtreal2', delete=True)
     #
     vreal = ensemble.VirtualRealization('foo')
-    vreal.load_disk('virtreal')
+    vreal.load_disk('virtreal2')
+
     for key in vreal.keys():
         if isinstance(real.get_df(key), pd.DataFrame) or \
            isinstance(real.get_df(key), dict):

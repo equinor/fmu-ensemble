@@ -224,7 +224,7 @@ def test_filesystem_changes():
     tmpensname = ".deleteme_ens"
     # Clean up earlier failed runs:
     if os.path.exists(datadir + '/' + tmpensname):
-        shutil.rmtree(datadir + '/' + tmpensname)
+        shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
     os.mkdir(datadir + '/' + tmpensname)
     shutil.copytree(datadir + '/testensemble-reek001/realization-0',
                     datadir + '/' + tmpensname + '/realization-0')
@@ -298,6 +298,31 @@ def test_filesystem_changes():
     assert len(real.get_df('STATUS')) == 0
     # This demonstrates we can fool the Realization object, and
     # should perhaps leads to relaxation of the requirement..
+
+    # Try with a STATUS file with error message on first job
+    # the situation where there is one successful job.
+    fhandle = open(realdir + '/STATUS', 'w')
+    fhandle.write("""Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+LSF JOBID: not running LSF
+COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
+""")
+    fhandle.close()
+    real = ensemble.ScratchRealization(realdir)
+    # When issue 37 is resolved, update this to 1 and check the
+    # error message is picked up.
+    assert len(real.get_df('STATUS')) == 1
+    fhandle = open(realdir + '/STATUS', 'w')
+    fhandle.write("""Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+LSF JOBID: not running LSF
+COPY_FILE                       : 20:58:55 .... 20:58:57
+COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
+""")
+    fhandle.close()
+    real = ensemble.ScratchRealization(realdir)
+    assert len(real.get_df('STATUS')) == 2
+    # Check that we have the error string picked up:
+    assert real.get_df('STATUS')['errorstring'].dropna().values[0] == \
+        "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1"
 
     # Check that we can move the Eclipse files to another place
     # in the realization dir and still load summary data:

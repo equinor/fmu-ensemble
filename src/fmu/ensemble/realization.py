@@ -122,6 +122,8 @@ class ScratchRealization(object):
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
             self.load_txt('parameters.txt')
 
+        logger.info('Initialized %s', abspath)
+
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
         to a VirtualRealization
@@ -342,22 +344,42 @@ class ScratchRealization(object):
             # This should not happen as long as __init__ requires STATUS
             # to be present.
             return pd.DataFrame()  # will be empty
+        errorcolumns = ['error' + str(x) for x in range(0,10)]
         status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
                                header=None,
                                names=['FORWARD_MODEL', 'colon',
-                                      'STARTTIME', 'dots', 'ENDTIME'],
+                                      'STARTTIME', 'dots', 'ENDTIME'] +
+                               errorcolumns,
+                               dtype=str,
                                engine='python',
                                error_bad_lines=False,
                                warn_bad_lines=True)
+
+        # dtype str messes up a little bit:
+        status.replace('None', '', inplace=True)
+        errorjobs = status[errorcolumns[0]] != ''
+
+        # Merge any error strings:
+        status.loc[errorjobs, 'errorstring'] \
+            = status.loc[errorjobs, errorcolumns].astype(str)\
+                                                 .apply(' '.join, axis=1) \
+                                                 .apply(str.strip)
+        status.drop(errorcolumns, axis=1, inplace=True)
+
         # Delete potential unwanted row
         status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                            (status.colon == 'JOBID:'))]
-        status.reset_index(inplace=True)
-        del status['colon']
-        del status['dots']
+
+        if len(status) == 0:
+            logger.warn('No parseable data in STATUS')
+            self.data['STATUS'] = status
+            return status
+
+        status = status.reset_index().drop('colon', axis=1).drop('dots', axis=1)
+
         # Index the jobs, this makes it possible to match with jobs.json:
         status.insert(0, 'JOBINDEX', status.index.astype(int))
-        del status['index']
+        status = status.drop('index', axis=1)
         # Calculate duration. Only Python 3.6 has time.fromisoformat().
         # Warning: Unpandaic code..
         durations = []
@@ -865,14 +887,6 @@ class ScratchRealization(object):
         result = RealizationCombination(ref=self, scale=float(other))
         return result
 
-    def get_ok(self):
-        """Tell if the realization has an OK file
-
-        This file is written by ERT when all FORWARD_MODELs
-        have completed successfully"""
-        okfile = os.path.join(self._origpath, 'OK')
-        return os.path.exists(okfile)
-
     def realization_mismatch(self, obs):
         return mismatch(self, obs)
 
@@ -920,6 +934,26 @@ class ScratchRealization(object):
             return EclFile(unrst_filename,
                            flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclunrst
+
+    def get_grid_index(self, active_only):
+        """
+        Return the grid index in a pandas dataframe.
+        """
+        return self.get_grid().export_index(active_only=active_only)
+
+    def get_grid_corners(self, grid_index):
+        corners = self.get_grid().export_corners(grid_index)
+        columns = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'x3', 'y3', 'z3', 'x4',
+                   'y4', 'z4', 'x5', 'y5', 'z5', 'x6', 'y6', 'z6', 'x7', 'y7',
+                   'z7', 'x8', 'y8', 'z8']
+
+        return pd.DataFrame(data=corners,
+                            columns=columns)
+
+    def get_grid_centre(self, grid_index):
+        grid_cell_centre = self.get_grid().export_position(grid_index)
+        return pd.DataFrame(data=grid_cell_centre,
+                            columns=['cell_x', 'cell_y', 'cell_z'])
 
     def get_grid(self):
         """
@@ -983,55 +1017,6 @@ class ScratchRealization(object):
         """
         prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
         return prop_values
-
-    def _get_cell(self, ijk):
-        """
-        :parameter ijk: Triple of ijk coordinates of a cell in the grid.
-        :returns: A dictionary of the upper corner points and depth of the cell
-            at ijk.
-        """
-        points = []
-        for idx in [4, 5, 7, 6]:
-            x, y, _ = self.get_grid().get_cell_corner(idx, ijk=ijk)
-            points.append((x, y))
-        i, j, k = ijk
-        return {'points': points,
-                'i': i,
-                'j': j,
-                'k': k,
-                'depth': self.get_grid().get_xyz(ijk=ijk)[2]}
-
-    def _is_active_cell(self, cell):
-        """
-        :returns: true if the given cell is an active cell.
-        """
-        grid = self.get_grid()
-        ijk = (cell['i'], cell['j'], cell['k'])
-        return grid.active(ijk=ijk)
-
-    def cell_layers(self, active_only=False):
-        """
-        :param active_only: `optional parameter`. Only return cells
-            active in this realization.
-        :returns: A list of layers. Each layer is a list of cells. Each
-            cell is a dictionary containing the coordinates of its four upper
-            points in that layer and its depth.
-        ::
-            realization = Realization('reek/ECLIPSE')
-            cell_layers = realization.ecl_grid_cell_layers()
-            # cell_layers[layer][cell]['points'] = [(x1,y1), (x2, y2), ...]
-            # cell_layers[layer][cell]['depth']  = 3.14
-        """
-        all_cells = [[self._get_cell((i, j, k))
-                      for i in range(self.get_grid().get_nx())
-                      for j in range(self.get_grid().get_ny())]
-                     for k in range(self.get_grid().get_nz())]
-
-        if active_only:
-            return [filter(self._is_active_cell, layer)
-                    for layer in all_cells]
-
-        return all_cells
 
 
 def normalize_dates(start_date, end_date, freq):
