@@ -871,14 +871,13 @@ class ScratchRealization(object):
         """
         return self.get_unrst().report_dates
 
-    def get_global_init_keyword(self, prop, grid_index):
+    def get_global_init_keyword(self, prop):
         """
         :param prop: A name of a keyword in the realization's init file.
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        prop = self.get_init()[prop][0]
-        return self.get_grid().export_data(grid_index, prop)
+        return self.get_init()[prop][0].scatter_copy(self.actnum)
 
     def get_global_unrst_keyword(self, prop, grid_index, report):
         """
@@ -886,63 +885,8 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        prop = self.get_unrst()[prop][0][report]
-        print(prop)
-        prop_values = self.get_grid().export_data(grid_index, prop)
-        #prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
+        prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
         return prop_values
-
-    def _get_cell(self, ijk):
-        """
-        :parameter ijk: Triple of ijk coordinates of a cell in the grid.
-        :returns: A dictionary of the upper corner points and depth of the cell
-            at ijk.
-        """
-        points = []
-        for idx in [4, 5, 7, 6]:
-            x, y, _ = self.get_grid().get_cell_corner(idx, ijk=ijk)
-            points.append((x, y))
-        i, j, k = ijk
-        return {'points': points,
-                'i': i,
-                'j': j,
-                'k': k,
-                'depth': self.get_grid().get_xyz(ijk=ijk)[2]}
-
-    def _is_active_cell(self, cell):
-        """
-        :returns: true if the given cell is an active cell.
-        """
-        grid = self._eclgrid
-        ijk = (cell['i'], cell['j'], cell['k'])
-        return grid.active(ijk=ijk)
-
-    def cell_layers(self, active_only=False):
-        """
-        :param active_only: `optional parameter`. Only return cells
-            active in this realization.
-        :returns: A list of layers. Each layer is a list of cells. Each
-            cell is a dictionary containing the coordinates of its four upper
-            points in that layer and its depth.
-        ::
-            realization = Realization('reek/ECLIPSE')
-            cell_layers = realization.ecl_grid_cell_layers()
-            # cell_layers[layer][cell]['points'] = [(x1,y1), (x2, y2), ...]
-            # cell_layers[layer][cell]['depth']  = 3.14
-        """
-        if not self._eclgrid:
-            self.get_grid()
-
-        all_cells = [[self._get_cell((i, j, k))
-                      for i in range(self.get_grid().get_nx())
-                      for j in range(self.get_grid().get_ny())]
-                     for k in range(self.get_grid().get_nz())]
-
-        if active_only:
-            return [filter(self._is_active_cell, layer)
-                    for layer in all_cells]
-
-        return all_cells
 
 
 def normalize_dates(start_date, end_date, freq):
