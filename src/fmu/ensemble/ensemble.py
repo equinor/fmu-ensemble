@@ -14,6 +14,7 @@ from __future__ import print_function
 import re
 import os
 import glob
+import numpy as np
 from collections import defaultdict
 import pandas as pd
 from ecl import EclDataType
@@ -25,7 +26,7 @@ from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .observation_parser import observations_parser
-
+from .realization import parse_number
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -79,8 +80,12 @@ class ScratchEnsemble(object):
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
-        logger.info("Loading ensemble from dirs: %s",
-                    " ".join(globbedpaths))
+        if not globbedpaths:
+            logger.warning("No files found, or no access")
+            return
+        else:
+            logger.info("Loading ensemble from dirs: %s",
+                        " ".join(globbedpaths))
 
         # Search and locate minimal set of files
         # representing the realizations.
@@ -88,14 +93,6 @@ class ScratchEnsemble(object):
 
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
-
-        # remove failed realization from the ensemble
-        list_of_failed = self.get_ok().query("OK == False")['REAL'].values
-        if list_of_failed.size:
-            print ('The following failed realizations and were removed from ' +
-                   self._name)
-            print (list_of_failed)
-            self.remove_realizations(list_of_failed)
 
     def __getitem__(self, realizationindex):
         """Get one of the realizations.
@@ -231,7 +228,7 @@ class ScratchEnsemble(object):
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
-
+        vens.update_realindices()
         return vens
 
     @property
@@ -239,6 +236,20 @@ class ScratchEnsemble(object):
         """Getter for get_parameters(convert_numeric=True)
         """
         return self.from_txt('parameters.txt')
+
+    def from_scalar(self, localpath, convert_numeric=False,
+                    force_reread=False):
+        """Parse a single value from a file.
+
+        The value can be a string or a number.
+
+        Empty files are treated as existing, with an empty string as
+        the value, different from non-existing files.
+
+        Parsing is performed individually in each realization
+        """
+        return self.from_file(localpath, 'scalar',
+                              convert_numeric, force_reread)
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -248,7 +259,7 @@ class ScratchEnsemble(object):
         <key> <value>
         in each line.
 
-        Parsing is performed individually in eacn realization
+        Parsing is performed individually in each realization
         """
         return self.from_file(localpath, 'txt',
                               convert_numeric, force_reread)
@@ -261,7 +272,7 @@ class ScratchEnsemble(object):
         return self.from_file(localpath, 'csv',
                               convert_numeric, force_reread)
 
-    def from_file(self, localpath, fformat, convert_numeric=True,
+    def from_file(self, localpath, fformat, convert_numeric=False,
                   force_reread=False):
         """Function for calling from_file() in every realization
 
@@ -273,7 +284,8 @@ class ScratchEnsemble(object):
                 and 'csv'.
             convert_numeric: If set to True, numerical columns
                 will be searched for and have their dtype set
-                to integers or floats.
+                to integers or floats. If scalars, only numerical
+                data will be loaded.
             force_reread: Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
@@ -351,25 +363,33 @@ class ScratchEnsemble(object):
         return list(result)
 
     def get_df(self, localpath):
-        """Load data from each realization and concatenate vertically
+        """Load data from each realization and aggregate vertically
 
-        Each row is tagged by the realization index.
+        Each row is tagged by the realization index in the column 'REAL'
 
         Args:
-            localpath: string, filename local to realization
+            localpath: string, filename local to the realizations
         Returns:
            dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
-               Empty dataframe if no data lis found
+               Empty dataframe if no data is found
 
         """
         dflist = {}
         for index, realization in self._realizations.items():
             try:
-                dframe = realization.get_df(localpath)
-                if isinstance(dframe, dict):
-                    dframe = pd.DataFrame(index=[1], data=dframe)
-                dflist[index] = dframe
+                data = realization.get_df(localpath)
+                if isinstance(data, dict):
+                    data = pd.DataFrame(index=[1], data=data)
+                elif isinstance(data, str) or isinstance(data, int) \
+                     or isinstance(data, float):
+                    data = pd.DataFrame(index=[1], columns=[localpath],
+                                        data=data)
+                if isinstance(data, pd.DataFrame):
+                    dflist[index] = data
+                else:
+                    raise ValueError("Unkown datatype returned " +
+                                     "from realization")
             except ValueError:
                 # No logging here, those error messages
                 # should have appeared at construction using from_*()
@@ -437,6 +457,60 @@ class ScratchEnsemble(object):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry-' +
                            time_index + '.csv')
+
+    def filter(self, localpath, **kwargs):
+        """Filter realizations or data within realizations
+
+        Calling this function can return a copy with fewer
+        realizations, or remove realizations from the current object.
+
+        Typical usage is to require that parameters.txt is present, or
+        that the OK file is present.
+
+        It is also possible to require a certain scalar to have a specific
+        value, for example filtering on a specific sensitivity case.
+
+        Args:
+            localpath: string pointing to the data for which the filtering
+                applies. If no other arguments, only realizations containing
+                this data key is kept.
+            key: A certain key within a realization dictionary that is
+                required to be present. If a value is also provided, this
+                key must be equal to this value
+            value: The value a certain key must equal. Floating point
+                comparisons are not robust.
+            inplace: Boolean indicating if the current object should have its
+                realizations stripped, or if a copy should be returned.
+                Default true.
+
+         Return:
+            If inplace=True, then nothing will be returned.
+            If inplace=False, a VirtualEnsemble fulfilling the filter
+            will be returned.
+        """
+        if 'inplace' not in kwargs:
+            kwargs['inplace'] = True
+
+        deletethese = []
+        keepthese = []
+        for realidx, realization in self._realizations.items():
+            if kwargs['inplace']:
+                if not realization.contains(localpath, **kwargs):
+                    deletethese.append(realidx)
+            else:
+                if realization.contains(localpath, **kwargs):
+                    keepthese.append(realidx)
+
+        if kwargs['inplace']:
+            logger.info("Removing realizations %s", deletethese)
+            if deletethese:
+                self.remove_realizations(deletethese)
+            return self
+        else:
+            filtered = VirtualEnsemble(self.name + " filtered")
+            for realidx in keepthese:
+                filtered.add_realization(self._realizations[realidx])
+            return filtered
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
@@ -543,7 +617,7 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
 
         data = {}  # dict to be returned
-        for key in column_keys:
+        for key in dframe.columns.drop('DATE').drop('REAL'):
             dates = dframe.groupby('DATE').first().index.values
             name = [key] * len(dates)
             mean = dframe.groupby('DATE').mean()[key].values
@@ -639,6 +713,8 @@ class ScratchEnsemble(object):
                 keylist is empty, otherwise ignored
         Returns:
             VirtualRealization. Its name will include the aggregation operator
+
+        WARNING: This code is duplicated in virtualensemble.py
         """
         quantilematcher = re.compile(r'p(\d\d)')
         supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
@@ -688,6 +764,10 @@ class ScratchEnsemble(object):
             if key != 'STATUS':  # STATUS dataframe contains too many strings..
                 groupby = list(set(groupby + stringcolumns))
 
+            dtypes = data.dtypes.unique()
+            if not (int in dtypes or float in dtypes):
+                logger.info("No numerical data to aggregate in %s", key)
+                continue
             if len(groupby):
                 logger.info("Grouping %s by %s", key, groupby)
                 aggobject = data.groupby(groupby)
@@ -703,9 +783,14 @@ class ScratchEnsemble(object):
                 # the docstring.
                 aggregated = aggobject.agg(aggregation)
 
-            if len(groupby):
+            if groupby:
                 aggregated.reset_index(inplace=True)
 
+            # We have to recognize scalars.
+            if len(aggregated) == 1 and aggregated.index.values[0] == key:
+                aggregated = parse_number(aggregated.values[0])
+                print(aggregated)
+                print(type(aggregated))
             vreal.append(key, aggregated)
         return vreal
 
@@ -830,18 +915,21 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
-        if not self._global_grid:
-            self._global_grid = self.cell_layers(active_only=active_only)
-
-        grid = self._global_grid
-        grid = self._unwrap_grid(grid)
+        ref = self._realizations.values()[0]
+        grid_index = ref.get_grid_index(active_only=active_only)
+        corners = ref.get_grid_corners(grid_index)
+        centre = ref.get_grid_centre(grid_index)
+        dframe = grid_index.reset_index().join(corners).join(centre)
+        dframe['realizations_active'] = self.global_active.numpy_copy()
         for prop in props:
             print('Reading the grid property: '+prop)
             if prop in self.init_keys:
-                grid[prop] = self.get_init(prop, agg=agg)
+                dframe[prop] = self.get_init(prop, agg=agg)
             if prop in self.unrst_keys:
-                grid[prop] = self.get_unrst(prop, agg=agg, report=report)
-        return pd.DataFrame(grid)
+                dframe[prop] = self.get_unrst(prop, agg=agg, report=report)
+        dframe.drop('index', axis=1, inplace=True)
+        dframe.set_index(['i', 'j', 'k', 'active'])
+        return dframe
 
     @property
     def global_active(self):
@@ -870,40 +958,14 @@ class ScratchEnsemble(object):
             self._global_size = self._realizations.values()[0].global_size
         return self._global_size
 
-    @property
-    def grid(self):
+    def _get_grid_index(self, active=True):
         """
         :returns: The grid of the ensemble, see
             :func:`fmu.ensemble.Realization.get_grid()`.
         """
         if not self._realizations:
             return None
-        return self._realizations.values()[0].get_grid()
-
-    def _is_active_cell(self, cell):
-        """
-        :returns: true if the given cell is an active cell
-            in all self._realizations.
-        """
-        grid = self.grid
-        active = self.global_active
-        ijk = (cell['i'], cell['j'], cell['k'])
-        return active[grid.get_global_index(ijk=ijk)] > 0
-
-    def cell_layers(self, active_only=False):
-        """
-        :param active_only: `optional parameter`. Only return cells
-            active in at least one realization.
-        :returns: All cells in the grid, see
-                see :func:`fmu.ensemble.Realization.cell_layers()`.
-        """
-        if not self._realizations:
-            return None
-        all_cells = self._realizations.values()[0].cell_layers(active_only=active_only)
-        if active_only:
-            return [filter(self._is_active_cell, layer) for layer in all_cells]
-
-        return all_cells
+        return self._realizations.values()[0].get_grid_index(active=active)
 
     @property
     def init_keys(self):
@@ -970,7 +1032,8 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
 
-        keywords = [realization.get_global_unrst_keyword(prop, report)
+        keywords = [realization.get_global_unrst_keyword(prop,
+                                                         report)
                     for _, realization in self._realizations.iteritems()]
 
         if agg == 'mean':
@@ -985,61 +1048,38 @@ class ScratchEnsemble(object):
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def _keyword_mean(self, name, keywords, num_realizations):
+    def _keyword_mean(self, name, keywords, global_active):
         """
         :returns: Mean values of keywords.
         :param name: Name of resulting Keyword.
         :param keywords: List of keywords.
-        :param num_realizations: A EclKW with, for each cell, The number of
+        :param global_active: A EclKW with, for each cell, The number of
             realizations where the cell is active.
         """
-        mean = EclKW(name, len(num_realizations), EclDataType.ECL_FLOAT)
+        mean = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
         for keyword in keywords:
             mean += keyword
-        mean.safe_div(num_realizations)
+        mean.safe_div(global_active)
         return mean
 
-    def _keyword_std_dev(self, name, keywords, num_realizations, mean):
+    def _keyword_std_dev(self, name, keywords, global_active, mean):
         """
         :returns: Standard deviation of keywords.
         :param name: Name of resulting Keyword.
         :param keywords: List of pairs of keywords and list of active cell
-        :param num_realizations: A EclKW with, for each cell, The number of
+        :param global_active: A EclKW with, for each cell, The number of
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
-        std_dev = EclKW(name, len(num_realizations), EclDataType.ECL_FLOAT)
+        std_dev = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
         for keyword in keywords:
             std_dev.add_squared(keyword - mean)
 
-        std_dev.safe_div(num_realizations)
+        std_dev.safe_div(global_active)
         std_dev.isqrt()
         return std_dev
 
-    def _unwrap_grid(self, data):
-        """
-        code from fmu_postprocessing returns grid rows and coloumns,
-        per grid layer. This function unwraps grid points to make a
-        dictionary of lists, where each list corresponds to
-        i,j,k,x0,y0,x1,y1,x2,y2,x3,y3
-        """
-        grid = defaultdict(list)
-        for layer in data:
-            for cell in layer:
-                grid['i'].append(cell['i'])
-                grid['j'].append(cell['j'])
-                grid['k'].append(cell['k'])
-                points = cell['points']
-                grid['x0'].append(points[0][0])
-                grid['y0'].append(points[0][1])
-                grid['x1'].append(points[1][0])
-                grid['y1'].append(points[1][1])
-                grid['x2'].append(points[2][0])
-                grid['y2'].append(points[2][1])
-                grid['x3'].append(points[3][0])
-                grid['y3'].append(points[3][1])
 
-        return grid
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns

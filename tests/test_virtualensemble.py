@@ -32,6 +32,8 @@ def test_virtualensemble():
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
     reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.from_scalar('npv.txt')
+    reekensemble.from_txt('outputs.txt')
     vens = reekensemble.to_virtual()
 
     # Check that we have data for 5 realizations
@@ -45,6 +47,11 @@ def test_virtualensemble():
         'share/results/tables/unsmry-yearly.csv'
     assert vens.shortcut2path('unsmry-yearly.csv') == \
         'share/results/tables/unsmry-yearly.csv'
+
+    assert 'npv.txt' in vens.keys()
+    assert len(vens['npv.txt']) == 5  # includes the 'error!' string in real4
+    assert 'outputs.txt' in vens.keys()
+    assert len(vens['outputs.txt']) == 4
 
     # Check that get_smry() works
     fopt = vens.get_smry(column_keys=['FOPT'], time_index='yearly')
@@ -81,9 +88,11 @@ def test_virtualensemble():
     # Test realization removal:
     vens.remove_realizations(3)
     assert len(vens.parameters['REAL'].unique()) == 4
+    assert len(vens) == 4
     vens.remove_realizations(3)  # This will give warning
     assert len(vens.parameters['REAL'].unique()) == 4
     assert len(vens['unsmry-yearly']['REAL'].unique()) == 4
+    assert len(vens) == 4
 
     # Test data removal:
     vens.remove_data('parameters.txt')

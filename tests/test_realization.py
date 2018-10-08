@@ -68,6 +68,36 @@ def test_single_realization():
     vol_df2 = real.get_df('share/results/volumes/simulator_volume_fipnum.csv')
     assert vol_df2['STOIIP_TOTAL'].sum() > 0
 
+    # Test scalar import
+    assert 'OK' in real.keys()  # Imported in __init__
+    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert isinstance(real['OK'], str)
+
+    # Check that we can "reimport" the OK file
+    real.from_scalar('OK', force_reread=True)
+    assert 'OK' in real.keys()  # Imported in __init__
+    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert isinstance(real['OK'], str)
+    assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
+
+    real.from_scalar('npv.txt')
+    assert real.get_df('npv.txt') == 3444
+    assert real['npv.txt'] == 3444
+    assert isinstance(real.data['npv.txt'], int)
+    assert 'npv.txt' in real.files.LOCALPATH.values
+    assert real.files[real.files.LOCALPATH == 'npv.txt']['FILETYPE'].values[0]\
+        == 'txt'
+
+    real.from_scalar('emptyscalarfile')
+    # Activate this test when filter() is merged:
+    # assert real.contains('emptyfile')
+    assert 'emptyscalarfile' in real.data
+    assert isinstance(real['emptyscalarfile'], str)
+    assert 'emptyscalarfile' in real.files.LOCALPATH.values
+
+    with pytest.raises(IOError):
+        real.from_scalar('notexisting.txt')
+
     # Test internal storage:
     localpath = 'share/results/volumes/simulator_volume_fipnum.csv'
     assert localpath in real.data
@@ -268,6 +298,31 @@ def test_filesystem_changes():
     assert len(real.get_df('STATUS')) == 0
     # This demonstrates we can fool the Realization object, and
     # should perhaps leads to relaxation of the requirement..
+
+    # Try with a STATUS file with error message on first job
+    # the situation where there is one successful job.
+    fhandle = open(realdir + '/STATUS', 'w')
+    fhandle.write("""Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+LSF JOBID: not running LSF
+COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
+""")
+    fhandle.close()
+    real = ensemble.ScratchRealization(realdir)
+    # When issue 37 is resolved, update this to 1 and check the
+    # error message is picked up.
+    assert len(real.get_df('STATUS')) == 1
+    fhandle = open(realdir + '/STATUS', 'w')
+    fhandle.write("""Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+LSF JOBID: not running LSF
+COPY_FILE                       : 20:58:55 .... 20:58:57
+COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
+""")
+    fhandle.close()
+    real = ensemble.ScratchRealization(realdir)
+    assert len(real.get_df('STATUS')) == 2
+    # Check that we have the error string picked up:
+    assert real.get_df('STATUS')['errorstring'].dropna().values[0] == \
+        "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1"
 
     # Check that we can move the Eclipse files to another place
     # in the realization dir and still load summary data:

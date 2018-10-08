@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import pytest
+import pandas as pd
 from fmu import config
 from fmu import ensemble
 
@@ -73,8 +74,10 @@ def test_virtual_todisk():
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
     real.from_smry(time_index='yearly', column_keys=['F*'])
+    real.from_scalar('npv.txt')
 
     vreal = real.to_virtual()
+    assert 'npv.txt' in vreal.keys()
 
     with pytest.raises(IOError):
         vreal.to_disk('.')
@@ -83,6 +86,7 @@ def test_virtual_todisk():
     assert os.path.exists('virtreal/parameters.txt')
     assert os.path.exists('virtreal/STATUS')
     assert os.path.exists('virtreal/share/results/tables/unsmry-yearly.csv')
+    assert os.path.exists('virtreal/npv.txt')
 
 
 def test_virtual_fromdisk():
@@ -96,13 +100,19 @@ def test_virtual_fromdisk():
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
     real.from_smry(time_index='yearly', column_keys=['F*'])
+    real.from_scalar('npv.txt')
     real.to_virtual().to_disk('virtreal', delete=True)
     #
     vreal = ensemble.VirtualRealization('foo')
     vreal.from_disk('virtreal')
     for key in vreal.keys():
-        assert len(real.get_df(key)) == len(vreal.get_df(key))
+        if isinstance(real.get_df(key), pd.DataFrame) or \
+           isinstance(real.get_df(key), dict):
+            assert len(real.get_df(key)) == len(vreal.get_df(key))
+        else:  # Scalars:
+            assert real.get_df(key) == vreal.get_df(key)
     assert real.get_df('parameters')['FWL'] == \
         vreal.get_df('parameters')['FWL']
     assert real.get_df('unsmry-yearly').iloc[-1]['FGIP'] == \
         vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']
+    assert real.get_df('npv.txt') == 3444

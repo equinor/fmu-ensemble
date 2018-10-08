@@ -114,6 +114,20 @@ class EnsembleSet(object):
         """
         return self.get_df('parameters.txt')
 
+    def from_scalar(self, localpath, convert_numeric=False,
+                    force_reread=False):
+        """Parse a single value from a file
+
+        The value can be a string or a number. Empty files
+        are treated as existing, with an empty string as
+        the value, different from non-existing files.
+
+        Parsing is performed individually in each ensemble
+        and realization"""
+        for _, ensemble in self._ensembles.items():
+            ensemble.from_scalar(localpath, convert_numeric,
+                                 force_reread)
+
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse and internalize a txt-file from disk
