@@ -71,6 +71,7 @@ class ScratchEnsemble(object):
         self._global_active = None
         self._global_size = None
         self._global_grid = None
+        self.obs = None
 
         if isinstance(paths, str):
             paths = [paths]
