@@ -404,14 +404,6 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def get_ok(self):
-        """ collate the ok status for the ensemble """
-        ens_ok = defaultdict(list)
-        for index, realization in self._realizations.items():
-            ens_ok['REAL'].append(index)
-            ens_ok['OK'].append(realization.get_ok())
-        return pd.DataFrame(ens_ok)
-
     def from_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
         Fetch summary data from all realizations.
