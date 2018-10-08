@@ -879,7 +879,7 @@ class ScratchRealization(object):
         """
         return self.get_init()[prop][0].scatter_copy(self.actnum)
 
-    def get_global_unrst_keyword(self, prop, grid_index, report):
+    def get_global_unrst_keyword(self, prop, report):
         """
         :param prop: A name of a keyword in the realization's restart file.
         :returns: The EclKw of given name. Length is global_size.

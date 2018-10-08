@@ -316,5 +316,5 @@ def test_read_eclgrid():
     grid_df = reekensemble.get_eclgrid(['PERMX', 'FLOWATI+', 'FLOWATJ+'],
                                         report=4)
 
-    assert len(grid_df.columns) == 14
+    assert len(grid_df.columns) == 35
     assert len(grid_df['i']) == 35840

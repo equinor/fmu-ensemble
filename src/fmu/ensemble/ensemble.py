@@ -825,26 +825,21 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
-
-        grid_index = self._realizations.values()[0].get_grid_index(active_only=active_only)
-        self._global_active = len(grid_index.index)
-
-        corners = self._realizations.values()[0].get_grid_corners(grid_index)
-
-        centre = self._realizations.values()[0].get_grid_centre(grid_index)
-
-        full = grid_index.reset_index().join(corners).join(centre)
-
+        ref = self._realizations.values()[0]
+        grid_index = ref.get_grid_index(active_only=active_only)
+        corners = ref.get_grid_corners(grid_index)
+        centre = ref.get_grid_centre(grid_index)
+        dframe = grid_index.reset_index().join(corners).join(centre)
+        dframe['realizations_active'] = self.global_active.numpy_copy()
         for prop in props:
             print('Reading the grid property: '+prop)
-
             if prop in self.init_keys:
-                full[prop] = self.get_init(prop, grid_index, agg=agg)
+                dframe[prop] = self.get_init(prop, agg=agg)
             if prop in self.unrst_keys:
-                full[prop] = self.get_unrst(prop, grid_index, agg=agg, report=report)
-        full.drop('index', axis=1, inplace=True)
-        full.set_index(['i', 'j', 'k', 'active'])
-        return full
+                dframe[prop] = self.get_unrst(prop, agg=agg, report=report)
+        dframe.drop('index', axis=1, inplace=True)
+        dframe.set_index(['i', 'j', 'k', 'active'])
+        return dframe
 
     @property
     def global_active(self):
@@ -882,35 +877,6 @@ class ScratchEnsemble(object):
             return None
         return self._realizations.values()[0].get_grid_index(active=active)
 
-    def _get_grid_attributes(self,  active=True):
-        self.grid_index = self._get_grid_index(active=active)
-
-
-    def _is_active_cell(self, cell):
-        """
-        :returns: true if the given cell is an active cell
-            in all self._realizations.
-        """
-        grid = self.grid
-        active = self.global_active
-        ijk = (cell['i'], cell['j'], cell['k'])
-        return active[grid.get_global_index(ijk=ijk)] > 0
-
-    def cell_layers(self, active_only=False):
-        """
-        :param active_only: `optional parameter`. Only return cells
-            active in at least one realization.
-        :returns: All cells in the grid, see
-                see :func:`fmu.ensemble.Realization.cell_layers()`.
-        """
-        if not self._realizations:
-            return None
-        all_cells = self._realizations.values()[0].cell_layers(active_only=active_only)
-        if active_only:
-            return [filter(self._is_active_cell, layer) for layer in all_cells]
-
-        return all_cells
-
     @property
     def init_keys(self):
         """ Keys availible in the eclipse init file """
@@ -944,7 +910,7 @@ class ScratchEnsemble(object):
         dframe.index.names = ['Report']
         return dframe
 
-    def get_init(self, prop, grid_index, agg):
+    def get_init(self, prop, agg):
         """
         :param prop: A time independent property,
         :returns: Dictionary with ``mean`` or ``std_dev`` as keys,
@@ -952,23 +918,22 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not found.
         """
 
-        keywords = np.vstack([realization.get_global_init_keyword(prop, grid_index)
-                             for _, realization in self._realizations.iteritems()])
+        keywords = [(realization.get_global_init_keyword(prop))
+                    for _, realization in self._realizations.iteritems()]
 
-        print(keywords.shape, 'the shape vector')
         if agg == 'mean':
             mean = self._keyword_mean(prop,
                                       keywords,
-                                      self._global_active)
+                                      self.global_active)
             return pd.Series(mean.numpy_copy(), name=prop)
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
                                             keywords,
-                                            self._global_active,
+                                            self.global_active,
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def get_unrst(self, prop, grid_index, report, agg):
+    def get_unrst(self, prop, report, agg):
         """
         :param prop: A time dependent property, see
             `fmu_postprocessing.modelling.SimulationGrid.TIME_DEPENDENT`.
@@ -977,7 +942,7 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
 
-        keywords = [realization.get_global_unrst_keyword(prop, grid_index,
+        keywords = [realization.get_global_unrst_keyword(prop,
                                                          report)
                     for _, realization in self._realizations.iteritems()]
 
@@ -993,64 +958,37 @@ class ScratchEnsemble(object):
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def _keyword_mean(self, name, keywords, active):
+    def _keyword_mean(self, name, keywords, global_active):
         """
         :returns: Mean values of keywords.
         :param name: Name of resulting Keyword.
         :param keywords: List of keywords.
-        :param num_realizations: A EclKW with, for each cell, The number of
+        :param global_active: A EclKW with, for each cell, The number of
             realizations where the cell is active.
         """
-        print ('the keyword', len(keywords))
-        data = np.vstack(keywords)
-        print (data.shape, 'the shape')
-        mean = np.mean(data, axis=0)
-        print (mean.shape)
-
-
+        mean = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
+        for keyword in keywords:
+            mean += keyword
+        mean.safe_div(global_active)
         return mean
 
-    def _keyword_std_dev(self, name, keywords, active, mean):
+    def _keyword_std_dev(self, name, keywords, global_active, mean):
         """
         :returns: Standard deviation of keywords.
         :param name: Name of resulting Keyword.
         :param keywords: List of pairs of keywords and list of active cell
-        :param num_realizations: A EclKW with, for each cell, The number of
+        :param global_active: A EclKW with, for each cell, The number of
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
-        std_dev = EclKW(name, active, EclDataType.ECL_FLOAT)
+        std_dev = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
         for keyword in keywords:
             std_dev.add_squared(keyword - mean)
 
-        std_dev.safe_div(active)
+        std_dev.safe_div(global_active)
         std_dev.isqrt()
         return std_dev
 
-    def _unwrap_grid(self, data):
-        """
-        code from fmu_postprocessing returns grid rows and coloumns,
-        per grid layer. This function unwraps grid points to make a
-        dictionary of lists, where each list corresponds to
-        i,j,k,x0,y0,x1,y1,x2,y2,x3,y3
-        """
-        grid = defaultdict(list)
-        for layer in data:
-            for cell in layer:
-                grid['i'].append(cell['i'])
-                grid['j'].append(cell['j'])
-                grid['k'].append(cell['k'])
-                points = cell['points']
-                grid['x0'].append(points[0][0])
-                grid['y0'].append(points[0][1])
-                grid['x1'].append(points[1][0])
-                grid['y1'].append(points[1][1])
-                grid['x2'].append(points[2][0])
-                grid['y2'].append(points[2][1])
-                grid['x3'].append(points[3][0])
-                grid['y3'].append(points[3][1])
-
-        return grid
 
 def _convert_numeric_columns(dataframe):
     """Discovers and searches for numeric columns
