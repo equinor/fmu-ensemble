@@ -156,6 +156,31 @@ produce though any code into a file called ``outputs.txt`` in every
 realization directory, and call
 ``myensembleobject.from_txt('outputs.txt')``.
 
+Scalar data
+^^^^^^^^^^^
+
+There is support for text files containing only one value, either
+string or numeric. There should be nothing else than the value itself
+in the text file, except for comments after a comment characters.
+
+.. code-block:: python
+    ens.from_scalar('npv.txt')
+
+You are advised to add the option `convert_numeric=True` when the
+values are actually numeric. This ensures that the loaded data is
+interpreted as numbers, and thrown away if not. When strings are
+present in in erroneous realizations, it will break aggregation as all
+the data for all realizations will be treated as strings.
+
+Scalar data will be aggregated to ensembles and ensemble sets. When
+aggregated, a dataframe with the realization index in the first column
+and the values in the second column. This value column has the same
+name as the filename.
+
+.. code-block:: python
+    npv = ens.get_df('npv.txt')  # A DataFrame is returned, with the columns 'REAL' and 'npv.txt'
+    npv_values = npv['npv.txt']  # Need to say 'npv.txt' once more to get to the column values.
+
 
 Reading tabular data from CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -170,7 +195,10 @@ In aggregations from ensembles, the first column will always be
 ``REAL`` which is the realization index. The next columns will be from
 the CSV data you loaded.
 
-In case you need to clean up imported files, it is possible to delete columns and rows from internalized dataframes through the `drop()` functionality. For an ensemble object called `ens` you may issue the following:
+In case you need to clean up imported files, it is possible to delete
+columns and rows from internalized dataframes through the `drop()`
+functionality. For an ensemble object called `ens` you may issue the
+following:
 
 .. code-block:: python
 
@@ -203,3 +231,37 @@ When called `get_eclgrid` reads the grid from one realization. Then depending if
 properties requested are static or dynamic, the corresponding *INIT or *UNRST file
 will be read for all successful realization in the ensemble. The user can specify how 
 the results should be aggregated. Currently the options support are `mean` or `std`.
+
+
+Filtering realizations
+^^^^^^^^^^^^^^^^^^^^^^
+
+In an ensemble, realizations can be filtered out based on certain
+properties. Filtering is relevant both for removing realizations that
+have failed somewhere in the process, and it is also relevant for
+extracting subsets with certain properties (by values).
+
+Generally, fmu.ensemble is very permissive of realizations with close
+to no data. It is the user responsibility to filter those out if
+needed. The filtering function `filter()` can be used both do to
+in-place filtering, but also return VirtualEnsemble objects containing
+those realizations that matched the criterion.
+
+Examples:
+
+.. code-block:: python
+
+    # Assuming an ensemble where yearly summary data is loaded,
+    # throw away all realizations that did not reach a certain date
+    ens.filter('unsmry-yearly', column='DATE',
+               columncontains='2030-01-01')
+
+    # Extract the subset for a specific sensitivity.
+    vens = ens.filter('parameters.txt', key='DRAINAGE_STRATEGY',
+                      value='Depletion', inplace=False)
+    
+    # Remove all realizations where a specific output file
+    # (that we have tried to internalize) is missing
+    ens.filter('geo_oil_1.csv')
+
+Filtering with other comparators than equivalence is not implemented.

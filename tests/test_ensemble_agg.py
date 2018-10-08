@@ -33,6 +33,7 @@ def test_ensemble_aggregations():
     reekensemble.from_smry(time_index='monthly', column_keys=['F*'])
     reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
     reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    reekensemble.from_scalar('npv.txt', convert_numeric=True)
 
     stats = {
         # The ensemble class' agg function takes 'oil industry' quantile
@@ -82,6 +83,9 @@ def test_ensemble_aggregations():
         stats['max']['STATUS'].iloc[49]['DURATION']
     # job 49 is the Eclipse forward model
 
+    assert 'npv.txt' in stats['mean'].keys()
+    assert stats['mean']['npv.txt'] == 3382.5
+
     # Test agg(excludekeys=..)
     assert 'STATUS' not in reekensemble.agg('mean',
                                             excludekeys='STATUS').keys()
@@ -113,3 +117,4 @@ def test_ensemble_aggregations():
     assert isinstance(reekensemble.agg('mean',
                                        keylist='unsmry-yearly')
                       .get_df('unsmry-yearly'), pd.DataFrame)
+
