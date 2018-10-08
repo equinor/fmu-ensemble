@@ -344,17 +344,39 @@ class ScratchRealization(object):
             # This should not happen as long as __init__ requires STATUS
             # to be present.
             return pd.DataFrame()  # will be empty
+        errorcolumns = ['error' + str(x) for x in range(0,10)]
         status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
                                header=None,
                                names=['FORWARD_MODEL', 'colon',
-                                      'STARTTIME', 'dots', 'ENDTIME'],
+                                      'STARTTIME', 'dots', 'ENDTIME'] +
+                               errorcolumns,
+                               dtype=str,
                                engine='python',
                                error_bad_lines=False,
                                warn_bad_lines=True)
+
+        # dtype str messes up a little bit:
+        status.replace('None', '', inplace=True)
+        errorjobs = status[errorcolumns[0]] != ''
+
+        # Merge any error strings:
+        status.loc[errorjobs, 'errorstring'] \
+            = status.loc[errorjobs, errorcolumns].astype(str)\
+                                                 .apply(' '.join, axis=1) \
+                                                 .apply(str.strip)
+        status.drop(errorcolumns, axis=1, inplace=True)
+
         # Delete potential unwanted row
         status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                            (status.colon == 'JOBID:'))]
+
+        if len(status) == 0:
+            logger.warn('No parseable data in STATUS')
+            self.data['STATUS'] = status
+            return status
+
         status = status.reset_index().drop('colon', axis=1).drop('dots', axis=1)
+
         # Index the jobs, this makes it possible to match with jobs.json:
         status.insert(0, 'JOBINDEX', status.index.astype(int))
         status = status.drop('index', axis=1)
