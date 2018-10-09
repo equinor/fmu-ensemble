@@ -887,14 +887,6 @@ class ScratchRealization(object):
         result = RealizationCombination(ref=self, scale=float(other))
         return result
 
-    def get_ok(self):
-        """Tell if the realization has an OK file
-
-        This file is written by ERT when all FORWARD_MODELs
-        have completed successfully"""
-        okfile = os.path.join(self._origpath, 'OK')
-        return os.path.exists(okfile)
-
     def realization_mismatch(self, obs):
         return mismatch(self, obs)
 

@@ -224,7 +224,7 @@ def test_filesystem_changes():
     tmpensname = ".deleteme_ens"
     # Clean up earlier failed runs:
     if os.path.exists(datadir + '/' + tmpensname):
-        shutil.rmtree(datadir + '/' + tmpensname)
+        shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
     os.mkdir(datadir + '/' + tmpensname)
     shutil.copytree(datadir + '/testensemble-reek001/realization-0',
                     datadir + '/' + tmpensname + '/realization-0')
