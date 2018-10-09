@@ -46,7 +46,7 @@ def test_ensembleset_reek001():
     iter1 = ensemble.ScratchEnsemble('iter-1',
                                      ensdir + '/realization-*/iter-1')
 
-    ensset = ensemble.EnsembleSet("reek001", [iter0, iter1])
+    ensset = ensemble.EnsembleSet([iter0, iter1], name="reek001")
     assert len(ensset) == 2
     assert len(ensset['iter-0'].get_df('STATUS')) == 250
     assert len(ensset['iter-1'].get_df('STATUS')) == 250
@@ -127,6 +127,13 @@ def test_ensembleset_reek001():
     predel_len = len(ensset3.keys())
     ensset3.drop('parameters.txt')
     assert len(ensset3.keys()) == predel_len - 1
+
+    # Initialize differently, using only the root path containing
+    # realization-*
+    ensset4 = ensemble.EnsembleSet(ensdir)
+    assert len(ensset4) == 2
+    assert ensset4[0].name == 'iter-0'
+    assert ensset4[1].name == 'iter-1'
 
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):

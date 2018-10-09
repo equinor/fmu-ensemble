@@ -24,18 +24,22 @@ class EnsembleSet(object):
     Ensembles might be both ScratchEnsembles or VirtualEnsembles.
     """
 
-    def __init__(self, ensembleset_name, ensembles):
-        """Initiate an ensemble set from a list of ensembles
+    def __init__(self, ensembles, name=None):
+        """Initiate an ensemble set
 
         Args:
-            ensemblesetname: string with the name of the ensemble set
-            ensembles: list of existing Ensemble objects. Can be empty.
+            ensembles: list of Ensemble objects or string with filesystem
+                path. If filesystem path is given, ensemble names
+                will be determined from path.
+            name: string with name of ensembleset
         """
-        self._name = ensembleset_name
+        self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
-        for ensemble in ensembles:
-            self._ensembles[ensemble.name] = ensemble
-
+        if isinstance(ensembles, list):
+            for ensemble in ensembles:
+                self._ensembles[ensemble.name] = ensemble
+        elif isinstance(ensembles, str):
+            
     @property
     def name(self):
         """Return the name of the ensembleset,
