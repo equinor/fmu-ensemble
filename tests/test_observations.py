@@ -36,7 +36,7 @@ def test_observation_import():
     obs = reekensemble.load_observations(testdir +
                                          '/data/testensemble-reek001/' +
                                          '/share/observations/' +
-                                         'observations.yaml')
+                                         'observations.yml')
 
     assert len(obs.keys()) == 2
     df_mismatch = reekensemble.ensemble_mismatch()
