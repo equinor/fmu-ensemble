@@ -332,7 +332,7 @@ class VirtualEnsemble(object):
         # Mature analogue function in VirtualRealization before commencing this
         raise NotImplementedError
 
-    def from_disk(self, directory):
+    def load_disk(self, directory):
         """Load data from disk.
 
         Data must be written like to_disk() would have

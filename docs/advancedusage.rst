@@ -12,7 +12,7 @@ CSV export is just a merge of the dataframes coming from
 .. code-block:: python
 
     import pandas as pd
-    smry = reekensemble.from_smry(time_index='monthly')
+    smry = reekensemble.load_smry(time_index='monthly')
     params = reekensemble.parameters
     # Match the two tables where the value of REAL is identical:
     smry_params = pd.merge(smry, params)
@@ -22,7 +22,7 @@ For finer control, you can specify exactly which summary vectors you
 want to include, the time resolution, and perhaps also a subset of the
 parameters. For example, if you have computed any kind of scalar data
 pr. realization and put that into ``outputs.txt``, you can merge with
-``from_txt('outputs.txt')`` instead of ``params`` in the code above.
+``load_txt('outputs.txt')`` instead of ``params`` in the code above.
 
 
 Statistics over ensembles

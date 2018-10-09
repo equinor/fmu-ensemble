@@ -122,7 +122,7 @@ class VirtualRealization(object):
                 logger.warning("Don't know how to dump %s " +
                                "of type %s to disk", key, type(key))
 
-    def from_disk(self, filesystempath):
+    def load_disk(self, filesystempath):
         """Load data for a virtual realization from disk.
 
         Existing data in the current object will be wiped,
@@ -199,7 +199,7 @@ class VirtualRealization(object):
         Dump realization data to json.
 
         Resulting json string is compatible with the
-        accompanying from_json() function
+        accompanying load_json() function
         """
         raise NotImplementedError
 

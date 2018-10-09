@@ -28,8 +28,8 @@ def test_ensemblecombination_basic():
                                             testdir +
                                             '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
-    reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
-    reekensemble.from_scalar('npv.txt', convert_numeric=True)
+    reekensemble.load_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.load_scalar('npv.txt', convert_numeric=True)
 
     # Difference with itself should give zero..
     diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
@@ -74,14 +74,14 @@ def test_ensemblecombination_sparse():
                                    testdir +
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
-    ref.from_smry(time_index='yearly', column_keys=['F*'])
+    ref.load_smry(time_index='yearly', column_keys=['F*'])
 
     # Initialize over again to get two different objects
     ior = ensemble.ScratchEnsemble('reektest',
                                    testdir +
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
-    ior.from_smry(time_index='yearly', column_keys=['F*'])
+    ior.load_smry(time_index='yearly', column_keys=['F*'])
     ior.remove_realizations(3)
 
     assert 3 not in (ior - ref)['parameters'].REAL.unique()

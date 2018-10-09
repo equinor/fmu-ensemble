@@ -31,9 +31,9 @@ def test_virtualensemble():
                                    testdir +
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
-    reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
-    reekensemble.from_scalar('npv.txt')
-    reekensemble.from_txt('outputs.txt')
+    reekensemble.load_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.load_scalar('npv.txt')
+    reekensemble.load_txt('outputs.txt')
     vens = reekensemble.to_virtual()
 
     # Check that we have data for 5 realizations

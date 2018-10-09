@@ -75,15 +75,15 @@ def test_ensembleset_reek001():
     assert 'ENSEMBLE' in ensset3.parameters.columns
     assert 'REAL' in ensset3.parameters.columns
 
-    outputs = ensset3.from_txt('outputs.txt')
+    outputs = ensset3.load_txt('outputs.txt')
     assert 'NPV' in outputs.columns
 
     # Test Eclipse summary handling:
     assert len(ensset3.get_smry_dates(freq='report')) == 641
     assert len(ensset3.get_smry_dates(freq='monthly')) == 37
-    assert len(ensset3.from_smry(column_keys=['FOPT'],
+    assert len(ensset3.load_smry(column_keys=['FOPT'],
                                  time_index='yearly')) == 50
-    monthly = ensset3.from_smry(column_keys=['F*'],
+    monthly = ensset3.load_smry(column_keys=['F*'],
                                 time_index='monthly')
     assert 'ENSEMBLE' == monthly.columns[0]
     assert 'REAL' == monthly.columns[1]
@@ -99,12 +99,12 @@ def test_ensembleset_reek001():
 
     # Check errors when we ask for stupid stuff
     with pytest.raises(ValueError):
-        ensset3.from_csv('bogus.csv')
+        ensset3.load_csv('bogus.csv')
     with pytest.raises(ValueError):
         ensset3.get_df('bogus.csv')
 
     # Test aggregation of csv files:
-    vol_df = ensset3.from_csv('share/results/volumes/' +
+    vol_df = ensset3.load_csv('share/results/volumes/' +
                               'simulator_volume_fipnum.csv')
     assert 'REAL' in vol_df
     assert 'ENSEMBLE' in vol_df
@@ -113,14 +113,14 @@ def test_ensembleset_reek001():
     assert len(ensset3.keys()) == 7
 
     # Test scalar imports:
-    ensset3.from_scalar('npv.txt')
+    ensset3.load_scalar('npv.txt')
     npv = ensset3.get_df('npv.txt')
     assert 'ENSEMBLE' in npv
     assert 'REAL' in npv
     assert 'npv.txt' in npv
     assert len(npv) == 10
     # Scalar import with forced numerics:
-    ensset3.from_scalar('npv.txt', convert_numeric=True, force_reread=True)
+    ensset3.load_scalar('npv.txt', convert_numeric=True, force_reread=True)
     npv = ensset3.get_df('npv.txt')
     assert len(npv) == 8
 

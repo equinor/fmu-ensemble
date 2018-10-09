@@ -30,10 +30,10 @@ def test_ensemble_aggregations():
                                    testdir +
                                    '/data/testensemble-reek001/' +
                                    'realization-*/iter-0')
-    reekensemble.from_smry(time_index='monthly', column_keys=['F*'])
-    reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
-    reekensemble.from_csv('share/results/volumes/simulator_volume_fipnum.csv')
-    reekensemble.from_scalar('npv.txt', convert_numeric=True)
+    reekensemble.load_smry(time_index='monthly', column_keys=['F*'])
+    reekensemble.load_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.load_csv('share/results/volumes/simulator_volume_fipnum.csv')
+    reekensemble.load_scalar('npv.txt', convert_numeric=True)
 
     stats = {
         # The ensemble class' agg function takes 'oil industry' quantile
