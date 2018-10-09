@@ -1020,7 +1020,7 @@ class ScratchEnsemble(object):
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
                                             self.global_active,
-                                            mean)
+                                            mean, report=report)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
     def _keyword_mean(self, prop, global_active, report=None):
@@ -1045,7 +1045,7 @@ class ScratchEnsemble(object):
             mean.safe_div(global_active)
             return mean
 
-    def _keyword_std_dev(self, name, keywords, global_active, mean):
+    def _keyword_std_dev(self, prop, global_active, mean, report=0):
         """
         :returns: Standard deviation of keywords.
         :param name: Name of resulting Keyword.
@@ -1054,14 +1054,21 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
-        std_dev = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
-        for keyword in keywords:
-            std_dev.add_squared(keyword - mean)
+        if report:
+            std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for real, realization in self._realizations.iteritems():
+                real_prop = realization.get_global_unrst_keyword(prop, report)
+                std_dev.add_squared(real_prop - mean)
+            std_dev.safe_div(global_active)
+            return std_dev.isqrt()
 
-        std_dev.safe_div(global_active)
-        std_dev.isqrt()
-        return std_dev
-
+        else:
+            std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for real, realization in self._realizations.iteritems():
+                real_prop = realization.get_global_init_keyword(prop)
+                std_dev.add_squared(real_prop - mean)
+            std_dev.safe_div(global_active)
+            return std_dev.isqrt()
 
 
 def _convert_numeric_columns(dataframe):
