@@ -18,6 +18,8 @@ import copy
 import glob
 import json
 import numpy
+from datetime import datetime, date, time
+import dateutil
 import pandas as pd
 
 import ert.ecl
@@ -115,14 +117,12 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'OK')):
-            filerow = {'LOCALPATH': 'OK',
-                       'FILETYPE': 'OK',
-                       'FULLPATH': os.path.join(abspath, 'OK'),
-                       'BASENAME': 'OK'}
-            self.files = self.files.append(filerow, ignore_index=True)
+            self.from_scalar('OK')
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
             self.from_txt('parameters.txt')
+
+        logger.info('Initialized %s', abspath)
 
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
@@ -149,13 +149,70 @@ class ScratchRealization(object):
         Several file formats are supported:
         * txt (one key-value pair pr. line)
         * csv
+        * scalar (one number or one string in the first line)
         """
         if fformat == 'txt':
             self.from_txt(localpath, convert_numeric, force_reread)
         elif fformat == 'csv':
             self.from_csv(localpath, convert_numeric, force_reread)
+        elif fformat == 'scalar':
+            self.from_scalar(localpath, convert_numeric, force_reread)
         else:
             raise ValueError("Unsupported file format %s" % fformat)
+
+    def from_scalar(self, localpath, convert_numeric=False,
+                    force_reread=False, comment=None, skip_blank_lines=True,
+                    skipinitialspace=True):
+        """Parse a single value from a file.
+
+        The value can be a string or a number.
+
+        Empty files are treated as existing, with an empty string as
+        the value, different from non-existing files.
+
+        pandas.read_table() is used to parse the contents, the args
+        'comment', 'skip_blank_lines', and 'skipinitialspace' is passed on
+        to that function.
+
+        Args:
+            localpath: path to the file, local to the realization
+            convert_numeric: If True, non-numerical content will be thrown away
+            force_reread: Reread the data from disk.
+        Returns:
+            the value read from the file.
+        """
+        fullpath = os.path.join(self._origpath, localpath)
+        if not os.path.exists(fullpath):
+            raise IOError("File not found: " + fullpath)
+        else:
+            if fullpath in self.files['FULLPATH'].values and not force_reread:
+                # Return cached version
+                return self.data[localpath]
+            elif fullpath not in self.files['FULLPATH'].values:
+                filerow = {'LOCALPATH': localpath,
+                           'FILETYPE': localpath.split('.')[-1],
+                           'FULLPATH': fullpath,
+                           'BASENAME': os.path.split(localpath)[-1]}
+                self.files = self.files.append(filerow, ignore_index=True)
+            try:
+                value = pd.read_table(fullpath, header=None, engine='python',
+                                      skip_blank_lines=skip_blank_lines,
+                                      skipinitialspace=skipinitialspace,
+                                      comment=comment).iloc[0, 0]
+            except pd.errors.EmptyDataError:
+                value = ""
+            if convert_numeric:
+                value = parse_number(value)
+                if not isinstance(value, str):
+                    self.data[localpath] = value
+                else:
+                    # In case we are re-reading, we must
+                    # ensure there is no value present now:
+                    if localpath in self.data:
+                        del self.data[localpath]
+            else:
+                self.data[localpath] = value
+            return value
 
     def from_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -282,28 +339,47 @@ class ScratchRealization(object):
             A dataframe with information from the STATUS files.
             Each row represents one job in one of the realizations.
         """
-        from datetime import datetime, date, time
         statusfile = os.path.join(self._origpath, 'STATUS')
         if not os.path.exists(statusfile):
             # This should not happen as long as __init__ requires STATUS
             # to be present.
             return pd.DataFrame()  # will be empty
+        errorcolumns = ['error' + str(x) for x in range(0,10)]
         status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
                                header=None,
                                names=['FORWARD_MODEL', 'colon',
-                                      'STARTTIME', 'dots', 'ENDTIME'],
+                                      'STARTTIME', 'dots', 'ENDTIME'] +
+                               errorcolumns,
+                               dtype=str,
                                engine='python',
                                error_bad_lines=False,
                                warn_bad_lines=True)
+
+        # dtype str messes up a little bit:
+        status.replace('None', '', inplace=True)
+        errorjobs = status[errorcolumns[0]] != ''
+
+        # Merge any error strings:
+        status.loc[errorjobs, 'errorstring'] \
+            = status.loc[errorjobs, errorcolumns].astype(str)\
+                                                 .apply(' '.join, axis=1) \
+                                                 .apply(str.strip)
+        status.drop(errorcolumns, axis=1, inplace=True)
+
         # Delete potential unwanted row
         status = status[~ ((status.FORWARD_MODEL == 'LSF') &
                            (status.colon == 'JOBID:'))]
-        status.reset_index(inplace=True)
-        del status['colon']
-        del status['dots']
+
+        if len(status) == 0:
+            logger.warn('No parseable data in STATUS')
+            self.data['STATUS'] = status
+            return status
+
+        status = status.reset_index().drop('colon', axis=1).drop('dots', axis=1)
+
         # Index the jobs, this makes it possible to match with jobs.json:
         status.insert(0, 'JOBINDEX', status.index.astype(int))
-        del status['index']
+        status = status.drop('index', axis=1)
         # Calculate duration. Only Python 3.6 has time.fromisoformat().
         # Warning: Unpandaic code..
         durations = []
@@ -370,6 +446,7 @@ class ScratchRealization(object):
 
     def get_df(self, localpath):
         """Access the internal datastore which contains dataframes or dicts
+        or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
@@ -550,7 +627,7 @@ class ScratchRealization(object):
         if not self.get_eclsum():
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
-
+        print(self)
         time_index_path = time_index
         if time_index == 'raw':
             time_index_arg = None
@@ -668,6 +745,67 @@ class ScratchRealization(object):
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 
+    def contains(self, localpath, **kwargs):
+        """Boolean function for asking the realization for presence
+        of certain data types and possibly data values.
+
+        Args:
+            localpath: string pointing to the data for which the query
+                applies. If no other arguments, only realizations containing
+                this data key is kept.
+            key: A certain key within a realization dictionary that is
+                required to be present. If a value is also provided, this
+                key must be equal to this value. If localpath is not
+                a dictionary, this will raise a ValueError
+            value: The value a certain key must equal. Floating point
+                comparisons are not robust. Only relevant for dictionaries
+            column: Name of a column in tabular data. If columncontains is
+                not specified, this means that this column must be present
+            columncontains:
+                A value that the specific column must include.
+
+        Returns:
+            boolean: True if the data is present and fulfilling any
+            criteria.
+        """
+        kwargs.pop('inplace', 0)
+        localpath = self.shortcut2path(localpath)
+        if localpath not in self.keys():
+            return False
+        if not kwargs:
+            return localpath in self.keys()
+        if isinstance(self.data[localpath], dict):
+            if 'key' in kwargs and 'value' not in kwargs:
+                return kwargs['key'] in self.data[localpath]
+        if isinstance(self.data[localpath], pd.DataFrame):
+            if 'key' in kwargs:
+                raise ValueError("Don't use key for tabular data")
+            if 'value' in kwargs:
+                raise ValueError("Don't use value for tabular data")
+            if 'column' in kwargs and 'columncontains' not in kwargs:
+                # Only asking for column presence
+                return kwargs['column'] in self.data[localpath].columns
+            if 'column' in kwargs and 'columncontains' in kwargs:
+                # Treat 'DATE' column specifically
+                if kwargs['column'] == 'DATE':
+                    return dateutil.parser.parse(kwargs['columncontains']) in \
+                        self.data[localpath][kwargs['column']]\
+                            .astype(datetime).values
+                else:
+                    return kwargs['columncontains'] in \
+                        self.data[localpath][kwargs['column']].values
+
+        if 'key' in kwargs and 'value' in kwargs:
+            if isinstance(kwargs['value'], str):
+                if kwargs['key'] in self.data[localpath]:
+                    return str(self.data[localpath][kwargs['key']]) \
+                        == kwargs['value']
+                else:
+                    return False
+            else:  # non-string, then don't convert the internalized data
+                return self.data[localpath][kwargs['key']] == kwargs['value']
+        raise ValueError("Wrong arguments to contains()")
+
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
 
@@ -749,14 +887,6 @@ class ScratchRealization(object):
         result = RealizationCombination(ref=self, scale=float(other))
         return result
 
-    def get_ok(self):
-        """Tell if the realization has an OK file
-
-        This file is written by ERT when all FORWARD_MODELs
-        have completed successfully"""
-        okfile = os.path.join(self._origpath, 'OK')
-        return os.path.exists(okfile)
-
     def realization_mismatch(self, obs):
         return mismatch(self, obs)
 
@@ -804,6 +934,26 @@ class ScratchRealization(object):
             return EclFile(unrst_filename,
                            flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclunrst
+
+    def get_grid_index(self, active_only):
+        """
+        Return the grid index in a pandas dataframe.
+        """
+        return self.get_grid().export_index(active_only=active_only)
+
+    def get_grid_corners(self, grid_index):
+        corners = self.get_grid().export_corners(grid_index)
+        columns = ['x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'x3', 'y3', 'z3', 'x4',
+                   'y4', 'z4', 'x5', 'y5', 'z5', 'x6', 'y6', 'z6', 'x7', 'y7',
+                   'z7', 'x8', 'y8', 'z8']
+
+        return pd.DataFrame(data=corners,
+                            columns=columns)
+
+    def get_grid_centre(self, grid_index):
+        grid_cell_centre = self.get_grid().export_position(grid_index)
+        return pd.DataFrame(data=grid_cell_centre,
+                            columns=['cell_x', 'cell_y', 'cell_z'])
 
     def get_grid(self):
         """
@@ -867,55 +1017,6 @@ class ScratchRealization(object):
         """
         prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
         return prop_values
-
-    def _get_cell(self, ijk):
-        """
-        :parameter ijk: Triple of ijk coordinates of a cell in the grid.
-        :returns: A dictionary of the upper corner points and depth of the cell
-            at ijk.
-        """
-        points = []
-        for idx in [4, 5, 7, 6]:
-            x, y, _ = self.get_grid().get_cell_corner(idx, ijk=ijk)
-            points.append((x, y))
-        i, j, k = ijk
-        return {'points': points,
-                'i': i,
-                'j': j,
-                'k': k,
-                'depth': self.get_grid().get_xyz(ijk=ijk)[2]}
-
-    def _is_active_cell(self, cell):
-        """
-        :returns: true if the given cell is an active cell.
-        """
-        grid = self.get_grid()
-        ijk = (cell['i'], cell['j'], cell['k'])
-        return grid.active(ijk=ijk)
-
-    def cell_layers(self, active_only=False):
-        """
-        :param active_only: `optional parameter`. Only return cells
-            active in this realization.
-        :returns: A list of layers. Each layer is a list of cells. Each
-            cell is a dictionary containing the coordinates of its four upper
-            points in that layer and its depth.
-        ::
-            realization = Realization('reek/ECLIPSE')
-            cell_layers = realization.ecl_grid_cell_layers()
-            # cell_layers[layer][cell]['points'] = [(x1,y1), (x2, y2), ...]
-            # cell_layers[layer][cell]['depth']  = 3.14
-        """
-        all_cells = [[self._get_cell((i, j, k))
-                      for i in range(self.get_grid().get_nx())
-                      for j in range(self.get_grid().get_ny())]
-                     for k in range(self.get_grid().get_nz())]
-
-        if active_only:
-            return [filter(self._is_active_cell, layer)
-                    for layer in all_cells]
-
-        return all_cells
 
 
 def normalize_dates(start_date, end_date, freq):

@@ -29,15 +29,18 @@ def test_ensemblecombination_basic():
                                             '/data/testensemble-reek001/' +
                                             'realization-*/iter-0')
     reekensemble.from_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.from_scalar('npv.txt', convert_numeric=True)
 
     # Difference with itself should give zero..
     diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
     assert diff['parameters']['KRW1'].sum() == 0
     assert diff['unsmry-yearly']['FOPT'].sum() == 0
+    assert diff['npv.txt']['npv.txt'].sum() == 0
 
     foptsum = reekensemble.get_df('unsmry-yearly')['FOPT'].sum()
     half = 0.5 * reekensemble
     assert half['unsmry-yearly']['FOPT'].sum() == 0.5 * foptsum
+    assert half['npv.txt']['npv.txt'][0] == 1722
 
     # This is only true since we only juggle one ensemble here:
     assert len(half.get_smry_dates(freq='monthly')) == len(
