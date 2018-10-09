@@ -42,3 +42,25 @@ def test_observation_import():
     df_mismatch = reekensemble.ensemble_mismatch()
 
     assert len(df_mismatch.columns) == 7
+
+## Alternative code with observations as its own object
+     obsobject = ensemble.Observations(filename)
+
+     mismatches = obsobject.mismatch(ensemble)
+     # Returns a 
+     
+     theobs = obsobject.get_observations()  # returns a dict
+     theobs.pop('FGPT')
+     alternative = Observations(theobs)  # We can also give in a 'dict'
+     # to reinitialize
+
+     # For dumping to disk/cloud.
+     yaml = alternative.to_yaml()  # (returns multiline string)
+     # json = alternative.to_json()  # should not be supported,
+     # will create confusion
+
+     alternative_mismatches = alternative.mismatch(ensemble)
+
+     # Obtain a list of integers
+     ranked_realizations = alternative.rank(ensemble, "FOPT")
+     best_realization = ranked_realizations[0]

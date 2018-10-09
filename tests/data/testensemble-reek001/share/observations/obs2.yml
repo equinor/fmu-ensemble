@@ -5,7 +5,11 @@
 #
 # Below the top level, the structure can vary between the datatypes.
 
-
+# There is an implied concept of a "single" observation from this data structure
+# Returned dataframes must be able to refer to single observations based on data
+# in this file. If multiple dates are listed for "one" observations, this
+# is multiple observations. 
+# 
 # Eclipse summary vectors.
 smry:
   - key: FOPT
@@ -23,6 +27,13 @@ smry:
     comment: Platform rate at an important date
     observations:
       - {value: 2000, error: 10, date: 2003-01-01}
+# These observations will be internalized as
+# smry/FOPT
+# smry/WBP4:OP_1@2001-01-01
+# smry/WBP4:OP_1@2002-01-01
+# smry/FOPR@2003-01-01
+# (The date component can be taken out and presented in its own column)
+
 
 # Data internalized from Eclipse RFT file output
 rft:
@@ -40,6 +51,10 @@ rft:
         i: 39
         j: 90
         k: 10
+# Internalized as
+# rft/OP_1/0@2001-09-10
+# rft/OP_2/0@2001-09-10
+# The numerical index here refers to the list of observations. Zero-indexed.
 
 # Referring to a value that is contained in a <key>-<value> txt file
 # in each realization This could be relevant for conditioning, but can
