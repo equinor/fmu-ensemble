@@ -917,8 +917,8 @@ class ScratchRealization(object):
             return None
 
         if not self._eclinit:
-            return EclFile(init_filename,
-                           flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
+            self._eclinit = EclFile(init_filename,
+                                    flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclinit
 
     def get_unrst(self):
@@ -939,8 +939,8 @@ class ScratchRealization(object):
         if not os.path.exists(unrst_filename):
             return None
         if not self._eclunrst:
-            return EclFile(unrst_filename,
-                           flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
+            self._eclunrst = EclFile(unrst_filename,
+                                     flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclunrst
 
     def get_grid_index(self, active_only):
@@ -1023,8 +1023,7 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
-        return prop_values
+        return self.get_unrst()[prop][report].scatter_copy(self.actnum)
 
 
 def normalize_dates(start_date, end_date, freq):

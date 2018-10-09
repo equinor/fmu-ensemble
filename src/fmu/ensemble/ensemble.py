@@ -20,6 +20,7 @@ import pandas as pd
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
+
 from fmu.config import etc
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
@@ -1000,18 +1001,12 @@ class ScratchEnsemble(object):
             and corresponding values for given property as values.
         :raises ValueError: If prop is not found.
         """
-
-        keywords = [(realization.get_global_init_keyword(prop))
-                    for _, realization in self._realizations.iteritems()]
-
         if agg == 'mean':
             mean = self._keyword_mean(prop,
-                                      keywords,
                                       self.global_active)
             return pd.Series(mean.numpy_copy(), name=prop)
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
-                                            keywords,
                                             self.global_active,
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
@@ -1025,35 +1020,38 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
 
-        keywords = [realization.get_global_unrst_keyword(prop,
-                                                         report)
-                    for _, realization in self._realizations.iteritems()]
-
         if agg == 'mean':
             mean = self._keyword_mean(prop,
-                                      keywords,
-                                      self.global_active)
+                                      self.global_active,
+                                      report=report)
             return pd.Series(mean.numpy_copy(), name=prop)
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
-                                            keywords,
                                             self.global_active,
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def _keyword_mean(self, name, keywords, global_active):
+    def _keyword_mean(self, prop, global_active, report=None):
         """
         :returns: Mean values of keywords.
-        :param name: Name of resulting Keyword.
-        :param keywords: List of keywords.
+        :param prop: Name of resulting Keyword.
         :param global_active: A EclKW with, for each cell, The number of
             realizations where the cell is active.
+        :param report: Report step for unrst keywords
         """
-        mean = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
-        for keyword in keywords:
-            mean += keyword
-        mean.safe_div(global_active)
-        return mean
+        if report:
+            mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for real, realization in self._realizations.iteritems():
+                mean += realization.get_global_unrst_keyword(prop,
+                                                             report)
+            mean.safe_div(global_active)
+            return mean
+        else:
+            mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for _, realization in self._realizations.iteritems():
+                mean += realization.get_global_init_keyword(prop)
+            mean.safe_div(global_active)
+            return mean
 
     def _keyword_std_dev(self, name, keywords, global_active, mean):
         """
