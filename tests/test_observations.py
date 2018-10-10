@@ -32,7 +32,7 @@ def test_observation_import():
                        '/data/testensemble-reek001/' +
                        '/share/observations/' +
                        'observations.yml')
-    assert len(obs.keys()) == 10 # adjust this..
+    assert len(obs.keys()) == 2 # adjust this..
 
 
 
@@ -47,6 +47,9 @@ def test_real_mismatch():
                               'realization-0/iter-0/')
 
     real.load_smry()
+    real.load_txt('outputs.txt')
+    real.load_scalar('npv.txt')
+
     obs = Observations({'txt': [ {'localpath': 'parameters.txt',
                                   'key': 'FWL',
                                   'value': 1702}]})
@@ -56,17 +59,20 @@ def test_real_mismatch():
     assert isinstance(realmis, pd.DataFrame)
     assert len(realmis) == 1
     assert 'REAL' not in realmis.columns  # should only be there for ensembles.
+    assert 'OBSTYPE' in realmis.columns
     assert 'OBSKEY' in realmis.columns
     assert 'DATE' not in realmis.columns  # date is not relevant
-    assert 'MIS' in realmis.columns
+    assert 'MISMATCH' in realmis.columns
     assert 'L1' in realmis.columns
     assert 'L2' in realmis.columns
 
     # Check actually computed values, there should only be one row with data:
-    assert realmis.loc[0, 'OBSKEY'] == 'txt/parameters.txt/FWL'
-    assert realmis.loc[0, 'MIS'] == -2
+    assert realmis.loc[0, 'OBSTYPE'] == 'txt'
+    assert realmis.loc[0, 'OBSKEY'] == 'parameters.txt/FWL'
+    assert realmis.loc[0, 'MISMATCH'] == -2
+    assert realmis.loc[0, 'SIGN'] == -1
     assert realmis.loc[0, 'L1'] == 2
-    assert realmis.loc[0, 'L2'] == 2
+    assert realmis.loc[0, 'L2'] == 4
 
     # Another observation set:
     obs2 = Observations({'txt': [ {'localpath': 'parameters.txt',
@@ -75,14 +81,16 @@ def test_real_mismatch():
                                   {'localpath': 'outputs.txt',
                                    'key': 'top_structure',
                                    'value': 3200}
-                                  ]
+                                  ],
                          'scalar': [ {'key': 'npv.txt',
                                       'value': 3400}]})
     realmis2 = obs2.mismatch(real)
+    print(realmis2)
     assert len(realmis2) == 3
-    assert realmis2['OBSKEY'].values == ['txt/parameters.txt',
-                                         'txt/outputs.txt',
-                                         'scalar/npv.txt']
+    assert 'parameters.txt/RMS_SEED' in realmis2['OBSKEY'].values
+    assert 'outputs.txt/top_structure' in realmis2['OBSKEY'].values
+    assert 'npv.txt' in realmis2['OBSKEY'].values
+
     # assert much more!
 
     # Test use of allocated values:
