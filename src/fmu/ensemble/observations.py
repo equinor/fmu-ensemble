@@ -14,13 +14,9 @@ from __future__ import print_function
 import re
 import os
 import glob
-
+import math
 import yaml
-import numpy as np
-from collections import defaultdict
 import pandas as pd
-from ecl import EclDataType
-from ecl.eclfile import EclKW
 
 from fmu.config import etc
 from .realization import ScratchRealization
@@ -63,7 +59,7 @@ class Observations(object):
 
     def __init__(self, observations):
         """Initialize an observation object with observations.
-        
+
         Args:
             observations: dict with observation structure or string
                 with path to a yaml file.
@@ -77,10 +73,10 @@ class Observations(object):
             self.observations = observations
         else:
             raise ValueError("Unsupported object for observations")
-        
+
         if not self._clean_observations():
             raise ValueError("No usable observations")
-        
+
     def mismatch(self, ens_or_real):
         """Compute the mismatch from the current observation set
         to the incoming ensemble or realization.
@@ -94,17 +90,17 @@ class Observations(object):
         """
         # For ensembles, we should in the future be able to loop
         # over realizations in a multiprocessing fashion
-        if isinstance(ens_or_real, VirtualEnsemble) or \
-            isinstance(ens_or_real, ScratchEnsemble):
+        if isinstance(ens_or_real, VirtualEnsemble) \
+           or isinstance(ens_or_real, ScratchEnsemble):
             mismatches = dict()
             for realidx, real in ens_or_real.realizations:
                 mismatches[realidx] = _realization_mismatch(real)
                 mismatches[realidx]['REAL'] = realidx
-        elif isinstance(ens_or_real, VirtualRealization) or \
-            isinstance(ens_or_real, ScratchRealization):
+        elif isinstance(ens_or_real, VirtualRealization) \
+             or isinstance(ens_or_real, ScratchRealization):
             return self._realization_mismatch(ens_or_real)
         elif isinstance(ens_or_real, EnsembleSet):
-            pass 
+            pass
         else:
             raise ValueError("Unsupported object for mismatch calculation")
 
@@ -119,10 +115,10 @@ class Observations(object):
     def _realization_mismatch(self, real):
         """Compute the mismatch from the current
         loaded observations to the a realization
-        
+
         Supports both ScratchRealizations and
         VirtualRealizations
-       
+
         The returned dataframe contains the columns:
             * OBSTYPE - category/type of the observation
             * OBSKEY - name of the observation key
@@ -146,24 +142,36 @@ class Observations(object):
             for obsunit in self.observations[obstype]:  # (list)
                 if obstype == 'txt':
                     sim_value = real.get_df(obsunit['localpath'])\
-                            [obsunit['key']]
+                                [obsunit['key']]
                     mismatch = sim_value - obsunit['value']
                     mismatches.append(dict(OBSTYPE=obstype, 
-                                 OBSKEY=str(obsunit['localpath']) + '/' + \
-                                 str(obsunit['key']),
-                                 MISMATCH=mismatch, 
-                                 L1=abs(mismatch),
-                                 L2=abs(mismatch)**2,
-                                 SIGN=cmp(mismatch, 0)))
+                                           OBSKEY=str(obsunit['localpath']) + '/' + \
+                                           str(obsunit['key']),
+                                           MISMATCH=mismatch,
+                                           L1=abs(mismatch),
+                                           L2=abs(mismatch)**2,
+                                           SIGN=cmp(mismatch, 0)))
                 if obstype == 'scalar':
                     sim_value = real.get_df(obsunit['key'])
                     mismatch = sim_value - obsunit['value']
                     mismatches.append(dict(OBSTYPE=obstype,
-                        OBSKEY=str(obsunit['key']),
-                        MISMATCH=mismatch, L1=abs(mismatch),
-                        L2=abs(mismatch)**2, SIGN=cmp(mismatch,0)))
-        return pd.DataFrame(mismatches) 
-  
+                                           OBSKEY=str(obsunit['key']),
+                                           MISMATCH=mismatch, L1=abs(mismatch),
+                                           L2=abs(mismatch)**2, SIGN=cmp(mismatch,0)))
+                if obstype == 'smryh':
+                    # Will use raw times when available.
+                    # Time index is always identical
+                    sim_hist = real.get_smry(column_keys=[obsunit['key'],
+                                                          obsunit['histvec']])
+                    sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
+                                           sim_hist[obsunit['histvec']]
+                    mismatches.append(dict(OBSTYPE='smryh',
+                                           OBSKEY=obsunit['key'],
+                                           MISMATCH=sim_hist.mismatch.sum(),
+                                           L1=sim_hist.mismatch.abs().sum(),
+                                           L2=math.sqrt((sim_hist.mismatch ** 2).sum())))
+        return pd.DataFrame(mismatches)
+
     def _realization_misfit(self, real, corr=None):
         """The misfit value for the observation set
 
@@ -171,7 +179,7 @@ class Observations(object):
 
         Args:
             real : a ScratchRealization or a VirtualRealization
-            corr : correlation or weigthing matrix (numpy matrix). 
+            corr : correlation or weigthing matrix (numpy matrix).
                 If a list or numpy vector is supplied, it is intepreted
                 as a diagonal matrix. If omitted, the identity matrix is used
 
@@ -181,12 +189,19 @@ class Observations(object):
         return 1
 
     def _clean_observations(self):
-
         """Verify integrity of observations, remove
         observation units that cannot be used.
 
-        Will log warnings about things that are removed. 
-        
+        Will log warnings about things that are removed.
+
         Returns number of usable observation units.
         """
-        return 1 
+        return 1
+
+    def to_yaml(self):
+        """Convert the current observations to YAML format
+
+        Returns:
+            string : Multiline YAML string.
+        """
+        return ""

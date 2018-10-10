@@ -85,7 +85,6 @@ def test_real_mismatch():
                          'scalar': [ {'key': 'npv.txt',
                                       'value': 3400}]})
     realmis2 = obs2.mismatch(real)
-    print(realmis2)
     assert len(realmis2) == 3
     assert 'parameters.txt/RMS_SEED' in realmis2['OBSKEY'].values
     assert 'outputs.txt/top_structure' in realmis2['OBSKEY'].values
@@ -94,10 +93,11 @@ def test_real_mismatch():
     # assert much more!
 
     # Test use of allocated values:
-    obs3 = Observations({'smry': [ {'key': 'FOPT',
-                                    'observations': 'FOPTH'} ]})
+    obs3 = Observations({'smryh': [ {'key': 'FOPT',
+                                     'histvec': 'FOPTH'} ]})
     fopt_mis = obs3.mismatch(real)
-    assert fopt_mis.loc[0, 'OBSKEY'] == 'smry/FOPT'
+    assert fopt_mis.loc[0, 'OBSTYPE'] == 'smryh'
+    assert fopt_mis.loc[0, 'OBSKEY'] == 'FOPT'
     assert fopt_mis.loc[0, 'L1'] > 0
     assert fopt_mis.loc[0, 'L1'] != fopt_mis.loc[0, 'L2']
 
