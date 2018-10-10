@@ -3,11 +3,18 @@ import pandas as pd
 import yaml
 
 
-def observations_parser(path):
-    """ Function to parse the observation yaml file
+def observations_parser(observations):
+    """Load observations
+
+    Observations are typically physical measurements of reality
+    that have a counterpart in simulated data, which the realization
+    objects hold.
+
+    Observation data refer to the simulated names of the same observations.
 
     Args:
-    path: string. file path the observation yaml file
+        observations: String with a path to a YAML file with observations,
+            or a populated dict with observations.
 
     Returns:
         dictionary containing a dataframe for each observation type
