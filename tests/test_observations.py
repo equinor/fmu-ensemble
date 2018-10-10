@@ -115,21 +115,23 @@ def test_ens_mismatch():
         testdir = os.path.dirname(os.path.abspath(__file__))
     else:
         testdir = os.path.abspath('.')
-        
-    
-        
-    theobs = obsobject.get_observations()  # returns a dict
-    theobs.pop('FGPT')
-    alternative = Observations(theobs)  # We can also give in a 'dict'
-    # to reinitialize
+    ens = ScratchEnsemble('test', testdir + '/data/testensemble-reek001/' +
+                          'realization-*/iter-0/')
 
-    # For dumping to disk/cloud.
-    yaml = alternative.to_yaml()  # (returns multiline string)
-    # json = alternative.to_json()  # should not be supported,
-    # will create confusion
+    obs = Observations({'smryh': [{'key': 'FOPT',
+                                   'histvec': 'FOPTH'}]})
 
-    alternative_mismatches = alternative.mismatch(ensemble)
+    mismatch = obs.mismatch(ens)
 
-    # Obtain a list of integers
-    ranked_realizations = alternative.rank(ensemble, "FOPT")
-    best_realization = ranked_realizations[0]
+    assert 'L1' in mismatch.columns
+    assert 'L2' in mismatch.columns
+    assert 'MISMATCH' in mismatch.columns
+    assert 'OBSKEY' in mismatch.columns
+    assert 'OBSTYPE' in mismatch.columns
+    assert 'REAL' in mismatch.columns
+    assert len(mismatch) == len(ens) * 1  # number of observation units.
+
+    fopt_rank = mismatch.sort_values('L2', ascending=True)['REAL'].values
+    assert fopt_rank[0] == 2  # closest realization
+    assert fopt_rank[-1] == 1  # worst realization
+

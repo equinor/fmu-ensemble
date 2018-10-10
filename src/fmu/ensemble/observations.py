@@ -92,10 +92,11 @@ class Observations(object):
         # over realizations in a multiprocessing fashion
         if isinstance(ens_or_real, VirtualEnsemble) \
            or isinstance(ens_or_real, ScratchEnsemble):
-            mismatches = dict()
-            for realidx, real in ens_or_real.realizations:
-                mismatches[realidx] = _realization_mismatch(real)
+            mismatches = {}
+            for realidx, real in ens_or_real._realizations.items():
+                mismatches[realidx] = self._realization_mismatch(real)
                 mismatches[realidx]['REAL'] = realidx
+            return pd.concat(mismatches, axis=0, ignore_index=True)
         elif isinstance(ens_or_real, VirtualRealization) \
              or isinstance(ens_or_real, ScratchRealization):
             return self._realization_mismatch(ens_or_real)
