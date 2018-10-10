@@ -114,7 +114,7 @@ class EnsembleSet(object):
         """
         return self.get_df('parameters.txt')
 
-    def from_scalar(self, localpath, convert_numeric=False,
+    def load_scalar(self, localpath, convert_numeric=False,
                     force_reread=False):
         """Parse a single value from a file
 
@@ -125,30 +125,30 @@ class EnsembleSet(object):
         Parsing is performed individually in each ensemble
         and realization"""
         for _, ensemble in self._ensembles.items():
-            ensemble.from_scalar(localpath, convert_numeric,
+            ensemble.load_scalar(localpath, convert_numeric,
                                  force_reread)
 
-    def from_txt(self, localpath, convert_numeric=True,
+    def load_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse and internalize a txt-file from disk
 
         Parses text files on the form
         <key> <value>
         in each line."""
-        return self.from_file(localpath, 'txt', convert_numeric,
+        return self.load_file(localpath, 'txt', convert_numeric,
                               force_reread)
 
-    def from_csv(self, localpath, convert_numeric=True,
+    def load_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse and internalize a CSV file from disk"""
-        return self.from_file(localpath, 'csv', convert_numeric,
+        return self.load_file(localpath, 'csv', convert_numeric,
                               force_reread)
 
-    def from_file(self, localpath, fformat, convert_numeric=True,
+    def load_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):
-        """Internal function for from_*()"""
+        """Internal function for load_*()"""
         for _, ensemble in self._ensembles.items():
-            ensemble.from_file(localpath, fformat, convert_numeric,
+            ensemble.load_file(localpath, fformat, convert_numeric,
                                force_reread)
         return self.get_df(localpath)
 
@@ -256,12 +256,12 @@ class EnsembleSet(object):
             dflist.append(dframe)
         return pd.concat(dflist, sort=False)
 
-    def from_smry(self, time_index=None, column_keys=None):
+    def load_smry(self, time_index=None, column_keys=None):
         """
         Fetch summary data from all ensembles
 
-        Wraps around Ensemble.from_smry() which wraps
-        Realization.from_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+        Wraps around Ensemble.load_smry() which wraps
+        Realization.load_smry(), which wraps ert.ecl.EclSum.pandas_frame()
 
         The time index is determined at realization level. If you
         ask for 'monthly', you will from each realization get its
@@ -283,7 +283,7 @@ class EnsembleSet(object):
         """
         # Future: Multithread this:
         for _, ensemble in self._ensembles.items():
-            ensemble.from_smry(time_index=time_index,
+            ensemble.load_smry(time_index=time_index,
                                column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'

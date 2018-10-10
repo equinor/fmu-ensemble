@@ -21,15 +21,15 @@ ScratchRealization
 The class ScratchRealization is a Python object that can load
 realization results (and input) from the filesystem, typically located
 on /scratch. You can ask the object to load in and *internalize* data,
-with the `from_*()` functions. The internalization is an important
-concepts. All data that you internalize will be stored in the object,
+with the `load_*()` functions. The internalization is an important
+concept. All data that you internalize will be stored in the object,
 and then can be used further.
 
 Additionally, you may find `get_*()` functions that can access certain
 datatypes. Common for these is that they will *not* modify the object,
 it is a read-once operation. This is particularly relevant for Eclipse
 summary data, where you at different times may ask for different
-subsets and at different sampling frequenccies, but do not want to
+subsets and at different sampling frequencies, but do not want to
 internalize all the data into the object.
 
 VirtualRealization
@@ -50,7 +50,7 @@ versions of realizations, or to be able to store computed
 realizations. You may both write to disk into a file structure that
 would resemble the original realization (and you can edit the files if
 you are bold enough). The virtual realization can later be
-instantiated from the dumped disk structure by `from_disk()`. Another
+instantiated from the dumped disk structure by `load_disk()`. Another
 variant for storage is to use `to_json()` which will dump all data in
 as a *json* datatype, for which there probably exists use cases.
 

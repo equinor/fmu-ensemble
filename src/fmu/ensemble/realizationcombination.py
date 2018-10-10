@@ -145,7 +145,7 @@ class RealizationCombination(object):
         """
         Loads the Eclipse summary data directly from the underlying
         realization data, independent of whether you have issued
-        from_smry() first in the realization.
+        load_smry() first in the realization.
 
         If you involve VirtualRealization in this operation, this
         this will fail. You have to use internalized data, that is

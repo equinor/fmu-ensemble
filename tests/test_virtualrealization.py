@@ -73,8 +73,8 @@ def test_virtual_todisk():
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
-    real.from_smry(time_index='yearly', column_keys=['F*'])
-    real.from_scalar('npv.txt')
+    real.load_smry(time_index='yearly', column_keys=['F*'])
+    real.load_scalar('npv.txt')
 
     vreal = real.to_virtual()
     assert 'npv.txt' in vreal.keys()
@@ -99,12 +99,13 @@ def test_virtual_fromdisk():
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
-    real.from_smry(time_index='yearly', column_keys=['F*'])
-    real.from_scalar('npv.txt')
+    real.load_smry(time_index='yearly', column_keys=['F*'])
+    real.load_scalar('npv.txt')
     real.to_virtual().to_disk('virtreal2', delete=True)
     #
     vreal = ensemble.VirtualRealization('foo')
-    vreal.from_disk('virtreal2')
+    vreal.load_disk('virtreal2')
+
     for key in vreal.keys():
         if isinstance(real.get_df(key), pd.DataFrame) or \
            isinstance(real.get_df(key), dict):
