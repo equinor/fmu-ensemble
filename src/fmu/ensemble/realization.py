@@ -35,9 +35,6 @@ from .realizationcombination import RealizationCombination
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
-if not fmux.testsetup():
-    raise SystemExit()
-
 
 class ScratchRealization(object):
     r"""A representation of results still present on disk
