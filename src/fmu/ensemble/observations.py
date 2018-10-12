@@ -11,9 +11,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import re
-import os
-import glob
 import math
 import yaml
 import pandas as pd
@@ -21,6 +18,7 @@ import pandas as pd
 from fmu.config import etc
 from .realization import ScratchRealization
 from .ensemble import ScratchEnsemble
+from .ensembleset import EnsembleSet
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 
@@ -142,11 +140,12 @@ class Observations(object):
         for obstype in self.observations.keys():
             for obsunit in self.observations[obstype]:  # (list)
                 if obstype == 'txt':
-                    sim_value = real.get_df(obsunit['localpath'])\
-                                [obsunit['key']]
+                    sim_value = real.get_df(obsunit[
+                        'localpath'])[obsunit['key']]
                     mismatch = sim_value - obsunit['value']
-                    mismatches.append(dict(OBSTYPE=obstype, 
-                                           OBSKEY=str(obsunit['localpath']) + '/' + \
+                    mismatches.append(dict(OBSTYPE=obstype,
+                                           OBSKEY=str(obsunit['localpath'])
+                                           + '/' +
                                            str(obsunit['key']),
                                            MISMATCH=mismatch,
                                            L1=abs(mismatch),
@@ -158,19 +157,21 @@ class Observations(object):
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['key']),
                                            MISMATCH=mismatch, L1=abs(mismatch),
-                                           L2=abs(mismatch)**2, SIGN=cmp(mismatch,0)))
+                                           L2=abs(mismatch)**2,
+                                           SIGN=cmp(mismatch, 0)))
                 if obstype == 'smryh':
                     # Will use raw times when available.
                     # Time index is always identical
                     sim_hist = real.get_smry(column_keys=[obsunit['key'],
                                                           obsunit['histvec']])
                     sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
-                                           sim_hist[obsunit['histvec']]
+                        sim_hist[obsunit['histvec']]
                     mismatches.append(dict(OBSTYPE='smryh',
                                            OBSKEY=obsunit['key'],
                                            MISMATCH=sim_hist.mismatch.sum(),
                                            L1=sim_hist.mismatch.abs().sum(),
-                                           L2=math.sqrt((sim_hist.mismatch ** 2).sum())))
+                                           L2=math.sqrt(
+                                               (sim_hist.mismatch ** 2).sum())))
         return pd.DataFrame(mismatches)
 
     def _realization_misfit(self, real, corr=None):
