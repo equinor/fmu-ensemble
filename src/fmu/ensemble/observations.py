@@ -11,9 +11,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import re
-import os
-import glob
 import math
 import yaml
 import pandas as pd
@@ -105,6 +102,10 @@ class Observations(object):
         else:
             raise ValueError("Unsupported object for mismatch calculation")
 
+    def __len__(self):
+        """Return the number of observation units present"""
+        return len(self.observations.keys())
+
     def keys(self):
         """Return a list of observation units present.
 
@@ -145,7 +146,7 @@ class Observations(object):
                     sim_value = real.get_df(obsunit['localpath'])\
                                 [obsunit['key']]
                     mismatch = sim_value - obsunit['value']
-                    mismatches.append(dict(OBSTYPE=obstype, 
+                    mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['localpath']) + '/' + \
                                            str(obsunit['key']),
                                            MISMATCH=mismatch,
@@ -158,7 +159,7 @@ class Observations(object):
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['key']),
                                            MISMATCH=mismatch, L1=abs(mismatch),
-                                           L2=abs(mismatch)**2, SIGN=cmp(mismatch,0)))
+                                           L2=abs(mismatch)**2, SIGN=cmp(mismatch, 0)))
                 if obstype == 'smryh':
                     # Will use raw times when available.
                     # Time index is always identical
@@ -197,6 +198,23 @@ class Observations(object):
 
         Returns number of usable observation units.
         """
+        supported_categories = ['smry', 'smryh', 'txt', 'scalar', 'rft']
+
+        # Check top level keys in observations dict:
+        for key in self.observations.keys():
+            if key not in supported_categories:
+                self.observations.pop(key)
+                logger.error('Observation category %s not supported',
+                             key)
+                continue
+            if not isinstance(self.observations[key], list):
+                logger.error('Observation category %s did not contain a' +
+                             'list, but %s',
+                             key, type(self.observations[key]))
+                self.observations.pop(key)
+        if not len(self.observations.keys()):
+            logger.error("No parseable observations")
+            raise ValueError
         return 1
 
     def to_yaml(self):
