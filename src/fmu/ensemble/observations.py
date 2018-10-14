@@ -225,6 +225,15 @@ class Observations(object):
             raise ValueError
         return 1
 
+    def to_ert2observations(self):
+        """Convert the observation set to an observation 
+        file for use with Ert 2.
+
+        Returns: multiline string
+        """
+        raise NotImplementedError
+        return ""
+
     def to_yaml(self):
         """Convert the current observations to YAML format
 
