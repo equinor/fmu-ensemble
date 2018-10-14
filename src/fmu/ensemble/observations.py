@@ -40,7 +40,8 @@ class Observations(object):
     An observation unit is a concept for the observation and points to
     something we define as a "single" observation. It can be one value
     for one datatype at a specific date, but in the case of Eclipse
-    summary vector, it can also be a time-series.
+    summary vector, it can also be a time-series. Mismatches will
+    be computed pr. observation unit.
 
     The type of observations supported must follow the datatypes that
     the realizations and ensemble objects are able to internalize.
@@ -55,7 +56,11 @@ class Observations(object):
     #   a dict, and then it is mergeable in Pandas)
 
     def __init__(self, observations):
-        """Initialize an observation object with observations.
+        """Initialize an observation object with observations
+        from file or from an incoming dictionary structure
+
+        Observations will be checked for validity, and
+        if there are no accepted observations, this will error.
 
         Args:
             observations: dict with observation structure or string
@@ -78,12 +83,12 @@ class Observations(object):
         """Compute the mismatch from the current observation set
         to the incoming ensemble or realization.
 
-        In the case of an ensemble, it will pass on the task to
-        every realization, and aggregate the results
+        In the case of an ensemble, it will calculate individually
+        for every realization, and aggregate the results.
 
         Returns:
             dataframe with REAL (only if ensemble), OBSKEY, DATE,
-                L1, L2.
+                L1, L2. One row for every observation unit.
         """
         # For ensembles, we should in the future be able to loop
         # over realizations in a multiprocessing fashion
@@ -104,6 +109,7 @@ class Observations(object):
 
     def __len__(self):
         """Return the number of observation units present"""
+        # This is not correctly implemented yet..
         return len(self.observations.keys())
 
     def keys(self):
@@ -115,8 +121,8 @@ class Observations(object):
         return self.observations.keys()
 
     def _realization_mismatch(self, real):
-        """Compute the mismatch from the current
-        loaded observations to the a realization
+        """Compute the mismatch from the current loaded
+        observations to a realization.
 
         Supports both ScratchRealizations and
         VirtualRealizations
@@ -130,6 +136,7 @@ class Observations(object):
             * L1 - absolute difference
             * L2 - absolute difference squared
             * SIGN - True if positive difference
+        One row for every observation unit.
 
         Args:
             real : ScratchRealization or VirtualRealization
@@ -188,6 +195,7 @@ class Observations(object):
         Returns:
             float : the misfit value for the observation set and realization
         """
+        raise NotImplementedError
         return 1
 
     def _clean_observations(self):
