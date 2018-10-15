@@ -1,4 +1,4 @@
-summary_vectors:
+smry:
   # Mandatory elements per entry: key and observations
   - key: WBP4:OP_1
     comment: "Shut-in pressures converted from well head conditions" # This is a global comment regarding this set of observations
@@ -37,26 +37,24 @@ summary_vectors:
        - {value: 0.15, error: 0.05, date: 2001-01-01}
        - {value: 0.48, error: 0.05, date: 2002-01-01}
        - {value: 0.72, error: 0.07, date: 2003-01-01}
-general_observations:
-  rft_pressure: 
-    # identifier for specialized post-processing/visualization software
-      - well: OP_1
-        date: 2001-09-10
-        comment: RFT pressure OP_1 before well start up
-        simulation_output: ./share/results/rft_op_1.yaml # Where the simulation output to compare with is created on scratch
-        observations:
-          # Mandatory elements in general observations: value, error, date, the order ma
-          - {value: 303.5, error: 3, zone: BelowTopReek, MDmsl: 2396, x: 462698, y: 5934227, z: 1609.58}
-          - {value: 304.4, error: 3, zone: BelowMidReek, MDmsl: 2404, x: 462698, y: 5934227, z: 1620.67}
-          - {value: 305.0, error: 3, zone: BelowMidReek, MDmsl: 2414, x: 462698, y: 5934227, z: 1630.63, comment: Tool communication error}
-          - {value: 305.0, error: 3, zone: BelowLowReek, MDmsl: 2424, x: 462698, y: 5934227, z: 1640.65}
-      - well: OP_2
-        date: 2001-09-10
-        comment: RFT pressure OP_1 before well start up
-        simulation_output: ./share/results/rft_op_1.yaml # Where the simulation output to compare with is created on scratch
-        observations:
-          # Mandatory elements in general observations: value, error, date, the order ma
-          - {value: 303.5, error: 3, zone: BelowTopReek, MDmsl: 2396, x: 462698, y: 5934227, z: 1609.58}
-          - {value: 304.4, error: 3, zone: BelowMidReek, MDmsl: 2404, x: 462698, y: 5934227, z: 1620.67}
-          - {value: 305.0, error: 3, zone: BelowMidReek, MDmsl: 2414, x: 462698, y: 5934227, z: 1630.63, comment: Tool communication error}
-          - {value: 305.0, error: 3, zone: BelowLowReek, MDmsl: 2424, x: 462698, y: 5934227, z: 1640.65}
+rft:
+# identifier for specialized post-processing/visualization software
+  - well: OP_1
+    date: 2001-09-10
+    comment: RFT pressure OP_1 before well start up
+    observations:
+       # Mandatory elements in general observations: value, error, date, the order ma
+       - {value: 303.5, error: 3, zone: BelowTopReek, MDmsl: 2396, x: 462698, y: 5934227, z: 1609.58}
+       - {value: 304.4, error: 3, zone: BelowMidReek, MDmsl: 2404, x: 462698, y: 5934227, z: 1620.67}
+       - {value: 305.0, error: 3, zone: BelowMidReek, MDmsl: 2414, x: 462698, y: 5934227, z: 1630.63, comment: Tool communication error}
+       - {value: 305.0, error: 3, zone: BelowLowReek, MDmsl: 2424, x: 462698, y: 5934227, z: 1640.65}
+  - well: OP_2
+    date: 2001-09-10
+    comment: RFT pressure OP_1 before well start up
+    simulation_output: ./share/results/rft_op_1.yaml # Where the simulation output to compare with is created on scratch
+    observations:
+       # Mandatory elements in general observations: value, error, date, the order ma
+       - {value: 303.5, error: 3, zone: BelowTopReek, MDmsl: 2396, x: 462698, y: 5934227, z: 1609.58}
+       - {value: 304.4, error: 3, zone: BelowMidReek, MDmsl: 2404, x: 462698, y: 5934227, z: 1620.67}
+       - {value: 305.0, error: 3, zone: BelowMidReek, MDmsl: 2414, x: 462698, y: 5934227, z: 1630.63, comment: Tool communication error}
+       - {value: 305.0, error: 3, zone: BelowLowReek, MDmsl: 2424, x: 462698, y: 5934227, z: 1640.65}

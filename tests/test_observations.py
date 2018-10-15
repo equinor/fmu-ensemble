@@ -37,6 +37,8 @@ def test_observation_import():
 
 
 def test_real_mismatch():
+    """Test calculation of mismatch from the observation set to a
+    realization"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -50,9 +52,9 @@ def test_real_mismatch():
     real.load_txt('outputs.txt')
     real.load_scalar('npv.txt')
 
-    obs = Observations({'txt': [ {'localpath': 'parameters.txt',
-                                  'key': 'FWL',
-                                  'value': 1702}]})
+    obs = Observations({'txt': [{'localpath': 'parameters.txt',
+                                 'key': 'FWL',
+                                 'value': 1702}]})
     realmis = obs.mismatch(real)
 
     # Check layout of returned data
@@ -75,15 +77,15 @@ def test_real_mismatch():
     assert realmis.loc[0, 'L2'] == 4
 
     # Another observation set:
-    obs2 = Observations({'txt': [ {'localpath': 'parameters.txt',
-                                   'key': 'RMS_SEED',
-                                   'value': 600000000},
-                                  {'localpath': 'outputs.txt',
-                                   'key': 'top_structure',
-                                   'value': 3200}
-                                  ],
-                         'scalar': [ {'key': 'npv.txt',
-                                      'value': 3400}]})
+    obs2 = Observations({'txt': [{'localpath': 'parameters.txt',
+                                  'key': 'RMS_SEED',
+                                  'value': 600000000},
+                                 {'localpath': 'outputs.txt',
+                                  'key': 'top_structure',
+                                  'value': 3200}
+                                ],
+                         'scalar': [{'key': 'npv.txt',
+                                     'value': 3400}]})
     realmis2 = obs2.mismatch(real)
     assert len(realmis2) == 3
     assert 'parameters.txt/RMS_SEED' in realmis2['OBSKEY'].values
@@ -93,8 +95,8 @@ def test_real_mismatch():
     # assert much more!
 
     # Test use of allocated values:
-    obs3 = Observations({'smryh': [ {'key': 'FOPT',
-                                     'histvec': 'FOPTH'} ]})
+    obs3 = Observations({'smryh': [{'key': 'FOPT',
+                                    'histvec': 'FOPTH'}]})
     fopt_mis = obs3.mismatch(real)
     assert fopt_mis.loc[0, 'OBSTYPE'] == 'smryh'
     assert fopt_mis.loc[0, 'OBSKEY'] == 'FOPT'
@@ -109,7 +111,38 @@ def test_real_mismatch():
     # * Check that the observation objects are the same
 
 
+def test_errormessages():
+    """Test that we give ~sensible error messages when the
+    observation input is unparseable"""
+
+    # Emtpy
+    with pytest.raises(TypeError):
+        obs = Observations()
+
+    # Non-existing filename:
+    with pytest.raises(IOError):
+        obs = Observations("foobar")
+
+    # Integer input does not make sense..
+    with pytest.raises(ValueError):
+        obs = Observations(3)
+
+    # Unsupported observation category
+    with pytest.raises(ValueError):
+        obs = Observations(dict(foobar='foo'))
+        # (there will be logged a warning also)
+
+    # Check that the dict is a dict of lists:
+    with pytest.raises(ValueError):
+        obs = Observations(dict(smry='not_a_list'))
+        # (warning will also be issued)
+
+    # Empty list
+    # with pytest.raises(ValueError):
+    #    obs = Observations(dict(smry=[]))
+
 def test_ens_mismatch():
+    """Test calculation of mismatch to ensemble data"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -134,4 +167,3 @@ def test_ens_mismatch():
     fopt_rank = mismatch.sort_values('L2', ascending=True)['REAL'].values
     assert fopt_rank[0] == 2  # closest realization
     assert fopt_rank[-1] == 1  # worst realization
-
