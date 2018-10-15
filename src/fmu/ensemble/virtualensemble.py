@@ -16,9 +16,6 @@ from fmu.ensemble.virtualrealization import VirtualRealization
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
-if not fmux.testsetup():
-    raise SystemExit()
-
 
 class VirtualEnsemble(object):
     """A computed or archived ensemble

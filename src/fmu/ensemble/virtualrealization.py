@@ -13,9 +13,6 @@ from fmu import config
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
-if not fmux.testsetup():
-    raise SystemExit()
-
 
 class VirtualRealization(object):
     """A computed or archived realization.
