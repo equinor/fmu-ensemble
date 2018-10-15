@@ -155,7 +155,8 @@ class Observations(object):
                         'localpath'])[obsunit['key']]
                     mismatch = sim_value - obsunit['value']
                     mismatches.append(dict(OBSTYPE=obstype,
-                                           OBSKEY=str(obsunit['key']),
+                                           OBSKEY=str(obsunit['localpath'])\
+                                           + '/' + str(obsunit['key']),
                                            MISMATCH=mismatch,
                                            L1=abs(mismatch),
                                            L2=abs(mismatch)**2,
