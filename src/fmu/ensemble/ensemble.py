@@ -14,11 +14,14 @@ from __future__ import print_function
 import re
 import os
 import glob
+
+import warnings
 import numpy as np
 from collections import defaultdict
 import pandas as pd
 from ecl import EclDataType
 from ecl.eclfile import EclKW
+
 
 from fmu.config import etc
 from .realization import ScratchRealization
@@ -235,9 +238,9 @@ class ScratchEnsemble(object):
     def parameters(self):
         """Getter for get_parameters(convert_numeric=True)
         """
-        return self.from_txt('parameters.txt')
+        return self.load_txt('parameters.txt')
 
-    def from_scalar(self, localpath, convert_numeric=False,
+    def load_scalar(self, localpath, convert_numeric=False,
                     force_reread=False):
         """Parse a single value from a file.
 
@@ -248,10 +251,10 @@ class ScratchEnsemble(object):
 
         Parsing is performed individually in each realization
         """
-        return self.from_file(localpath, 'scalar',
+        return self.load_file(localpath, 'scalar',
                               convert_numeric, force_reread)
 
-    def from_txt(self, localpath, convert_numeric=True,
+    def load_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a key-value text file from disk and internalize data
 
@@ -261,20 +264,20 @@ class ScratchEnsemble(object):
 
         Parsing is performed individually in each realization
         """
-        return self.from_file(localpath, 'txt',
+        return self.load_file(localpath, 'txt',
                               convert_numeric, force_reread)
 
-    def from_csv(self, localpath, convert_numeric=True,
+    def load_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a CSV file from disk and internalize data in a dataframe
 
         Parsing is performed individually in each realization."""
-        return self.from_file(localpath, 'csv',
+        return self.load_file(localpath, 'csv',
                               convert_numeric, force_reread)
 
-    def from_file(self, localpath, fformat, convert_numeric=False,
+    def load_file(self, localpath, fformat, convert_numeric=False,
                   force_reread=False):
-        """Function for calling from_file() in every realization
+        """Function for calling load_file() in every realization
 
         This function may utilize multithreading.
 
@@ -294,12 +297,12 @@ class ScratchEnsemble(object):
         """
         for index, realization in self._realizations.items():
             try:
-                realization.from_file(localpath, fformat,
+                realization.load_file(localpath, fformat,
                                       convert_numeric, force_reread)
             except ValueError:
                 # This would at least occur for unsupportd fileformat,
                 # and that we should not skip.
-                logger.critical('from_file() failed')
+                logger.critical('load_file() failed')
                 raise ValueError  # (this might hide traceback from try:)
             except IOError:
                 # At ensemble level, we allow files to be missing in
@@ -392,7 +395,7 @@ class ScratchEnsemble(object):
                                      "from realization")
             except ValueError:
                 # No logging here, those error messages
-                # should have appeared at construction using from_*()
+                # should have appeared at construction using load_*()
                 pass
         if dflist:
             # Merge a dictionary of dataframes. The dict key is
@@ -404,14 +407,19 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def from_smry(self, time_index='raw', column_keys=None, stacked=True):
+    def from_smry(self, *args, **kwargs):
+        warnings.warn("from_smry() is deprecated. Use load_smry()",
+                      DeprecationWarning)
+        return self.load_smry(*args, **kwargs)
+
+    def load_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
         Fetch summary data from all realizations.
 
         The pr. realization results will be cached by each
         realization object, and can be retrieved through get_df().
 
-        Wraps around Realization.from_smry() which wraps around
+        Wraps around Realization.load_smry() which wraps around
         ert.ecl.EclSum.pandas_frame()
 
         Beware that the default time_index or ensembles is 'monthly',
@@ -443,7 +451,7 @@ class ScratchEnsemble(object):
             # instead we look them up afterwards using get_df()
             # Downside is that we have to compute the name of the
             # cached object as it is not returned.
-            realization.from_smry(time_index=time_index,
+            realization.load_smry(time_index=time_index,
                                   column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'
@@ -871,7 +879,13 @@ class ScratchEnsemble(object):
         else:
             raise NotImplementedError
 
+
     def from_obs_yaml(self, localpath):
+        warnings.warn("from_obs_yaml() is deprecated. Use load_observations()",
+                      DeprecationWarning)
+        return self.load_observations(localpath)
+
+    def load_observations(self, localpath):
         self.obs = observations_parser(localpath)
         return self.obs
 
@@ -991,18 +1005,12 @@ class ScratchEnsemble(object):
             and corresponding values for given property as values.
         :raises ValueError: If prop is not found.
         """
-
-        keywords = [(realization.get_global_init_keyword(prop))
-                    for _, realization in self._realizations.iteritems()]
-
         if agg == 'mean':
             mean = self._keyword_mean(prop,
-                                      keywords,
                                       self.global_active)
             return pd.Series(mean.numpy_copy(), name=prop)
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
-                                            keywords,
                                             self.global_active,
                                             mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
@@ -1016,37 +1024,40 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
 
-        keywords = [realization.get_global_unrst_keyword(prop,
-                                                         report)
-                    for _, realization in self._realizations.iteritems()]
-
         if agg == 'mean':
             mean = self._keyword_mean(prop,
-                                      keywords,
-                                      self.global_active)
+                                      self.global_active,
+                                      report=report)
             return pd.Series(mean.numpy_copy(), name=prop)
         if agg == 'std':
             std_dev = self._keyword_std_dev(prop,
-                                            keywords,
                                             self.global_active,
-                                            mean)
+                                            mean, report=report)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
-    def _keyword_mean(self, name, keywords, global_active):
+    def _keyword_mean(self, prop, global_active, report=None):
         """
         :returns: Mean values of keywords.
-        :param name: Name of resulting Keyword.
-        :param keywords: List of keywords.
+        :param prop: Name of resulting Keyword.
         :param global_active: A EclKW with, for each cell, The number of
             realizations where the cell is active.
+        :param report: Report step for unrst keywords
         """
-        mean = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
-        for keyword in keywords:
-            mean += keyword
-        mean.safe_div(global_active)
-        return mean
+        if report:
+            mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for real, realization in self._realizations.iteritems():
+                mean += realization.get_global_unrst_keyword(prop,
+                                                             report)
+            mean.safe_div(global_active)
+            return mean
+        else:
+            mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for _, realization in self._realizations.iteritems():
+                mean += realization.get_global_init_keyword(prop)
+            mean.safe_div(global_active)
+            return mean
 
-    def _keyword_std_dev(self, name, keywords, global_active, mean):
+    def _keyword_std_dev(self, prop, global_active, mean, report=0):
         """
         :returns: Standard deviation of keywords.
         :param name: Name of resulting Keyword.
@@ -1055,14 +1066,21 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
-        std_dev = EclKW(name, len(global_active), EclDataType.ECL_FLOAT)
-        for keyword in keywords:
-            std_dev.add_squared(keyword - mean)
+        if report:
+            std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for real, realization in self._realizations.iteritems():
+                real_prop = realization.get_global_unrst_keyword(prop, report)
+                std_dev.add_squared(real_prop - mean)
+            std_dev.safe_div(global_active)
+            return std_dev.isqrt()
 
-        std_dev.safe_div(global_active)
-        std_dev.isqrt()
-        return std_dev
-
+        else:
+            std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+            for real, realization in self._realizations.iteritems():
+                real_prop = realization.get_global_init_keyword(prop)
+                std_dev.add_squared(real_prop - mean)
+            std_dev.safe_div(global_active)
+            return std_dev.isqrt()
 
 
 def _convert_numeric_columns(dataframe):

@@ -84,7 +84,7 @@ Eclipse (e.g. OPM etc).
 
     # Get a dataframe with monthly summary data for all field vectors
     # and all well vectors
-    smry = ens.from_smry(column_keys=['F*', 'W*'], time_index='monthly')
+    smry = ens.load_smry(column_keys=['F*', 'W*'], time_index='monthly')
 
 The python object ``smry`` is now a Pandas DataFrame (a table)
 containing the summary data you requested. Each row is the values for
@@ -105,7 +105,7 @@ you only need to issue
 
     ens.find_files("*.UNSMRY")
 
-prior to running `from_smry()`. If your problem is multiple Eclipse
+prior to running `load_smry()`. If your problem is multiple Eclipse
 run in the same directory, you have to explicitly discover the full
 path for the file in the call to `find_files()`.
 
@@ -115,7 +115,7 @@ Internalized data
 
 The ensemble object (which is just a collection of realization
 objects) will internalize the data it reads when you call
-``from_<something>()``, meaning that it will keep the dataframes
+``load_<something>()``, meaning that it will keep the dataframes
 produced in memory for later retrieval. You can ask the ensemble
 objects for what data it currently contains by calling ``ens.keys()``
 (this is a call that is forwarded to each realization, and you are
@@ -129,7 +129,7 @@ vectors for all realizations merged into one table above,
 ``get_df('unsmry-monthly.csv')`` was called under the hood.
 
 In the objects, these dataframes are stored with filenames as
-keys. When checking ``keys()`` after having run ``from_smry()``, you
+keys. When checking ``keys()`` after having run ``load_smry()``, you
 will see a pathname in front of ``unsmry-monthly.csv`` which is where
 the dataframe will be written to if you want to dump a realization to
 disk. For convenience in interactive use, you do not need to write the
@@ -154,7 +154,7 @@ of these kinds of text files as you want, in order to categorize
 inputs and/or outputs. As an example, put any scalar results that you
 produce though any code into a file called ``outputs.txt`` in every
 realization directory, and call
-``myensembleobject.from_txt('outputs.txt')``.
+``myensembleobject.load_txt('outputs.txt')``.
 
 Scalar data
 ^^^^^^^^^^^
@@ -164,7 +164,7 @@ string or numeric. There should be nothing else than the value itself
 in the text file, except for comments after a comment characters.
 
 .. code-block:: python
-    ens.from_scalar('npv.txt')
+    ens.load_scalar('npv.txt')
 
 You are advised to add the option `convert_numeric=True` when the
 values are actually numeric. This ensures that the loaded data is
@@ -186,7 +186,7 @@ Reading tabular data from CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CSV files are handled analogously to txt files, in that you read them
-in by ``from_csv(filename)`` (where ``filename`` is the filename local
+in by ``load_csv(filename)`` (where ``filename`` is the filename local
 to each realization). The data will be stored with the filename as the
 key, and you can get back the aggregated data set using
 ``get_df(filename)``.

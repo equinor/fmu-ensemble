@@ -16,9 +16,6 @@ from fmu.ensemble.virtualrealization import VirtualRealization
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
-if not fmux.testsetup():
-    raise SystemExit()
-
 
 class VirtualEnsemble(object):
     """A computed or archived ensemble
@@ -332,7 +329,7 @@ class VirtualEnsemble(object):
         # Mature analogue function in VirtualRealization before commencing this
         raise NotImplementedError
 
-    def from_disk(self, directory):
+    def load_disk(self, directory):
         """Load data from disk.
 
         Data must be written like to_disk() would have

@@ -35,9 +35,6 @@ from .realizationcombination import RealizationCombination
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
 
-if not fmux.testsetup():
-    raise SystemExit()
-
 
 class ScratchRealization(object):
     r"""A representation of results still present on disk
@@ -104,7 +101,7 @@ class ScratchRealization(object):
                        'FULLPATH': os.path.join(abspath, 'STATUS'),
                        'BASENAME': 'STATUS'}
             self.files = self.files.append(filerow, ignore_index=True)
-            self.from_status()
+            self.load_status()
         else:
             logger.warn("No STATUS file, %s",
                         abspath)
@@ -117,10 +114,10 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, 'OK')):
-            self.from_scalar('OK')
+            self.load_scalar('OK')
 
         if os.path.exists(os.path.join(abspath, 'parameters.txt')):
-            self.from_txt('parameters.txt')
+            self.load_txt('parameters.txt')
 
         logger.info('Initialized %s', abspath)
 
@@ -141,7 +138,7 @@ class ScratchRealization(object):
             return VirtualRealization(name, copy.deepcopy(self.data))
         return VirtualRealization(name, self.data)
 
-    def from_file(self, localpath, fformat, convert_numeric=True,
+    def load_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):
         """
         Parse and internalize files from disk.
@@ -152,15 +149,15 @@ class ScratchRealization(object):
         * scalar (one number or one string in the first line)
         """
         if fformat == 'txt':
-            self.from_txt(localpath, convert_numeric, force_reread)
+            self.load_txt(localpath, convert_numeric, force_reread)
         elif fformat == 'csv':
-            self.from_csv(localpath, convert_numeric, force_reread)
+            self.load_csv(localpath, convert_numeric, force_reread)
         elif fformat == 'scalar':
-            self.from_scalar(localpath, convert_numeric, force_reread)
+            self.load_scalar(localpath, convert_numeric, force_reread)
         else:
             raise ValueError("Unsupported file format %s" % fformat)
 
-    def from_scalar(self, localpath, convert_numeric=False,
+    def load_scalar(self, localpath, convert_numeric=False,
                     force_reread=False, comment=None, skip_blank_lines=True,
                     skipinitialspace=True):
         """Parse a single value from a file.
@@ -214,7 +211,7 @@ class ScratchRealization(object):
                 self.data[localpath] = value
             return value
 
-    def from_txt(self, localpath, convert_numeric=True,
+    def load_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a txt file with
         <key> <value>
@@ -274,7 +271,7 @@ class ScratchRealization(object):
             self.data[localpath] = keyvalues
             return keyvalues
 
-    def from_csv(self, localpath, convert_numeric=True,
+    def load_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
         """Parse a CSV file as a DataFrame
 
@@ -325,7 +322,7 @@ class ScratchRealization(object):
             self.data[localpath] = dframe
             return dframe
 
-    def from_status(self):
+    def load_status(self):
         """Collects the contents of the STATUS files and return
         as a dataframe, with information from jobs.json added if
         available.
@@ -596,7 +593,7 @@ class ScratchRealization(object):
         self._eclsum = eclsum
         return self._eclsum
 
-    def from_smry(self, time_index='raw', column_keys=None):
+    def load_smry(self, time_index='raw', column_keys=None):
         """Produce dataframe from Summary data from the realization
 
         When this function is called, the dataframe will be cached.
@@ -909,8 +906,8 @@ class ScratchRealization(object):
             return None
 
         if not self._eclinit:
-            return EclFile(init_filename,
-                           flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
+            self._eclinit = EclFile(init_filename,
+                                    flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclinit
 
     def get_unrst(self):
@@ -931,8 +928,8 @@ class ScratchRealization(object):
         if not os.path.exists(unrst_filename):
             return None
         if not self._eclunrst:
-            return EclFile(unrst_filename,
-                           flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
+            self._eclunrst = EclFile(unrst_filename,
+                                     flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM)
         return self._eclunrst
 
     def get_grid_index(self, active_only):
@@ -1015,8 +1012,7 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        prop_values = self.get_unrst()[prop][report].scatter_copy(self.actnum)
-        return prop_values
+        return self.get_unrst()[prop][report].scatter_copy(self.actnum)
 
 
 def normalize_dates(start_date, end_date, freq):
