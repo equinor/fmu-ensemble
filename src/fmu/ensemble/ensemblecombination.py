@@ -116,7 +116,7 @@ class EnsembleCombination(object):
         if self.add:
             dates = dates.union(set(self.add.get_smry_dates(freq)))
         if self.sub:
-            dates = dates.union(set(self.add.get_smry_dates(freq)))
+            dates = dates.union(set(self.sub.get_smry_dates(freq)))
         dates = list(dates)
         dates.sort()
         return dates
