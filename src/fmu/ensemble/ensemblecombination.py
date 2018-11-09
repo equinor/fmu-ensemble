@@ -6,6 +6,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import pandas as pd
+
 from fmu.config import etc
 from fmu.ensemble.virtualensemble import VirtualEnsemble
 
@@ -151,6 +153,61 @@ class EnsembleCombination(object):
                           .set_index(indexlist)
             result = result.sub(otherdf)
         return result.reset_index()
+
+    def get_smry_stats(self, column_keys=None, time_index='monthly'):
+        """
+        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+        for a set of simulation summary vectors (column key).
+
+        Output format of the function is tailored towards webviz_fan_chart
+        (data layout and column naming)
+
+        Compared to the agg() function, this function only works on summary
+        data (time series), and will only operate on actually requested data,
+        independent of what is internalized. It accesses the summary files
+        directly and can thus obtain data at any time frequency.
+
+        Args:
+            column_keys: list of column key wildcards
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+        Returns:
+            A dictionary. Index by column key to the corresponding ensemble
+            summary statistics dataframe. Each dataframe has the dates in a
+        column called 'index', and statistical data in 'min', 'max', 'mean',
+        'p10', 'p90'. The column 'p10' contains the oil industry version of
+        'p10', and is calculated using the Pandas p90 functionality.
+
+        TODO: add warning message when failed realizations are removed
+        """
+        # Obtain an aggregated dataframe for only the needed columns over
+        # the entire ensemble.
+
+        dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
+
+        data = {}  # dict to be returned
+        for key in dframe.columns.drop('DATE').drop('REAL'):
+            dates = dframe.groupby('DATE').first().index.values
+            name = [key] * len(dates)
+            mean = dframe.groupby('DATE').mean()[key].values
+            p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
+            p90 = dframe.groupby('DATE').quantile(q=0.10)[key].values
+            maximum = dframe.groupby('DATE').max()[key].values
+            minimum = dframe.groupby('DATE').min()[key].values
+
+            data[key] = pd.DataFrame({
+                'index': dates,
+                'name': name,
+                'mean': mean,
+                'p10': p10,
+                'p90': p90,
+                'max': maximum,
+                'min': minimum
+            })
+
+        return data
 
     def __getitem__(self, localpath):
         return self.get_df(localpath)

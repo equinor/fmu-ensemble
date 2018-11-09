@@ -7,6 +7,8 @@ from __future__ import print_function
 
 import os
 
+import pandas as pd
+
 from fmu import config
 from fmu import ensemble
 
@@ -53,6 +55,32 @@ def test_ensemblecombination_basic():
 
     assert len(diff.get_smry(column_keys=['FOPR', 'FGPR',
                                           'FWCT']).columns) == 5
+
+    # eclipse summary vector statistics for a given ensemble
+    df_stats = diff.get_smry_stats(column_keys=['FOPR', 'FGPR'],
+                                           time_index='monthly')
+    assert isinstance(df_stats, dict)
+    assert len(df_stats.keys()) == 2
+    assert isinstance(df_stats['FOPR'], pd.DataFrame)
+    assert len(df_stats['FOPR'].index) == 37
+
+    # check if wild cards also work for get_smry_stats
+    df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
+                                           time_index='monthly')
+    assert len(df_stats.keys()) == len(reekensemble.get_smrykeys(['FOP*',
+                                                                 'FGP*']))
+
+    # Check webviz requirements for dataframe
+    assert 'min' in df_stats['FOPR'].columns
+    assert 'max' in df_stats['FOPR'].columns
+    assert 'name' in df_stats['FOPR'].columns
+    assert df_stats['FOPR']['name'].unique() == 'FOPR'
+    assert 'index' in df_stats['FOPR'].columns  # This is DATE (!)
+    assert 'mean' in df_stats['FOPR'].columns
+    assert 'p10' in df_stats['FOPR'].columns
+    assert 'p90' in df_stats['FOPR'].columns
+    assert df_stats['FOPR']['min'].iloc[-1] < \
+        df_stats['FOPR']['max'].iloc[-1]
 
     # Virtualization of ensemble combinations
     # (equals comutation of everything)
