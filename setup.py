@@ -29,9 +29,54 @@ test_requirements = [
 fmuensemble_function = ('fmuensemble='
                         'fmu.ensemble.unknowrunner:main')
 
+# -----------------------------------------------------------------------------
+# Explaining versions:
+# As system the PEP 440 major.minor.micro is used:
+# - major: API or any very larger changes
+# - minor: Functionality added, mostly backward compatibility but some
+#          functions may change. Also includes larger refactoring of code.
+# - micro: Added functionality and bug fixes with no expected side effects
+# - Provide a tag on the form 3.4.0 for each release!
+#
+# Also, a verymicro may _sometimes_ exist (allowed in PEP440); which can be:
+# - One single, very easy to understand, bugfixes
+# - Additions in documentations (not affecting code)
+# - These may not be tagged explicity!
+#
+# Hence, use major.minor.micro or major.minor.micro.verymicro scheme.
+# -----------------------------------------------------------------------------
+
+
+def the_version():
+    """Process the version, to avoid non-pythonic version schemes.
+
+    Means that e.g. 1.5.12+2.g191571d.dirty is turned to 1.5.12.2.dev0
+
+    This function must be ~identical to fmu-tools._theversion.py
+    """
+
+    version = versioneer.get_version()
+    sver = version.split('.')
+    print('\nFrom TAG description: {}'.format(sver))
+
+    useversion = 'UNSET'
+    if len(sver) == 3:
+        useversion = version
+    else:
+        bugv = sver[2].replace('+', '.')
+
+        if 'dirty' in version:
+            ext = '.dev0'
+        else:
+            ext = ''
+        useversion = '{}.{}.{}{}'.format(sver[0], sver[1], bugv, ext)
+
+    print('Using version {}\n'.format(useversion))
+    return useversion
+
 setup(
     name='fmu_ensemble',
-    version=versioneer.get_version(),
+    version=the_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Library for various config scripts in FMU scope",
     long_description=readme + '\n\n' + history,
