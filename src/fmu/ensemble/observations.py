@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Module for parsing an ensemble from FMU. This class represents an
-ensemble, which is nothing but a collection of realizations.
-
-The typical task of this class is book-keeping of each realization,
-and abilities to aggregate any information that each realization can
-provide.
+"""
+Observations support and related calculations
 """
 
 from __future__ import absolute_import
@@ -44,8 +40,13 @@ class Observations(object):
     summary vector, it can also be a time-series. Mismatches will
     be computed pr. observation unit.
 
+    Important: Using time-series as observations is not recommended in
+    assisted history match. Pick individual uncorrelated data points
+    at relevant points in time instead.
+
     The type of observations supported must follow the datatypes that
     the realizations and ensemble objects are able to internalize.
+
     """
 
     # Discussion points:
@@ -79,6 +80,10 @@ class Observations(object):
 
         if not self._clean_observations():
             raise ValueError("No usable observations")
+
+    def __getitem__(self, object):
+        """Pick objects from the observations dict"""
+        return self.observations[object]
 
     def mismatch(self, ens_or_real):
         """Compute the mismatch from the current observation set
@@ -155,7 +160,7 @@ class Observations(object):
                         'localpath'])[obsunit['key']]
                     mismatch = sim_value - obsunit['value']
                     mismatches.append(dict(OBSTYPE=obstype,
-                                           OBSKEY=str(obsunit['localpath'])\
+                                           OBSKEY=str(obsunit['localpath'])
                                            + '/' + str(obsunit['key']),
                                            MISMATCH=mismatch,
                                            L1=abs(mismatch),
@@ -181,7 +186,8 @@ class Observations(object):
                                            MISMATCH=sim_hist.mismatch.sum(),
                                            L1=sim_hist.mismatch.abs().sum(),
                                            L2=math.sqrt(
-                                               (sim_hist.mismatch ** 2).sum())))
+                                               (sim_hist\
+                                                .mismatch ** 2).sum())))
         return pd.DataFrame(mismatches)
 
     def _realization_misfit(self, real, corr=None):
@@ -229,8 +235,8 @@ class Observations(object):
         return 1
 
     def to_ert2observations(self):
-        """Convert the observation set to an observation 
-        file for use with Ert 2.
+        """Convert the observation set to an observation
+        file for use with Ert 2.x.
 
         Returns: multiline string
         """

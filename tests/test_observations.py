@@ -33,7 +33,11 @@ def test_observation_import():
                        '/share/observations/' +
                        'observations.yml')
     assert len(obs.keys()) == 2 # adjust this..
+    assert len(obs['smry'] == 7)
+    assert len(obs['rft'] == 2)
 
+    assert isinstance(obs['smry'], list)
+    assert isinstance(obs['rft'], list)
 
 
 def test_real_mismatch():
@@ -138,8 +142,8 @@ def test_errormessages():
         # (warning will also be issued)
 
     # Empty list
-    # with pytest.raises(ValueError):
-    #    obs = Observations(dict(smry=[]))
+    with pytest.raises(ValueError):
+        obs = Observations(dict(smry=[]))
 
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""
