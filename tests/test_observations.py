@@ -6,7 +6,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import numpy
 import pandas as pd
 
 import pytest
@@ -22,6 +21,7 @@ if not fmux.testsetup():
 
 
 def test_observation_import():
+    """Test import of observations from yaml"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -33,8 +33,8 @@ def test_observation_import():
                        '/share/observations/' +
                        'observations.yml')
     assert len(obs.keys()) == 2 # adjust this..
-    assert len(obs['smry'] == 7)
-    assert len(obs['rft'] == 2)
+    assert len(obs['smry']) == 7
+    assert len(obs['rft']) == 2
 
     assert isinstance(obs['smry'], list)
     assert isinstance(obs['rft'], list)
@@ -108,8 +108,9 @@ def test_real_mismatch():
     assert fopt_mis.loc[0, 'L1'] != fopt_mis.loc[0, 'L2']
 
     # Test dumping to yaml:
-    yamlobsstr = obs2.to_yaml()
-    assert isinstance(yamlobsstr, str)
+    # Not implemented.
+    # yamlobsstr = obs2.to_yaml()
+    # assert isinstance(yamlobsstr, str)
     # * Write yamlobsstr to tmp file
     # * Reload observation object from that file
     # * Check that the observation objects are the same
@@ -121,29 +122,26 @@ def test_errormessages():
 
     # Emtpy
     with pytest.raises(TypeError):
-        obs = Observations()
+        Observations()
 
     # Non-existing filename:
     with pytest.raises(IOError):
-        obs = Observations("foobar")
+        Observations("foobar")
 
     # Integer input does not make sense..
     with pytest.raises(ValueError):
-        obs = Observations(3)
+        Observations(3)
 
     # Unsupported observation category
     with pytest.raises(ValueError):
-        obs = Observations(dict(foobar='foo'))
+        Observations(dict(foobar='foo'))
         # (there will be logged a warning also)
 
     # Check that the dict is a dict of lists:
     with pytest.raises(ValueError):
-        obs = Observations(dict(smry='not_a_list'))
+        Observations(dict(smry='not_a_list'))
         # (warning will also be issued)
 
-    # Empty list
-    with pytest.raises(ValueError):
-        obs = Observations(dict(smry=[]))
 
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""

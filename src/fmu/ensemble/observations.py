@@ -98,20 +98,19 @@ class Observations(object):
         """
         # For ensembles, we should in the future be able to loop
         # over realizations in a multiprocessing fashion
-        if isinstance(ens_or_real, VirtualEnsemble) \
-           or isinstance(ens_or_real, ScratchEnsemble):
+        if isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
             mismatches = {}
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
                 mismatches[realidx]['REAL'] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True)
-        elif isinstance(ens_or_real, VirtualRealization) \
-             or isinstance(ens_or_real, ScratchRealization):
+        elif isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):
             return self._realization_mismatch(ens_or_real)
         elif isinstance(ens_or_real, EnsembleSet):
             pass
         else:
             raise ValueError("Unsupported object for mismatch calculation")
+        return None
 
     def __len__(self):
         """Return the number of observation units present"""
@@ -205,7 +204,6 @@ class Observations(object):
             float : the misfit value for the observation set and realization
         """
         raise NotImplementedError
-        return 1
 
     def _clean_observations(self):
         """Verify integrity of observations, remove
@@ -229,7 +227,7 @@ class Observations(object):
                              'list, but %s',
                              key, type(self.observations[key]))
                 self.observations.pop(key)
-        if not len(self.observations.keys()):
+        if not self.observations.keys():
             logger.error("No parseable observations")
             raise ValueError
         return 1
@@ -241,7 +239,6 @@ class Observations(object):
         Returns: multiline string
         """
         raise NotImplementedError
-        return ""
 
     def to_yaml(self):
         """Convert the current observations to YAML format
@@ -249,4 +246,4 @@ class Observations(object):
         Returns:
             string : Multiline YAML string.
         """
-        return ""
+        raise NotImplementedError
