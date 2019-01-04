@@ -555,7 +555,7 @@ class ScratchRealization(object):
         and return as a libecl EclSum object
 
         Unless the UNSMRY lfile has been discovered, it will
-        pick the file from the glob eclipse/model/*UNSMRY
+        pick the file from the glob `eclipse/model/*UNSMRY`
 
         Warning: If you have multiple UNSMRY files and have not
         performed explicit discovery, this function will

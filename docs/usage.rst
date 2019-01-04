@@ -258,10 +258,12 @@ and/or ensembles with many realizations.
     # extract the mean of following properties at the report step 4
     ens.get_eclgrid(props=['PERMX', 'FLOWATI+', 'FLOWATJ+'], report=4, agg='mean')
 
-When called `get_eclgrid` reads the grid from one realization. Then depending if the
-properties requested are static or dynamic, the corresponding *INIT or *UNRST file
-will be read for all successful realization in the ensemble. The user can specify how 
-the results should be aggregated. Currently the options support are `mean` or `std`.
+When called `get_eclgrid` reads the grid from one realization. Then
+depending if the properties requested are static or dynamic, the
+corresponding `*INIT` or `*UNRST` file will be read for all successful
+realization in the ensemble. The user can specify how the results
+should be aggregated. Currently the options support are `mean` or
+`std`.
 
 
 Filtering realizations
