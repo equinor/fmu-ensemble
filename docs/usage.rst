@@ -193,6 +193,7 @@ string or numeric. There should be nothing else than the value itself
 in the text file, except for comments after a comment characters.
 
 .. code-block:: python
+
     ens.load_scalar('npv.txt')
 
 You are advised to add the option `convert_numeric=True` when the
@@ -207,6 +208,7 @@ and the values in the second column. This value column has the same
 name as the filename.
 
 .. code-block:: python
+
     npv = ens.get_df('npv.txt')  # A DataFrame is returned, with the columns 'REAL' and 'npv.txt'
     npv_values = npv['npv.txt']  # Need to say 'npv.txt' once more to get to the column values.
 
