@@ -51,8 +51,8 @@ Change the path to your own if you do not want to try this particular ensemble.
 
 Pay attention to the wildcard path. ``iter-3`` is fixed here, and you
 cannot use ``iter-*`` in this call, as that would not be an ensemble. If
-you want to load ``iter-*`` you are initalizing an *ensemble set* which
-is documented further down.
+you want to load ``iter-*`` you are initalizing an *ensemble set*,
+see below.
 
 When doing this, only rudimentary loading of the ensemble is
 performed, like loading ``STATUS`` and ``parameters.txt``. It is the intention
@@ -72,6 +72,35 @@ When an ensemble is loaded into memory, you can ask for certain properties,
     # List of parameters available:
     ens.parameters.columns
 
+Loading multiple ensembles
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have multiple ensembles in the typical ``realization-*/iter-*`` 
+directory structure, you can load all these ensembles in one go:
+
+.. code-block:: python
+
+    ens_set = ensemble.EnsembleSet('hm_attempt01',
+                  frompath='/scratch/fmustandmat/r001_reek_scratch/')
+
+This will look for realizations and iterations and group them
+accordingly.  Ensemble names will be inferred from the iteration
+directory level, and will be named `iter-X`
+
+If you have run prediction ensembles, which do not match `iter-X` in
+the directory name, you have to add them manually to the ensemble set:
+
+.. code-block:: python
+
+    # Augment the existing ens_set object
+    ens_set.add_ensemble(ensemble.ScratchEnsemble('pred-dg3',
+        '/scratch/fmustandmat/r001_reek_scratch/realization-*/pred-dg3/'))
+
+EnsembleSet object can be treated almost as Ensemble
+objects. Operations on ensemble sets will typically be applied to each
+ensemble member. A difference is that aggregated data structures
+always have an extra column called ``ENSEMBLE`` that contains the
+ensemble names.
 
 Reading Eclipse data
 ^^^^^^^^^^^^^^^^^^^^

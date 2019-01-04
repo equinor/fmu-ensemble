@@ -12,29 +12,49 @@ import glob
 import pandas as pd
 
 from fmu.config import etc
-from .ensemble import ScratchEnsemble
+from .ensemble import ScratchEnsemble, VirtualEnsemble
 
 xfmu = etc.Interaction()
 logger = xfmu.functionlogger(__name__)
 
 
 class EnsembleSet(object):
-    """An ensemble set is any collection of ensembles.
+    """An ensemble set is any collection of ensemble objects
 
-    Ensembles might be both ScratchEnsembles or VirtualEnsembles.
+    Ensemble objects are ScratchEnsembles or VirtualEnsembles.
     """
 
-    def __init__(self, ensembleset_name, ensembles):
-        """Initiate an ensemble set from a list of ensembles
+    def __init__(self, name=None, ensembles=None, frompath=None):
+        """Initiate an ensemble set
 
         Args:
-            ensemblesetname: string with the name of the ensemble set
-            ensembles: list of existing Ensemble objects. Can be empty.
+        name: Chosen name for the ensemble set. Can be used if aggregated at a
+            higher level.
+        ensembles: list of Ensemble objects. Can be omitted.
+        frompath: string or list of strings with filesystem path.
+            Will be globbed by default. If no realizations or iterations
+            are detected after globbing, the standard glob
+            'realization-*/iter-*/ will be used.
         """
-        self._name = ensembleset_name
+        self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
-        for ensemble in ensembles:
-            self._ensembles[ensemble.name] = ensemble
+
+        if ensembles and frompath:
+            logger.error("EnsembleSet cannot initialize from " +
+                         "both list of ensembles and path")
+
+        if ensembles and isinstance(ensembles, list):
+            for ensemble in ensembles:
+                if isinstance(ensemble, (ScratchEnsemble, VirtualEnsemble)):
+                    self._ensembles[ensemble.name] = ensemble
+                else:
+                    logger.warning("Supplied object was not an ensemble")
+            return
+        else:
+            logger.error("Ensembles supplied to EnsembleSet must be a list")
+
+        if frompath:
+            self.add_ensembles_frompath(frompath)
 
     @property
     def name(self):
