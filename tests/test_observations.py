@@ -143,6 +143,13 @@ def test_smry():
     assert mismatch.L1.sum() > 0
     assert mismatch.L2.sum() > 0
 
+    # This should work, but either the observation object
+    # must do the smry interpolation in dataframes, or
+    # the virtual realization should implement get_smry()
+    # vreal = real.to_virtual()
+    # vmismatch = obs.mismatch(vreal)
+    # print(vmismatch)
+
 
 def test_errormessages():
     """Test that we give ~sensible error messages when the
