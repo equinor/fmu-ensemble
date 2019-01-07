@@ -145,8 +145,8 @@ class Observations(object):
             * L1 - absolute difference
             * L2 - absolute difference squared
             * SIGN - True if positive difference
-            * SIMVALUE - the simulated value
-            * OBSVALUE - the observed value
+            * SIMVALUE - the simulated value, not for smryh
+            * OBSVALUE - the observed value, not for smryh
         One row for every observation unit.
 
         Args:
@@ -170,6 +170,8 @@ class Observations(object):
                                            MISMATCH=mismatch,
                                            L1=abs(mismatch),
                                            L2=abs(mismatch)**2,
+                                           SIMVALUE=sim_value,
+                                           OBSVALUE=obsunit['value'],
                                            SIGN=cmp(mismatch, 0)))
                 if obstype == 'scalar':
                     sim_value = real.get_df(obsunit['key'])
@@ -177,6 +179,8 @@ class Observations(object):
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['key']),
                                            MISMATCH=mismatch, L1=abs(mismatch),
+                                           SIMVALUE=sim_value,
+                                           OBSVALUE=obsunit['value'],
                                            L2=abs(mismatch)**2,
                                            SIGN=cmp(mismatch, 0)))
                 if obstype == 'smryh':
@@ -209,7 +213,8 @@ class Observations(object):
                                                OBSVALUE=unit['value'],
                                                SIMVALUE=sim_value,
                                                L1=abs(mismatch),
-                                               L2=abs(mismatch)))
+                                               L2=abs(mismatch),
+                                               SIGN=cmp(mismatch, 0)))
         return pd.DataFrame(mismatches)
 
     def _realization_misfit(self, real, corr=None):
