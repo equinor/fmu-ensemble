@@ -40,6 +40,10 @@ class Observations(object):
     summary vector, it can also be a time-series. Mismatches will
     be computed pr. observation unit.
 
+    Pay attentiont to mismatch versus misfit. Here, mismatch is used
+    for individual observation units, while misfit is used as single
+    number for whole realizations.
+
     Important: Using time-series as observations is not recommended in
     assisted history match. Pick individual uncorrelated data points
     at relevant points in time instead.
@@ -141,6 +145,8 @@ class Observations(object):
             * L1 - absolute difference
             * L2 - absolute difference squared
             * SIGN - True if positive difference
+            * SIMVALUE - the simulated value
+            * OBSVALUE - the observed value
         One row for every observation unit.
 
         Args:
@@ -185,8 +191,25 @@ class Observations(object):
                                            MISMATCH=sim_hist.mismatch.sum(),
                                            L1=sim_hist.mismatch.abs().sum(),
                                            L2=math.sqrt(
-                                               (sim_hist\
+                                               (sim_hist
                                                 .mismatch ** 2).sum())))
+                if obstype == 'smry':
+                    # For 'smry', there is a list of
+                    # observations (indexed by date)
+                    for unit in obsunit['observations']:
+                        sim_value = real.get_smry(time_index=[unit['date']],
+                                                  column_keys=obsunit['key'])\
+                                                  [obsunit['key']].values[0]
+                        mismatch = sim_value - unit['value']
+                        mismatches.append(dict(OBSTYPE='smry',
+                                               OBSKEY=obsunit['key'],
+                                               DATE=unit['date'],
+                                               MEASERROR=unit['error'],
+                                               MISMATCH=mismatch,
+                                               OBSVALUE=unit['value'],
+                                               SIMVALUE=sim_value,
+                                               L1=abs(mismatch),
+                                               L2=abs(mismatch)))
         return pd.DataFrame(mismatches)
 
     def _realization_misfit(self, real, corr=None):

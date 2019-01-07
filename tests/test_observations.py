@@ -32,7 +32,7 @@ def test_observation_import():
                        '/data/testensemble-reek001/' +
                        '/share/observations/' +
                        'observations.yml')
-    assert len(obs.keys()) == 2 # adjust this..
+    assert len(obs.keys()) == 2  # adjust this..
     assert len(obs['smry']) == 7
     assert len(obs['rft']) == 2
 
@@ -114,6 +114,34 @@ def test_real_mismatch():
     # * Write yamlobsstr to tmp file
     # * Reload observation object from that file
     # * Check that the observation objects are the same
+
+
+def test_smry():
+    """Test the support for smry observations, these are
+    observations relating to summary data, but where
+    the observed values are specified in yaml, not through
+    *H summary variables"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    obs = Observations(testdir +
+                       '/data/testensemble-reek001/' +
+                       '/share/observations/' +
+                       'observations.yml')
+    real = ScratchRealization(testdir + '/data/testensemble-reek001/' +
+                              'realization-0/iter-0/')
+
+    # Compute the mismatch from this particular observation set to the
+    # loaded realization.
+    mismatch = obs.mismatch(real)
+
+    assert len(mismatch) == 21  # later: implement counting in the obs object
+    assert mismatch.L1.sum() > 0
+    assert mismatch.L2.sum() > 0
 
 
 def test_errormessages():
