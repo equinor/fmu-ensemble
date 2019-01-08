@@ -164,6 +164,7 @@ class Observations(object):
                     sim_value = real.get_df(obsunit[
                         'localpath'])[obsunit['key']]
                     mismatch = sim_value - obsunit['value']
+                    measerror = 1
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['localpath'])
                                            + '/' + str(obsunit['key']),
@@ -172,15 +173,18 @@ class Observations(object):
                                            L2=abs(mismatch)**2,
                                            SIMVALUE=sim_value,
                                            OBSVALUE=obsunit['value'],
+                                           MEASERROR=measerror,
                                            SIGN=cmp(mismatch, 0)))
                 if obstype == 'scalar':
                     sim_value = real.get_df(obsunit['key'])
                     mismatch = sim_value - obsunit['value']
+                    measerror = 1
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['key']),
                                            MISMATCH=mismatch, L1=abs(mismatch),
                                            SIMVALUE=sim_value,
                                            OBSVALUE=obsunit['value'],
+                                           MEASERROR=measerror,
                                            L2=abs(mismatch)**2,
                                            SIGN=cmp(mismatch, 0)))
                 if obstype == 'smryh':
@@ -190,9 +194,11 @@ class Observations(object):
                                                           obsunit['histvec']])
                     sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
                         sim_hist[obsunit['histvec']]
+                    measerror = 1
                     mismatches.append(dict(OBSTYPE='smryh',
                                            OBSKEY=obsunit['key'],
                                            MISMATCH=sim_hist.mismatch.sum(),
+                                           MEASERROR=measerror,
                                            L1=sim_hist.mismatch.abs().sum(),
                                            L2=math.sqrt(
                                                (sim_hist
@@ -217,21 +223,40 @@ class Observations(object):
                                                SIGN=cmp(mismatch, 0)))
         return pd.DataFrame(mismatches)
 
-    def _realization_misfit(self, real, corr=None):
+    def _realization_misfit(self, real, defaulterrors=False, corr=None):
         """The misfit value for the observation set
 
-        Ref: https://wiki.statoil.no/wiki/indexphp/RP_HM/Observations#Misfit_function
+        Ref: https://wiki.statoil.no/wiki/index.php/RP_HM/Observations#Misfit_function
 
         Args:
             real : a ScratchRealization or a VirtualRealization
+            defaulterrors: (boolean) If set to True, zero measurement errors
+                will be set to 1.
             corr : correlation or weigthing matrix (numpy matrix).
-                If a list or numpy vector is supplied, it is intepreted
+                If a list or numpy vector is supplied, it is interpreted
                 as a diagonal matrix. If omitted, the identity matrix is used
 
         Returns:
             float : the misfit value for the observation set and realization
         """
-        raise NotImplementedError
+        if corr:
+            raise NotImplementedError("correlations in misfit " +
+                                      "calculation is not supported")
+        mismatch = self._realization_mismatch(real)
+
+        zeroerrors = mismatch['MEASERROR'] < 1e-7
+        if defaulterrors:
+            mismatch[zeroerrors]['MEASERROR'] = 1
+        else:
+            if zeroerrors.any():
+                print(mismatch[zeroerrors])
+                raise ValueError("Zero measurement error in observation set. " +
+                                 "can't be used to calculate misfit")
+        if 'MISFIT' not in mismatch.columns:
+            mismatch['MISFIT'] = mismatch['L2']/ (mismatch['MEASERROR'] ** 2)
+
+        return mismatch['MISFIT'].sum()
+
 
     def _clean_observations(self):
         """Verify integrity of observations, remove
