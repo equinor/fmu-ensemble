@@ -10,7 +10,7 @@ import datetime
 import pytest
 import shutil
 import pandas as pd
-import ert.ecl
+import ecl.summary
 
 from fmu import config
 from fmu import ensemble
@@ -161,7 +161,7 @@ def test_singlereal_ecl():
     real = ensemble.ScratchRealization(realdir)
 
     # Eclipse summary files:
-    assert isinstance(real.get_eclsum(), ert.ecl.EclSum)
+    assert isinstance(real.get_eclsum(), ecl.summary.EclSum)
     real.load_smry().to_csv('real0smry.csv', index=False)
     assert real.load_smry().shape == (378, 474)
     # 378 dates, 470 columns + DATE column

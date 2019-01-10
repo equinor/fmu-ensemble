@@ -420,7 +420,7 @@ class ScratchEnsemble(object):
         realization object, and can be retrieved through get_df().
 
         Wraps around Realization.load_smry() which wraps around
-        ert.ecl.EclSum.pandas_frame()
+        ecl.summary.EclSum.pandas_frame()
 
         Beware that the default time_index or ensembles is 'monthly',
         differing from realizations which use raw dates by default.
@@ -845,7 +845,7 @@ class ScratchEnsemble(object):
         Aggregates summary data from all realizations.
 
         Wraps around Realization.get_smry() which wraps around
-        ert.ecl.EclSum.pandas_frame()
+        ecl.summary.EclSum.pandas_frame()
 
         Args:
             time_index: list of DateTime if interpolation is wanted

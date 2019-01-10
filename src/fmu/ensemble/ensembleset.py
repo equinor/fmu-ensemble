@@ -281,7 +281,7 @@ class EnsembleSet(object):
         Fetch summary data from all ensembles
 
         Wraps around Ensemble.load_smry() which wraps
-        Realization.load_smry(), which wraps ert.ecl.EclSum.pandas_frame()
+        Realization.load_smry(), which wraps ecl.summary.EclSum.pandas_frame()
 
         The time index is determined at realization level. If you
         ask for 'monthly', you will from each realization get its
