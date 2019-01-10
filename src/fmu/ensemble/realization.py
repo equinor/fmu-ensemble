@@ -384,11 +384,11 @@ class ScratchRealization(object):
             if not jobrow['ENDTIME']:  # A job that is not finished.
                 durations.append(numpy.nan)
             else:
-                hms = map(int, jobrow['STARTTIME'].split(':'))
+                hms = list(map(int, jobrow['STARTTIME'].split(':')))
                 start = datetime.combine(date.today(),
                                          time(hour=hms[0], minute=hms[1],
                                               second=hms[2]))
-                hms = map(int, jobrow['ENDTIME'].split(':'))
+                hms = list(map(int, jobrow['ENDTIME'].split(':')))
                 end = datetime.combine(date.today(),
                                        time(hour=hms[0], minute=hms[1],
                                             second=hms[2]))
@@ -487,7 +487,7 @@ class ScratchRealization(object):
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
         """
-        basenames = map(os.path.basename, self.data.keys())
+        basenames = list(map(os.path.basename, self.data.keys()))
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in self.data}
             return short2path[shortpath]
