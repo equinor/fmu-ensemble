@@ -22,7 +22,7 @@ from datetime import datetime, date, time
 import dateutil
 import pandas as pd
 
-import ert.ecl
+import ecl.summary
 from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
@@ -582,7 +582,7 @@ class ScratchRealization(object):
         if not os.path.exists(unsmry_filename):
             return None
         try:
-            eclsum = ert.ecl.EclSum(unsmry_filename, lazy_load=False)
+            eclsum = ecl.summary.EclSum(unsmry_filename, lazy_load=False)
         except IOError:
             # This can happen if there is something wrong with the file
             # or if SMSPEC is missing.
@@ -607,7 +607,7 @@ class ScratchRealization(object):
         on the chosen time_index. If a custom time_index (list
         of datetime) was supplied, <time_index> will be called 'custom'.
 
-        Wraps ert.ecl.EclSum.pandas_frame()
+        Wraps ecl.summary.EclSum.pandas_frame()
 
         Args:
             time_index: string indicating a resampling frequency,
