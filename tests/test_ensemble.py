@@ -429,29 +429,6 @@ def test_nonexisting():
     assert not nopermission
 
 
-def test_observation_import():
-    if '__file__' in globals():
-        # Easen up copying test code into interactive sessions
-        testdir = os.path.dirname(os.path.abspath(__file__))
-    else:
-        testdir = os.path.abspath('.')
-
-    reekensemble = ScratchEnsemble('reektest',
-                                   testdir +
-                                   '/data/testensemble-reek001/' +
-                                   'realization-*/iter-0')
-
-    obs = reekensemble.load_observations(testdir +
-                                         '/data/testensemble-reek001/' +
-                                         '/share/observations/' +
-                                         'observations.yaml')
-
-    assert len(obs.keys()) == 2
-    df_mismatch = reekensemble.ensemble_mismatch()
-
-    assert len(df_mismatch.columns) == 7
-
-
 def test_filedescriptors():
     """Test how filedescriptors are used.
 
