@@ -28,7 +28,6 @@ from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
-from .observation_parser import observations_parser
 from .realization import parse_number
 
 xfmu = etc.Interaction()
