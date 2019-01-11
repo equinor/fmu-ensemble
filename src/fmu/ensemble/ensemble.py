@@ -881,30 +881,6 @@ class ScratchEnsemble(object):
             raise NotImplementedError
 
 
-    def from_obs_yaml(self, localpath):
-        warnings.warn("from_obs_yaml() is deprecated. Use load_observations()",
-                      DeprecationWarning)
-        return self.load_observations(localpath)
-
-    def load_observations(self, localpath):
-        self.obs = observations_parser(localpath)
-        return self.obs
-
-    def ensemble_mismatch(self):
-        """
-        This function returns the mismatch for each observation
-        in each realization in an ensemble.
-
-        """
-        if self.obs:
-            dflist = []
-            for index, realization in self._realizations.items():
-                dframe = realization.realization_mismatch(self.obs)
-                dflist.append(dframe)
-            return pd.concat(dflist, sort=False).reset_index()
-        else:
-            pd.DataFrame()
-
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
         """
         Returns the grid (i,j,k) and (x,y), and any requested init
