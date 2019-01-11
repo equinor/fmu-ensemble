@@ -2,10 +2,10 @@
 
 """Top-level package for fmu.ensemble"""
 
-from ._version import get_versions
-__version__ = get_versions()['version']
+from ._theversion import theversion
+__version__ = theversion()
 
-del get_versions
+del theversion
 
 from .ensemble import ScratchEnsemble  # noqa
 from .realization import ScratchRealization  # noqa
