@@ -109,3 +109,74 @@ then construct delta objects of the statistical realizations.
 
 Remember that this library does not help you in interpreting these
 results correctly, it only gives you the opportunity to calculate them!
+
+
+Working with observations
+-------------------------
+
+Observations for history matching can be loaded, and computations
+(comparisons) of observed data versus simulated data can be performed.
+
+The `Observation` object can be initizalized using YAML files or from a Python
+dictionary.
+
+If you are opting for simple usage, just being able to compare `FOPT`
+versus `FOPTH` in your ensemble, your observation config could look
+like:
+
+.. code-block:: yaml
+
+    # Eclipse summary vectors compared with allocated summary vectors
+    smryh:
+      - key: FOPT
+        histvec: FOPTH
+
+This file can be loaded in Python:
+
+.. code-block:: python
+
+    # Assume the yaml above has been put in a file:
+    obs = ensemble.Observations('fopt-obs.yml')
+
+Alternatively, it is possible to initialize this directly without the filesystem:
+
+.. code-block:: python
+
+    obs = ensemble.Observations({'smryh': [{'key': 'FOPT',
+            'histvec': 'FOPTH'}]})
+
+
+.. code-block:: python
+
+    # Load an ensemble we want to analyze
+    ens = ensemble.ScratchEnsemble('hmcandidate',
+            '/scratch/foo/something/realization-*/iter-3')
+    # Load an example observation configuration:
+
+
+    # Perform calculation of misfit
+    # A dataframe with computed mismatches is returned.
+    misfit = obs.mismatch(ens)
+
+    # Sort ascending by L1 (absolute error) and print the five
+    # best realization indices:
+    print(mis.sort_values('L1').head()['REAL'].values)
+    # Will return f.ex:
+    #   [ 38  26 100  71  57]
+
+
+For comparisons with single measured values (recommended for history matching), use the YAML syntax:
+
+.. code-block:: yaml
+                
+    smry:
+      # Mandatory elements per entry: key and observations
+      - key: WBP4:OP_1
+        comment: "Shut-in pressures converted from well head conditions" # This is a global comment regarding this set of observations
+        observations:
+           # Mandatory elements per entry in ecl_vector observations: value, error, date
+           - {value: 251, error: 4, date: 2001-01-01}
+           - {value: 251, error: 10, date: 2002-01-01}
+           - {value: 251, error: 10, date: 2003-01-01, comment: First measurement after sensor drift correction} 
+
+
