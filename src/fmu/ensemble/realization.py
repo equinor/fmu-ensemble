@@ -27,7 +27,6 @@ from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
 from fmu import config
-from .realizationmismatch import mismatch
 
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
