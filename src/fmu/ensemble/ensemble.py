@@ -16,8 +16,6 @@ import os
 import glob
 
 import warnings
-import numpy as np
-from collections import defaultdict
 import pandas as pd
 from ecl import EclDataType
 from ecl.eclfile import EclKW
@@ -384,8 +382,7 @@ class ScratchEnsemble(object):
                 data = realization.get_df(localpath)
                 if isinstance(data, dict):
                     data = pd.DataFrame(index=[1], data=data)
-                elif isinstance(data, str) or isinstance(data, int) \
-                     or isinstance(data, float):
+                elif isinstance(data, (str, int, float)):
                     data = pd.DataFrame(index=[1], columns=[localpath],
                                         data=data)
                 if isinstance(data, pd.DataFrame):

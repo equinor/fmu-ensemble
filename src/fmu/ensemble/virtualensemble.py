@@ -176,8 +176,7 @@ class VirtualEnsemble(object):
             df = realization.get_df(key)
             if isinstance(df, dict):  # dicts to go to one-row dataframes
                 df = pd.DataFrame(index=[1], data=df)
-            if (isinstance(df, str) or isinstance(df, int) or
-                isinstance(df, float)):
+            if isinstance(df, (str, int, float)):
                 df = pd.DataFrame(index=[1], columns=[key], data=df)
             df['REAL'] = realidx
             if key not in self.data.keys():

@@ -208,8 +208,8 @@ class Observations(object):
                     # observations (indexed by date)
                     for unit in obsunit['observations']:
                         sim_value = real.get_smry(time_index=[unit['date']],
-                                                  column_keys=obsunit['key'])\
-                                                  [obsunit['key']].values[0]
+                                                  column_keys=obsunit['key'])[
+                                                  obsunit['key']].values[0]
                         mismatch = sim_value - unit['value']
                         mismatches.append(dict(OBSTYPE='smry',
                                                OBSKEY=obsunit['key'],
@@ -238,7 +238,7 @@ class Observations(object):
 
         Returns:
             float : the misfit value for the observation set and realization
-        """
+        """  # noqa
         if corr:
             raise NotImplementedError("correlations in misfit " +
                                       "calculation is not supported")
@@ -250,13 +250,12 @@ class Observations(object):
         else:
             if zeroerrors.any():
                 print(mismatch[zeroerrors])
-                raise ValueError("Zero measurement error in observation set. " +
-                                 "can't be used to calculate misfit")
+                raise ValueError("Zero measurement error in observation set" +
+                                 ". can't be used to calculate misfit")
         if 'MISFIT' not in mismatch.columns:
-            mismatch['MISFIT'] = mismatch['L2']/ (mismatch['MEASERROR'] ** 2)
+            mismatch['MISFIT'] = mismatch['L2'] / (mismatch['MEASERROR'] ** 2)
 
         return mismatch['MISFIT'].sum()
-
 
     def _clean_observations(self):
         """Verify integrity of observations, remove

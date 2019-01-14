@@ -340,7 +340,7 @@ class ScratchRealization(object):
             # This should not happen as long as __init__ requires STATUS
             # to be present.
             return pd.DataFrame()  # will be empty
-        errorcolumns = ['error' + str(x) for x in range(0,10)]
+        errorcolumns = ['error' + str(x) for x in range(0, 10)]
         status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
                                header=None,
                                names=['FORWARD_MODEL', 'colon',
@@ -371,7 +371,8 @@ class ScratchRealization(object):
             self.data['STATUS'] = status
             return status
 
-        status = status.reset_index().drop('colon', axis=1).drop('dots', axis=1)
+        status = status.reset_index().drop('colon', axis=1).drop('dots',
+                                                                 axis=1)
 
         # Index the jobs, this makes it possible to match with jobs.json:
         status.insert(0, 'JOBINDEX', status.index.astype(int))
@@ -881,9 +882,6 @@ class ScratchRealization(object):
     def __rmul__(self, other):
         result = RealizationCombination(ref=self, scale=float(other))
         return result
-
-    def realization_mismatch(self, obs):
-        return mismatch(self, obs)
 
     def get_init(self):
         """
