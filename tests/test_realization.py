@@ -152,7 +152,7 @@ def test_datenormalization():
         (date(1997, 1, 1), date(2021, 1, 1))
 
 
-def test_singlereal_ecl():
+def test_singlereal_ecl(tmp='TMP'):
     """Test Eclipse specific functionality for realizations"""
 
     testdir = os.path.dirname(os.path.abspath(__file__))
@@ -162,7 +162,9 @@ def test_singlereal_ecl():
 
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), ecl.summary.EclSum)
-    real.load_smry().to_csv('real0smry.csv', index=False)
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    real.load_smry().to_csv(os.path.join(tmp, 'real0smry.csv'), index=False)
     assert real.load_smry().shape == (378, 474)
     # 378 dates, 470 columns + DATE column
 
@@ -344,7 +346,7 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
 
 
-def test_drop():
+def test_drop(tmp='TMP'):
 
     testdir = os.path.dirname(os.path.abspath(__file__))
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
@@ -363,7 +365,10 @@ def test_drop():
     assert len(real.parameters) == parametercount - 3
 
     real.load_smry(column_keys='FOPT', time_index='monthly')
-    real.get_df('unsmry-monthly').to_csv('foo.csv', index=False)
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    real.get_df('unsmry-monthly').to_csv(os.path.join(tmp, 'foo.csv'),
+                                         index=False)
     datecount = len(real.get_df('unsmry-monthly'))
     real.drop('unsmry-monthly', rowcontains='2000-01-01')
     assert len(real.get_df('unsmry-monthly')) == datecount - 1

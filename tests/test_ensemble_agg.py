@@ -19,7 +19,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_ensemble_aggregations():
+def test_ensemble_aggregations(tmp='TMP'):
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -46,9 +46,11 @@ def test_ensemble_aggregations():
         'p10': reekensemble.agg('p10')  # high estimate
     }
 
-    stats['min'].to_disk('virtreal_min', delete=True)
-    stats['max'].to_disk('virtreal_max', delete=True)
-    stats['mean'].to_disk('virtreal_mean', delete=True)
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    stats['min'].to_disk(os.path.join(tmp, 'virtreal_min'), delete=True)
+    stats['max'].to_disk(os.path.join(tmp, 'virtreal_max'), delete=True)
+    stats['mean'].to_disk(os.path.join(tmp, 'virtreal_mean'), delete=True)
 
     assert stats['min']['parameters.txt']['RMS_SEED'] < \
         stats['max']['parameters.txt']['RMS_SEED']
