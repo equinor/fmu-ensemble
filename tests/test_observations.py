@@ -86,8 +86,7 @@ def test_real_mismatch():
                                   'value': 600000000},
                                  {'localpath': 'outputs.txt',
                                   'key': 'top_structure',
-                                  'value': 3200}
-                                ],
+                                  'value': 3200}],
                          'scalar': [{'key': 'npv.txt',
                                      'value': 3400}]})
     realmis2 = obs2.mismatch(real)

@@ -58,7 +58,7 @@ def test_ensemblecombination_basic():
 
     # eclipse summary vector statistics for a given ensemble
     df_stats = diff.get_smry_stats(column_keys=['FOPR', 'FGPR'],
-                                           time_index='monthly')
+                                   time_index='monthly')
     assert isinstance(df_stats, dict)
     assert len(df_stats.keys()) == 2
     assert isinstance(df_stats['FOPR'], pd.DataFrame)

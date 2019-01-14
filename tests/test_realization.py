@@ -305,7 +305,7 @@ def test_filesystem_changes():
     fhandle.write("""Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
-""")
+""")  # noqa
     fhandle.close()
     real = ensemble.ScratchRealization(realdir)
     # When issue 37 is resolved, update this to 1 and check the
@@ -316,13 +316,13 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:55 .... 20:58:57
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
-""")
+""")  # noqa
     fhandle.close()
     real = ensemble.ScratchRealization(realdir)
     assert len(real.get_df('STATUS')) == 2
     # Check that we have the error string picked up:
     assert real.get_df('STATUS')['errorstring'].dropna().values[0] == \
-        "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1"
+        "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1"  # noqa
 
     # Check that we can move the Eclipse files to another place
     # in the realization dir and still load summary data:

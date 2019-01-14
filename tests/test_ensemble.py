@@ -135,6 +135,7 @@ def test_reek001():
     reekensemble.remove_data('parameters.txt')
     assert len(reekensemble.keys()) == keycount - 1
 
+
 def test_reek001_scalars():
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
@@ -162,7 +163,8 @@ def test_reek001_scalars():
     assert npv.dtypes['npv.txt'] == object
     # This is undesirable, can cause trouble with aggregation
     # Try again:
-    reekensemble.load_scalar('npv.txt', force_reread=True, convert_numeric=True)
+    reekensemble.load_scalar('npv.txt', force_reread=True,
+                             convert_numeric=True)
     npv = reekensemble.get_df('npv.txt')
     assert npv.dtypes['npv.txt'] == int or npv.dtypes['npv.txt'] == float
     assert len(npv) == 4  # the error should now be removed
@@ -181,6 +183,7 @@ def test_reek001_scalars():
 
     with pytest.raises(ValueError):
         reekensemble.load_scalar('nonexistingfile')
+
 
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
@@ -291,6 +294,7 @@ def test_ensemble_ecl():
     assert df_stats['FOPR']['min'].iloc[-1] < \
         df_stats['FOPR']['max'].iloc[-1]
 
+
 def test_deprecation():
     """Eclipse specific functionality"""
 
@@ -306,7 +310,9 @@ def test_deprecation():
                                    'realization-*/iter-0')
 
     # Load summary using deprecated function call
-    monthly = reekensemble.from_smry(time_index='monthly')
+    # This should trigger a depreciation warning
+    reekensemble.from_smry(time_index='monthly')
+
 
 def test_filter():
     if '__file__' in globals():

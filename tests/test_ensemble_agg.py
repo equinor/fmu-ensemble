@@ -117,4 +117,3 @@ def test_ensemble_aggregations():
     assert isinstance(reekensemble.agg('mean',
                                        keylist='unsmry-yearly')
                       .get_df('unsmry-yearly'), pd.DataFrame)
-
