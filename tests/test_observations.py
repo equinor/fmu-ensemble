@@ -6,12 +6,15 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import glob
+import datetime
 import pandas as pd
 
 import pytest
 
 from fmu import config
-from fmu.ensemble import ScratchEnsemble, ScratchRealization, Observations
+from fmu.ensemble import Observations, ScratchRealization, ScratchEnsemble, \
+    EnsembleSet
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -176,6 +179,10 @@ def test_errormessages():
         Observations(dict(smry='not_a_list'))
         # (warning will also be issued)
 
+    # This should give a because 'observation' is missing
+    # Observations({'smry': [{'key': 'WBP4:OP_1',
+    #                         'comment': 'Pressure observations well OP_1'}]})
+
 
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""
@@ -203,3 +210,56 @@ def test_ens_mismatch():
     fopt_rank = mismatch.sort_values('L2', ascending=True)['REAL'].values
     assert fopt_rank[0] == 2  # closest realization
     assert fopt_rank[-1] == 1  # worst realization
+
+
+def test_ensset_mismatch():
+    """Test mismatch calculation on an EnsembleSet
+    """
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ensdir = os.path.join(testdir,
+                          "data/testensemble-reek001/")
+
+    # Copy iter-0 to iter-1, creating an identical ensemble
+    # we can load for testing.
+    for realizationdir in glob.glob(ensdir + '/realization-*'):
+        if os.path.exists(realizationdir + '/iter-1'):
+            os.remove(realizationdir + '/iter-1')
+        os.symlink(realizationdir + '/iter-0',
+                   realizationdir + '/iter-1')
+
+    iter0 = ScratchEnsemble('iter-0',
+                            ensdir + '/realization-*/iter-0')
+    iter1 = ScratchEnsemble('iter-1',
+                            ensdir + '/realization-*/iter-1')
+
+    ensset = EnsembleSet("reek001", [iter0, iter1])
+
+    obs = Observations({'smryh': [{'key': 'FOPT',
+                                   'histvec': 'FOPTH'}]})
+
+    mismatch = obs.mismatch(ensset)
+    assert 'ENSEMBLE' in mismatch.columns
+    assert 'REAL' in mismatch.columns
+    assert len(mismatch) == 10
+    assert mismatch[mismatch.ENSEMBLE == 'iter-0'].L1.sum() \
+        == mismatch[mismatch.ENSEMBLE == 'iter-1'].L1.sum()
+
+    # This is quite hard to input in dict-format. Better via YAML..
+    # Note that the date in there must be a datetime, can't be a string.
+    obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
+                                     'comment':
+                                     'Pressure observations well OP_1',
+                                     'observations': [{'value': 250,
+                                                       'error': 1,
+                                                       'date':
+                                                       datetime.date(2001,
+                                                                     1, 1)
+                                                       }]}]})
+
+    mis_pr = obs_pr.mismatch(ensset)
+    assert len(mis_pr) == 10
