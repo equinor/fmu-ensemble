@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import datetime
 import pandas as pd
 
 import pytest
@@ -178,6 +179,10 @@ def test_errormessages():
         Observations(dict(smry='not_a_list'))
         # (warning will also be issued)
 
+    # This should give a because 'observation' is missing
+    # Observations({'smry': [{'key': 'WBP4:OP_1',
+    #                         'comment': 'Pressure observations well OP_1'}]})
+
 
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""
@@ -230,7 +235,7 @@ def test_ensset_mismatch():
     iter0 = ScratchEnsemble('iter-0',
                             ensdir + '/realization-*/iter-0')
     iter1 = ScratchEnsemble('iter-1',
-                                     ensdir + '/realization-*/iter-1')
+                            ensdir + '/realization-*/iter-1')
 
     ensset = EnsembleSet("reek001", [iter0, iter1])
 
@@ -243,3 +248,18 @@ def test_ensset_mismatch():
     assert len(mismatch) == 10
     assert mismatch[mismatch.ENSEMBLE == 'iter-0'].L1.sum() \
         == mismatch[mismatch.ENSEMBLE == 'iter-1'].L1.sum()
+
+    # This is quite hard to input in dict-format. Better via YAML..
+    # Note that the date in there must be a datetime, can't be a string.
+    obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
+                                     'comment':
+                                     'Pressure observations well OP_1',
+                                     'observations': [{'value': 250,
+                                                       'error': 1,
+                                                       'date':
+                                                       datetime.date(2001,
+                                                                     1, 1)
+                                                       }]}]})
+
+    mis_pr = obs_pr.mismatch(ensset)
+    assert len(mis_pr) == 10
