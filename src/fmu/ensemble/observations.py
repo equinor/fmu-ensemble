@@ -289,8 +289,9 @@ class Observations(object):
                              key, type(self.observations[key]))
                 self.observations.pop(key)
         if not self.observations.keys():
-            logger.error("No parseable observations")
-            raise ValueError
+            error_msg = "No parseable observations"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         return 1
 
     def to_ert2observations(self):
