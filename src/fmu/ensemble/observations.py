@@ -102,7 +102,16 @@ class Observations(object):
         """
         # For ensembles, we should in the future be able to loop
         # over realizations in a multiprocessing fashion
-        if isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
+        if isinstance(ens_or_real, EnsembleSet):
+            mismatches = {}
+            for ensname, ens in ens_or_real._ensembles.items():
+                for realidx, real in ens._realizations.items():
+                    mismatches[(ensname, realidx)] \
+                        = self._realization_mismatch(real)
+                    mismatches[(ensname, realidx)]['REAL'] = realidx
+                    mismatches[(ensname, realidx)]['ENSEMBLE'] = ensname
+            return pd.concat(mismatches, axis=0, ignore_index=True)
+        elif isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
             mismatches = {}
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
