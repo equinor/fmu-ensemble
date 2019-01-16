@@ -151,15 +151,15 @@ Alternatively, it is possible to initialize this directly without the filesystem
     # Load an ensemble we want to analyze
     ens = ensemble.ScratchEnsemble('hmcandidate',
             '/scratch/foo/something/realization-*/iter-3')
-    # Load an example observation configuration:
-
 
     # Perform calculation of misfit
     # A dataframe with computed mismatches is returned.
+    # We only have one "observation" for each realization, so
+    # only one row pr. realization is returned.
     misfit = obs.mismatch(ens)
 
-    # Sort ascending by L1 (absolute error) and print the five
-    # best realization indices:
+    # Sort ascending by L1 (absolute error) and print the realization
+    # indices of the first five:
     print(misfit.sort_values('L1').head()['REAL'].values)
     # Will return f.ex:
     #   [ 38  26 100  71  57]
