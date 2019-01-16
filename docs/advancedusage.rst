@@ -160,7 +160,7 @@ Alternatively, it is possible to initialize this directly without the filesystem
 
     # Sort ascending by L1 (absolute error) and print the five
     # best realization indices:
-    print(mis.sort_values('L1').head()['REAL'].values)
+    print(misfit.sort_values('L1').head()['REAL'].values)
     # Will return f.ex:
     #   [ 38  26 100  71  57]
 
