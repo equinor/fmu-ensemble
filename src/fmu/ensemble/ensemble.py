@@ -611,29 +611,19 @@ class ScratchEnsemble(object):
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
 
-        dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
+        dframe = self.get_smry(time_index=time_index,
+                               column_keys=column_keys).drop(columns='REAL')\
+                                                       .groupby('DATE')
 
-        data = {}  # dict to be returned
-        for key in dframe.columns.drop('DATE').drop('REAL'):
-            dates = dframe.groupby('DATE').first().index.values
-            name = [key] * len(dates)
-            mean = dframe.groupby('DATE').mean()[key].values
-            p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
-            p90 = dframe.groupby('DATE').quantile(q=0.10)[key].values
-            maximum = dframe.groupby('DATE').max()[key].values
-            minimum = dframe.groupby('DATE').min()[key].values
+        mean = dframe.mean()
+        p10 = dframe.quantile(q=0.90)
+        p90 = dframe.quantile(q=0.10)
+        maximum = dframe.max()
+        minimum = dframe.min()
 
-            data[key] = pd.DataFrame({
-                'index': dates,
-                'name': name,
-                'mean': mean,
-                'p10': p10,
-                'p90': p90,
-                'max': maximum,
-                'min': minimum
-            })
-
-        return data
+        return pd.concat([mean, p10, p90, maximum, minimum],
+                         keys=['mean', 'p10', 'p90', 'maximum', 'minimum'],
+                         names=['statistic'])
 
     def get_wellnames(self, well_match=None):
         """
