@@ -582,11 +582,8 @@ class ScratchEnsemble(object):
 
     def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
-        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+       Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
-
-        Output format of the function is tailored towards webviz_fan_chart
-        (data layout and column naming)
 
         Compared to the agg() function, this function only works on summary
         data (time series), and will only operate on actually requested data,
@@ -600,11 +597,11 @@ class ScratchEnsemble(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
         Returns:
-            A dictionary. Index by column key to the corresponding ensemble
-            summary statistics dataframe. Each dataframe has the dates in a
-        column called 'index', and statistical data in 'min', 'max', 'mean',
-        'p10', 'p90'. The column 'p10' contains the oil industry version of
-        'p10', and is calculated using the Pandas p90 functionality.
+            A MultiLevel dataframe. Outer index is 'minimum', 'maximum',
+            'mean', 'p10', 'p90', inner index are the dates. Column names
+            are the different vectors. The column 'p10' contains the oil
+            industry version of 'p10', and is calculated using the Pandas p90
+            functionality.
 
         TODO: add warning message when failed realizations are removed
         """
@@ -623,7 +620,7 @@ class ScratchEnsemble(object):
 
         return pd.concat([mean, p10, p90, maximum, minimum],
                          keys=['mean', 'p10', 'p90', 'maximum', 'minimum'],
-                         names=['statistic'])
+                         names=['statistic'], sort=False)
 
     def get_wellnames(self, well_match=None):
         """

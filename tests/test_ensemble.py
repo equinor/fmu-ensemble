@@ -271,28 +271,26 @@ def test_ensemble_ecl():
     # eclipse summary vector statistics for a given ensemble
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPR', 'FGPR'],
                                            time_index='monthly')
-    assert isinstance(df_stats, dict)
-    assert len(df_stats.keys()) == 2
-    assert isinstance(df_stats['FOPR'], pd.DataFrame)
-    assert len(df_stats['FOPR'].index) == 37
+    assert isinstance(df_stats, pd.DataFrame)
+    assert len(df_stats.columns) == 2
+    assert isinstance(df_stats['FOPR']['mean'], pd.Series)
+    assert len(df_stats['FOPR']['mean'].index) == 37
 
     # check if wild cards also work for get_smry_stats
     df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
                                            time_index='monthly')
-    assert len(df_stats.keys()) == len(reekensemble.get_smrykeys(['FOP*',
+    assert len(df_stats.columns) == len(reekensemble.get_smrykeys(['FOP*',
                                                                  'FGP*']))
 
     # Check webviz requirements for dataframe
-    assert 'min' in df_stats['FOPR'].columns
-    assert 'max' in df_stats['FOPR'].columns
-    assert 'name' in df_stats['FOPR'].columns
-    assert df_stats['FOPR']['name'].unique() == 'FOPR'
-    assert 'index' in df_stats['FOPR'].columns  # This is DATE (!)
-    assert 'mean' in df_stats['FOPR'].columns
-    assert 'p10' in df_stats['FOPR'].columns
-    assert 'p90' in df_stats['FOPR'].columns
-    assert df_stats['FOPR']['min'].iloc[-1] < \
-        df_stats['FOPR']['max'].iloc[-1]
+    stats = df_stats.index.levels[0].tolist()
+    assert 'minimum' in stats
+    assert 'maximum' in stats
+    assert 'p10' in stats
+    assert 'p90' in stats
+    assert 'mean' in stats
+    assert df_stats['FOPR']['minimum'].iloc[-1] < \
+        df_stats['FOPR']['maximum'].iloc[-1]
 
 
 def test_deprecation():
