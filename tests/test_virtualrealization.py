@@ -63,7 +63,7 @@ def test_virtual_realization():
         vreal.get_df('bogusdataname')
 
 
-def test_virtual_todisk():
+def test_virtual_todisk(tmp='TMP'):
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -82,14 +82,19 @@ def test_virtual_todisk():
     with pytest.raises(IOError):
         vreal.to_disk('.')
 
-    vreal.to_disk('virtreal1', delete=True)
-    assert os.path.exists('virtreal1/parameters.txt')
-    assert os.path.exists('virtreal1/STATUS')
-    assert os.path.exists('virtreal1/share/results/tables/unsmry-yearly.csv')
-    assert os.path.exists('virtreal1/npv.txt')
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    print(os.path.join(tmp, 'virtreal1'))
+    vreal.to_disk(os.path.join(tmp, 'virtreal1'), delete=True)
+    assert os.path.exists(os.path.join(tmp, 'virtreal1/parameters.txt'))
+    assert os.path.exists(os.path.join(tmp, 'virtreal1/STATUS'))
+    assert os.path.exists(os.path.join(tmp,
+                                       'virtreal1/share/results/' +
+                                       'tables/unsmry-yearly.csv'))
+    assert os.path.exists(os.path.join(tmp, 'virtreal1/npv.txt'))
 
 
-def test_virtual_fromdisk():
+def test_virtual_fromdisk(tmp='TMP'):
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -101,10 +106,12 @@ def test_virtual_fromdisk():
     real = ensemble.ScratchRealization(realdir)
     real.load_smry(time_index='yearly', column_keys=['F*'])
     real.load_scalar('npv.txt')
-    real.to_virtual().to_disk('virtreal2', delete=True)
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    real.to_virtual().to_disk(os.path.join(tmp, 'virtreal2'), delete=True)
     #
     vreal = ensemble.VirtualRealization('foo')
-    vreal.load_disk('virtreal2')
+    vreal.load_disk(os.path.join(tmp, 'virtreal2'))
 
     for key in vreal.keys():
         if isinstance(real.get_df(key), pd.DataFrame) or \

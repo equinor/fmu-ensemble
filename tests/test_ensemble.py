@@ -21,7 +21,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_reek001():
+def test_reek001(tmp='TMP'):
     """Test import of a stripped 5 realization ensemble"""
 
     if '__file__' in globals():
@@ -56,7 +56,9 @@ def test_reek001():
     # STATUS in real4 is modified to simulate that Eclipse never finished:
     assert numpy.isnan(statusdf.loc[249, 'DURATION'])
 
-    statusdf.to_csv('status.csv', index=False)
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    statusdf.to_csv(os.path.join(tmp, 'status.csv'), index=False)
 
     # Parameters.txt
     paramsdf = reekensemble.load_txt('parameters.txt')
@@ -65,7 +67,7 @@ def test_reek001():
     paramsdf = reekensemble.get_df('parameters.txt')
     assert len(paramsdf) == 5
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
-    paramsdf.to_csv('params.csv', index=False)
+    paramsdf.to_csv(os.path.join(tmp, 'params.csv'), index=False)
 
     # Check that the ensemble object has not tainted the realization dataframe:
     assert 'REAL' not in reekensemble._realizations[0].get_df('parameters.txt')
@@ -86,7 +88,7 @@ def test_reek001():
     reekensemble.find_files('share/results/volumes/*csv',
                             metadata={'GRID': 'simgrid'})
 
-    reekensemble.files.to_csv('files.csv', index=False)
+    reekensemble.files.to_csv(os.path.join(tmp, 'files.csv'), index=False)
 
     # CSV files
     csvpath = 'share/results/volumes/simulator_volume_fipnum.csv'
@@ -97,7 +99,7 @@ def test_reek001():
 
     assert 'REAL' in vol_df
     assert len(vol_df['REAL'].unique()) == 3  # missing in 2 reals
-    vol_df.to_csv('simulatorvolumes.csv', index=False)
+    vol_df.to_csv(os.path.join(tmp, 'simulatorvolumes.csv'), index=False)
 
     # Test retrival of cached data
     vol_df2 = reekensemble.get_df(csvpath)

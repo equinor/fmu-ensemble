@@ -20,7 +20,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_ensembleset_reek001():
+def test_ensembleset_reek001(tmp='TMP'):
     """Test import of a stripped 5 realization ensemble,
     manually doubled to two identical ensembles
     """
@@ -78,7 +78,9 @@ def test_ensembleset_reek001():
 
     # Testing aggregation of parameters
     paramsdf = ensset3.parameters
-    paramsdf.to_csv('enssetparams.csv', index=False)
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    paramsdf.to_csv(os.path.join(tmp, 'enssetparams.csv'), index=False)
     assert isinstance(paramsdf, pd.DataFrame)
     assert len(ensset3.parameters) == 10
     assert len(ensset3.parameters.columns) == 27
@@ -102,7 +104,7 @@ def test_ensembleset_reek001():
     # Check that we can retrieve cached versions
     assert len(ensset3.get_df('unsmry-monthly')) == 380
     assert len(ensset3.get_df('unsmry-yearly')) == 50
-    monthly.to_csv('ensset-monthly.csv', index=False)
+    monthly.to_csv(os.path.join(tmp, 'ensset-monthly.csv'), index=False)
 
     with pytest.raises(ValueError):
         ensset3.get_df('unsmry-weekly')

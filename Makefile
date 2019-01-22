@@ -92,7 +92,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr TMP/
-
+	rm -fr tests/TMP/
 
 flake: ## check style with flake8
 	python -m flake8 ${SRCAPPLICATION} tests
