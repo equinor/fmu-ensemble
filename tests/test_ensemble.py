@@ -137,6 +137,11 @@ def test_reek001():
 
 
 def test_reek001_scalars():
+    """Test import of scalar values from files
+
+    Files with scalar values can contain numerics or strings,
+    or be empty."""
+
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -203,7 +208,7 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smrykeys('FOPT')) == 1
     assert len(reekensemble.get_smrykeys('F*')) == 49
     assert len(reekensemble.get_smrykeys(['F*', 'W*'])) == 49 + 280
-    assert len(reekensemble.get_smrykeys('BOGUS')) == 0
+    assert not reekensemble.get_smrykeys('BOGUS')
 
     # reading ensemble dataframe
     monthly = reekensemble.load_smry(time_index='monthly')
@@ -280,10 +285,10 @@ def test_ensemble_ecl():
     df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
                                            time_index='monthly')
     assert len(df_stats.columns) == len(reekensemble.get_smrykeys(['FOP*',
-                                                                 'FGP*']))
+                                                                   'FGP*']))
 
     # Check webviz requirements for dataframe
-    stats = df_stats.index.levels[0].tolist()
+    stats = df_stats.index.levels[0]
     assert 'minimum' in stats
     assert 'maximum' in stats
     assert 'p10' in stats
@@ -313,6 +318,11 @@ def test_deprecation():
 
 
 def test_filter():
+    """Test filtering of realizations in ensembles
+
+    Realizations not fulfilling tested conditions are
+    dropped from the ensemble"""
+
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -331,6 +341,8 @@ def test_filter():
     reekensemble.filter('parameters.txt', key='RMS_SEED', value='723121249',
                         inplace=True)
     assert len(reekensemble) == 2
+
+    # (False positive from pylint on this line)
     assert reekensemble.agg('mean')['parameters']['RMS_SEED'] == 723121249
 
     # Test numeric equivalence
@@ -373,25 +385,25 @@ def test_filter():
     assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL')) == 5
     assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
                                    inplace=False)) == 5
-    assert len(reekensemble.filter('STATUS', column='FOOBAR',
-                                   inplace=False)) == 0
+    assert not reekensemble.filter('STATUS', column='FOOBAR',
+                                   inplace=False)
     with pytest.raises(ValueError):
         reekensemble.filter('STATUS', wrongarg='FOOBAR',
                             inplace=False)
     assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
                                    columncontains='ECLIPSE100_2014.2')) == 5
-    assert len(reekensemble.filter('STATUS', column='FORWARD_MODEL',
+    assert not reekensemble.filter('STATUS', column='FORWARD_MODEL',
                                    columncontains='ECLIPSE100_2010.2',
-                                   inplace=False)) == 0
+                                   inplace=False)
     reekensemble.load_smry()
     assert len(reekensemble.filter('unsmry-raw')) == 5
     assert len(reekensemble.filter('unsmry-raw', column='FOPT')) == 5
-    assert len(reekensemble.filter('unsmry-raw', column='FOOBAR',
-                                   inplace=False)) == 0
+    assert not reekensemble.filter('unsmry-raw', column='FOOBAR',
+                                   inplace=False)
     assert len(reekensemble.filter('unsmry-raw', column='FOPT',
                                    columncontains=0)) == 5
-    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
-                                   columncontains=-1000, inplace=False)) == 0
+    assert not reekensemble.filter('unsmry-raw', column='FOPT',
+                                   columncontains=-1000, inplace=False)
     assert len(reekensemble.filter('unsmry-raw', column='FOPT',
                                    columncontains=6025523.0,
                                    inplace=False)) == 1
@@ -409,19 +421,22 @@ def test_filter():
     assert len(reekensemble.filter('unsmry-raw', column='DATE',
                                    columncontains='2002-11-25 00:00:00',
                                    inplace=False)) == 5
-    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+    assert not reekensemble.filter('unsmry-raw', column='DATE',
                                    columncontains='2002-11-25 00:00:01',
-                                   inplace=False)) == 0
+                                   inplace=False)
     assert len(reekensemble.filter('unsmry-raw', column='DATE',
                                    columncontains='2000-01-07 02:26:15',
                                    inplace=False)) == 3
-    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+    assert not reekensemble.filter('unsmry-raw', column='DATE',
                                    columncontains='2000-01-07',
-                                   inplace=False)) == 0
+                                   inplace=False)
     # Last one is zero because it implies 00:00:00, it does not round!
 
 
 def test_nonexisting():
+    """Test what happens when we try to initialize from a
+    filesystem path that does not exist"""
+
     empty = ScratchEnsemble('nothing', '/foo/bar/com/not_existing')
     assert not empty
 
@@ -473,6 +488,12 @@ def test_filedescriptors():
 
 
 def test_read_eclgrid():
+    """Test reading Eclipse grids of a full ensemble
+
+    This is a cpu-intensive test
+
+    Will silently pass if the directory does not exist"""
+
     if not os.path.exists('/scratch/fmu/akia/3_r001_reek/realization-1'):
         pytest.skip("Only works on Stavanger Linux")
 

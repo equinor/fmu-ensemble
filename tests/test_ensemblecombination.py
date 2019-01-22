@@ -68,10 +68,10 @@ def test_ensemblecombination_basic():
     df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
                                            time_index='monthly')
     assert len(df_stats.columns) == len(reekensemble.get_smrykeys(['FOP*',
-                                                                 'FGP*']))
+                                                                   'FGP*']))
 
     # Check webviz requirements for dataframe
-    stats = df_stats.index.levels[0].tolist()
+    stats = df_stats.index.levels[0]
     assert 'minimum' in stats
     assert 'maximum' in stats
     assert 'p10' in stats
