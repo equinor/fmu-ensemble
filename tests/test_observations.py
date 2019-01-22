@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import yaml
 import datetime
 import pandas as pd
 
@@ -23,7 +24,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_observation_import():
+def test_observation_import(tmp='TMP'):
     """Test import of observations from yaml"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
@@ -42,6 +43,12 @@ def test_observation_import():
     assert isinstance(obs['smry'], list)
     assert isinstance(obs['rft'], list)
 
+    # Dump back to disk
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    exportedfile = os.path.join(tmp, 'share/observations/observations_copy.yml')
+    obs.to_disk(exportedfile)
+    assert os.path.exists(exportedfile)
 
 def test_real_mismatch():
     """Test calculation of mismatch from the observation set to a
@@ -99,6 +106,14 @@ def test_real_mismatch():
     assert 'npv.txt' in realmis2['OBSKEY'].values
 
     # assert much more!
+
+    # Test that we can write the observations to yaml
+    # and verify that the exported yaml can be reimported
+    # and yield the same result
+    obs2r = Observations(yaml.load(obs2.to_yaml()))
+    realmis2r = obs2r.mismatch(real)
+    assert (realmis2['MISMATCH'].values ==
+            realmis2r['MISMATCH'].values).all()
 
     # Test use of allocated values:
     obs3 = Observations({'smryh': [{'key': 'FOPT',
@@ -259,7 +274,7 @@ def test_ensset_mismatch():
                                                        'date':
                                                        datetime.date(2001,
                                                                      1, 1)
-                                                       }]}]})
+                                                      }]}]})
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10

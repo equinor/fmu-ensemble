@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import math
 import yaml
 import pandas as pd
@@ -308,4 +309,26 @@ class Observations(object):
         Returns:
             string : Multiline YAML string.
         """
-        raise NotImplementedError
+        return yaml.dump(self.observations)
+
+    def to_disk(self, filename):
+        """Write the current observation object to disk
+
+        In YAML-format. If a new observation object
+        is instantiated from the outputted filename, it
+        should yield identical results in mismatch
+        calculation.
+
+        Directory structure will be created if not existing.
+        Existing file will be overwritten.
+
+        Arguments:
+            filename - string with path and filename to
+                be written to"""
+        if not isinstance(filename, str):
+            raise ValueError("Filename must be a string")
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname) and dirname:
+            os.makedirs(dirname)
+        with open(filename, 'w') as fhandle:
+            fhandle.write(self.to_yaml())
