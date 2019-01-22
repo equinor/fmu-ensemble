@@ -582,7 +582,7 @@ class ScratchEnsemble(object):
 
     def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
-       Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
 
         Compared to the agg() function, this function only works on summary
@@ -597,7 +597,7 @@ class ScratchEnsemble(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
         Returns:
-            A MultiLevel dataframe. Outer index is 'minimum', 'maximum',
+            A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
             are the different vectors. The column 'p10' contains the oil
             industry version of 'p10', and is calculated using the Pandas p90
@@ -607,7 +607,6 @@ class ScratchEnsemble(object):
         """
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
-
         dframe = self.get_smry(time_index=time_index,
                                column_keys=column_keys).drop(columns='REAL')\
                                                        .groupby('DATE')
@@ -620,7 +619,7 @@ class ScratchEnsemble(object):
 
         return pd.concat([mean, p10, p90, maximum, minimum],
                          keys=['mean', 'p10', 'p90', 'maximum', 'minimum'],
-                         names=['statistic'], sort=False)
+                         names=['STATISTIC'], sort=False)
 
     def get_wellnames(self, well_match=None):
         """
