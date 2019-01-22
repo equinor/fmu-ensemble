@@ -303,6 +303,15 @@ class Observations(object):
         """
         raise NotImplementedError
 
+    def __repr__(self):
+        """Return a representation of the object
+
+        The representation is a YAML string
+        that can be used to reinstatiate the
+        object
+        """
+        return self.to_yaml()
+
     def to_yaml(self):
         """Convert the current observations to YAML format
 
