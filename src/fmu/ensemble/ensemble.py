@@ -580,7 +580,8 @@ class ScratchEnsemble(object):
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 
-    def get_smry_stats(self, column_keys=None, time_index='monthly'):
+    def get_smry_stats(self, column_keys=None, time_index='monthly',
+                       quantiles=None):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -596,30 +597,45 @@ class ScratchEnsemble(object):
                default is None, which returns the raw Eclipse report times
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
+            quantiles: list of ints between 0 and 100 for which quantiles
+               to compute. Quantiles refer to oil industry convention, and
+               the quantile number 10 will be calculated as Pandas p90.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
             are the different vectors. The column 'p10' contains the oil
             industry version of 'p10', and is calculated using the Pandas p90
-            functionality.
+            functionality. If quantiles are explicitly supplied, the 'pXX'
+            strings in the outer index are changed accordingly.
 
         TODO: add warning message when failed realizations are removed
         """
+
+        if quantiles == None:  # noqa
+            quantiles = [10, 90]
+
+        # Check validity of quantiles to compute:
+        quantiles = map(int, quantiles)  # Potentially raise ValueError
+        for quantile in quantiles:
+            if quantile < 0 or quantile > 100:
+                raise ValueError("Quantiles must be integers between 0 and 100")
+
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
         dframe = self.get_smry(time_index=time_index,
                                column_keys=column_keys).drop(columns='REAL')\
                                                        .groupby('DATE')
 
-        mean = dframe.mean()
-        p10 = dframe.quantile(q=0.90)
-        p90 = dframe.quantile(q=0.10)
-        maximum = dframe.max()
-        minimum = dframe.min()
+        # Build a dictionary of dataframes to be concatenated
+        dframes = {}
+        dframes['mean'] = dframe.mean()
+        for quantile in quantiles:
+            quantile_str = 'p' + str(quantile)
+            dframes[quantile_str] = dframe.quantile(q=1 - quantile / 100.0)
+        dframes['maximum'] = dframe.max()
+        dframes['minimum'] = dframe.min()
 
-        return pd.concat([mean, p10, p90, maximum, minimum],
-                         keys=['mean', 'p10', 'p90', 'maximum', 'minimum'],
-                         names=['STATISTIC'], sort=False)
+        return pd.concat(dframes, names=['STATISTIC'], sort=False)
 
     def get_wellnames(self, well_match=None):
         """
