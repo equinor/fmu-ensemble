@@ -184,15 +184,20 @@ def test_errormessages():
     with pytest.raises(ValueError):
         Observations(3)
 
-    # Unsupported observation category
+    # Unsupported observation category, this foobar will be wiped
+    emptyobs = Observations(dict(foobar='foo'))
+    assert not len(emptyobs)
+    # (there will be logged a warning)
+
+    # Empty observation set should be ok, but it must be a dict
+    empty2 = Observations(dict())
+    assert not len(empty2)
     with pytest.raises(ValueError):
-        Observations(dict(foobar='foo'))
-        # (there will be logged a warning also)
+        Observations([])
 
     # Check that the dict is a dict of lists:
-    with pytest.raises(ValueError):
-        Observations(dict(smry='not_a_list'))
-        # (warning will also be issued)
+    assert not len(Observations(dict(smry='not_a_list')))
+    # (warning will be printed)
 
     # This should give a because 'observation' is missing
     # Observations({'smry': [{'key': 'WBP4:OP_1',

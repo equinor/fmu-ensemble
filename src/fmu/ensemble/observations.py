@@ -67,7 +67,9 @@ class Observations(object):
         from file or from an incoming dictionary structure
 
         Observations will be checked for validity, and
-        if there are no accepted observations, this will error.
+        incorrect observations (wrong format, unsupported etc.)
+        will be removed. Empty observation list is allowed, and
+        will typically end in empty result dataframes
 
         Args:
             observations: dict with observation structure or string
@@ -83,8 +85,8 @@ class Observations(object):
         else:
             raise ValueError("Unsupported object for observations")
 
-        if not self._clean_observations():
-            raise ValueError("No usable observations")
+        # Remove unsupported observations
+        self._clean_observations()
 
     def __getitem__(self, object):
         """Pick objects from the observations dict"""
@@ -289,11 +291,6 @@ class Observations(object):
                              'list, but %s',
                              key, type(self.observations[key]))
                 self.observations.pop(key)
-        if not self.observations.keys():
-            error_msg = "No parseable observations"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        return 1
 
     def to_ert2observations(self):
         """Convert the observation set to an observation
