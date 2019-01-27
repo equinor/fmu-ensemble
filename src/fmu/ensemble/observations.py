@@ -11,6 +11,7 @@ import os
 import math
 import yaml
 import pandas as pd
+from collections import OrderedDict
 
 from fmu.config import etc
 from .realization import ScratchRealization
@@ -291,6 +292,26 @@ class Observations(object):
                              'list, but %s',
                              key, type(self.observations[key]))
                 self.observations.pop(key)
+
+        # Check smry observations for validity
+        if 'smry' in self.observations.keys():
+            # We already know that observations['smry'] is a list
+            # Each list element must be a dict with
+            # the mandatory keys 'key' and 'observation'
+            smryunits = self.observations['smry']
+            for unit in smryunits:
+                if not isinstance(unit, (dict, OrderedDict)):
+                    logger.warning('Observation units must be dicts')
+                    del smryunits[smryunits.index(unit)]
+                    continue
+                if not ('key' in unit and 'observations' in unit):
+                    logger.warning('Observation unit must '
+                                   + 'contain key and observations')
+                    del smryunits[smryunits.index(unit)]
+                    continue
+            # If everything is deleted from 'smry', delete it
+            if not len(smryunits):
+                del self.observations['smry']
 
     def to_ert2observations(self):
         """Convert the observation set to an observation
