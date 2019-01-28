@@ -288,7 +288,7 @@ class Observations(object):
                              key)
                 continue
             if not isinstance(self.observations[key], list):
-                logger.error('Observation category %s did not contain a' +
+                logger.error('Observation category %s did not contain a ' +
                              'list, but %s',
                              key, type(self.observations[key]))
                 self.observations.pop(key)
@@ -301,12 +301,14 @@ class Observations(object):
             smryunits = self.observations['smry']
             for unit in smryunits:
                 if not isinstance(unit, (dict, OrderedDict)):
-                    logger.warning('Observation units must be dicts')
+                    logger.warning('Observation units must be dicts, '
+                                   + 'deleting: ' + str(unit))
                     del smryunits[smryunits.index(unit)]
                     continue
                 if not ('key' in unit and 'observations' in unit):
                     logger.warning('Observation unit must '
-                                   + 'contain key and observations')
+                                   + 'contain key and observations, '
+                                   + 'deleting: ' + str(unit))
                     del smryunits[smryunits.index(unit)]
                     continue
             # If everything is deleted from 'smry', delete it
