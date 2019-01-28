@@ -46,9 +46,11 @@ def test_observation_import(tmp='TMP'):
     # Dump back to disk
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    exportedfile = os.path.join(tmp, 'share/observations/observations_copy.yml')
+    exportedfile = os.path.join(tmp,
+                                'share/observations/observations_copy.yml')
     obs.to_disk(exportedfile)
     assert os.path.exists(exportedfile)
+
 
 def test_real_mismatch():
     """Test calculation of mismatch from the observation set to a
@@ -281,7 +283,7 @@ def test_ensset_mismatch():
                                                        'date':
                                                        datetime.date(2001,
                                                                      1, 1)
-                                                      }]}]})
+                                                       }]}]})
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10
