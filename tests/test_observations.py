@@ -201,8 +201,10 @@ def test_errormessages():
 
     # This should give a warning because 'observation' is missing
     wrongobs = Observations({'smry': [{'key': 'WBP4:OP_1',
-                                       'comment': 'Pressure observations well OP_1'}]})
+                                       'comment':
+                                       'Pressure observations well OP_1'}]})
     assert not len(wrongobs)
+
 
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""
