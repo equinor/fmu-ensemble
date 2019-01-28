@@ -287,3 +287,48 @@ def test_ensset_mismatch():
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10
+
+
+def test_virtual_observations():
+    """Construct an virtual(?) observation object from a specific summary vector
+    and use it to rank realizations for similarity.
+    """
+
+    # We need an ensemble to work with:
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+    ens = ScratchEnsemble('test', testdir + '/data/testensemble-reek001/' +
+                          'realization-*/iter-0/')
+    ens.load_smry(column_keys=['FOPT', 'FGPT', 'FWPT', 'FWCT', 'FGOR'],
+                  time_index='yearly')
+
+    # And we need some VirtualRealizations
+    virtreals = {
+        'p10realization': ens.agg('p10'),
+        'meanrealization': ens.agg('mean'),
+        'p90realization': ens.agg('p90')
+        }
+
+    summaryvector = "FOPT"
+    representative_realizations = {}
+    for virtrealname, virtreal in virtreals.iteritems():
+        # Create empty observation object
+        obs = Observations({})
+        obs.load_smry(virtreal, summaryvector, time_index='yearly')
+
+        # Calculate how far each realization is from this observation set
+        # (only one row pr. realization, as FOPTH is only one observation unit)
+        mis = obs.mismatch(ens)
+
+        closest_realization = mis.groupby('REAL').sum()['L2']\
+                                                 .sort_values()\
+                                                 .index\
+                                                 .values[0]
+        representative_realizations[virtrealname] = closest_realization
+
+    assert representative_realizations['meanrealization'] == 4
+    assert representative_realizations['p10realization'] == 2
+    assert representative_realizations['p90realization'] == 1

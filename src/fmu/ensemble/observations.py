@@ -129,7 +129,64 @@ class Observations(object):
             raise ValueError("Unsupported object for mismatch calculation")
         return None
 
+    def load_smry(self, realization, smryvector, time_index='yearly',
+                  smryerror=None):
+        """Add an observation unit from a VirtualRealization or
+        ScratchRealization, being a specific summaryvector, picking
+        values with the specified time resolution.
+
+        This can be used to compare similarity between realization, by
+        viewing simulated results as "observations". A use case is
+        to rank all realizations in an ensemble for the similarity to
+        a certain mean profile, f.ex. FOPT.
+
+        The result of the function is a observation unit added to
+        the smry observations, with values at every date.
+
+        Arguments:
+            realization: ScratchRealization or VirtualRealization containing
+                data for constructing the virtual observation
+            smryvector: string with a name of a specific summary vector
+                to be used
+            time_index: string with timeresolution, typically 'yearly'
+                or 'monthly'. The Realization must already have data
+                loaded at this time resolution.
+            smryerror: float, constant value to be used as the measurement
+                error for every date.
+        """
+
+        # We can only assume VirtualRealizations coming in, not
+        # ScratchRealizations. VirtualRealization currenly lack a
+        # get_smry() API that will interpolate its known data.
+        # That means we have to guess which dataset to load for
+        # smry data, and we cannot support arbitrary time indices
+        data_name = 'unsmry-' + str(time_index)
+
+        # A ValueError will be thrown if the realization does not have
+        # the smry data loaded, and a KeyError if incorrect summary vector name
+        dataseries = realization.get_df(data_name)\
+                                .set_index('DATE')[smryvector]
+
+        # Modify the observation object (self)
+        if 'smry' not in self.observations.keys():
+            self.observations['smry'] = []  # Empty list
+
+        # Construct a virtual observation with observation units
+        # at every timestep:
+        virtobs = {}
+        virtobs['key'] = smryvector
+        virtobs['comment'] = "Virtual observation unit constructed from " \
+                             + str(realization)
+        virtobs['observations'] = []
+        for date, value in dataseries.iteritems():
+            virtobs['observations'].append({
+                'value': value,
+                'error': smryerror,
+                'date': date})
+        self.observations['smry'].append(virtobs)
+
     def __len__(self):
+
         """Return the number of observation units present"""
         # This is not correctly implemented yet..
         return len(self.observations.keys())
