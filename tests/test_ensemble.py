@@ -220,7 +220,7 @@ def test_ensemble_ecl():
     assert monthly.columns[1] == 'DATE'
     assert len(monthly) == 190
     # Check that the result was cached in memory, not necessarily on disk..
-    assert isinstance(reekensemble.get_df('unsmry-monthly.csv'), pd.DataFrame)
+    assert isinstance(reekensemble.get_df('unsmry--monthly.csv'), pd.DataFrame)
 
     assert len(reekensemble.keys()) == 4
 
@@ -233,7 +233,7 @@ def test_ensemble_ecl():
                                                    'FOP*']).columns) == 12
 
     # Check that there is now a cached version with raw dates:
-    assert isinstance(reekensemble.get_df('unsmry-raw.csv'), pd.DataFrame)
+    assert isinstance(reekensemble.get_df('unsmry--raw.csv'), pd.DataFrame)
     # The columns are not similar, this is allowed!
 
     # If you get 3205 here, it means that you are using the union of
@@ -253,7 +253,7 @@ def test_ensemble_ecl():
     yearly = reekensemble.get_smry_dates(freq='yearly')
     assert len(reekensemble.load_smry(column_keys=['FOPT'],
                                       time_index=yearly)) == 20
-    # NB: This is cached in unsmry-custom.csv, not unsmry-yearly!
+    # NB: This is cached in unsmry-custom.csv, not unsmry--yearly!
     # This usage is discouraged. Use 'yearly' in such cases.
 
     # Check that we can shortcut get_smry_dates:
@@ -262,7 +262,7 @@ def test_ensemble_ecl():
 
     assert len(reekensemble.load_smry(column_keys=['FOPR'],
                                       time_index='last')) == 5
-    assert isinstance(reekensemble.get_df('unsmry-last.csv'), pd.DataFrame)
+    assert isinstance(reekensemble.get_df('unsmry--last.csv'), pd.DataFrame)
 
     # eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
@@ -398,38 +398,38 @@ def test_filter():
                                    columncontains='ECLIPSE100_2010.2',
                                    inplace=False)
     reekensemble.load_smry()
-    assert len(reekensemble.filter('unsmry-raw')) == 5
-    assert len(reekensemble.filter('unsmry-raw', column='FOPT')) == 5
-    assert not reekensemble.filter('unsmry-raw', column='FOOBAR',
+    assert len(reekensemble.filter('unsmry--raw')) == 5
+    assert len(reekensemble.filter('unsmry--raw', column='FOPT')) == 5
+    assert not reekensemble.filter('unsmry--raw', column='FOOBAR',
                                    inplace=False)
-    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+    assert len(reekensemble.filter('unsmry--raw', column='FOPT',
                                    columncontains=0)) == 5
-    assert not reekensemble.filter('unsmry-raw', column='FOPT',
+    assert not reekensemble.filter('unsmry--raw', column='FOPT',
                                    columncontains=-1000, inplace=False)
-    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+    assert len(reekensemble.filter('unsmry--raw', column='FOPT',
                                    columncontains=6025523.0,
                                    inplace=False)) == 1
-    assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+    assert len(reekensemble.filter('unsmry--raw', column='FOPT',
                                    columncontains=6025523, inplace=False)) == 1
 
     # We do not support strings here (not yet)
-    # assert len(reekensemble.filter('unsmry-raw', column='FOPT',
+    # assert len(reekensemble.filter('unsmry--raw', column='FOPT',
     #                                columncontains='6025523.0',
     #                                inplace=False)) == 1
 
-    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+    assert len(reekensemble.filter('unsmry--raw', column='DATE',
                                    columncontains='2002-11-25',
                                    inplace=False)) == 5
-    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+    assert len(reekensemble.filter('unsmry--raw', column='DATE',
                                    columncontains='2002-11-25 00:00:00',
                                    inplace=False)) == 5
-    assert not reekensemble.filter('unsmry-raw', column='DATE',
+    assert not reekensemble.filter('unsmry--raw', column='DATE',
                                    columncontains='2002-11-25 00:00:01',
                                    inplace=False)
-    assert len(reekensemble.filter('unsmry-raw', column='DATE',
+    assert len(reekensemble.filter('unsmry--raw', column='DATE',
                                    columncontains='2000-01-07 02:26:15',
                                    inplace=False)) == 3
-    assert not reekensemble.filter('unsmry-raw', column='DATE',
+    assert not reekensemble.filter('unsmry--raw', column='DATE',
                                    columncontains='2000-01-07',
                                    inplace=False)
     # Last one is zero because it implies 00:00:00, it does not round!

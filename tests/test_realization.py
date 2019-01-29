@@ -173,12 +173,12 @@ def test_singlereal_ecl(tmp='TMP'):
 
     # get_smry() should be analogue to load_smry(), but it should
     # not modify the internalized dataframes!
-    internalized_df = real['unsmry-raw']
+    internalized_df = real['unsmry--raw']
     df = real.get_smry(column_keys=['G*'])
     assert 'GGIR:OP' in df.columns
     assert 'GGIR:OP' not in internalized_df.columns
     # Test that the internalized was not touched:
-    assert 'GGIR:OP' not in real['unsmry-raw'].columns
+    assert 'GGIR:OP' not in real['unsmry--raw'].columns
 
     assert 'FOPT' in real.get_smry(column_keys=['F*'], time_index='monthly')
     assert 'FOPT' in real.get_smry(column_keys='F*', time_index='yearly')
@@ -200,12 +200,12 @@ def test_singlereal_ecl(tmp='TMP'):
     # Test caching/internalization of summary files
 
     # This should be false, since only the full localpath is in keys():
-    assert 'unsmry-raw.csv' not in real.keys()
-    assert 'share/results/tables/unsmry-raw.csv' in real.keys()
-    assert 'FOPT' in real['unsmry-raw']
+    assert 'unsmry--raw.csv' not in real.keys()
+    assert 'share/results/tables/unsmry--raw.csv' in real.keys()
+    assert 'FOPT' in real['unsmry--raw']
     with pytest.raises(ValueError):
         # This does not exist before we have asked for it
-        'FOPT' in real['unsmry-yearly']
+        'FOPT' in real['unsmry--yearly']
 
 
 def test_filesystem_changes():
@@ -367,11 +367,11 @@ def test_drop(tmp='TMP'):
     real.load_smry(column_keys='FOPT', time_index='monthly')
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    real.get_df('unsmry-monthly').to_csv(os.path.join(tmp, 'foo.csv'),
+    real.get_df('unsmry--monthly').to_csv(os.path.join(tmp, 'foo.csv'),
                                          index=False)
-    datecount = len(real.get_df('unsmry-monthly'))
-    real.drop('unsmry-monthly', rowcontains='2000-01-01')
-    assert len(real.get_df('unsmry-monthly')) == datecount - 1
+    datecount = len(real.get_df('unsmry--monthly'))
+    real.drop('unsmry--monthly', rowcontains='2000-01-01')
+    assert len(real.get_df('unsmry--monthly')) == datecount - 1
 
     real.drop('parameters')
     assert 'parameters.txt' not in real.keys()

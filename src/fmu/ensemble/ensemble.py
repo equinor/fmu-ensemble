@@ -452,7 +452,7 @@ class ScratchEnsemble(object):
                                   column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry-' +
+        return self.get_df('share/results/tables/unsmry--' +
                            time_index + '.csv')
 
     def filter(self, localpath, **kwargs):

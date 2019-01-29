@@ -102,12 +102,12 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert 'DATE' == monthly.columns[2]
 
     # Check that we can retrieve cached versions
-    assert len(ensset3.get_df('unsmry-monthly')) == 380
-    assert len(ensset3.get_df('unsmry-yearly')) == 50
+    assert len(ensset3.get_df('unsmry--monthly')) == 380
+    assert len(ensset3.get_df('unsmry--yearly')) == 50
     monthly.to_csv(os.path.join(tmp, 'ensset-monthly.csv'), index=False)
 
     with pytest.raises(ValueError):
-        ensset3.get_df('unsmry-weekly')
+        ensset3.get_df('unsmry--weekly')
 
     # Check errors when we ask for stupid stuff
     with pytest.raises(ValueError):
