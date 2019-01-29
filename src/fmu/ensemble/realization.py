@@ -561,7 +561,7 @@ class ScratchRealization(object):
         Fetch the Eclipse Summary file from the realization
         and return as a libecl EclSum object
 
-        Unless the UNSMRY lfile has been discovered, it will
+        Unless the UNSMRY file has been discovered, it will
         pick the file from the glob `eclipse/model/*UNSMRY`
 
         Warning: If you have multiple UNSMRY files and have not
