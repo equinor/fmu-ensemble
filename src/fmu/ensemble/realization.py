@@ -522,9 +522,14 @@ class ScratchRealization(object):
             metadata: dict with metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
+        Returns:
+            A slice of the internalized dataframe corresponding
+            to the discovered files.
         """
         if isinstance(paths, str):
             paths = [paths]
+        returnedslice = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
+                                              'LOCALPATH', 'BASENAME'])
         for searchpath in paths:
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
@@ -537,8 +542,10 @@ class ScratchRealization(object):
                     self.files = self.files[self.files.FULLPATH != match]
                 if metadata:
                     filerow.update(metadata)
-                # Issue: Solve when file is discovered multiple times.
                 self.files = self.files.append(filerow, ignore_index=True)
+                returnedslice = returnedslice.append(filerow,
+                                                     ignore_index=True)
+        return returnedslice
 
     @property
     def parameters(self):
