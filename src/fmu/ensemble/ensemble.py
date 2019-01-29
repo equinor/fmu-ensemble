@@ -455,7 +455,7 @@ class ScratchEnsemble(object):
         return self.get_df('share/results/tables/unsmry-' +
                            time_index + '.csv')
 
-    def filter(self, localpath, **kwargs):
+    def filter(self, localpath, inplace=True, **kwargs):
         """Filter realizations or data within realizations
 
         Calling this function can return a copy with fewer
@@ -485,20 +485,17 @@ class ScratchEnsemble(object):
             If inplace=False, a VirtualEnsemble fulfilling the filter
             will be returned.
         """
-        if 'inplace' not in kwargs:
-            kwargs['inplace'] = True
-
         deletethese = []
         keepthese = []
         for realidx, realization in self._realizations.items():
-            if kwargs['inplace']:
+            if inplace:
                 if not realization.contains(localpath, **kwargs):
                     deletethese.append(realidx)
             else:
                 if realization.contains(localpath, **kwargs):
                     keepthese.append(realidx)
 
-        if kwargs['inplace']:
+        if inplace:
             logger.info("Removing realizations %s", deletethese)
             if deletethese:
                 self.remove_realizations(deletethese)
