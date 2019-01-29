@@ -611,7 +611,7 @@ class ScratchEnsemble(object):
         TODO: add warning message when failed realizations are removed
         """
 
-        if quantiles == None:  # noqa
+        if quantiles is None:
             quantiles = [10, 90]
 
         # Check validity of quantiles to compute:
