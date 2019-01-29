@@ -90,7 +90,7 @@ def test_virtual_todisk(tmp='TMP'):
     assert os.path.exists(os.path.join(tmp, 'virtreal1/STATUS'))
     assert os.path.exists(os.path.join(tmp,
                                        'virtreal1/share/results/' +
-                                       'tables/unsmry-yearly.csv'))
+                                       'tables/unsmry--yearly.csv'))
     assert os.path.exists(os.path.join(tmp, 'virtreal1/npv.txt'))
 
 
@@ -121,6 +121,6 @@ def test_virtual_fromdisk(tmp='TMP'):
             assert real.get_df(key) == vreal.get_df(key)
     assert real.get_df('parameters')['FWL'] == \
         vreal.get_df('parameters')['FWL']
-    assert real.get_df('unsmry-yearly').iloc[-1]['FGIP'] == \
-        vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']
+    assert real.get_df('unsmry--yearly').iloc[-1]['FGIP'] == \
+        vreal.get_df('unsmry--yearly').iloc[-1]['FGIP']
     assert real.get_df('npv.txt') == 3444
