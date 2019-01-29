@@ -299,6 +299,30 @@ def test_ensemble_ecl():
     assert df_stats['FOPR']['minimum'].iloc[-1] < \
         df_stats['FOPR']['maximum'].iloc[-1]
 
+    # Check user supplied quantiles
+    df_stats = reekensemble.get_smry_stats(column_keys=['FOPT'],
+                                           time_index='yearly',
+                                           quantiles=[0,15,50,85,100])
+    statistics = df_stats.index.levels[0]
+    assert 'p0' in statistics
+    assert 'p15' in statistics
+    assert 'p50' in statistics
+    assert 'p85' in statistics
+    assert 'p100' in statistics
+
+    # For oil industry, p15 on FOPT should yield a larger value than p85.
+    # Check that the last value obeys this:
+    assert df_stats['FOPT']['p15'][-1] > df_stats['FOPT']['p85'][-1]
+
+    with pytest.raises(ValueError):
+        reekensemble.get_smry_stats(column_keys=['FOPT'],
+                                           time_index='yearly',
+                                           quantiles=['foobar'])
+
+    noquantiles = reekensemble.get_smry_stats(column_keys=['FOPT'],
+                                           time_index='yearly',
+                                           quantiles=[])
+    assert len(noquantiles.index.levels[0]) == 3
 
 def test_deprecation():
     """Eclipse specific functionality"""
