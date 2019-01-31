@@ -65,7 +65,7 @@ to "`p90`" before beint sent to Pandas and Numpy for computation.
     print(mean['parameters.txt']['FWL'])
 
     # What is the mean ultimate FOPT
-    print(mean['unsmry-monthly']['FOPT'].iloc[-1])
+    print(mean['unsmry--monthly']['FOPT'].iloc[-1])
     # (.iloc[-1] is here Pandas functionality for accessing the last
     # row)
   
