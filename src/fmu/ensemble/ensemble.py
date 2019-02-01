@@ -615,7 +615,7 @@ class ScratchEnsemble(object):
             quantiles = [10, 90]
 
         # Check validity of quantiles to compute:
-        quantiles = map(int, quantiles)  # Potentially raise ValueError
+        quantiles = list(map(int, quantiles))  # Potentially raise ValueError
         for quantile in quantiles:
             if quantile < 0 or quantile > 100:
                 raise ValueError("Quantiles must be integers between 0 and 100")
