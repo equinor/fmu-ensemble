@@ -522,9 +522,11 @@ class ScratchRealization(object):
             metadata: dict with metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
+                During rediscovery of files, old metadata will be removed.
         Returns:
             A slice of the internalized dataframe corresponding
-            to the discovered files.
+            to the discovered files (will be included even if it has
+            been discovered earlier)
         """
         if isinstance(paths, str):
             paths = [paths]

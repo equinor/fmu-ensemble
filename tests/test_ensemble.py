@@ -85,10 +85,36 @@ def test_reek001(tmp='TMP'):
     assert 'outputs.txt' in reekensemble.files['LOCALPATH'].values
 
     # File discovery:
-    reekensemble.find_files('share/results/volumes/*csv',
-                            metadata={'GRID': 'simgrid'})
+    csvvolfiles = reekensemble.find_files('share/results/volumes/*csv',
+                                          metadata={'GRID': 'simgrid'})
+    assert isinstance(csvvolfiles, pd.DataFrame)
+    assert 'REAL' in csvvolfiles
+    assert 'FULLPATH' in csvvolfiles
+    assert 'LOCALPATH' in csvvolfiles
+    assert 'BASENAME' in csvvolfiles
+    # Check the explicit metadata:
+    assert 'GRID' in csvvolfiles
+    assert csvvolfiles['GRID'].unique() == ['simgrid']
 
     reekensemble.files.to_csv(os.path.join(tmp, 'files.csv'), index=False)
+
+    # Check that rediscovery does not mess things up:
+
+    filecount = len(reekensemble.files)
+    print(reekensemble.files)
+    newfiles = reekensemble.find_files('share/results/volumes/*csv')
+    # Also note that we skipped metadata here in rediscovery:
+
+    assert len(reekensemble.files) == filecount
+    assert len(newfiles) == len(csvvolfiles)
+
+    # The last invocation of find_files() should not return the metadata
+    assert len(newfiles.columns) + 1 == len(csvvolfiles.columns)
+
+    # The metadata in the rediscovered files should have been removed
+    print(reekensemble.files)
+    assert len(reekensemble.files[reekensemble.files['GRID']
+                                  == 'simgrid']) == 0
 
     # CSV files
     csvpath = 'share/results/volumes/simulator_volume_fipnum.csv'
