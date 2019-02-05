@@ -24,7 +24,12 @@ if not fmux.testsetup():
 
 def test_single_realization():
 
-    testdir = os.path.dirname(os.path.abspath(__file__))
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
