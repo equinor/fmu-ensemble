@@ -94,7 +94,7 @@ class VirtualEnsemble(object):
 
         CODE DUPLICATION.
         """
-        basenames = map(os.path.basename, self.keys())
+        basenames = list(map(os.path.basename, self.keys()))
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in self.keys()}
             return short2path[shortpath]
