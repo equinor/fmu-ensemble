@@ -349,6 +349,17 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     assert len(unsmry_file) == 1
     assert isinstance(unsmry_file, pd.DataFrame)
 
+    # Test having values with spaces in parameters.txt
+    # Current "wanted" behaviour is to ignore the anything after
+    #  <key><whitespace><value><whitespace><ignoreremainder>
+    # which is similar to ERT CSV_EXPORT1
+    param_file = open(realdir + '/parameters.txt', 'a')
+    param_file.write('FOOBAR 1 2 3 4 5 6')
+    param_file.close()
+
+    real = ensemble.ScratchRealization(realdir)
+    assert real.parameters['FOOBAR'] == 1
+
     # Clean up when finished. This often fails on network drives..
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
 
