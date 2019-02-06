@@ -324,10 +324,18 @@ class ScratchEnsemble(object):
             metadata: dict with metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
+        Returns:
+            DataFrame with the slice of discovered files in each
+            realization, tagged with realization index in the column REAL
         """
-        logger.warning("find_files() might become deprecated")
-        for _, realization in self._realizations.items():
-            realization.find_files(paths, metadata)
+        df_list = {}
+        for index, realization in self._realizations.items():
+            df_list[index] = realization.find_files(paths, metadata)
+        if df_list:
+            return pd.concat(df_list, sort=False)\
+                     .reset_index()\
+                     .rename(columns={'level_0': 'REAL'})\
+                     .drop('level_1', axis='columns')
 
     def __repr__(self):
         return "<ScratchEnsemble {}, {} realizations>".format(self.name,

@@ -343,9 +343,11 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
 
     # Now discover the UNSMRY file explicitly, then load_smry()
     # should work.
-    real.find_files('eclipsedir/model/*.UNSMRY')
+    unsmry_file = real.find_files('eclipsedir/model/*.UNSMRY')
     # Non-empty dataframe:
     assert len(real.load_smry()) > 0
+    assert len(unsmry_file) == 1
+    assert isinstance(unsmry_file, pd.DataFrame)
 
     # Clean up when finished. This often fails on network drives..
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)

@@ -522,9 +522,16 @@ class ScratchRealization(object):
             metadata: dict with metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
+                During rediscovery of files, old metadata will be removed.
+        Returns:
+            A slice of the internalized dataframe corresponding
+            to the discovered files (will be included even if it has
+            been discovered earlier)
         """
         if isinstance(paths, str):
             paths = [paths]
+        returnedslice = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
+                                              'LOCALPATH', 'BASENAME'])
         for searchpath in paths:
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
@@ -537,8 +544,10 @@ class ScratchRealization(object):
                     self.files = self.files[self.files.FULLPATH != match]
                 if metadata:
                     filerow.update(metadata)
-                # Issue: Solve when file is discovered multiple times.
                 self.files = self.files.append(filerow, ignore_index=True)
+                returnedslice = returnedslice.append(filerow,
+                                                     ignore_index=True)
+        return returnedslice
 
     @property
     def parameters(self):
@@ -554,7 +563,7 @@ class ScratchRealization(object):
         Fetch the Eclipse Summary file from the realization
         and return as a libecl EclSum object
 
-        Unless the UNSMRY lfile has been discovered, it will
+        Unless the UNSMRY file has been discovered, it will
         pick the file from the glob `eclipse/model/*UNSMRY`
 
         Warning: If you have multiple UNSMRY files and have not
