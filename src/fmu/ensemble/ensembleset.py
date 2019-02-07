@@ -126,6 +126,9 @@ class EnsembleSet(object):
 
         Name is taken from the ensembleobject.
         """
+        if ensembleobject.name in self._ensembles:
+            raise ValueError("The name %s already exists in the EnsembleSet",
+                             ensembleobject.name)
         self._ensembles[ensembleobject.name] = ensembleobject
 
     @property

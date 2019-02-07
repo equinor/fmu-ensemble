@@ -53,7 +53,10 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert len(ensset['iter-1'].get_df('STATUS')) == 250
 
     # Try adding the same object over again
-    ensset.add_ensemble(iter0)
+    try:
+        ensset.add_ensemble(iter0)
+    except ValueError:
+        pass
     assert len(ensset) == 2  # Unchanged!
 
     # Initialize starting from empty ensemble
@@ -203,6 +206,13 @@ def test_pred_dir():
     assert 'pred-dg3' in ens_list
     assert 'iter-0' in ens_list
     assert 'iter-1' in ens_list
+
+    # Try to add a new ensemble with a similar name to an existing:
+    foo_ens = ensemble.ScratchEnsemble('pred-dg3',
+                                       ensdir + "realization-*/iter-1")
+    with pytest.raises(ValueError):
+        ensset.add_ensemble(foo_ens)
+    assert len(ensset) == 3
 
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
