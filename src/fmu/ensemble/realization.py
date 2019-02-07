@@ -231,6 +231,9 @@ class ScratchRealization(object):
         (except for parameters.txt, for which there is a property
         called 'parameters')
 
+        Values with spaces are not supported, this is similar
+        to ERT's CSV_EXPORT1. Remainder string will be ignored silently.
+
         Args:
             localpath: path local the realization to the txt file
             convert_numeric: defaults to True, will try to parse
@@ -261,6 +264,7 @@ class ScratchRealization(object):
             try:
                 keyvalues = pd.read_table(fullpath, sep=r'\s+',
                                           index_col=0, dtype=str,
+                                          usecols=[0,1],
                                           header=None)[1].to_dict()
             except pd.errors.EmptyDataError:
                 keyvalues = {}
