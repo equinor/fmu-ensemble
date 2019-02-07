@@ -43,18 +43,33 @@ class EnsembleSet(object):
             logger.error("EnsembleSet cannot initialize from " +
                          "both list of ensembles and path")
 
+        # Check consistency in arguments.
+        if not name:
+            logger.error("Name of EnsembleSet is required")
+            return None
+        if name and not isinstance(name, str):
+            logger.error("Name of EnsembleSet must be a string")
+            return None
+        if frompath and not isinstance(frompath, str):
+            logger.error("frompath arg given to EnsembleSet must be a string")
+            return None
+        if ensembles and not isinstance(ensembles, list):
+            logger.error("Ensembles supplied to EnsembleSet must be a list")
+            return None
+
         if ensembles and isinstance(ensembles, list):
             for ensemble in ensembles:
                 if isinstance(ensemble, (ScratchEnsemble, VirtualEnsemble)):
                     self._ensembles[ensemble.name] = ensemble
                 else:
                     logger.warning("Supplied object was not an ensemble")
-            return
-        else:
-            logger.error("Ensembles supplied to EnsembleSet must be a list")
+            if not self._ensembles:
+                logger.warning("No ensembles added to EnsembleSet")
 
         if frompath:
             self.add_ensembles_frompath(frompath)
+            if not self._ensembles:
+                logger.warning("No ensembles added to EnsembleSet")
 
     @property
     def name(self):

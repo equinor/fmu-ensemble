@@ -38,7 +38,10 @@ def test_ensembleset_reek001(tmp='TMP'):
     # we can load for testing.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         if os.path.exists(realizationdir + '/iter-1'):
-            os.remove(realizationdir + '/iter-1')
+            if os.path.islink(realizationdir + '/iter-1'):
+                os.remove(realizationdir + '/iter-1')
+            else:
+                shutil.rmtree(realizationdir + '/iter-1')
         os.symlink(realizationdir + '/iter-0',
                    realizationdir + '/iter-1')
 
@@ -249,6 +252,12 @@ def test_mangling_data():
                ('outputs.txt' not in realizationcomponent):
                 os.symlink(realizationcomponent,
                            realizationcomponent.replace('iter-0', 'iter-1'))
+
+    # Trigger warnings:
+    assert not ensemble.EnsembleSet()  # warning given
+    assert not ensemble.EnsembleSet(['bargh'])  # warning given
+    assert not ensemble.EnsembleSet('bar')  # No warning, just empty
+    ensemble.EnsembleSet('foobar', frompath="foobarth")  # trigger warning
 
     ensset = ensemble.EnsembleSet("foo", frompath=ensdir)
     assert len(ensset) == 2
