@@ -484,6 +484,10 @@ class ScratchEnsemble(object):
                 key must be equal to this value
             value: The value a certain key must equal. Floating point
                 comparisons are not robust.
+            column: Name of a column in tabular data. If columncontains is
+                not specified, this means that this column must be present
+            columncontains:
+                A value that the specific column must include.
             inplace: Boolean indicating if the current object should have its
                 realizations stripped, or if a copy should be returned.
                 Default true.
