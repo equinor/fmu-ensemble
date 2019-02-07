@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import glob
 import pytest
+import shutil
 import pandas as pd
 
 from fmu import config
@@ -207,3 +208,44 @@ def test_pred_dir():
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         os.remove(realizationdir + '/iter-1')
         os.remove(realizationdir + '/pred-dg3')
+
+
+def test_mangling_data():
+    """Test import of a stripped 5 realization ensemble,
+    manually doubled to two identical ensembles,
+    and then with some data removed
+    """
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+    ensdir = os.path.join(testdir,
+                          "data/testensemble-reek001/")
+
+    # Copy iter-0 to iter-1, creating an identical ensemble
+    # we can load for testing. Delete in case it exists
+    for realizationdir in glob.glob(ensdir + '/realization-*'):
+        if os.path.exists(realizationdir + '/iter-1'):
+            shutil.rmtree(realizationdir + '/iter-1')
+        # Symlink each file/dir individually (so we can remove some)
+        os.mkdir(realizationdir + '/iter-1')
+        for realizationcomponent in glob.glob(realizationdir + '/iter-0/*'):
+            print(realizationcomponent)
+            os.symlink(realizationcomponent,
+                       realizationcomponent.replace('iter-0', 'iter-1'))
+        os.remove(realizationdir + '/iter-1/parameters.txt')
+
+    ensset = ensemble.EnsembleSet("foo", frompath=ensdir)
+    assert len(ensset) == 2
+    assert isinstance(ensset['iter-0'], ensemble.ScratchEnsemble)
+    assert isinstance(ensset['iter-1'], ensemble.ScratchEnsemble)
+
+    assert 'parameters.txt' in ensset.keys()
+
+    assert len(ensset.get_df('parameters.txt')) == 5
+
+    # Delete the symlinks when we are done.
+    for realizationdir in glob.glob(ensdir + '/realization-*'):
+        shutil.rmtree(realizationdir + '/iter-1')
