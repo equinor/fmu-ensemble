@@ -144,9 +144,16 @@ class EnsembleSet(object):
 
         Parsing is performed individually in each ensemble
         and realization"""
-        for _, ensemble in self._ensembles.items():
-            ensemble.load_scalar(localpath, convert_numeric,
-                                 force_reread)
+        for ensname, ensemble in self._ensembles.items():
+            try:
+                ensemble.load_scalar(localpath, convert_numeric,
+                                     force_reread)
+            except ValueError:
+                # This will occur if an ensemble is missing the file.
+                # At ensemble level that is an Error, but at EnsembleSet level
+                # it is only a warning.
+                logger.warn('Ensemble %s did not contain the data %s', ensname,
+                            localpath)
 
     def load_txt(self, localpath, convert_numeric=True,
                  force_reread=False):
@@ -167,9 +174,16 @@ class EnsembleSet(object):
     def load_file(self, localpath, fformat, convert_numeric=True,
                   force_reread=False):
         """Internal function for load_*()"""
-        for _, ensemble in self._ensembles.items():
-            ensemble.load_file(localpath, fformat, convert_numeric,
-                               force_reread)
+        for ensname, ensemble in self._ensembles.items():
+            try:
+                ensemble.load_file(localpath, fformat, convert_numeric,
+                                   force_reread)
+            except ValueError:
+                # This will occur if an ensemble is missing the file.
+                # At ensemble level that is an Error, but at EnsembleSet level
+                # it is only a warning.
+                logger.warn('Ensemble %s did not contain the data %s', ensname,
+                            localpath)
         return self.get_df(localpath)
 
     def get_df(self, localpath):
@@ -185,11 +199,19 @@ class EnsembleSet(object):
                 returned cached results.
         """
         ensdflist = []
-        for _, ensemble in self._ensembles.items():
-            ensdf = ensemble.get_df(localpath)
-            ensdf.insert(0, 'ENSEMBLE', ensemble.name)
-            ensdflist.append(ensdf)
-        return pd.concat(ensdflist, sort=False)
+        for ensname, ensemble in self._ensembles.items():
+            try:
+                ensdf = ensemble.get_df(localpath)
+                ensdf.insert(0, 'ENSEMBLE', ensemble.name)
+                ensdflist.append(ensdf)
+            except ValueError:
+                # Happens if an ensemble is missing some data
+                # Warning has already been issued at initialization
+                pass
+        if ensdflist:
+            return pd.concat(ensdflist, sort=False)
+        else:
+            raise ValueError("No data found for %s", localpath)
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

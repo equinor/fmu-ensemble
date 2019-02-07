@@ -228,14 +228,17 @@ def test_mangling_data():
     # we can load for testing. Delete in case it exists
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         if os.path.exists(realizationdir + '/iter-1'):
-            shutil.rmtree(realizationdir + '/iter-1')
+            if os.path.islink(realizationdir + '/iter-1'):
+                os.remove(realizationdir + '/iter-1')
+            else:
+                shutil.rmtree(realizationdir + '/iter-1')
         # Symlink each file/dir individually (so we can remove some)
         os.mkdir(realizationdir + '/iter-1')
         for realizationcomponent in glob.glob(realizationdir + '/iter-0/*'):
-            print(realizationcomponent)
-            os.symlink(realizationcomponent,
-                       realizationcomponent.replace('iter-0', 'iter-1'))
-        os.remove(realizationdir + '/iter-1/parameters.txt')
+            if ('parameters.txt' not in realizationcomponent) and \
+               ('outputs.txt' not in realizationcomponent):
+                os.symlink(realizationcomponent,
+                           realizationcomponent.replace('iter-0', 'iter-1'))
 
     ensset = ensemble.EnsembleSet("foo", frompath=ensdir)
     assert len(ensset) == 2
@@ -244,7 +247,19 @@ def test_mangling_data():
 
     assert 'parameters.txt' in ensset.keys()
 
-    assert len(ensset.get_df('parameters.txt')) == 5
+    # We should only have parameters in iter-0
+    params = ensset.get_df('parameters.txt')
+    assert len(params) == 5
+    assert params['ENSEMBLE'].unique() == 'iter-0'
+
+    ensset.load_txt('outputs.txt')
+    assert 'outputs.txt' in ensset.keys()
+    assert len(ensset.get_df('outputs.txt') == 4)
+
+    # When it does not exist in any of the ensembles, we
+    # should error
+    with pytest.raises(ValueError):
+        ensset.get_df('foobar')
 
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
