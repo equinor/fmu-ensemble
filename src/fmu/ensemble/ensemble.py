@@ -298,7 +298,7 @@ class ScratchEnsemble(object):
                 realization.load_file(localpath, fformat,
                                       convert_numeric, force_reread)
             except ValueError:
-                # This would at least occur for unsupportd fileformat,
+                # This would at least occur for unsupported fileformat,
                 # and that we should not skip.
                 logger.critical('load_file() failed')
                 raise ValueError  # (this might hide traceback from try:)
@@ -307,6 +307,8 @@ class ScratchEnsemble(object):
                 # some realizations
                 logger.warn('Could not read %s for realization %d', localpath,
                             index)
+        if self.get_df(localpath).empty:
+            raise ValueError('No ensemble data found for %s', localpath)
         return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None):
