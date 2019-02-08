@@ -670,7 +670,7 @@ class ScratchRealization(object):
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
-        if time_index == 'raw':
+        if isinstance(time_index, str) and time_index == 'raw':
             time_index_arg = None
         elif isinstance(time_index, str):
             time_index_arg = self.get_smry_dates(freq=time_index)
@@ -681,6 +681,77 @@ class ScratchRealization(object):
             return self.get_eclsum().pandas_frame(time_index_arg, column_keys)
         else:
             return pd.DataFrame()
+
+    def _glob_smry_keys(self, column_keys):
+        """Utility function for globbing column names
+
+        Use this to expand 'F*' to the list of Eclipse summary
+        vectors matching.
+
+        Args:
+            column_keys: str or list of strings with patterns
+        """
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+        keys = set()
+        for key in column_keys:
+            if isinstance(key, str):
+                keys = keys.union(set(self._eclsum.keys(key)))
+        return list(keys)
+
+    def get_volumetric_rates(self, column_keys=None, time_index=None):
+        """Compute volumetric rates from cumulative summary vectors
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+
+        """
+        column_keys = self._glob_smry_keys(column_keys)
+
+        # Be strict and only include certain summary vectors that look
+        # cumulative by their name:
+        column_keys = [x for x in column_keys if
+                       (x.endswith('T') and ':' not in x and 'CT' not in x)
+                       or ('T:' in x and 'CT:' not in x)]
+
+        if not column_keys:
+            logger.error("No valid cumulative columns given "
+                         + "to volumetric computation")
+            return pd.DataFrame()
+
+        cum_df = self.get_smry(column_keys=column_keys, time_index=time_index)
+
+        # Compute row-wise difference, shift back one row
+        # to get the NaN to the end, and then drop the NaN.
+        # The "rate" given for a specific date is then
+        # valid from that date until the next date.
+        diff_cum = cum_df.diff().shift(-1).fillna(value=0)
+
+        # Translate the column vectors
+        # Expressive code to avoid hard-to-read regexp
+        rate_names = []
+        for vec in diff_cum.columns:
+            if vec.endswith('T') and ':' not in vec:
+                lvec = list(vec)
+                lvec[-1] = 'R'
+                rate_names.append(''.join(lvec))
+            elif 'T:' in vec:
+                rate_names.append(vec.replace('T:', 'R:'))
+        diff_cum.columns = rate_names
+        return(diff_cum)
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -699,13 +770,8 @@ class ScratchRealization(object):
         if not self._eclsum:
             return pd.DataFrame()
 
-        if not props_wildcard:
-            props_wildcard = [None]
-        if isinstance(props_wildcard, str):
-            props_wildcard = [props_wildcard]
-        props = set()
-        for prop in props_wildcard:
-            props = props.union(set(self._eclsum.keys(prop)))
+        props = self._glob_smry_keys(props_wildcard)
+
         if 'numpy_vector' in dir(self._eclsum):
             data = {prop: self._eclsum.numpy_vector(prop, report_only=False)
                     for prop in props}

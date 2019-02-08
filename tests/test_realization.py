@@ -12,6 +12,7 @@ import shutil
 import pandas as pd
 import ecl.summary
 
+from numpy import random
 from fmu import config
 from fmu import ensemble
 
@@ -23,7 +24,6 @@ if not fmux.testsetup():
 
 
 def test_single_realization():
-
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -132,6 +132,71 @@ def test_single_realization():
     # at ensemble level it is fine.
     with pytest.raises(IOError):
         real.load_csv('bogus.csv')
+
+
+def test_volumetric_rates():
+    """Test computation of volumetric rates from cumulative vectors"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+
+    # Should work without prior internalization:
+    cum_df = real.get_smry(column_keys=['F*T', 'W*T*'],
+                           time_index='yearly')
+    vol_rate_df = real.get_volumetric_rates(column_keys=['F*T', 'W*T*'],
+                                            time_index='yearly')
+    assert 'FWCR' not in vol_rate_df  # We should not compute FWCT..
+    assert 'FOPR' in vol_rate_df
+    assert 'FWPR' in vol_rate_df
+
+    # Test that computed rates can be summed up to cumulative at end:
+    assert vol_rate_df['FOPR'].sum() == cum_df['FOPT'].iloc[-1]
+    assert vol_rate_df['FGPR'].sum() == cum_df['FGPT'].iloc[-1]
+    assert vol_rate_df['FWPR'].sum() == cum_df['FWPT'].iloc[-1]
+
+    # Since rates are valid forwards in time, the last
+    # row should have a zero, since that is the final simulated
+    # date for the cumulative vector
+    assert vol_rate_df['FOPR'].iloc[-1] == 0
+
+    assert real.get_volumetric_rates(column_keys='FOOBAR').empty
+    assert real.get_volumetric_rates(column_keys=['FOOBAR']).empty
+    assert real.get_volumetric_rates(column_keys={}).empty
+
+    with pytest.raises(ValueError):
+        real.get_volumetric_rates(column_keys='FOPT',
+                                  time_index='bogus')
+
+    mcum = real.get_smry(column_keys='FOPT', time_index='monthly')
+    dmcum = real.get_volumetric_rates(column_keys='FOPT',
+                                      time_index='monthly')
+    assert dmcum['FOPR'].sum() == mcum['FOPT'].iloc[-1]
+
+    # Pick 10 **random** dates to get the volumetric rates between:
+    daily_dates = real.get_smry_dates(freq='daily', normalize=False)
+    subset_dates = random.choice(daily_dates, size=10, replace=False)
+    subset_dates.sort()
+    dcum = real.get_smry(column_keys='FOPT', time_index=subset_dates)
+    ddcum = real.get_volumetric_rates(column_keys='FOPT',
+                                      time_index=subset_dates)
+    assert ddcum['FOPR'].iloc[-1] == 0
+
+    # We are probably neither at the start or at the end of the production
+    # interval.
+    cumulative_error = ddcum['FOPR'].sum() - \
+        (dcum['FOPT'].loc[subset_dates[-1]]
+         - dcum['FOPT'].loc[subset_dates[0]])
+
+    # Give some slack, we might have done a lot of interpolation
+    # here.
+    assert cumulative_error / ddcum['FOPR'].sum() < 0.000001
 
 
 def test_datenormalization():
