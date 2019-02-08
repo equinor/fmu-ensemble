@@ -117,8 +117,8 @@ Working with observations
 Observations for history matching can be loaded, and computations
 (comparisons) of observed data versus simulated data can be performed.
 
-The `Observation` object can be initizalized using YAML files or from a Python
-dictionary.
+The `Observation` object can be initizalized using YAML files or from
+a Python dictionary.
 
 If you are opting for simple usage, just being able to compare `FOPT`
 versus `FOPTH` in your ensemble, your observation config could look
@@ -180,3 +180,43 @@ For comparisons with single measured values (recommended for history matching), 
            - {value: 251, error: 10, date: 2003-01-01, comment: First measurement after sensor drift correction} 
 
 
+Representative realizations
+- - - - - - - - - - - - - -
+
+It is possible to utilize the observation support for calculating
+similarity between realizations. An example of this is to create a
+"mean" realization by use of the aggregation functionality (or p10,
+p90 etc.). For calculating how similar each realization in an ensemble
+is to these virtual realizations, it is possible to pick certain
+summary data from the virtual realization as "observations", and
+calculate mismatches. For this, a utility function (`load_smry()`) is
+provided by the Observation object to load "virtual" observations from
+an existing realization. If you then use the Observation object to
+compute mismatches, and then rank realizations by the mismatch, you
+can pick the realization that is closest to your statistics of choice.
+
+.. code-block:: python
+
+    # Load an ensemble we want to analyze
+    ens = ensemble.ScratchEnsemble('hmensemble',
+            '/scratch/foo/something/realization-*/iter-3')
+
+    # Calculate a "mean" realization
+    mean = ens.agg('mean')
+
+    # Create an empty observation object
+    obs = Observations({})
+
+    # Load data from the mean realization as virtual observations:
+    obs.load_smry(mean, 'FOPT', time_index='yearly')
+
+    # Calculate the difference between the ensemble members and the
+    # mean realization:
+    mis = obs.mismatch(ens)
+
+    # Group mismatch data by realization, and pick the realization
+    # index with the smallest sum of squared errors ('L2')
+    closest_to_mean = mis.groupby('REAL').sum()['L2']\
+                                         .sort_values()\
+                                         .index\
+                                         .values[0]
