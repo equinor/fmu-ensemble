@@ -124,3 +124,19 @@ def test_virtual_fromdisk(tmp='TMP'):
     assert real.get_df('unsmry-yearly').iloc[-1]['FGIP'] == \
         vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']
     assert real.get_df('npv.txt') == 3444
+
+def test_get_smry_cumulative():
+    """Test the cumulative function booean function on a dummy
+    virtual realization."""
+    vreal = ensemble.VirtualRealization()
+    assert isinstance(vreal.smry_cumulative([]), list)
+    with pytest.raises(TypeError):
+        vreal.smry_cumulative({})
+    with pytest.raises(TypeError):
+        vreal.smry_cumulative()
+    assert vreal.smry_cumulative(['FOPT'])[0]
+    assert not vreal.smry_cumulative(['FOPR'])[0]
+
+    assert not vreal.smry_cumulative(['FWCT'])[0]
+    assert vreal.smry_cumulative(['WOPT:A-1'])[0]
+    assert not vreal.smry_cumulative(['WOPR:A-1T'])[0]

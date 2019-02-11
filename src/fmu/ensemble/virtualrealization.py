@@ -349,6 +349,8 @@ class VirtualRealization(object):
         """
         if isinstance(column_keys, str):
             column_keys = [column_keys]
+        if not isinstance(column_keys, list):
+            raise TypeError("column_keys must be str or list of str")
         return [(x.endswith('T') and ':' not in x and 'CT' not in x)
                 or ('T:' in x and 'CT:' not in x) for x in column_keys]
 
