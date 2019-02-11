@@ -7,9 +7,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import math
 import yaml
 import pandas as pd
+from collections import OrderedDict
 
 from fmu.config import etc
 from .realization import ScratchRealization
@@ -66,7 +68,9 @@ class Observations(object):
         from file or from an incoming dictionary structure
 
         Observations will be checked for validity, and
-        if there are no accepted observations, this will error.
+        incorrect observations (wrong format, unsupported etc.)
+        will be removed. Empty observation list is allowed, and
+        will typically end in empty result dataframes
 
         Args:
             observations: dict with observation structure or string
@@ -82,8 +86,8 @@ class Observations(object):
         else:
             raise ValueError("Unsupported object for observations")
 
-        if not self._clean_observations():
-            raise ValueError("No usable observations")
+        # Remove unsupported observations
+        self._clean_observations()
 
     def __getitem__(self, object):
         """Pick objects from the observations dict"""
@@ -125,7 +129,64 @@ class Observations(object):
             raise ValueError("Unsupported object for mismatch calculation")
         return None
 
+    def load_smry(self, realization, smryvector, time_index='yearly',
+                  smryerror=None):
+        """Add an observation unit from a VirtualRealization or
+        ScratchRealization, being a specific summaryvector, picking
+        values with the specified time resolution.
+
+        This can be used to compare similarity between realization, by
+        viewing simulated results as "observations". A use case is
+        to rank all realizations in an ensemble for the similarity to
+        a certain mean profile, f.ex. FOPT.
+
+        The result of the function is a observation unit added to
+        the smry observations, with values at every date.
+
+        Arguments:
+            realization: ScratchRealization or VirtualRealization containing
+                data for constructing the virtual observation
+            smryvector: string with a name of a specific summary vector
+                to be used
+            time_index: string with timeresolution, typically 'yearly'
+                or 'monthly'. The Realization must already have data
+                loaded at this time resolution.
+            smryerror: float, constant value to be used as the measurement
+                error for every date.
+        """
+
+        # We can only assume VirtualRealizations coming in, not
+        # ScratchRealizations. VirtualRealization currenly lack a
+        # get_smry() API that will interpolate its known data.
+        # That means we have to guess which dataset to load for
+        # smry data, and we cannot support arbitrary time indices
+        data_name = 'unsmry-' + str(time_index)
+
+        # A ValueError will be thrown if the realization does not have
+        # the smry data loaded, and a KeyError if incorrect summary vector name
+        dataseries = realization.get_df(data_name)\
+                                .set_index('DATE')[smryvector]
+
+        # Modify the observation object (self)
+        if 'smry' not in self.observations.keys():
+            self.observations['smry'] = []  # Empty list
+
+        # Construct a virtual observation with observation units
+        # at every timestep:
+        virtobs = {}
+        virtobs['key'] = smryvector
+        virtobs['comment'] = "Virtual observation unit constructed from " \
+                             + str(realization)
+        virtobs['observations'] = []
+        for date, value in dataseries.iteritems():
+            virtobs['observations'].append({
+                'value': value,
+                'error': smryerror,
+                'date': date})
+        self.observations['smry'].append(virtobs)
+
     def __len__(self):
+
         """Return the number of observation units present"""
         # This is not correctly implemented yet..
         return len(self.observations.keys())
@@ -284,15 +345,32 @@ class Observations(object):
                              key)
                 continue
             if not isinstance(self.observations[key], list):
-                logger.error('Observation category %s did not contain a' +
+                logger.error('Observation category %s did not contain a ' +
                              'list, but %s',
                              key, type(self.observations[key]))
                 self.observations.pop(key)
-        if not self.observations.keys():
-            error_msg = "No parseable observations"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        return 1
+
+        # Check smry observations for validity
+        if 'smry' in self.observations.keys():
+            # We already know that observations['smry'] is a list
+            # Each list element must be a dict with
+            # the mandatory keys 'key' and 'observation'
+            smryunits = self.observations['smry']
+            for unit in smryunits:
+                if not isinstance(unit, (dict, OrderedDict)):
+                    logger.warning('Observation units must be dicts, '
+                                   + 'deleting: ' + str(unit))
+                    del smryunits[smryunits.index(unit)]
+                    continue
+                if not ('key' in unit and 'observations' in unit):
+                    logger.warning('Observation unit must '
+                                   + 'contain key and observations, '
+                                   + 'deleting: ' + str(unit))
+                    del smryunits[smryunits.index(unit)]
+                    continue
+            # If everything is deleted from 'smry', delete it
+            if not len(smryunits):
+                del self.observations['smry']
 
     def to_ert2observations(self):
         """Convert the observation set to an observation
@@ -302,10 +380,41 @@ class Observations(object):
         """
         raise NotImplementedError
 
+    def __repr__(self):
+        """Return a representation of the object
+
+        The representation is a YAML string
+        that can be used to reinstatiate the
+        object
+        """
+        return self.to_yaml()
+
     def to_yaml(self):
         """Convert the current observations to YAML format
 
         Returns:
             string : Multiline YAML string.
         """
-        raise NotImplementedError
+        return yaml.dump(self.observations)
+
+    def to_disk(self, filename):
+        """Write the current observation object to disk
+
+        In YAML-format. If a new observation object
+        is instantiated from the outputted filename, it
+        should yield identical results in mismatch
+        calculation.
+
+        Directory structure will be created if not existing.
+        Existing file will be overwritten.
+
+        Arguments:
+            filename - string with path and filename to
+                be written to"""
+        if not isinstance(filename, str):
+            raise ValueError("Filename must be a string")
+        dirname = os.path.dirname(filename)
+        if not os.path.exists(dirname) and dirname:
+            os.makedirs(dirname)
+        with open(filename, 'w') as fhandle:
+            fhandle.write(self.to_yaml())

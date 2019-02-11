@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import yaml
 import datetime
 import pandas as pd
 
@@ -23,7 +24,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_observation_import():
+def test_observation_import(tmp='TMP'):
     """Test import of observations from yaml"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
@@ -41,6 +42,14 @@ def test_observation_import():
 
     assert isinstance(obs['smry'], list)
     assert isinstance(obs['rft'], list)
+
+    # Dump back to disk
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    exportedfile = os.path.join(tmp,
+                                'share/observations/observations_copy.yml')
+    obs.to_disk(exportedfile)
+    assert os.path.exists(exportedfile)
 
 
 def test_real_mismatch():
@@ -99,6 +108,14 @@ def test_real_mismatch():
     assert 'npv.txt' in realmis2['OBSKEY'].values
 
     # assert much more!
+
+    # Test that we can write the observations to yaml
+    # and verify that the exported yaml can be reimported
+    # and yield the same result
+    obs2r = Observations(yaml.load(obs2.to_yaml()))
+    realmis2r = obs2r.mismatch(real)
+    assert (realmis2['MISMATCH'].values ==
+            realmis2r['MISMATCH'].values).all()
 
     # Test use of allocated values:
     obs3 = Observations({'smryh': [{'key': 'FOPT',
@@ -169,19 +186,26 @@ def test_errormessages():
     with pytest.raises(ValueError):
         Observations(3)
 
-    # Unsupported observation category
+    # Unsupported observation category, this foobar will be wiped
+    emptyobs = Observations(dict(foobar='foo'))
+    assert not len(emptyobs)
+    # (there will be logged a warning)
+
+    # Empty observation set should be ok, but it must be a dict
+    empty2 = Observations(dict())
+    assert not len(empty2)
     with pytest.raises(ValueError):
-        Observations(dict(foobar='foo'))
-        # (there will be logged a warning also)
+        Observations([])
 
     # Check that the dict is a dict of lists:
-    with pytest.raises(ValueError):
-        Observations(dict(smry='not_a_list'))
-        # (warning will also be issued)
+    assert not len(Observations(dict(smry='not_a_list')))
+    # (warning will be printed)
 
-    # This should give a because 'observation' is missing
-    # Observations({'smry': [{'key': 'WBP4:OP_1',
-    #                         'comment': 'Pressure observations well OP_1'}]})
+    # This should give a warning because 'observation' is missing
+    wrongobs = Observations({'smry': [{'key': 'WBP4:OP_1',
+                                       'comment':
+                                       'Pressure observations well OP_1'}]})
+    assert not len(wrongobs)
 
 
 def test_ens_mismatch():
@@ -263,3 +287,48 @@ def test_ensset_mismatch():
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10
+
+
+def test_virtual_observations():
+    """Construct an virtual(?) observation object from a specific summary vector
+    and use it to rank realizations for similarity.
+    """
+
+    # We need an ensemble to work with:
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+    ens = ScratchEnsemble('test', testdir + '/data/testensemble-reek001/' +
+                          'realization-*/iter-0/')
+    ens.load_smry(column_keys=['FOPT', 'FGPT', 'FWPT', 'FWCT', 'FGOR'],
+                  time_index='yearly')
+
+    # And we need some VirtualRealizations
+    virtreals = {
+        'p10realization': ens.agg('p10'),
+        'meanrealization': ens.agg('mean'),
+        'p90realization': ens.agg('p90')
+        }
+
+    summaryvector = "FOPT"
+    representative_realizations = {}
+    for virtrealname, virtreal in virtreals.iteritems():
+        # Create empty observation object
+        obs = Observations({})
+        obs.load_smry(virtreal, summaryvector, time_index='yearly')
+
+        # Calculate how far each realization is from this observation set
+        # (only one row pr. realization, as FOPTH is only one observation unit)
+        mis = obs.mismatch(ens)
+
+        closest_realization = mis.groupby('REAL').sum()['L2']\
+                                                 .sort_values()\
+                                                 .index\
+                                                 .values[0]
+        representative_realizations[virtrealname] = closest_realization
+
+    assert representative_realizations['meanrealization'] == 4
+    assert representative_realizations['p10realization'] == 2
+    assert representative_realizations['p90realization'] == 1
