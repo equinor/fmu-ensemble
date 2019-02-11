@@ -277,6 +277,81 @@ class VirtualRealization(object):
         # calling function handle further errors.
         return shortpath
 
+    def get_smry(self, column_keys=None, time_index=None):
+        """Analog function to get_smry() in ScratchRealization
+
+        Accesses the internalized summary data and performs
+        interpolation if needed.
+
+        Returns data for those columns that are known, unknown
+        columns will be issued a warning for.
+
+        Args:
+            column_keys: str or list of str with column names,
+                may contain wildcards (glob-style)
+            time_index: str or list of datetimes
+        """
+        column_keys = self._glob_smry_keys(column_keys)
+        if not column_keys:
+            raise ValueError("No column keys found")
+        if not time_index:
+            time_index = 'monthly'
+        if isinstance(time_index, 'str'):
+            time_index = self._get_smry_dates(time_index)
+
+        # Determine which of the internalized dataframes we should use
+        # for interpolation. Or, should we merge some of them for even
+        # higher accuracy?
+
+        # If asked for yearly, look for yearly, monthly, daily, and then for raw.
+        # If asked for monthly, look for monthly, daily, raw, yearly
+        # If asked for weekly, look for weekly, daily, raw, monthly, yearly
+        # If asked for list of datetimes, look for raw, daily, weekly, monthly, yearly.
+        # We assume that smry dataframes with custom datetime list is never
+        # internalized, so we do not need to look for that
+
+        smry_source = self.get_df('unsmry-monthly')
+
+        smry_source.set_index('DATE', inplace=True)
+
+        # Add time_index to smry_soruce.index
+        # Sort smry_source.index
+
+        # Establish list of cumulative columns
+
+        # Linear-in-Time-interpolation for cumulative columns
+        # bfill for other columns
+        # Check if we need ffill at end for non-cum columns
+        # Check if we need bfill at start or ffill at end for cum columns
+        # Slice out the time-indices that was requested and return
+
+    def smry_cumulative(self, column_keys):
+        """Determine whether smry vectors are cumulative
+
+        Returns list of booleans, indicating whether a certain
+        column_key in summary dataframes corresponds to a cumulative
+        column.
+
+        The current implementation checks for the letter 'T' in the
+        column key, but this behaviour is not guaranteed in the
+        future, in case the cumulative information gets internalized
+
+        Warning: This code is duplicated in realization.py, even though
+        a ScratchRealization has access to the EclSum object which can
+        give the true answer
+
+        Args:
+            column_keys: str or list of strings with summary vector
+                names
+        Returns:
+            list of booleans, corresponding to each inputted
+                summary vector name.
+        """
+        if isinstance(column_keys, str):
+            column_keys = [column_keys]
+        return [(x.endswith('T') and ':' not in x and 'CT' not in x)
+                or ('T:' in x and 'CT:' not in x) for x in column_keys]
+
     @property
     def parameters(self):
         """Convenience getter for parameters.txt"""
