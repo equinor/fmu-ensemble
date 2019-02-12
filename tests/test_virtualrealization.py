@@ -125,6 +125,27 @@ def test_virtual_fromdisk(tmp='TMP'):
         vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']
     assert real.get_df('npv.txt') == 3444
 
+
+def test_get_smry():
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.load_smry(time_index='yearly', column_keys=['F*'])
+    vreal = real.to_virtual()
+    monthly = vreal.get_smry(column_keys=['FOPT', 'FOPR', 'FGPR', 'FWCT'],
+                             time_index='monthly')
+    assert 'FOPT' in monthly.columns
+    assert len(monthly) > 20
+    assert 'FOPR' in monthly.columns
+    assert len(monthly) == len(monthly.dropna())
+
+
 def test_get_smry_cumulative():
     """Test the cumulative function booean function on a dummy
     virtual realization."""
