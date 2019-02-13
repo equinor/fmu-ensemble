@@ -10,7 +10,7 @@ import glob
 import yaml
 import datetime
 import pandas as pd
-
+import six
 import pytest
 
 from fmu import config
@@ -314,7 +314,7 @@ def test_virtual_observations():
 
     summaryvector = "FOPT"
     representative_realizations = {}
-    for virtrealname, virtreal in virtreals.iteritems():
+    for virtrealname, virtreal in six.iteritems(virtreals):
         # Create empty observation object
         obs = Observations({})
         obs.load_smry(virtreal, summaryvector, time_index='yearly')
