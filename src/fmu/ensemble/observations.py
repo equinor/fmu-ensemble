@@ -233,8 +233,9 @@ class Observations(object):
                 if obstype == 'txt':
                     sim_value = real.get_df(obsunit[
                         'localpath'])[obsunit['key']]
-                    mismatch = sim_value - obsunit['value']
+                    mismatch = float(sim_value - obsunit['value'])
                     measerror = 1
+                    sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['localpath'])
                                            + '/' + str(obsunit['key']),
@@ -244,11 +245,12 @@ class Observations(object):
                                            SIMVALUE=sim_value,
                                            OBSVALUE=obsunit['value'],
                                            MEASERROR=measerror,
-                                           SIGN=cmp(mismatch, 0)))
+                                           SIGN=sign))
                 if obstype == 'scalar':
                     sim_value = real.get_df(obsunit['key'])
-                    mismatch = sim_value - obsunit['value']
+                    mismatch = float(sim_value - obsunit['value'])
                     measerror = 1
+                    sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(dict(OBSTYPE=obstype,
                                            OBSKEY=str(obsunit['key']),
                                            MISMATCH=mismatch, L1=abs(mismatch),
@@ -256,7 +258,7 @@ class Observations(object):
                                            OBSVALUE=obsunit['value'],
                                            MEASERROR=measerror,
                                            L2=abs(mismatch)**2,
-                                           SIGN=cmp(mismatch, 0)))
+                                           SIGN=sign))
                 if obstype == 'smryh':
                     # Will use raw times when available.
                     # Time index is always identical
@@ -280,7 +282,8 @@ class Observations(object):
                         sim_value = real.get_smry(time_index=[unit['date']],
                                                   column_keys=obsunit['key'])[
                                                   obsunit['key']].values[0]
-                        mismatch = sim_value - unit['value']
+                        mismatch = float(sim_value - unit['value'])
+                        sign = (mismatch > 0) - (mismatch < 0)
                         mismatches.append(dict(OBSTYPE='smry',
                                                OBSKEY=obsunit['key'],
                                                DATE=unit['date'],
@@ -290,7 +293,7 @@ class Observations(object):
                                                SIMVALUE=sim_value,
                                                L1=abs(mismatch),
                                                L2=abs(mismatch),
-                                               SIGN=cmp(mismatch, 0)))
+                                               SIGN=sign))
         return pd.DataFrame(mismatches)
 
     def _realization_misfit(self, real, defaulterrors=False, corr=None):
