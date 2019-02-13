@@ -390,6 +390,8 @@ class VirtualRealization(object):
         """
         available_smry = [x for x in self.keys()
                           if 'unsmry' in x]
+        if not available_smry:
+            raise ValueError("No summary to get start and end date from")
 
         # Infer start and end-date from internalized smry data
         available_dates = set()
@@ -434,9 +436,15 @@ class VirtualRealization(object):
         Returns:
             list of strings
         """
+        if isinstance(column_keys, str):
+            column_keys = [column_keys]
+
         # Get a list ala ['yearly', 'daily']
         available_smry = [x for x in self.keys()
                           if 'unsmry' in x]
+
+        if not available_smry:
+            raise ValueError("No summary data to glob from")
 
         # Merge all internalized columns:
         available_keys = set()

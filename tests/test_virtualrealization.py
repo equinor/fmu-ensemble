@@ -147,17 +147,52 @@ def test_get_smry():
 
 
 def test_get_smry_cumulative():
-    """Test the cumulative function booean function on a dummy
-    virtual realization."""
-    vreal = ensemble.VirtualRealization()
-    assert isinstance(vreal.smry_cumulative([]), list)
-    with pytest.raises(TypeError):
-        vreal.smry_cumulative({})
-    with pytest.raises(TypeError):
-        vreal.smry_cumulative()
-    assert vreal.smry_cumulative(['FOPT'])[0]
-    assert not vreal.smry_cumulative(['FOPR'])[0]
+    """Test the cumulative boolean function"""
 
-    assert not vreal.smry_cumulative(['FWCT'])[0]
-    assert vreal.smry_cumulative(['WOPT:A-1'])[0]
-    assert not vreal.smry_cumulative(['WOPR:A-1T'])[0]
+    vreal = ensemble.VirtualRealization()
+
+    assert isinstance(vreal._smry_cumulative([]), list)
+    with pytest.raises(TypeError):
+        vreal._smry_cumulative({})
+    with pytest.raises(TypeError):
+        vreal._smry_cumulative()
+    assert vreal._smry_cumulative(['FOPT'])[0]
+    assert not vreal._smry_cumulative(['FOPR'])[0]
+
+    assert not vreal._smry_cumulative(['FWCT'])[0]
+    assert vreal._smry_cumulative(['WOPT:A-1'])[0]
+    assert not vreal._smry_cumulative(['WOPR:A-1T'])[0]
+
+
+def test_get_smry_dates():
+    empty_vreal = ensemble.VirtualRealization()
+    with pytest.raises(ValueError):
+        empty_vreal._get_smry_dates()
+
+
+def test_glob_smry_keys():
+    """Test the globbing function for virtual realization"""
+    empty_vreal = ensemble.VirtualRealization()
+    with pytest.raises(ValueError):
+        empty_vreal._glob_smry_keys('FOP*')
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.load_smry(time_index='yearly', column_keys=['F*', 'W*'])
+    vreal = real.to_virtual()
+
+    assert len(vreal._glob_smry_keys('FOP*')) == 9
+    assert len(vreal._glob_smry_keys(['FOP*'])) == 9
+
+    assert len(vreal._glob_smry_keys('WOPT:*')) == 8
+    assert all([x.startswith('WOPT:')
+                for x in vreal._glob_smry_keys('WOPT:*')])
+
+    assert not vreal._glob_smry_keys('FOOBAR')
