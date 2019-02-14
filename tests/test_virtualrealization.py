@@ -193,6 +193,7 @@ def test_get_smry_dates():
     with pytest.raises(ValueError):
         assert vreal._get_smry_dates(freq='foobar')
 
+
 def test_glob_smry_keys():
     """Test the globbing function for virtual realization"""
     empty_vreal = ensemble.VirtualRealization()
