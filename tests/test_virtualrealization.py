@@ -165,10 +165,33 @@ def test_get_smry_cumulative():
 
 
 def test_get_smry_dates():
+    """Test date grid functionality from a virtual realization.
+
+    Already internalized summary data is needed for this"""
+
+    # First test with no data:
     empty_vreal = ensemble.VirtualRealization()
     with pytest.raises(ValueError):
         empty_vreal._get_smry_dates()
 
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.load_smry(time_index='yearly', column_keys=['F*', 'W*'])
+    vreal = real.to_virtual()
+
+    assert len(vreal._get_smry_dates(freq='monthly')) == 49
+    assert len(vreal._get_smry_dates(freq='daily')) == 1462
+    assert len(vreal._get_smry_dates(freq='yearly')) == 5
+
+    with pytest.raises(ValueError):
+        assert vreal._get_smry_dates(freq='foobar')
 
 def test_glob_smry_keys():
     """Test the globbing function for virtual realization"""
