@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import pytest
 import pandas as pd
+import datetime
 from fmu import config
 from fmu import ensemble
 
@@ -160,6 +161,26 @@ def test_get_smry():
     dvfopr = vreal.get_smry(column_keys='FOPR', time_index='daily')
     # FOPR is bfill'ed and should not have many unique values:
     assert len(dvfopr['FOPR'].unique()) == 4
+
+    # Try with custom datetimes
+    long_time_ago = [datetime.date(1978, 5, 6),
+                     datetime.date(1988, 5, 6)]
+    assert all(vreal.get_smry(column_keys=['FOPR', 'FOPT'],
+                              time_index=long_time_ago) == 0)
+    before_and_after = [datetime.date(1900, 1, 1),
+                        datetime.date(2100, 1, 1)]
+    assert all(vreal.get_smry(column_keys=['FOPR', 'FOPT'],
+                              time_index=before_and_after) ==
+               real.get_smry(column_keys=['FOPR', 'FOPT'],
+                             time_index=before_and_after))
+
+    # If you supply repeating timeindices, you get duplicates out
+    # (only duplicates between existing and supplied timesteps are
+    # removed)
+    repeating = [datetime.date(2002, 2, 1),
+                 datetime.date(2002, 2, 1)]
+    assert len(vreal.get_smry(column_keys='FOPR',
+                              time_index=repeating)) == len(repeating)
 
 
 def test_get_smry_cumulative():

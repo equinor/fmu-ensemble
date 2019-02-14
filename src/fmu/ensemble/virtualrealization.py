@@ -321,7 +321,8 @@ class VirtualRealization(object):
                           .replace('unsmry-', '') for x in self.keys()
                           if 'unsmry' in x]
 
-        if isinstance(time_index, str) and time_index not in available_smry:
+        if (isinstance(time_index, str) and time_index not in available_smry)\
+           or isinstance(time_index, list):
             # Suboptimal code, we always pick the finest available
             # time resolution:
             priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly']
