@@ -145,6 +145,9 @@ def test_get_smry():
     assert 'FOPR' in monthly.columns
     assert len(monthly) == len(monthly.dropna())
 
+    assert len(vreal.get_smry(column_keys='FOPT',
+                              time_index='yearly').columns) == 1
+
 
 def test_get_smry_cumulative():
     """Test the cumulative boolean function"""

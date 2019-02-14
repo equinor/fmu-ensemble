@@ -338,6 +338,8 @@ class VirtualRealization(object):
                 logger.error("No internalized summary data "
                              + "to interpolate from")
                 return pd.DataFrame()
+        else:
+            chosen_smry = time_index
 
         smry = self.get_df('unsmry-' + chosen_smry)[
             ['DATE'] + column_keys]
@@ -353,19 +355,18 @@ class VirtualRealization(object):
         smry.sort_index(inplace=True)
         smry = smry.apply(pd.to_numeric)
 
-        # Hmm, there must be a neater way of utilizing the mask..:
         cummask = self._smry_cumulative(column_keys)
         cum_columns = [column_keys[i] for i in range(len(column_keys))
                        if cummask[i]]
         noncum_columns = [column_keys[i] for i in range(len(column_keys))
                           if not cummask[i]]
         smry[cum_columns] = smry[cum_columns]\
-                            .interpolate(method='time')\
-                            .fillna(method='ffill')\
-                            .fillna(method='bfill')
+            .interpolate(method='time')\
+            .fillna(method='ffill')\
+            .fillna(method='bfill')
         smry[noncum_columns] = smry[noncum_columns]\
-                               .fillna(method='bfill')\
-                               .fillna(value=0)
+            .fillna(method='bfill')\
+            .fillna(value=0)
 
         return smry.loc[pd.to_datetime(time_index_dt)]
 
