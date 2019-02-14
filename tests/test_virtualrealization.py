@@ -183,6 +183,41 @@ def test_get_smry():
                               time_index=repeating)) == len(repeating)
 
 
+def test_get_smry2():
+    """More tests for get_smry, with more choices in
+    what is internalized"""
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    real.load_smry(time_index='yearly', column_keys=['F*'])
+    real.load_smry(time_index='monthly', column_keys=['F*'])
+    daily = real.load_smry(time_index='daily', column_keys=['F*'])
+    real.load_smry(time_index='raw', column_keys=['F*'])
+    vreal = real.to_virtual()
+
+    assert len(vreal.get_smry(column_keys='FOPR',
+                              time_index='daily')['FOPR'].unique()
+               == len(daily))
+    assert len(vreal.get_smry(column_keys='FOPT',
+                              time_index='daily')['FOPT'].unique()
+               == len(daily))
+    daily_dt = vreal._get_smry_dates('daily')
+    # If we now ask for daily, we probably pick from 'raw' as it is
+    # internalized.
+    daily2 = vreal.get_smry(column_keys=['FOPR', 'FOPT'],
+                            time_index=daily_dt)
+    assert len(daily2['FOPR'].unique()) == \
+        len(daily['FOPR'].unique())
+    assert len(daily2['FOPT'].unique()) == \
+        len(daily['FOPT'].unique())
+
+
 def test_get_smry_cumulative():
     """Test the cumulative boolean function"""
 
