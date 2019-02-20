@@ -364,6 +364,50 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
 
 
+def test_apply(tmp='TMP'):
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+
+    def ex_func1():
+        return pd.DataFrame(index=['1','2'], columns=['foo', 'bar'],
+                            data=[[1, 2], [3, 4]])
+    result = real.apply(ex_func1)
+    assert isinstance(result, pd.DataFrame)
+
+    # Apply and store the result:
+    real.apply(ex_func1, localpath='df-1234')
+    internalized_result = real.get_df('df-1234')
+    assert isinstance(internalized_result, pd.DataFrame)
+    assert (result == internalized_result).all().all()
+
+    # Check that the submitted function can utilize data from **kwargs
+    def ex_func2(kwargs):
+        arg = kwargs['foo']
+        return pd.DataFrame(index=['1','2'], columns=['foo', 'bar'],
+                            data=[[arg, arg], [arg, arg]])
+
+    result2 = real.apply(ex_func2, foo='bar')
+    assert result2.iloc[0,0] == 'bar'
+
+    # We require applied function to return only DataFrames.
+    def scalar_func():
+        return 1
+    with pytest.raises(ValueError):
+        real.apply(scalar_func)
+
+    # The applied function should have access to the realization object:
+    def real_func(kwargs):
+        return pd.DataFrame(index=[0], columns=['path'],
+                            data=kwargs['realization']._origpath)
+    origpath = real.apply(real_func)
+    assert os.path.exists(origpath.iloc[0,0])
+
+    # Do not allow supplying the realization object to apply:
+    with pytest.raises(ValueError):
+        real.apply(real_func, realization='foo')
+
 def test_drop(tmp='TMP'):
 
     testdir = os.path.dirname(os.path.abspath(__file__))
