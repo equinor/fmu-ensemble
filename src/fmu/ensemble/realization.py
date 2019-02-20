@@ -120,6 +120,15 @@ class ScratchRealization(object):
 
         logger.info('Initialized %s', abspath)
 
+    def runpath(self):
+        """Return the runpath ("root") of the realization
+
+        Returns:
+            str with a filesystem path which at least existeda
+                at time of object initialization.
+        """
+        return self._origpath
+
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
         to a VirtualRealization
