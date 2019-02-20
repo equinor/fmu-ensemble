@@ -551,6 +551,35 @@ class ScratchEnsemble(object):
             except ValueError:
                 pass  # Allow localpath to be missing in some realizations
 
+    def apply(self, callback, **kwargs):
+        """Callback functionalty, apply a function to every realization
+
+        The supplied function handle will be handed over to
+        each underlying realization object. The function supplied
+        must return a Pandas DataFrame. The function can obtain
+        the realization object in the kwargs dictionary through
+        the key 'realization'.
+
+        Args:
+            callback: function handle
+            kwargs: dictionary where 'realization' and
+                'localpath' is reserved, will be forwarded
+                to the callbacked function
+            localpath: str, optional if the data is to be internalized
+                in each realization object.
+
+        Returns:
+            pd.DataFrame, aggregated result of the supplied function
+                on each realization.
+        """
+        results = []
+        for realidx, realization in self._realizations.items():
+            result = realization.apply(callback, **kwargs).copy()
+            # (we took a copy since we are modifying it here:)
+            result['REAL'] = realidx
+            results.append(result)
+        return pd.concat(results, sort=False, ignore_index=True)
+
     def get_smry_dates(self, freq='monthly'):
         """Return list of datetimes for an ensemble according to frequency
 
