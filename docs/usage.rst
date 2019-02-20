@@ -155,11 +155,11 @@ realizations has, using the general function ``get_df()``. When we
 asked for the ensemble parameters above, what actually happened is a
 call to ``get_df('parameters.txt')``, and when we got all summary
 vectors for all realizations merged into one table above,
-``get_df('unsmry-monthly.csv')`` was called under the hood.
+``get_df('unsmry--monthly.csv')`` was called under the hood.
 
 In the objects, these dataframes are stored with filenames as
 keys. When checking ``keys()`` after having run ``load_smry()``, you
-will see a pathname in front of ``unsmry-monthly.csv`` which is where
+will see a pathname in front of ``unsmry--monthly.csv`` which is where
 the dataframe will be written to if you want to dump a realization to
 disk. For convenience in interactive use, you do not need to write the
 entire pathname when calling ``get_df()``, but *only* when there is no
@@ -237,7 +237,7 @@ following:
     ens.drop('parameters.txt', keys=['FOO1', 'FOO2', 'FOO3'])
     ens.drop('geo_gas_volumes.csv', rowcontains='Totals') # Deletes all rows with 'Totals' anywhere.
     ens.drop('geo_oil_volumes.csv', column='Giip')
-    ens.drop('unsmry-monthly', rowcontains='2000-01-01') # Enter dates as strings
+    ens.drop('unsmry--monthly', rowcontains='2000-01-01') # Enter dates as strings
 
 When called on `ScratchEnsemble` object the drops occur in each linked
 realization object, while on virtual ensembles, it occurs directly in
@@ -286,7 +286,7 @@ Examples:
 
     # Assuming an ensemble where yearly summary data is loaded,
     # throw away all realizations that did not reach a certain date
-    ens.filter('unsmry-yearly', column='DATE',
+    ens.filter('unsmry--yearly', column='DATE',
                columncontains='2030-01-01')
 
     # Extract the subset for a specific sensitivity.

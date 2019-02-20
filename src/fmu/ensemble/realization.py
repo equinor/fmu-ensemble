@@ -613,7 +613,7 @@ class ScratchRealization(object):
         Caching supports different time_index, but there is no handling
         of multiple sets of column_keys. The cached data will be called
 
-          'share/results/tables/unsmry-<time_index>.csv'
+          'share/results/tables/unsmry--<time_index>.csv'
 
         where <time_index> is among 'yearly', 'monthly', 'daily', 'last' or
         'raw' (meaning the raw dates in the SMRY file), depending
@@ -655,7 +655,7 @@ class ScratchRealization(object):
         dframe.rename(columns={'index': 'DATE'}, inplace=True)
 
         # Cache the result:
-        localpath = 'share/results/tables/unsmry-' +\
+        localpath = 'share/results/tables/unsmry--' +\
                     time_index_path + '.csv'
         self.data[localpath] = dframe
         return dframe

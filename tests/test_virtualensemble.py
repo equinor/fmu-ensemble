@@ -37,16 +37,16 @@ def test_virtualensemble():
     vens = reekensemble.to_virtual()
 
     # Check that we have data for 5 realizations
-    assert len(vens['unsmry-yearly']['REAL'].unique()) == 5
+    assert len(vens['unsmry--yearly']['REAL'].unique()) == 5
     assert len(vens['parameters.txt']) == 5
 
     assert 'REAL' in vens['STATUS'].columns
 
     # Check shorthand functionality:
-    assert vens.shortcut2path('unsmry-yearly') == \
-        'share/results/tables/unsmry-yearly.csv'
-    assert vens.shortcut2path('unsmry-yearly.csv') == \
-        'share/results/tables/unsmry-yearly.csv'
+    assert vens.shortcut2path('unsmry--yearly') == \
+        'share/results/tables/unsmry--yearly.csv'
+    assert vens.shortcut2path('unsmry--yearly.csv') == \
+        'share/results/tables/unsmry--yearly.csv'
 
     assert 'npv.txt' in vens.keys()
     assert len(vens['npv.txt']) == 5  # includes the 'error!' string in real4
@@ -91,7 +91,7 @@ def test_virtualensemble():
     assert len(vens) == 4
     vens.remove_realizations(3)  # This will give warning
     assert len(vens.parameters['REAL'].unique()) == 4
-    assert len(vens['unsmry-yearly']['REAL'].unique()) == 4
+    assert len(vens['unsmry--yearly']['REAL'].unique()) == 4
     assert len(vens) == 4
 
     # Test data removal:
