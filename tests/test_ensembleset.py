@@ -166,6 +166,15 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert len(rmsvols_df['REAL'].unique()) == 4
     assert len(rmsvols_df['ENSEMBLE'].unique()) == 2
 
+    # Test that we can dump to disk as well and load from csv:
+    ensset3.apply(rms_vol2df, filename='share/results/volumes/'
+                  + 'geogrid_vol_oil_1.txt',
+                  localpath='share/results/volumes/geogrid--oil.csv',
+                  dumptodisk=True)
+    geogrid_oil = ensset3.load_csv('share/results/volumes/geogrid--oil.csv')
+    assert len(geogrid_oil['REAL'].unique()) == 4
+    assert len(geogrid_oil['ENSEMBLE'].unique()) == 2
+
     # Initialize differently, using only the root path containing
     # realization-*
     ensset4 = ensemble.EnsembleSet("foo", frompath=ensdir)

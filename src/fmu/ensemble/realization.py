@@ -442,6 +442,10 @@ class ScratchRealization(object):
         also reserved for the use inside this apply(), as it
         is used for the name of the internalized data.
 
+        If the key 'dumptofile' is a boolean and set to True,
+        the resulting dataframe is also attempted written
+        to disk using the supplied 'localpath'.
+
         Args:
             **kwargs: dict which is supplied to the callbacked function,
             in which the key 'localpath' also points the the name
@@ -468,6 +472,19 @@ class ScratchRealization(object):
         # Only internalize if 'localpath' is given
         if 'localpath' in kwargs:
             self.data[kwargs['localpath']] = result
+
+        if 'dumptodisk' in kwargs and kwargs['dumptodisk']:
+            if not kwargs['localpath']:
+                raise ValueError("localpath must be supplied when"
+                                 + "dumptodisk is used")
+            fullpath = os.path.join(self.runpath(),
+                                    kwargs['localpath'])
+            if not os.path.exists(os.path.dirname(fullpath)):
+                os.makedirs(os.path.dirname(fullpath))
+            if os.path.exists(fullpath):
+                os.unlink(fullpath)
+            logger.info("Writing result of function call to " + fullpath)
+            result.to_csv(fullpath, index=False)
         return result
 
     def __getitem__(self, localpath):
