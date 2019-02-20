@@ -421,21 +421,42 @@ class ScratchRealization(object):
         self.data['STATUS'] = status
         return status
 
-    def apply(self, function, **kwargs):
+    def apply(self, callback, **kwargs):
+        """Callback functionality
+
+        A function handle can be supplied which will be executed on
+        this realization. The function supplied *must* return
+        a Pandas DataFrame. The function can accept an additional
+        kwargs dictionary with extra information. Special keys
+        in the kwargs data are 'realization', which will hold
+        the current realization object. The key 'localpath' is
+        also reserved for the use inside this apply(), as it
+        is used for the name of the internalized data.
+
+        Args:
+            **kwargs: dict which is supplied to the callbacked function,
+            in which the key 'localpath' also points the the name
+            used for data internalization.
+        """
+
         if not kwargs:
             kwargs = {}
         if 'realization' in kwargs:
             raise ValueError("Never supply realization= to apply()")
         kwargs['realization'] = self
 
+        # Allow for calling functions which cannot take any
+        # arguments:
         try:
-            result = function(kwargs)
+            result = callback(kwargs)
         except TypeError:
-            result = function()
+            result = callback()
 
         if not isinstance(result, pd.DataFrame):
             raise ValueError("Returned value from applied "
                              + "function must be a dataframe")
+
+        # Only internalize if 'localpath' is given
         if 'localpath' in kwargs:
             self.data[kwargs['localpath']] = result
         return result
