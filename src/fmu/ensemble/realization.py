@@ -421,6 +421,25 @@ class ScratchRealization(object):
         self.data['STATUS'] = status
         return status
 
+    def apply(self, function, **kwargs):
+        if not kwargs:
+            kwargs = {}
+        if 'realization' in kwargs:
+            raise ValueError("Never supply realization= to apply()")
+        kwargs['realization'] = self
+
+        try:
+            result = function(kwargs)
+        except TypeError:
+            result = function()
+
+        if not isinstance(result, pd.DataFrame):
+            raise ValueError("Returned value from applied "
+                             + "function must be a dataframe")
+        if 'localpath' in kwargs:
+            self.data[kwargs['localpath']] = result
+        return result
+
     def __getitem__(self, localpath):
         """Direct access to the realization data structure
 
