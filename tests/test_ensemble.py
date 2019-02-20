@@ -588,9 +588,9 @@ def test_apply(tmp='TMP'):
     assert 'REAL' in int_df
     assert len(int_df) == len(result)
 
-    ## Test if we can wrap the volumetrics-parser in fmu.tools:
-    ## It cannot be applied directly, as we need to combine the
-    ## realization's root directory with the relative path coming in:
+    # Test if we can wrap the volumetrics-parser in fmu.tools:
+    # It cannot be applied directly, as we need to combine the
+    # realization's root directory with the relative path coming in:
     def rms_vol2df(kwargs):
         fullpath = os.path.join(kwargs['realization'].runpath(),
                                 kwargs['filename'])
