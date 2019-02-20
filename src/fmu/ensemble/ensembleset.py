@@ -261,6 +261,41 @@ class EnsembleSet(object):
             except ValueError:
                 pass  # Allow localpath to be missing in some ensembles.
 
+    def apply(self,  callback, **kwargs):
+        """Callback functionalty, apply a function to every realization
+
+        The supplied function handle will be handed over to each
+        underlying ScratchEnsemble object, which in turn will hand it
+        over to its realization objects. The function supplied must
+        return a Pandas DataFrame. The function can obtain the
+        realization object in the kwargs dictionary through the key
+        'realization'.
+
+        Any VirtualEnsembles are ignored. Operations on dataframes in
+        VirtualEnsembles can be done using the apply() functionality
+        in pd.DataFrame
+
+        Args:
+            callback: function handle
+            kwargs: dictionary where 'realization' and
+                'localpath' is reserved, will be forwarded
+                to the callbacked function
+            localpath: str, optional if the data is to be internalized
+                in each realization object.
+
+        Returns:
+            pd.DataFrame, aggregated result of the supplied function
+                on each realization.
+
+        """
+        results = []
+        for ens_name, ensemble in self._ensembles.items():
+            if isinstance(ensemble, ScratchEnsemble):
+                result = ensemble.apply(callback, **kwargs)
+                result['ENSEMBLE'] = ens_name
+                results.append(result)
+        return pd.concat(results, sort=False, ignore_index=True)
+
     def shortcut2path(self, shortpath):
         """
         Convert short pathnames to fully qualified pathnames
