@@ -403,7 +403,7 @@ def test_apply(tmp='TMP'):
     # The applied function should have access to the realization object:
     def real_func(kwargs):
         return pd.DataFrame(index=[0], columns=['path'],
-                            data=kwargs['realization']._origpath)
+                            data=kwargs['realization'].runpath())
     origpath = real.apply(real_func)
     assert os.path.exists(origpath.iloc[0, 0])
 
