@@ -14,6 +14,7 @@ import ecl.summary
 
 from fmu import config
 from fmu import ensemble
+from fmu.tools import volumetrics
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -410,6 +411,25 @@ def test_apply(tmp='TMP'):
     # Do not allow supplying the realization object to apply:
     with pytest.raises(ValueError):
         real.apply(real_func, realization='foo')
+
+    # Test if we can wrap the volumetrics-parser in fmu.tools:
+    # It cannot be applied directly, as we need to combine the
+    # realization's root directory with the relative path coming in:
+
+    def rms_vol2df(kwargs):
+        return volumetrics.rmsvolumetrics_txt2df(
+            os.path.join(kwargs['realization'].runpath(),
+                         kwargs['filename']))
+    rmsvol_df = real.apply(rms_vol2df,
+                           filename='share/results/volumes/'
+                           + 'geogrid_vol_oil_1.txt')
+    assert rmsvol_df['STOIIP_OIL'].sum() > 0
+
+    # Also try internalization:
+    real.apply(rms_vol2df, filename='share/results/volumes/'
+               + 'geogrid_vol_oil_1.txt',
+               localpath='share/results/volumes/geogrid--oil.csv')
+    assert real.get_df('geogrid--oil')['STOIIP_OIL'].sum() > 0
 
 
 def test_drop(tmp='TMP'):
