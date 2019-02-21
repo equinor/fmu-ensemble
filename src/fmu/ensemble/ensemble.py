@@ -415,11 +415,6 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def from_smry(self, *args, **kwargs):
-        warnings.warn("from_smry() is deprecated. Use load_smry()",
-                      DeprecationWarning)
-        return self.load_smry(*args, **kwargs)
-
     def load_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
         Fetch summary data from all realizations.
