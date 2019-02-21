@@ -160,7 +160,7 @@ class Observations(object):
         # get_smry() API that will interpolate its known data.
         # That means we have to guess which dataset to load for
         # smry data, and we cannot support arbitrary time indices
-        data_name = 'unsmry-' + str(time_index)
+        data_name = 'unsmry--' + str(time_index)
 
         # A ValueError will be thrown if the realization does not have
         # the smry data loaded, and a KeyError if incorrect summary vector name
