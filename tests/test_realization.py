@@ -75,13 +75,14 @@ def test_single_realization():
 
     # Test scalar import
     assert 'OK' in real.keys()  # Imported in __init__
-    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert real['OK'] == "All jobs complete 22:47:54"
+    # NB: Trailing whitespace from the OK-file is removed.
     assert isinstance(real['OK'], str)
 
     # Check that we can "reimport" the OK file
     real.load_scalar('OK', force_reread=True)
     assert 'OK' in real.keys()  # Imported in __init__
-    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert real['OK'] == "All jobs complete 22:47:54"
     assert isinstance(real['OK'], str)
     assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
 

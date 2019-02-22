@@ -191,10 +191,11 @@ class ScratchRealization(object):
                            'BASENAME': os.path.split(localpath)[-1]}
                 self.files = self.files.append(filerow, ignore_index=True)
             try:
-                value = pd.read_table(fullpath, header=None, engine='python',
-                                      skip_blank_lines=skip_blank_lines,
-                                      skipinitialspace=skipinitialspace,
-                                      comment=comment).iloc[0, 0]
+                value = pd.read_csv(fullpath, header=None, sep='',
+                                    engine='python',
+                                    skip_blank_lines=skip_blank_lines,
+                                    skipinitialspace=skipinitialspace,
+                                    comment=comment).iloc[0, 0]
             except pd.errors.EmptyDataError:
                 value = ""
             if convert_numeric:
@@ -262,10 +263,10 @@ class ScratchRealization(object):
                            'BASENAME': os.path.split(localpath)[-1]}
                 self.files = self.files.append(filerow, ignore_index=True)
             try:
-                keyvalues = pd.read_table(fullpath, sep=r'\s+',
-                                          index_col=0, dtype=str,
-                                          usecols=[0,1],
-                                          header=None)[1].to_dict()
+                keyvalues = pd.read_csv(fullpath, sep=r'\s+',
+                                        index_col=0, dtype=str,
+                                        usecols=[0,1],
+                                        header=None)[1].to_dict()
             except pd.errors.EmptyDataError:
                 keyvalues = {}
             if convert_numeric:
@@ -345,15 +346,15 @@ class ScratchRealization(object):
             # to be present.
             return pd.DataFrame()  # will be empty
         errorcolumns = ['error' + str(x) for x in range(0, 10)]
-        status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
-                               header=None,
-                               names=['FORWARD_MODEL', 'colon',
-                                      'STARTTIME', 'dots', 'ENDTIME'] +
-                               errorcolumns,
-                               dtype=str,
-                               engine='python',
-                               error_bad_lines=False,
-                               warn_bad_lines=True)
+        status = pd.read_csv(statusfile, sep=r'\s+', skiprows=1,
+                             header=None,
+                             names=['FORWARD_MODEL', 'colon',
+                                   'STARTTIME', 'dots', 'ENDTIME'] +
+                             errorcolumns,
+                             dtype=str,
+                             engine='python',
+                             error_bad_lines=False,
+                             warn_bad_lines=True)
 
         # dtype str messes up a little bit, pre-Pandas 0.24.1 gives 'None' as
         # a string where data is missing.

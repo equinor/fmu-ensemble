@@ -172,16 +172,16 @@ class VirtualRealization(object):
                     if spacefields == 2 and commafields == 1:
                         # key-value txt file!
                         self.append(filename,
-                                    pd.read_table(os.path.join(root, filename),
-                                                  sep=r'\s+', index_col=0,
-                                                  header=None)[1].to_dict())
+                                    pd.read_csv(os.path.join(root, filename),
+                                                sep=r'\s+', index_col=0,
+                                                header=None)[1].to_dict())
                         logger.info('Read txt file %s', filename)
                     elif (spacefields == 1 and linecount == 1 and
                           commafields == 1):
                         # scalar file
-                        value = pd.read_table(os.path.join(root, filename),
-                                              header=None,
-                                              engine='python').iloc[0, 0]
+                        value = pd.read_csv(os.path.join(root, filename),
+                                            sep=r'\s+', header=None,
+                                            engine='python').iloc[0, 0]
                         logger.info('Read scalar file %s', filename)
                         self.append(filename, value)
                     elif (spacefields == 1 and linecount > 1 and
