@@ -795,11 +795,14 @@ class ScratchRealization(object):
                 # Only asking for column presence
                 return kwargs['column'] in self.data[localpath].columns
             if 'column' in kwargs and 'columncontains' in kwargs:
-                # Treat 'DATE' column specifically
+                # If we are dealing with the DATE column,
+                # convert everything to pandas datatime64 for comparisons,
+                # otherwise we revert to simpler check.
                 if kwargs['column'] == 'DATE':
-                    return dateutil.parser.parse(kwargs['columncontains']) in \
-                        self.data[localpath][kwargs['column']]\
-                            .astype(datetime).values
+                    return (pd.to_datetime(dateutil.parser\
+                                           .parse(kwargs['columncontains']))
+                            == pd.to_datetime(self.data[localpath]
+                                              [kwargs['column']])).any()
                 else:
                     return kwargs['columncontains'] in \
                         self.data[localpath][kwargs['column']].values
