@@ -292,7 +292,7 @@ class Observations(object):
                                                OBSVALUE=unit['value'],
                                                SIMVALUE=sim_value,
                                                L1=abs(mismatch),
-                                               L2=abs(mismatch),
+                                               L2=abs(mismatch)**2,
                                                SIGN=sign))
         return pd.DataFrame(mismatches)
 
