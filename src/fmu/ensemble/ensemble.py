@@ -53,7 +53,7 @@ class ScratchEnsemble(object):
                     '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
     """
 
-    def __init__(self, ensemble_name, paths):
+    def __init__(self, ensemble_name, paths, realidxregexp=None):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on
@@ -91,7 +91,7 @@ class ScratchEnsemble(object):
 
         # Search and locate minimal set of files
         # representing the realizations.
-        count = self.add_realizations(paths)
+        count = self.add_realizations(paths, realidxregexp)
 
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
@@ -151,7 +151,7 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-    def add_realizations(self, paths):
+    def add_realizations(self, paths, realidxregexp=None):
         """Utility function to add realizations to the ensemble.
 
         Realizations are identified by their integer index.
@@ -178,7 +178,8 @@ class ScratchEnsemble(object):
 
         count = 0
         for realdir in globbedpaths:
-            realization = ScratchRealization(realdir)
+            realization = ScratchRealization(realdir,
+                                             realidxregexp=realidxregexp)
             count += 1
             self._realizations[realization.index] = realization
         logger.info('add_realizations() found %d realizations',
