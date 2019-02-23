@@ -22,11 +22,19 @@ class EnsembleSet(object):
     """An ensemble set is any collection of ensemble objects
 
     Ensemble objects are ScratchEnsembles or VirtualEnsembles.
+
+    There is support for initializing from a filstructure with both
+    iterations and batches, but the concept of iterations and batches
+    are not kept in an EnsembleSet, there each ensemble is uniquely
+    identified by the ensemble name. To keep the iteration (and batch)
+    concept, that must be embedded into the ensemble name.
     """
 
     def __init__(self, name=None, ensembles=None, frompath=None,
                  realidxregexp=None, iterregexp=None, batchregexp=None):
-        """Initiate an ensemble set
+        """Initiate an ensemble set, either as empty, or from
+        a list of already initialized ensembles, or directly from the
+        filesystem.
 
         Args:
         name: Chosen name for the ensemble set. Can be used if aggregated at a
@@ -36,6 +44,13 @@ class EnsembleSet(object):
             Will be globbed by default. If no realizations or iterations
             are detected after globbing, the standard glob
             'realization-*/iter-*/ will be used.
+        realidxregexp: regular expression object that will be used to
+            determine the realization index (must be integer) from a path
+            component (split by /). The default fits realization-*
+        iterregexp: similar to realidxregexp, and result will always be
+            treated as a string.
+        batchregexp: similar ot iterregexp, for future support of an extra
+            level similar to iterations
         """
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
