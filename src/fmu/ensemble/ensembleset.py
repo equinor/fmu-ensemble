@@ -24,7 +24,8 @@ class EnsembleSet(object):
     Ensemble objects are ScratchEnsembles or VirtualEnsembles.
     """
 
-    def __init__(self, name=None, ensembles=None, frompath=None):
+    def __init__(self, name=None, ensembles=None, frompath=None,
+                 realidxregexp=None, iterregexp=None, batchregexp=None):
         """Initiate an ensemble set
 
         Args:
@@ -67,7 +68,8 @@ class EnsembleSet(object):
                 logger.warning("No ensembles added to EnsembleSet")
 
         if frompath:
-            self.add_ensembles_frompath(frompath)
+            self.add_ensembles_frompath(frompath, realidxregexp,
+                                        iterregexp, batchregexp)
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
 
@@ -87,6 +89,13 @@ class EnsembleSet(object):
         return "<EnsembleSet {}, {} ensembles:\n{}>".format(
             self.name, len(self), self._ensembles)
 
+    @property
+    def ensemblenames(self):
+        """
+        Return a list of named ensembles in this set
+        """
+        return self._ensembles.keys()
+
     def keys(self):
         """
         Return the union of all keys available in the ensembles.
@@ -99,41 +108,88 @@ class EnsembleSet(object):
             allkeys = allkeys.union(ensemble.keys())
         return allkeys
 
-    def add_ensembles_frompath(self, paths):
+    def add_ensembles_frompath(self, paths,
+                               realidxregexp=None, iterregexp=None,
+                               batchregexp=None):
         """Convenience function for adding multiple ensembles.
 
-        Tailored for the realization-*/iter-* disk structure.
-
         Args:
-            path: str or list of strings with path to the
+            paths: str or list of strings with path to the
                 directory containing the realization-*/iter-*
                 structure
+            realidxregexp: Supply a regexp that can extract the realization
+                index as an *integer* from path components.
+                The expression will be tested on individual path
+                components from right to left.
+            iterregexp: Similar to real_regexp, but is allowed to
+                match strings.
+            batchregexp: Similar to real_regexp, but is allowed to
+                match strings.
         """
+        # Try to catch the most common use case and make that easy:
         if isinstance(paths, str):
-            if 'realization' not in paths:
+            if 'realization' not in paths and not realidxregexp\
+               and not iterregexp and not batchregexp:
+                logger.info("Adding realization-*/iter-* "
+                            + "path pattern to case directory")
                 paths = paths + '/realization-*/iter-*'
             paths = [paths]
+
+        if not realidxregexp:
+            realidxregexp = re.compile(r'realization-(\d+)')
+        if not iterregexp:
+            # Alternative regexp that extracts iteration
+            # as an integer
+            # iterregexp = re.compile(r'iter-(\d+)')
+            # Default regexp that will add 'iter-' to the
+            # ensemble name
+            iterregexp = re.compile(r'(iter-\d+)')
+        if not batchregexp:
+            batchregexp = re.compile(r'batch-(\d+)')
+
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
-        realidxregexp = re.compile(r'.*realization-(\d+).*')
-        iteridxregexp = re.compile(r'.*iter-(\d+).*')
 
-        reals = set()
-        iters = set()
+        # Build a temporary dataframe of globbed paths, and columns with
+        # the realization index and the iter we found
+        # (extented to a third level called 'batch')
+        paths_df = pd.DataFrame(columns=['path', 'real', 'iter', 'batch'])
         for path in globbedpaths:
-            realidxmatch = re.match(realidxregexp, path)
-            if realidxmatch:
-                reals.add(int(realidxmatch.group(1)))
-            iteridxmatch = re.match(iteridxregexp, path)
-            if iteridxmatch:
-                iters.add(int(iteridxmatch.group(1)))
+            real = None
+            iter = None
+            batch = None
+            for path_comp in reversed(path.split(os.path.sep)):
+                realmatch = re.match(realidxregexp, path_comp)
+                if realmatch:
+                    real = int(realmatch.group(1))
+                    break
+            for path_comp in reversed(path.split(os.path.sep)):
+                itermatch = re.match(iterregexp, path_comp)
+                if itermatch:
+                    iter = str(itermatch.group(1))
+                    break
+            for path_comp in reversed(path.split(os.path.sep)):
+                batchmatch = re.match(batchregexp, path_comp)
+                if batchmatch:
+                    batch = str(itermatch.group(1))
+                    break
+            df_row = {'path': path,
+                      'real': real,
+                      'iter': iter,
+                      'batch': batch}
+            paths_df = paths_df.append(df_row, ignore_index=True)
 
         # Initialize ensemble objects for each iter found:
+        iters = sorted(paths_df['iter'].unique())
+        logger.info("Identified %s iterations, %s", len(iters), iters)
         for iterr in iters:
-            ens = ScratchEnsemble('iter-' + str(iterr),
-                                  [x for x in globbedpaths
-                                   if 'iter-' + str(iterr) in x])
+            pathsforiter = sorted(paths_df[paths_df['iter'] == iterr]
+                                  ['path'].values)
+            # iterr might contain the 'iter-' prefix,
+            # depending on chosen regexpx
+            ens = ScratchEnsemble(str(iterr),
+                                  pathsforiter, realidxregexp=realidxregexp)
             self._ensembles[ens.name] = ens
 
     def add_ensemble(self, ensembleobject):
