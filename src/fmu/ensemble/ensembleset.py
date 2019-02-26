@@ -168,6 +168,17 @@ class EnsembleSet(object):
         if isinstance(batchregexp, str):
             batchregexp = re.compile(batchregexp)
 
+        # Check that the regexpes actually can return something
+        if realidxregexp.groups != 1:
+            logger.critical("Invalid regular expression for realization")
+            return
+        if iterregexp.groups != 1:
+            logger.critical("Invalid regular expression for iter")
+            return
+        if batchregexp.groups != 1:
+            logger.critical("Invalid regular expression for batch")
+            return
+
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
