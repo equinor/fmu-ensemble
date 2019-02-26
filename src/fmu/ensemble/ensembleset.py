@@ -211,7 +211,7 @@ class EnsembleSet(object):
                       'iter': iter,
                       'batch': batch}
             paths_df = paths_df.append(df_row, ignore_index=True)
-
+        paths_df.fillna(value='Unknown', inplace=True)
         # Initialize ensemble objects for each iter found:
         iters = sorted(paths_df['iter'].unique())
         logger.info("Identified %s iterations, %s", len(iters), iters)
