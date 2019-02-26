@@ -334,7 +334,8 @@ def test_filestructures(tmp='TMP'):
     dummy = EnsembleSet('dummytest3',
                         frompath=ensdir + 'iter_*/real_*',
                         realidxregexp=re.compile('real_(\d+)'),
-                        iterregexp=re.compile('iter_(\d+)'))
+                        iterregexp='iter_(\d+)')
+    # (regexpes can also be supplied as strings)
 
     assert len(dummy) == no_iters
     assert len(dummy[dummy.ensemblenames[0]]) == no_reals

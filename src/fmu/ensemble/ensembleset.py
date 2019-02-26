@@ -152,6 +152,8 @@ class EnsembleSet(object):
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
+        if isinstance(realidxregexp, str):
+            realidxregexp = re.compile(realidxregexp)
         if not iterregexp:
             # Alternative regexp that extracts iteration
             # as an integer
@@ -159,8 +161,12 @@ class EnsembleSet(object):
             # Default regexp that will add 'iter-' to the
             # ensemble name
             iterregexp = re.compile(r'(iter-\d+)')
+        if isinstance(iterregexp, str):
+            iterregexp = re.compile(iterregexp)
         if not batchregexp:
             batchregexp = re.compile(r'batch-(\d+)')
+        if isinstance(batchregexp, str):
+            batchregexp = re.compile(batchregexp)
 
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
