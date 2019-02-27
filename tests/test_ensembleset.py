@@ -356,3 +356,16 @@ def test_filestructures(tmp='TMP'):
                          iterregexp=re.compile('iteration(\d+)'))
     assert len(dummy3) == no_iters
     assert len(dummy3[dummy3.ensemblenames[0]]) == no_reals
+
+    # Difficult question whether this code should fail hard
+    # or be forgiving for the "erroneous" (ambigous) user input
+    dummy6 = EnsembleSet('dummytest6',
+                         frompath=ensdir + 'real-*/iteration*',
+                         realidxregexp=re.compile('real-(\d+)'))
+    # Only one ensemble is distingushed because we did not tell
+    # the code how the ensembles are named:
+    assert len(dummy6) == 1
+    # There are 20 realizations in the file structure, but
+    # only 5 unique realization indices. We get back an ensemble
+    # with 5 members, but exactly which is not defined (or tested)
+    assert len(dummy6[dummy6.ensemblenames[0]]) == 5

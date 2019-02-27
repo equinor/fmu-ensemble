@@ -216,6 +216,14 @@ class EnsembleSet(object):
         iters = sorted(paths_df['iter'].unique())
         logger.info("Identified %s iterations, %s", len(iters), iters)
         for iterr in iters:
+            # The realization indices *must* be unique for these
+            # chosen paths, otherwise we are most likely in
+            # trouble
+            iterslice = paths_df[paths_df['iter'] == iterr]
+            if len(iterslice['real'].unique()) != len(iterslice):
+                logger.error("Repeated realization indices for iter %s",
+                             iterr)
+                logger.error("Some realizations will be ignored")
             pathsforiter = sorted(paths_df[paths_df['iter'] == iterr]
                                   ['path'].values)
             # iterr might contain the 'iter-' prefix,
