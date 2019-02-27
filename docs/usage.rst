@@ -32,7 +32,7 @@ Basic interactive usage
 Loading an ensemble
 ^^^^^^^^^^^^^^^^^^^
 
-An ensemble must be loaded from the file system (typically `/scratch`)
+An ensemble must be loaded from the filesystem (typically `/scratch`)
 into Python's memory first.
 
 .. code-block:: python
@@ -47,12 +47,15 @@ into Python's memory first.
    # the output should be something like
    #   <Ensemble reek_r001_iter0, 50 realizations>
             
-Change the path to your own if you do not want to try this particular ensemble.
+You name your ensemble in the first argument. This name is used when
+you combine the ensemble with other ensembles into an
+``EnsembleSet``. The path is where on the filesystem your realizations
+root are. The realization root is also called RUNPATH in ERT
+terminology, and is where you have the ``STATUS`` file among others.
 
-Pay attention to the wildcard path. ``iter-3`` is fixed here, and you
-cannot use ``iter-*`` in this call, as that would not be an ensemble. If
-you want to load ``iter-*`` you are initalizing an *ensemble set*,
-see below.
+When you initialize single ensembles, ensure you do not mix ``iter-3``
+with ``iter-*``, where the latter only makes sense when you
+initialize an *EnsembleSet*, see below.
 
 When doing this, only rudimentary loading of the ensemble is
 performed, like loading ``STATUS`` and ``parameters.txt``. It is the intention
@@ -101,6 +104,11 @@ objects. Operations on ensemble sets will typically be applied to each
 ensemble member. A difference is that aggregated data structures
 always have an extra column called ``ENSEMBLE`` that contains the
 ensemble names.
+
+It is possible to load directory structures like ``iter_*/real_*``,
+but you will need to look more closely into the API for the
+EnsembleSet object, and provide regular expressions for determining
+the iteration names and realization indices.
 
 Reading Eclipse data
 ^^^^^^^^^^^^^^^^^^^^
