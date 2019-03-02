@@ -7,8 +7,8 @@ from __future__ import print_function
 
 import os
 import glob
-import yaml
 import datetime
+import yaml
 import pandas as pd
 import six
 import pytest
@@ -188,24 +188,24 @@ def test_errormessages():
 
     # Unsupported observation category, this foobar will be wiped
     emptyobs = Observations(dict(foobar='foo'))
-    assert not len(emptyobs)
+    assert emptyobs.empty
     # (there will be logged a warning)
 
     # Empty observation set should be ok, but it must be a dict
     empty2 = Observations(dict())
-    assert not len(empty2)
+    assert empty2.empty
     with pytest.raises(ValueError):
         Observations([])
 
     # Check that the dict is a dict of lists:
-    assert not len(Observations(dict(smry='not_a_list')))
+    assert Observations(dict(smry='not_a_list')).empty
     # (warning will be printed)
 
     # This should give a warning because 'observation' is missing
     wrongobs = Observations({'smry': [{'key': 'WBP4:OP_1',
                                        'comment':
                                        'Pressure observations well OP_1'}]})
-    assert not len(wrongobs)
+    assert wrongobs.empty
 
 
 def test_ens_mismatch():
@@ -283,7 +283,7 @@ def test_ensset_mismatch():
                                                        'date':
                                                        datetime.date(2001,
                                                                      1, 1)
-                                                       }]}]})
+                                                      }]}]})
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10
