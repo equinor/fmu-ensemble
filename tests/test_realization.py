@@ -7,9 +7,10 @@ from __future__ import print_function
 
 import os
 import datetime
-import pytest
 import shutil
 import pandas as pd
+
+import pytest
 import ecl.summary
 
 from fmu import config
@@ -23,7 +24,8 @@ if not fmux.testsetup():
 
 
 def test_single_realization():
-
+    """Test internalization of properties pertaining
+    to single realizations"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -136,6 +138,8 @@ def test_single_realization():
 
 
 def test_datenormalization():
+    """Test normalization of dates, where
+    dates can be ensured to be on dategrid boundaries"""
     from fmu.ensemble.realization import normalize_dates
     from datetime import date
 
@@ -365,7 +369,7 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
 
 
-def test_drop(tmp='TMP'):
+def test_drop():
     """Test the drop functionality, where can delete
     parts of internalized data"""
     testdir = os.path.dirname(os.path.abspath(__file__))
