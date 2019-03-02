@@ -8,9 +8,10 @@ from __future__ import print_function
 import os
 import re
 import glob
-import pytest
 import shutil
 import pandas as pd
+
+import pytest
 
 from fmu import config
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
@@ -105,9 +106,9 @@ def test_ensembleset_reek001(tmp='TMP'):
                                  time_index='yearly')) == 50
     monthly = ensset3.load_smry(column_keys=['F*'],
                                 time_index='monthly')
-    assert 'ENSEMBLE' == monthly.columns[0]
-    assert 'REAL' == monthly.columns[1]
-    assert 'DATE' == monthly.columns[2]
+    assert monthly.columns[0] == 'ENSEMBLE'
+    assert monthly.columns[1] == 'REAL'
+    assert monthly.columns[2] == 'DATE'
 
     # Check that we can retrieve cached versions
     assert len(ensset3.get_df('unsmry--monthly')) == 380
@@ -274,7 +275,7 @@ def test_mangling_data():
 
     ensset.load_txt('outputs.txt')
     assert 'outputs.txt' in ensset.keys()
-    assert len(ensset.get_df('outputs.txt') == 4)
+    assert len(ensset.get_df('outputs.txt')) == 4
 
     # When it does not exist in any of the ensembles, we
     # should error
@@ -305,36 +306,36 @@ def test_filestructures(tmp='TMP'):
     no_reals = 5
     no_iters = 4
     for real in range(no_reals):
-        for iter in range(no_iters):
+        for iterr in range(no_iters):  # 'iter' is a builtin..
             runpath1 = os.path.join(ensdir,
-                                    "iter_" + str(iter),
+                                    "iter_" + str(iterr),
                                     "real_" + str(real))
             runpath2 = os.path.join(ensdir,
                                     "real-" + str(real),
-                                    "iteration" + str(iter))
+                                    "iteration" + str(iterr))
             os.makedirs(runpath1)
             os.makedirs(runpath2)
             open(os.path.join(runpath1,
                               'parameters.txt'), 'w')\
-                .write('REALTIMESITER ' + str(real * iter) + '\n')
+                .write('REALTIMESITER ' + str(real * iterr) + '\n')
             open(os.path.join(runpath1,
                               'parameters.txt'), 'w')\
-                .write('REALTIMESITERX2 ' + str(real * iter * 2) + '\n')
+                .write('REALTIMESITERX2 ' + str(real * iterr * 2) + '\n')
 
     # Initializing from this ensemble root should give nothing,
     # we do not recognize this iter_*/real_* by default
-    assert len(EnsembleSet('dummytest1', frompath=ensdir)) == 0
+    assert not EnsembleSet('dummytest1', frompath=ensdir)
 
     # Try to initialize providing the path to be globbed,
     # should still not work because the naming is non-standard:
-    assert len(EnsembleSet('dummytest2',
+    assert not EnsembleSet('dummytest2',
                            frompath=ensdir
-                           + 'iter_*/real_*')) == 0
+                           + 'iter_*/real_*')
     # If we also provide regexpes, we should be able to:
     dummy = EnsembleSet('dummytest3',
                         frompath=ensdir + 'iter_*/real_*',
-                        realidxregexp=re.compile('real_(\d+)'),
-                        iterregexp='iter_(\d+)')
+                        realidxregexp=re.compile(r'real_(\d+)'),
+                        iterregexp=r'iter_(\d+)')
     # (regexpes can also be supplied as strings)
 
     assert len(dummy) == no_iters
@@ -345,15 +346,15 @@ def test_filestructures(tmp='TMP'):
         print(dummy[ens_name])
     dummy2 = EnsembleSet('dummytest4',
                          frompath=ensdir + 'iter_*/real_*',
-                         realidxregexp=re.compile('real_(\d+)'),
-                         iterregexp=re.compile('(iter_\d+)'))
+                         realidxregexp=re.compile(r'real_(\d+)'),
+                         iterregexp=re.compile(r'(iter_\d+)'))
     # Different regexp for iter, so we get different ensemble names:
     assert len(dummy2.ensemblenames[0]) == len('iter-X')
 
     dummy3 = EnsembleSet('dummytest5',
                          frompath=ensdir + 'real-*/iteration*',
-                         realidxregexp=re.compile('real-(\d+)'),
-                         iterregexp=re.compile('iteration(\d+)'))
+                         realidxregexp=re.compile(r'real-(\d+)'),
+                         iterregexp=re.compile(r'iteration(\d+)'))
     assert len(dummy3) == no_iters
     assert len(dummy3[dummy3.ensemblenames[0]]) == no_reals
 
@@ -361,7 +362,7 @@ def test_filestructures(tmp='TMP'):
     # or be forgiving for the "erroneous" (ambigous) user input
     dummy6 = EnsembleSet('dummytest6',
                          frompath=ensdir + 'real-*/iteration*',
-                         realidxregexp=re.compile('real-(\d+)'))
+                         realidxregexp=re.compile(r'real-(\d+)'))
     # Only one ensemble is distingushed because we did not tell
     # the code how the ensembles are named:
     assert len(dummy6) == 1

@@ -62,16 +62,16 @@ class EnsembleSet(object):
         # Check consistency in arguments.
         if not name:
             logger.error("Name of EnsembleSet is required")
-            return None
+            return
         if name and not isinstance(name, str):
             logger.error("Name of EnsembleSet must be a string")
-            return None
+            return
         if frompath and not isinstance(frompath, str):
             logger.error("frompath arg given to EnsembleSet must be a string")
-            return None
+            return
         if ensembles and not isinstance(ensembles, list):
             logger.error("Ensembles supplied to EnsembleSet must be a list")
-            return None
+            return
 
         if ensembles and isinstance(ensembles, list):
             for ensemble in ensembles:
@@ -189,7 +189,7 @@ class EnsembleSet(object):
         paths_df = pd.DataFrame(columns=['path', 'real', 'iter', 'batch'])
         for path in globbedpaths:
             real = None
-            iter = None
+            iterr = None  # 'iter' is a builtin..
             batch = None
             for path_comp in reversed(path.split(os.path.sep)):
                 realmatch = re.match(realidxregexp, path_comp)
@@ -199,7 +199,7 @@ class EnsembleSet(object):
             for path_comp in reversed(path.split(os.path.sep)):
                 itermatch = re.match(iterregexp, path_comp)
                 if itermatch:
-                    iter = str(itermatch.group(1))
+                    iterr = str(itermatch.group(1))
                     break
             for path_comp in reversed(path.split(os.path.sep)):
                 batchmatch = re.match(batchregexp, path_comp)
@@ -208,7 +208,7 @@ class EnsembleSet(object):
                     break
             df_row = {'path': path,
                       'real': real,
-                      'iter': iter,
+                      'iter': iterr,
                       'batch': batch}
             paths_df = paths_df.append(df_row, ignore_index=True)
         paths_df.fillna(value='Unknown', inplace=True)
