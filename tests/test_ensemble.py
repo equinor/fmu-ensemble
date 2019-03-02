@@ -328,7 +328,8 @@ def test_ensemble_ecl():
     # Check user supplied quantiles
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPT'],
                                            time_index='yearly',
-                                           quantiles=[0,15,50,85,100])
+                                           quantiles=[0, 15, 50,
+                                                      85, 100])
     statistics = df_stats.index.levels[0]
     assert 'p0' in statistics
     assert 'p15' in statistics
@@ -342,12 +343,12 @@ def test_ensemble_ecl():
 
     with pytest.raises(ValueError):
         reekensemble.get_smry_stats(column_keys=['FOPT'],
-                                           time_index='yearly',
-                                           quantiles=['foobar'])
+                                    time_index='yearly',
+                                    quantiles=['foobar'])
 
     noquantiles = reekensemble.get_smry_stats(column_keys=['FOPT'],
-                                           time_index='yearly',
-                                           quantiles=[])
+                                              time_index='yearly',
+                                              quantiles=[])
     assert len(noquantiles.index.levels[0]) == 3
 
 
