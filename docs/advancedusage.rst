@@ -56,7 +56,7 @@ to ``p90`` before beint sent to Pandas and Numpy for computation.
 
 .. code-block:: python
 
-    ens = ensemble.ScratchRealization('ref-ensemble',
+    ens = ensemble.ScratchEnsemble('ref-ensemble',
              '/scratch/foo/r018-ref-case/realization-*/iter-3')
 
     mean = ens.agg('mean')
@@ -90,9 +90,9 @@ will be matched on realization index ``REAL``.
 
 .. code-block:: python
 
-    refens = ensemble.ScratchRealization('ref-ensemble',
+    refens = ensemble.ScratchEnsemble('ref-ensemble',
                 '/scratch/foo/r018-ref-case/realization-*/iter-3')
-    iorens = ensemble.ScratchRealization('ior-ensemble',
+    iorens = ensemble.ScratchEnsemble('ior-ensemble',
                 '/scratch/foo/r018-ior-case/realization-*/pred')
 
     # Calculate the delta ensemble
