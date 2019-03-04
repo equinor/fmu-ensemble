@@ -66,10 +66,13 @@ class ScratchRealization(object):
             is used to determine the realization index (integer)
             from the path. First match is the index.
             Default: realization-(\d+)
+            Only needs to match path components.
     """
-    def __init__(self, path,
-                 realidxregexp=re.compile(r'.*realization-(\d+)')):
+    def __init__(self, path, realidxregexp=None):
         self._origpath = path
+
+        if not realidxregexp:
+            realidxregexp = re.compile(r'realization-(\d+)')
 
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
@@ -86,9 +89,12 @@ class ScratchRealization(object):
         self._actnum = None
 
         abspath = os.path.abspath(path)
-        realidxmatch = re.match(realidxregexp, abspath)
-        if realidxmatch:
-            self.index = int(realidxmatch.group(1))
+        for path_comp in reversed(os.path.abspath(path)
+                                  .split(os.path.sep)):
+            realidxmatch = re.match(realidxregexp, path_comp)
+            if realidxmatch:
+                self.index = int(realidxmatch.group(1))
+                break
         else:
             logger.warn('Realization %s not valid, skipping',
                         abspath)
