@@ -389,11 +389,11 @@ class VirtualEnsemble(object):
         Resampling support can happen here, to be implemented later.
         """
         if time_index == 'monthly':
-            dataname = 'unsmry-monthly'
+            dataname = 'unsmry--monthly'
         elif time_index == 'yearly':
-            dataname = 'unsmry-yearly'
+            dataname = 'unsmry--yearly'
         elif time_index == 'daily':
-            dataname = 'unsmry-daily'
+            dataname = 'unsmry--daily'
         else:
             raise ValueError("Unsupported time index " + str(time_index))
         data = self.get_df(dataname)

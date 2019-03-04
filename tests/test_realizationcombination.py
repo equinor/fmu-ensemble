@@ -13,7 +13,7 @@ from fmu import ensemble
 from fmu.ensemble import ScratchEnsemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -35,7 +35,7 @@ def test_realizationcombination_basic():
     real1 = ensemble.ScratchRealization(real1dir)
     real1.load_smry(time_index='yearly', column_keys=['F*'])
 
-    assert 'FWPR' in ((real0 - real1)['unsmry-yearly']).columns
+    assert 'FWPR' in ((real0 - real1)['unsmry--yearly']).columns
     assert 'FWL' in ((real0 - real1)['parameters'])
 
 

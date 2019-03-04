@@ -13,7 +13,7 @@ from fmu import config
 from fmu import ensemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -36,12 +36,12 @@ def test_ensemblecombination_basic():
     # Difference with itself should give zero..
     diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
     assert diff['parameters']['KRW1'].sum() == 0
-    assert diff['unsmry-yearly']['FOPT'].sum() == 0
+    assert diff['unsmry--yearly']['FOPT'].sum() == 0
     assert diff['npv.txt']['npv.txt'].sum() == 0
 
-    foptsum = reekensemble.get_df('unsmry-yearly')['FOPT'].sum()
+    foptsum = reekensemble.get_df('unsmry--yearly')['FOPT'].sum()
     half = 0.5 * reekensemble
-    assert half['unsmry-yearly']['FOPT'].sum() == 0.5 * foptsum
+    assert half['unsmry--yearly']['FOPT'].sum() == 0.5 * foptsum
     assert half['npv.txt']['npv.txt'][0] == 1722
 
     # This is only true since we only juggle one ensemble here:
@@ -111,30 +111,30 @@ def test_ensemblecombination_sparse():
     ior.remove_realizations(3)
 
     assert 3 not in (ior - ref)['parameters'].REAL.unique()
-    assert 3 not in (ior - ref)['unsmry-yearly'].REAL.unique()
+    assert 3 not in (ior - ref)['unsmry--yearly'].REAL.unique()
 
     # Delete a specific date in the ior ensemble
-    df = ior[4].data['share/results/tables/unsmry-yearly.csv']
+    df = ior[4].data['share/results/tables/unsmry--yearly.csv']
     print(df.DATE.dtype)
     df.drop(2, inplace=True)  # index 2 is for date 2002-01-1
     # Inject into ensemble again:
-    ior[4].data['share/results/tables/unsmry-yearly.csv'] = df
-    assert '2002-01-01' not in list((ior - ref)['unsmry-yearly.csv']
+    ior[4].data['share/results/tables/unsmry--yearly.csv'] = df
+    assert '2002-01-01' not in list((ior - ref)['unsmry--yearly.csv']
                                     .DATE.unique())
 
     # Convert ref case to virtual:
     vref = ref.to_virtual()
     # Do the same checks over again:
     assert 3 not in (ior - vref)['parameters'].REAL.unique()
-    assert 3 not in (ior - vref)['unsmry-yearly'].REAL.unique()
-    assert '2002-01-01' not in list((ior - vref)['unsmry-yearly.csv']
+    assert 3 not in (ior - vref)['unsmry--yearly'].REAL.unique()
+    assert '2002-01-01' not in list((ior - vref)['unsmry--yearly.csv']
                                     .DATE.unique())
-    assert len((ior - vref)['unsmry-yearly']) == 19
+    assert len((ior - vref)['unsmry--yearly']) == 19
 
-    unsmry = vref.data['share/results/tables/unsmry-yearly.csv']
+    unsmry = vref.data['share/results/tables/unsmry--yearly.csv']
     del unsmry['FWIR']
-    vref.data['share/results/tables/unsmry-yearly.csv'] = unsmry
+    vref.data['share/results/tables/unsmry--yearly.csv'] = unsmry
 
-    assert 'FWIR' in ior.get_df('unsmry-yearly').columns
-    assert 'FWIR' not in vref.get_df('unsmry-yearly').columns
-    assert 'FWIR' not in (ior - vref)['unsmry-yearly'].columns
+    assert 'FWIR' in ior.get_df('unsmry--yearly').columns
+    assert 'FWIR' not in vref.get_df('unsmry--yearly').columns
+    assert 'FWIR' not in (ior - vref)['unsmry--yearly'].columns

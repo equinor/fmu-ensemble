@@ -22,10 +22,19 @@ class EnsembleSet(object):
     """An ensemble set is any collection of ensemble objects
 
     Ensemble objects are ScratchEnsembles or VirtualEnsembles.
+
+    There is support for initializing from a filstructure with both
+    iterations and batches, but the concept of iterations and batches
+    are not kept in an EnsembleSet, there each ensemble is uniquely
+    identified by the ensemble name. To keep the iteration (and batch)
+    concept, that must be embedded into the ensemble name.
     """
 
-    def __init__(self, name=None, ensembles=None, frompath=None):
-        """Initiate an ensemble set
+    def __init__(self, name=None, ensembles=None, frompath=None,
+                 realidxregexp=None, iterregexp=None, batchregexp=None):
+        """Initiate an ensemble set, either as empty, or from
+        a list of already initialized ensembles, or directly from the
+        filesystem.
 
         Args:
         name: Chosen name for the ensemble set. Can be used if aggregated at a
@@ -35,6 +44,13 @@ class EnsembleSet(object):
             Will be globbed by default. If no realizations or iterations
             are detected after globbing, the standard glob
             'realization-*/iter-*/ will be used.
+        realidxregexp: regular expression object that will be used to
+            determine the realization index (must be integer) from a path
+            component (split by /). The default fits realization-*
+        iterregexp: similar to realidxregexp, and result will always be
+            treated as a string.
+        batchregexp: similar ot iterregexp, for future support of an extra
+            level similar to iterations
         """
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
@@ -46,16 +62,16 @@ class EnsembleSet(object):
         # Check consistency in arguments.
         if not name:
             logger.error("Name of EnsembleSet is required")
-            return None
+            return
         if name and not isinstance(name, str):
             logger.error("Name of EnsembleSet must be a string")
-            return None
+            return
         if frompath and not isinstance(frompath, str):
             logger.error("frompath arg given to EnsembleSet must be a string")
-            return None
+            return
         if ensembles and not isinstance(ensembles, list):
             logger.error("Ensembles supplied to EnsembleSet must be a list")
-            return None
+            return
 
         if ensembles and isinstance(ensembles, list):
             for ensemble in ensembles:
@@ -67,7 +83,8 @@ class EnsembleSet(object):
                 logger.warning("No ensembles added to EnsembleSet")
 
         if frompath:
-            self.add_ensembles_frompath(frompath)
+            self.add_ensembles_frompath(frompath, realidxregexp,
+                                        iterregexp, batchregexp)
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
 
@@ -87,6 +104,13 @@ class EnsembleSet(object):
         return "<EnsembleSet {}, {} ensembles:\n{}>".format(
             self.name, len(self), self._ensembles)
 
+    @property
+    def ensemblenames(self):
+        """
+        Return a list of named ensembles in this set
+        """
+        return self._ensembles.keys()
+
     def keys(self):
         """
         Return the union of all keys available in the ensembles.
@@ -99,41 +123,113 @@ class EnsembleSet(object):
             allkeys = allkeys.union(ensemble.keys())
         return allkeys
 
-    def add_ensembles_frompath(self, paths):
+    def add_ensembles_frompath(self, paths,
+                               realidxregexp=None, iterregexp=None,
+                               batchregexp=None):
         """Convenience function for adding multiple ensembles.
 
-        Tailored for the realization-*/iter-* disk structure.
-
         Args:
-            path: str or list of strings with path to the
+            paths: str or list of strings with path to the
                 directory containing the realization-*/iter-*
                 structure
+            realidxregexp: Supply a regexp that can extract the realization
+                index as an *integer* from path components.
+                The expression will be tested on individual path
+                components from right to left.
+            iterregexp: Similar to real_regexp, but is allowed to
+                match strings.
+            batchregexp: Similar to real_regexp, but is allowed to
+                match strings.
         """
+        # Try to catch the most common use case and make that easy:
         if isinstance(paths, str):
-            if 'realization' not in paths:
+            if 'realization' not in paths and not realidxregexp\
+               and not iterregexp and not batchregexp:
+                logger.info("Adding realization-*/iter-* "
+                            + "path pattern to case directory")
                 paths = paths + '/realization-*/iter-*'
             paths = [paths]
+
+        if not realidxregexp:
+            realidxregexp = re.compile(r'realization-(\d+)')
+        if isinstance(realidxregexp, str):
+            realidxregexp = re.compile(realidxregexp)
+        if not iterregexp:
+            # Alternative regexp that extracts iteration
+            # as an integer
+            # iterregexp = re.compile(r'iter-(\d+)')
+            # Default regexp that will add 'iter-' to the
+            # ensemble name
+            iterregexp = re.compile(r'(iter-\d+)')
+        if isinstance(iterregexp, str):
+            iterregexp = re.compile(iterregexp)
+        if not batchregexp:
+            batchregexp = re.compile(r'batch-(\d+)')
+        if isinstance(batchregexp, str):
+            batchregexp = re.compile(batchregexp)
+
+        # Check that the regexpes actually can return something
+        if realidxregexp.groups != 1:
+            logger.critical("Invalid regular expression for realization")
+            return
+        if iterregexp.groups != 1:
+            logger.critical("Invalid regular expression for iter")
+            return
+        if batchregexp.groups != 1:
+            logger.critical("Invalid regular expression for batch")
+            return
+
         globbedpaths = [glob.glob(path) for path in paths]
         globbedpaths = list(set([item for sublist in globbedpaths
                                  for item in sublist]))
-        realidxregexp = re.compile(r'.*realization-(\d+).*')
-        iteridxregexp = re.compile(r'.*iter-(\d+).*')
 
-        reals = set()
-        iters = set()
+        # Build a temporary dataframe of globbed paths, and columns with
+        # the realization index and the iter we found
+        # (extented to a third level called 'batch')
+        paths_df = pd.DataFrame(columns=['path', 'real', 'iter', 'batch'])
         for path in globbedpaths:
-            realidxmatch = re.match(realidxregexp, path)
-            if realidxmatch:
-                reals.add(int(realidxmatch.group(1)))
-            iteridxmatch = re.match(iteridxregexp, path)
-            if iteridxmatch:
-                iters.add(int(iteridxmatch.group(1)))
-
+            real = None
+            iterr = None  # 'iter' is a builtin..
+            batch = None
+            for path_comp in reversed(path.split(os.path.sep)):
+                realmatch = re.match(realidxregexp, path_comp)
+                if realmatch:
+                    real = int(realmatch.group(1))
+                    break
+            for path_comp in reversed(path.split(os.path.sep)):
+                itermatch = re.match(iterregexp, path_comp)
+                if itermatch:
+                    iterr = str(itermatch.group(1))
+                    break
+            for path_comp in reversed(path.split(os.path.sep)):
+                batchmatch = re.match(batchregexp, path_comp)
+                if batchmatch:
+                    batch = str(itermatch.group(1))
+                    break
+            df_row = {'path': path,
+                      'real': real,
+                      'iter': iterr,
+                      'batch': batch}
+            paths_df = paths_df.append(df_row, ignore_index=True)
+        paths_df.fillna(value='Unknown', inplace=True)
         # Initialize ensemble objects for each iter found:
+        iters = sorted(paths_df['iter'].unique())
+        logger.info("Identified %s iterations, %s", len(iters), iters)
         for iterr in iters:
-            ens = ScratchEnsemble('iter-' + str(iterr),
-                                  [x for x in globbedpaths
-                                   if 'iter-' + str(iterr) in x])
+            # The realization indices *must* be unique for these
+            # chosen paths, otherwise we are most likely in
+            # trouble
+            iterslice = paths_df[paths_df['iter'] == iterr]
+            if len(iterslice['real'].unique()) != len(iterslice):
+                logger.error("Repeated realization indices for iter %s",
+                             iterr)
+                logger.error("Some realizations will be ignored")
+            pathsforiter = sorted(paths_df[paths_df['iter'] == iterr]
+                                  ['path'].values)
+            # iterr might contain the 'iter-' prefix,
+            # depending on chosen regexpx
+            ens = ScratchEnsemble(str(iterr),
+                                  pathsforiter, realidxregexp=realidxregexp)
             self._ensembles[ens.name] = ens
 
     def add_ensemble(self, ensembleobject):
@@ -347,7 +443,7 @@ class EnsembleSet(object):
                                column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry-' +
+        return self.get_df('share/results/tables/unsmry--' +
                            time_index + '.csv')
 
     def get_smry_dates(self, freq='monthly'):
