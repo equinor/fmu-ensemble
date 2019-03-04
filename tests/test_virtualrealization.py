@@ -12,7 +12,7 @@ from fmu import config
 from fmu import ensemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
