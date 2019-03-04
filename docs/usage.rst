@@ -32,7 +32,7 @@ Basic interactive usage
 Loading an ensemble
 ^^^^^^^^^^^^^^^^^^^
 
-An ensemble must be loaded from the file system (typically `/scratch`)
+An ensemble must be loaded from the filesystem (typically `/scratch`)
 into Python's memory first.
 
 .. code-block:: python
@@ -47,12 +47,15 @@ into Python's memory first.
    # the output should be something like
    #   <Ensemble reek_r001_iter0, 50 realizations>
             
-Change the path to your own if you do not want to try this particular ensemble.
+You name your ensemble in the first argument. This name is used when
+you combine the ensemble with other ensembles into an
+``EnsembleSet``. The path is where on the filesystem your realizations
+root are. The realization root is also called RUNPATH in ERT
+terminology, and is where you have the ``STATUS`` file among others.
 
-Pay attention to the wildcard path. ``iter-3`` is fixed here, and you
-cannot use ``iter-*`` in this call, as that would not be an ensemble. If
-you want to load ``iter-*`` you are initalizing an *ensemble set*,
-see below.
+When you initialize single ensembles, ensure you do not mix ``iter-3``
+with ``iter-*``, where the latter only makes sense when you
+initialize an *EnsembleSet*, see below.
 
 When doing this, only rudimentary loading of the ensemble is
 performed, like loading ``STATUS`` and ``parameters.txt``. It is the intention
@@ -101,6 +104,33 @@ objects. Operations on ensemble sets will typically be applied to each
 ensemble member. A difference is that aggregated data structures
 always have an extra column called ``ENSEMBLE`` that contains the
 ensemble names.
+
+It is possible to load directory structures like ``iter_*/real_*``,
+but you will need to look more closely into the API for the
+EnsembleSet object, and provide regular expressions for determining
+the iteration names and realization indices.
+
+Obtaining warning and error messages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+fmu-ensemble will by default be mute to warnings and error messages,
+unless you tell it to be verbose in your client code. The available debug
+levels are `INFO`, `WARNING`, `DEBUG` and `CRITICAL` where the latter is
+the default.
+
+Script authors can set a different default logging level by inserting
+the lines
+
+.. code-block:: python
+    from fmu.config import etc
+    fmux = etc.Interaction()
+    logger = fmux.basiclogger(__name__, level='WARNING')
+
+while users can always override this by setting an environment variable:
+
+.. code-block:: console
+    export FMU_LOGGING_LEVEL=WARNING  # If bash shell
+    setenv FMU_LOGGING_LEVEL WARNING  # Default shell in equinor
 
 Reading Eclipse data
 ^^^^^^^^^^^^^^^^^^^^
@@ -155,11 +185,11 @@ realizations has, using the general function ``get_df()``. When we
 asked for the ensemble parameters above, what actually happened is a
 call to ``get_df('parameters.txt')``, and when we got all summary
 vectors for all realizations merged into one table above,
-``get_df('unsmry-monthly.csv')`` was called under the hood.
+``get_df('unsmry--monthly.csv')`` was called under the hood.
 
 In the objects, these dataframes are stored with filenames as
 keys. When checking ``keys()`` after having run ``load_smry()``, you
-will see a pathname in front of ``unsmry-monthly.csv`` which is where
+will see a pathname in front of ``unsmry--monthly.csv`` which is where
 the dataframe will be written to if you want to dump a realization to
 disk. For convenience in interactive use, you do not need to write the
 entire pathname when calling ``get_df()``, but *only* when there is no
@@ -237,7 +267,7 @@ following:
     ens.drop('parameters.txt', keys=['FOO1', 'FOO2', 'FOO3'])
     ens.drop('geo_gas_volumes.csv', rowcontains='Totals') # Deletes all rows with 'Totals' anywhere.
     ens.drop('geo_oil_volumes.csv', column='Giip')
-    ens.drop('unsmry-monthly', rowcontains='2000-01-01') # Enter dates as strings
+    ens.drop('unsmry--monthly', rowcontains='2000-01-01') # Enter dates as strings
 
 When called on `ScratchEnsemble` object the drops occur in each linked
 realization object, while on virtual ensembles, it occurs directly in
@@ -286,7 +316,7 @@ Examples:
 
     # Assuming an ensemble where yearly summary data is loaded,
     # throw away all realizations that did not reach a certain date
-    ens.filter('unsmry-yearly', column='DATE',
+    ens.filter('unsmry--yearly', column='DATE',
                columncontains='2030-01-01')
 
     # Extract the subset for a specific sensitivity.

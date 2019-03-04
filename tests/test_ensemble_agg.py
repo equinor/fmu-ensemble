@@ -13,7 +13,7 @@ from fmu import config
 from fmu.ensemble import ScratchEnsemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -69,8 +69,8 @@ def test_ensemble_aggregations(tmp='TMP'):
     assert stats['min']['parameters.txt']['RMS_SEED'] <= \
         stats['max']['parameters.txt']['RMS_SEED']
 
-    assert stats['min']['unsmry-monthly']['FOPT'].iloc[-1] < \
-        stats['max']['unsmry-monthly']['FOPT'].iloc[-1]
+    assert stats['min']['unsmry--monthly']['FOPT'].iloc[-1] < \
+        stats['max']['unsmry--monthly']['FOPT'].iloc[-1]
 
     # .loc[2] corresponds to FIPNUM=3
     assert stats['min']['simulator_volume_fipnum'].iloc[2]['STOIIP_OIL'] < \
@@ -112,10 +112,10 @@ def test_ensemble_aggregations(tmp='TMP'):
 
     # Shorthand notion works for keys to include, but they
     # should get returned with fully qualified paths.
-    assert 'share/results/tables/unsmry-yearly.csv' in \
-        reekensemble.agg('mean', keylist='unsmry-yearly').keys()
-    assert 'share/results/tables/unsmry-yearly.csv' in \
-        reekensemble.agg('mean', keylist=['unsmry-yearly']).keys()
+    assert 'share/results/tables/unsmry--yearly.csv' in \
+        reekensemble.agg('mean', keylist='unsmry--yearly').keys()
+    assert 'share/results/tables/unsmry--yearly.csv' in \
+        reekensemble.agg('mean', keylist=['unsmry--yearly']).keys()
     assert isinstance(reekensemble.agg('mean',
-                                       keylist='unsmry-yearly')
-                      .get_df('unsmry-yearly'), pd.DataFrame)
+                                       keylist='unsmry--yearly')
+                      .get_df('unsmry--yearly'), pd.DataFrame)

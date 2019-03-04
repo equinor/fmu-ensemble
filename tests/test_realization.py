@@ -7,9 +7,10 @@ from __future__ import print_function
 
 import os
 import datetime
-import pytest
 import shutil
 import pandas as pd
+
+import pytest
 import ecl.summary
 
 from numpy import random
@@ -17,13 +18,15 @@ from fmu import config
 from fmu import ensemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
 
 
 def test_single_realization():
+    """Test internalization of properties pertaining
+    to single realizations"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -58,8 +61,8 @@ def test_single_realization():
 
     # STATUS file
     status = real.get_df('STATUS')
+    assert not status.empty
     assert isinstance(status, pd.DataFrame)
-    assert len(status)
     assert 'ECLIPSE' in status.loc[49, 'FORWARD_MODEL']
     assert int(status.loc[49, 'DURATION']) == 141
 
@@ -75,13 +78,14 @@ def test_single_realization():
 
     # Test scalar import
     assert 'OK' in real.keys()  # Imported in __init__
-    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert real['OK'] == "All jobs complete 22:47:54"
+    # NB: Trailing whitespace from the OK-file is removed.
     assert isinstance(real['OK'], str)
 
     # Check that we can "reimport" the OK file
     real.load_scalar('OK', force_reread=True)
     assert 'OK' in real.keys()  # Imported in __init__
-    assert real['OK'] == "All jobs complete 22:47:54 "  # Mind the last space
+    assert real['OK'] == "All jobs complete 22:47:54"
     assert isinstance(real['OK'], str)
     assert len(real.files[real.files.LOCALPATH == 'OK']) == 1
 
@@ -200,6 +204,8 @@ def test_volumetric_rates():
 
 
 def test_datenormalization():
+    """Test normalization of dates, where
+    dates can be ensured to be on dategrid boundaries"""
     from fmu.ensemble.realization import normalize_dates
     from datetime import date
 
@@ -243,12 +249,12 @@ def test_singlereal_ecl(tmp='TMP'):
 
     # get_smry() should be analogue to load_smry(), but it should
     # not modify the internalized dataframes!
-    internalized_df = real['unsmry-raw']
-    df = real.get_smry(column_keys=['G*'])
-    assert 'GGIR:OP' in df.columns
+    internalized_df = real['unsmry--raw']
+    fresh_df = real.get_smry(column_keys=['G*'])
+    assert 'GGIR:OP' in fresh_df.columns
     assert 'GGIR:OP' not in internalized_df.columns
     # Test that the internalized was not touched:
-    assert 'GGIR:OP' not in real['unsmry-raw'].columns
+    assert 'GGIR:OP' not in real['unsmry--raw'].columns
 
     assert 'FOPT' in real.get_smry(column_keys=['F*'], time_index='monthly')
     assert 'FOPT' in real.get_smry(column_keys='F*', time_index='yearly')
@@ -270,12 +276,12 @@ def test_singlereal_ecl(tmp='TMP'):
     # Test caching/internalization of summary files
 
     # This should be false, since only the full localpath is in keys():
-    assert 'unsmry-raw.csv' not in real.keys()
-    assert 'share/results/tables/unsmry-raw.csv' in real.keys()
-    assert 'FOPT' in real['unsmry-raw']
+    assert 'unsmry--raw.csv' not in real.keys()
+    assert 'share/results/tables/unsmry--raw.csv' in real.keys()
+    assert 'FOPT' in real['unsmry--raw']
     with pytest.raises(ValueError):
         # This does not exist before we have asked for it
-        'FOPT' in real['unsmry-yearly']
+        'FOPT' in real['unsmry--yearly']
 
 
 def test_filesystem_changes():
@@ -316,10 +322,10 @@ def test_filesystem_changes():
     assert real.get_smry_dates() is None
     # This should return empty dataframe:
     assert isinstance(real.load_smry(), pd.DataFrame)
-    assert len(real.load_smry()) == 0
+    assert real.load_smry().empty
 
     assert isinstance(real.get_smry(), pd.DataFrame)
-    assert len(real.get_smry()) == 0
+    assert real.get_smry().empty
 
     # Also move away UNSMRY and redo:
     shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY',
@@ -331,7 +337,7 @@ def test_filesystem_changes():
     assert real.get_smry_dates() is None
     # This should return empty dataframe:
     assert isinstance(real.load_smry(), pd.DataFrame)
-    assert len(real.load_smry()) == 0
+    assert real.load_smry().empty
 
     # Reinstate summary data:
     shutil.move(realdir + '/eclipse/model/2_R001_REEK-0.UNSMRY-FOOO',
@@ -367,7 +373,7 @@ def test_filesystem_changes():
     fhandle = open(realdir + '/STATUS', 'w')
     fhandle.close()
     real = ensemble.ScratchRealization(realdir)
-    assert len(real.get_df('STATUS')) == 0
+    assert real.get_df('STATUS').empty
     # This demonstrates we can fool the Realization object, and
     # should perhaps leads to relaxation of the requirement..
 
@@ -404,13 +410,13 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
 
     # load_smry() is now the same as no UNSMRY file found,
     # an empty dataframe (and there would be some logging)
-    assert len(real.load_smry()) == 0
+    assert real.load_smry().empty
 
     # Now discover the UNSMRY file explicitly, then load_smry()
     # should work.
     unsmry_file = real.find_files('eclipsedir/model/*.UNSMRY')
     # Non-empty dataframe:
-    assert len(real.load_smry()) > 0
+    assert not real.load_smry().empty
     assert len(unsmry_file) == 1
     assert isinstance(unsmry_file, pd.DataFrame)
 
@@ -429,8 +435,9 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     shutil.rmtree(datadir + '/' + tmpensname, ignore_errors=True)
 
 
-def test_drop(tmp='TMP'):
-
+def test_drop():
+    """Test the drop functionality, where can delete
+    parts of internalized data"""
     testdir = os.path.dirname(os.path.abspath(__file__))
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
                            'realization-0/iter-0')
@@ -448,13 +455,9 @@ def test_drop(tmp='TMP'):
     assert len(real.parameters) == parametercount - 3
 
     real.load_smry(column_keys='FOPT', time_index='monthly')
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    real.get_df('unsmry-monthly').to_csv(os.path.join(tmp, 'foo.csv'),
-                                         index=False)
-    datecount = len(real.get_df('unsmry-monthly'))
-    real.drop('unsmry-monthly', rowcontains='2000-01-01')
-    assert len(real.get_df('unsmry-monthly')) == datecount - 1
+    datecount = len(real.get_df('unsmry--monthly'))
+    real.drop('unsmry--monthly', rowcontains='2000-01-01')
+    assert len(real.get_df('unsmry--monthly')) == datecount - 1
 
     real.drop('parameters')
     assert 'parameters.txt' not in real.keys()

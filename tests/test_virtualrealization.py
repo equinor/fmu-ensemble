@@ -12,13 +12,16 @@ from fmu import config
 from fmu import ensemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
 
 
 def test_virtual_realization():
+    """Test making av virtual realization from
+    a fresh ScratchRealization, and veryfing that the
+    internalized data was conserved"""
 
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
@@ -48,16 +51,16 @@ def test_virtual_realization():
     vreal = real.to_virtual()
     assert real.keys() == vreal.keys()
 
-    # Test appending a random dictionary
+    # Test appending a random dictionary betteroutput
     vreal.append('betteroutput', {'NPV': 200000000, 'BREAKEVEN': 8.4})
-    assert vreal['betteroutput']['NPV'] > 0
+    assert vreal.get_df('betteroutput')['NPV'] > 0
     # Appending to a key that exists should not help
     vreal.append('betteroutput', {'NPV': -300, 'BREAKEVEN': 300})
-    assert vreal['betteroutput']['NPV'] > 0
+    assert vreal.get_df('betteroutput')['NPV'] > 0
     # Unless we overwrite explicitly:
     vreal.append('betteroutput', {'NPV': -300, 'BREAKEVEN': 300},
                  overwrite=True)
-    assert vreal['betteroutput']['NPV'] < 0
+    assert vreal.get_df('betteroutput')['NPV'] < 0
 
     with pytest.raises(ValueError):
         vreal.get_df('bogusdataname')
@@ -90,37 +93,42 @@ def test_virtual_todisk(tmp='TMP'):
     assert os.path.exists(os.path.join(tmp, 'virtreal1/STATUS'))
     assert os.path.exists(os.path.join(tmp,
                                        'virtreal1/share/results/' +
-                                       'tables/unsmry-yearly.csv'))
+                                       'tables/unsmry--yearly.csv'))
     assert os.path.exists(os.path.join(tmp, 'virtreal1/npv.txt'))
 
 
 def test_virtual_fromdisk(tmp='TMP'):
+    """Test retrieval of a virtualrealization that
+    has been dumped to disk"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
     else:
         testdir = os.path.abspath('.')
 
+    # First make a ScratchRealization to virtualize and dump:
     realdir = os.path.join(testdir, 'data/testensemble-reek001',
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
+    # Internalize some data that we can test for afterwards
     real.load_smry(time_index='yearly', column_keys=['F*'])
     real.load_scalar('npv.txt')
     if not os.path.exists(tmp):
         os.mkdir(tmp)
+    # Virtualize and dump to disk:
     real.to_virtual().to_disk(os.path.join(tmp, 'virtreal2'), delete=True)
-    #
+
+    # Reload the virtualized realization back from disk:
     vreal = ensemble.VirtualRealization('foo')
     vreal.load_disk(os.path.join(tmp, 'virtreal2'))
 
     for key in vreal.keys():
-        if isinstance(real.get_df(key), pd.DataFrame) or \
-           isinstance(real.get_df(key), dict):
+        if isinstance(real.get_df(key), (pd.DataFrame, dict)):
             assert len(real.get_df(key)) == len(vreal.get_df(key))
         else:  # Scalars:
             assert real.get_df(key) == vreal.get_df(key)
     assert real.get_df('parameters')['FWL'] == \
         vreal.get_df('parameters')['FWL']
-    assert real.get_df('unsmry-yearly').iloc[-1]['FGIP'] == \
-        vreal.get_df('unsmry-yearly').iloc[-1]['FGIP']
+    assert real.get_df('unsmry--yearly').iloc[-1]['FGIP'] == \
+        vreal.get_df('unsmry--yearly').iloc[-1]['FGIP']
     assert real.get_df('npv.txt') == 3444

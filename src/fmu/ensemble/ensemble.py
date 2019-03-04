@@ -14,6 +14,7 @@ from __future__ import print_function
 import re
 import os
 import glob
+import six
 
 import warnings
 import pandas as pd
@@ -52,7 +53,7 @@ class ScratchEnsemble(object):
                     '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
     """
 
-    def __init__(self, ensemble_name, paths):
+    def __init__(self, ensemble_name, paths, realidxregexp=None):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on
@@ -90,7 +91,7 @@ class ScratchEnsemble(object):
 
         # Search and locate minimal set of files
         # representing the realizations.
-        count = self.add_realizations(paths)
+        count = self.add_realizations(paths, realidxregexp)
 
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
@@ -150,7 +151,7 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-    def add_realizations(self, paths):
+    def add_realizations(self, paths, realidxregexp=None):
         """Utility function to add realizations to the ensemble.
 
         Realizations are identified by their integer index.
@@ -177,7 +178,8 @@ class ScratchEnsemble(object):
 
         count = 0
         for realdir in globbedpaths:
-            realization = ScratchRealization(realdir)
+            realization = ScratchRealization(realdir,
+                                             realidxregexp=realidxregexp)
             count += 1
             self._realizations[realization.index] = realization
         logger.info('add_realizations() found %d realizations',
@@ -414,11 +416,6 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def from_smry(self, *args, **kwargs):
-        warnings.warn("from_smry() is deprecated. Use load_smry()",
-                      DeprecationWarning)
-        return self.load_smry(*args, **kwargs)
-
     def load_smry(self, time_index='raw', column_keys=None, stacked=True):
         """
         Fetch summary data from all realizations.
@@ -462,7 +459,7 @@ class ScratchEnsemble(object):
                                   column_keys=column_keys)
         if isinstance(time_index, list):
             time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry-' +
+        return self.get_df('share/results/tables/unsmry--' +
                            time_index + '.csv')
 
     def filter(self, localpath, inplace=True, **kwargs):
@@ -906,7 +903,7 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
-        ref = self._realizations.values()[0]
+        ref = list(self._realizations.values())[0]
         grid_index = ref.get_grid_index(active_only=active_only)
         corners = ref.get_grid_corners(grid_index)
         centre = ref.get_grid_centre(grid_index)
@@ -946,7 +943,7 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return 0
         if self._global_size is None:
-            self._global_size = self._realizations.values()[0].global_size
+            self._global_size = list(self._realizations.values())[0].global_size
         return self._global_size
 
     def _get_grid_index(self, active=True):
@@ -956,7 +953,7 @@ class ScratchEnsemble(object):
         """
         if not self._realizations:
             return None
-        return self._realizations.values()[0].get_grid_index(active=active)
+        return list(self._realizations.values())[0].get_grid_index(active=active)
 
     @property
     def init_keys(self):
@@ -965,7 +962,7 @@ class ScratchEnsemble(object):
             return None
         all_keys = set.union(
             *[set(realization.get_init().keys())
-              for _, realization in self._realizations.iteritems()])
+              for _, realization in six.iteritems(self._realizations)])
         return all_keys
 
     @property
@@ -975,7 +972,7 @@ class ScratchEnsemble(object):
             return None
         all_keys = set.union(
             *[set(realization.get_unrst().keys())
-              for _, realization in self._realizations.iteritems()])
+              for _, realization in six.iteritems(self._realizations)])
         return all_keys
 
     def get_unrst_report_dates(self):
@@ -984,7 +981,7 @@ class ScratchEnsemble(object):
             return None
         all_report_dates = set.union(
             *[set(realization.report_dates)
-              for _, realization in self._realizations.iteritems()])
+              for _, realization in six.iteritems(self._realizations)])
         all_report_dates = list(all_report_dates)
         all_report_dates.sort()
         dframe = pd.DataFrame(all_report_dates, columns=['Dates'])
@@ -1038,14 +1035,14 @@ class ScratchEnsemble(object):
         """
         if report:
             mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for real, realization in self._realizations.iteritems():
+            for real, realization in six.iteritems(self._realizations):
                 mean += realization.get_global_unrst_keyword(prop,
                                                              report)
             mean.safe_div(global_active)
             return mean
         else:
             mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for _, realization in self._realizations.iteritems():
+            for _, realization in six.iteritems(self._realizations):
                 mean += realization.get_global_init_keyword(prop)
             mean.safe_div(global_active)
             return mean
@@ -1061,7 +1058,7 @@ class ScratchEnsemble(object):
         """
         if report:
             std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for real, realization in self._realizations.iteritems():
+            for real, realization in six.iteritems(self._realizations):
                 real_prop = realization.get_global_unrst_keyword(prop, report)
                 std_dev.add_squared(real_prop - mean)
             std_dev.safe_div(global_active)
@@ -1069,7 +1066,7 @@ class ScratchEnsemble(object):
 
         else:
             std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for real, realization in self._realizations.iteritems():
+            for real, realization in six.iteritems(self._realizations):
                 real_prop = realization.get_global_init_keyword(prop)
                 std_dev.add_squared(real_prop - mean)
             std_dev.safe_div(global_active)

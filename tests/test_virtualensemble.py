@@ -13,14 +13,14 @@ from fmu import config
 from fmu.ensemble import ScratchEnsemble
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
 
 
 def test_virtualensemble():
-
+    """Test the properties of a virtualized ScratchEnsemble"""
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -37,16 +37,16 @@ def test_virtualensemble():
     vens = reekensemble.to_virtual()
 
     # Check that we have data for 5 realizations
-    assert len(vens['unsmry-yearly']['REAL'].unique()) == 5
+    assert len(vens['unsmry--yearly']['REAL'].unique()) == 5
     assert len(vens['parameters.txt']) == 5
 
     assert 'REAL' in vens['STATUS'].columns
 
     # Check shorthand functionality:
-    assert vens.shortcut2path('unsmry-yearly') == \
-        'share/results/tables/unsmry-yearly.csv'
-    assert vens.shortcut2path('unsmry-yearly.csv') == \
-        'share/results/tables/unsmry-yearly.csv'
+    assert vens.shortcut2path('unsmry--yearly') == \
+        'share/results/tables/unsmry--yearly.csv'
+    assert vens.shortcut2path('unsmry--yearly.csv') == \
+        'share/results/tables/unsmry--yearly.csv'
 
     assert 'npv.txt' in vens.keys()
     assert len(vens['npv.txt']) == 5  # includes the 'error!' string in real4
@@ -91,7 +91,7 @@ def test_virtualensemble():
     assert len(vens) == 4
     vens.remove_realizations(3)  # This will give warning
     assert len(vens.parameters['REAL'].unique()) == 4
-    assert len(vens['unsmry-yearly']['REAL'].unique()) == 4
+    assert len(vens['unsmry--yearly']['REAL'].unique()) == 4
     assert len(vens) == 4
 
     # Test data removal:
@@ -108,26 +108,26 @@ def test_virtualensemble():
     assert 'REAL' in vens['betterdata'].columns
     assert 'NPV' in vens['betterdata'].columns
 
-    assert vens.get_realization(3)['betterdata']['NPV'] == 2300
-    assert vens.get_realization(0)['betterdata']['NPV'] == 1000
-    assert vens.get_realization(1)['betterdata']['NPV'] == 2000
-    assert vens.get_realization(2)['betterdata']['NPV'] == 1500
-    assert vens.get_realization(80)['betterdata']['NPV'] == 9
+    assert vens.get_realization(3).get_df('betterdata')['NPV'] == 2300
+    assert vens.get_realization(0).get_df('betterdata')['NPV'] == 1000
+    assert vens.get_realization(1).get_df('betterdata')['NPV'] == 2000
+    assert vens.get_realization(2).get_df('betterdata')['NPV'] == 1500
+    assert vens.get_realization(80).get_df('betterdata')['NPV'] == 9
 
     with pytest.raises(ValueError):
         vens.get_realization(9999)
 
     assert vens.shortcut2path('betterdata') == 'betterdata'
-    assert vens.agg('min')['betterdata']['NPV'] == 9
-    assert vens.agg('max')['betterdata']['NPV'] == 6000
-    assert vens.agg('min')['betterdata']['NPV'] < \
-        vens.agg('p93')['betterdata']['NPV']
-    assert vens.agg('p55')['betterdata']['NPV'] < \
-        vens.agg('p05')['betterdata']['NPV']
-    assert vens.agg('p54')['betterdata']['NPV'] < \
-        vens.agg('max')['betterdata']['NPV']
+    assert vens.agg('min').get_df('betterdata')['NPV'] == 9
+    assert vens.agg('max').get_df('betterdata')['NPV'] == 6000
+    assert vens.agg('min').get_df('betterdata')['NPV'] < \
+        vens.agg('p93').get_df('betterdata')['NPV']
+    assert vens.agg('p55').get_df('betterdata')['NPV'] < \
+        vens.agg('p05').get_df('betterdata')['NPV']
+    assert vens.agg('p54').get_df('betterdata')['NPV'] < \
+        vens.agg('max').get_df('betterdata')['NPV']
 
     assert 'REAL' not in vens.agg('min')['STATUS'].columns
 
     # Betterdata should be returned as a dictionary
-    assert isinstance(vens.agg('min')['betterdata'], dict)
+    assert isinstance(vens.agg('min').get_df('betterdata'), dict)

@@ -33,7 +33,7 @@ and presenting them in realization-like objects. A "*mean*" of an
 ensemble is possible to compute for all data an ensemble contains, and
 the result is something that we treat like a *realization*. It is
 important to realize that this result is **not** a realization, only
-something we can treat in this way, for which the `VirtualRealization`
+something we can treat in this way, for which the ``VirtualRealization``
 object is used. This "mean realization" is not a physical realization
 where all numbers make physically sense, it just gives you the mean of
 all the data, over the realizations for scalars, for each point in
@@ -44,15 +44,15 @@ realization, will typically not be compatible, it that it can be
 physically impossible for the reality to obtain these profiles. Use
 and interpret with care!
 
-Supported statistical aggregations are `mean`, `median`, `min`, `max`,
-`std`, `var` and `pXX` where `XX` is a number between `00` and `99`
-being the percentile you want. You access this functionality through
-the function `agg()` in the ensemble objects.
+Supported statistical aggregations are ``mean``, ``median``, ``min``,
+``max``, ``std``, ``var`` and ``pXX`` where ``XX`` is a number between
+``00`` and ``99`` being the percentile you want. You access this
+functionality through the function ``agg()`` in the ensemble objects.
 
 Pandas and Numpy is used under the hood for all computations, and for
 percentiles/quantiles, the oil industry has an opposite meaning of
-quantiles. When you ask for `p10` ("high case") it will be translated
-to "`p90`" before beint sent to Pandas and Numpy for computation.
+quantiles. When you ask for ``p10`` ("high case") it will be translated
+to ``p90`` before beint sent to Pandas and Numpy for computation.
 
 .. code-block:: python
 
@@ -65,7 +65,7 @@ to "`p90`" before beint sent to Pandas and Numpy for computation.
     print(mean['parameters.txt']['FWL'])
 
     # What is the mean ultimate FOPT
-    print(mean['unsmry-monthly']['FOPT'].iloc[-1])
+    print(mean['unsmry--monthly']['FOPT'].iloc[-1])
     # (.iloc[-1] is here Pandas functionality for accessing the last
     # row)
   
@@ -79,14 +79,14 @@ linear combination.
 
 Computing the sum of two realizations is only a matter of adding them
 in your Python interpreter. The end result is a object you can treat
-similar to a realization, asking for its data using `get_df()`, or
-asking for the summary data using `get_smry()`. Eclipse time-series
+similar to a realization, asking for its data using ``get_df()``, or
+asking for the summary data using ``get_smry()``. Eclipse time-series
 will be combined at point-wise in time, but only on shared
 time-steps. It is therefore recommended to interpolate them to
 e.g. monthly time interval prior to combination.
 
 Ensembles can be linearly combined analogously to realizations, and
-will be matched on realization index `REAL`. 
+will be matched on realization index ``REAL``. 
 
 .. code-block:: python
 
@@ -117,11 +117,11 @@ Working with observations
 Observations for history matching can be loaded, and computations
 (comparisons) of observed data versus simulated data can be performed.
 
-The `Observation` object can be initizalized using YAML files or from a Python
-dictionary.
+The Observation object can be initizalized using YAML files or from
+a Python dictionary.
 
-If you are opting for simple usage, just being able to compare `FOPT`
-versus `FOPTH` in your ensemble, your observation config could look
+If you are opting for simple usage, just being able to compare ``FOPT``
+versus ``FOPTH`` in your ensemble, your observation config could look
 like:
 
 .. code-block:: yaml
@@ -165,18 +165,61 @@ Alternatively, it is possible to initialize this directly without the filesystem
     #   [ 38  26 100  71  57]
 
 
-For comparisons with single measured values (recommended for history matching), use the YAML syntax:
+For comparisons with single measured values (recommended for history
+matching), use the YAML syntax:
 
 .. code-block:: yaml
                 
     smry:
       # Mandatory elements per entry: key and observations
-      - key: WBP4:OP_1
-        comment: "Shut-in pressures converted from well head conditions" # This is a global comment regarding this set of observations
+    - key: WBP4:OP_1
+        # This is a global comment regarding this set of observations
+        comment: "Shut-in pressures converted from well head conditions"
         observations:
            # Mandatory elements per entry in ecl_vector observations: value, error, date
            - {value: 251, error: 4, date: 2001-01-01}
            - {value: 251, error: 10, date: 2002-01-01}
-           - {value: 251, error: 10, date: 2003-01-01, comment: First measurement after sensor drift correction} 
+           - {value: 251, error: 10, date: 2003-01-01,
+              comment: First measurement after sensor drift correction}
 
 
+Representative realizations
+---------------------------
+
+It is possible to utilize the observation support for calculating
+similarity between realizations. An example of this is to create a
+"mean" realization by use of the aggregation functionality (or p10,
+p90 etc.) and then rank the ensemble members by how similar they are
+to this aggregated realization. It is possible to pick certain summary
+data from the virtual realization as "observations", and calculate
+mismatches. For this, a utility function ``load_smry()`` is provided
+by the Observation object to load "virtual" observations from an
+existing realization. If you then use the Observation object to
+compute mismatches, and then rank realizations by the mismatch, you
+can pick the realization that is closest to your statistics of choice.
+
+.. code-block:: python
+
+    # Load an ensemble we want to analyze
+    ens = ensemble.ScratchEnsemble('hmensemble',
+            '/scratch/foo/something/realization-*/iter-3')
+
+    # Calculate a "mean" realization
+    mean = ens.agg('mean')
+
+    # Create an empty observation object
+    obs = Observations({})
+
+    # Load data from the mean realization as virtual observations:
+    obs.load_smry(mean, 'FOPT', time_index='yearly')
+
+    # Calculate the difference between the ensemble members and the
+    # mean realization:
+    mis = obs.mismatch(ens)
+
+    # Group mismatch data by realization, and pick the realization
+    # index with the smallest sum of squared errors ('L2')
+    closest_to_mean = mis.groupby('REAL').sum()['L2']\
+                                         .sort_values()\
+                                         .index\
+                                         .values[0]

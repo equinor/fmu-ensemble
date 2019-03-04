@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Testing fmu-ensemble, EnsembleSet clas."""
+"""Testing fmu-ensemble, EnsembleSet class."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import os
+import re
 import glob
-import pytest
 import shutil
 import pandas as pd
 
+import pytest
+
 from fmu import config
-from fmu import ensemble
+from fmu.ensemble import ScratchEnsemble, EnsembleSet
 
 fmux = config.etc.Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -45,12 +47,12 @@ def test_ensembleset_reek001(tmp='TMP'):
         os.symlink(realizationdir + '/iter-0',
                    realizationdir + '/iter-1')
 
-    iter0 = ensemble.ScratchEnsemble('iter-0',
-                                     ensdir + '/realization-*/iter-0')
-    iter1 = ensemble.ScratchEnsemble('iter-1',
-                                     ensdir + '/realization-*/iter-1')
+    iter0 = ScratchEnsemble('iter-0',
+                            ensdir + '/realization-*/iter-0')
+    iter1 = ScratchEnsemble('iter-1',
+                            ensdir + '/realization-*/iter-1')
 
-    ensset = ensemble.EnsembleSet("reek001", [iter0, iter1])
+    ensset = EnsembleSet("reek001", [iter0, iter1])
     assert len(ensset) == 2
     assert len(ensset['iter-0'].get_df('STATUS')) == 250
     assert len(ensset['iter-1'].get_df('STATUS')) == 250
@@ -63,24 +65,24 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert len(ensset) == 2  # Unchanged!
 
     # Initialize starting from empty ensemble
-    ensset2 = ensemble.EnsembleSet("reek001", [])
+    ensset2 = EnsembleSet("reek001", [])
     ensset2.add_ensemble(iter0)
     ensset2.add_ensemble(iter1)
     assert len(ensset2) == 2
 
     # Check that we can skip the empty list:
-    ensset2x = ensemble.EnsembleSet("reek001")
+    ensset2x = EnsembleSet("reek001")
     ensset2x.add_ensemble(iter0)
     ensset2x.add_ensemble(iter1)
     assert len(ensset2x) == 2
 
     # Initialize directly from path with globbing:
-    ensset3 = ensemble.EnsembleSet("reek001direct", [])
+    ensset3 = EnsembleSet("reek001direct", [])
     ensset3.add_ensembles_frompath(ensdir)
     assert len(ensset3) == 2
 
     # Alternative globbing:
-    ensset4 = ensemble.EnsembleSet("reek001direct2", frompath=ensdir)
+    ensset4 = EnsembleSet("reek001direct2", frompath=ensdir)
     assert len(ensset4) == 2
 
     # Testing aggregation of parameters
@@ -104,17 +106,17 @@ def test_ensembleset_reek001(tmp='TMP'):
                                  time_index='yearly')) == 50
     monthly = ensset3.load_smry(column_keys=['F*'],
                                 time_index='monthly')
-    assert 'ENSEMBLE' == monthly.columns[0]
-    assert 'REAL' == monthly.columns[1]
-    assert 'DATE' == monthly.columns[2]
+    assert monthly.columns[0] == 'ENSEMBLE'
+    assert monthly.columns[1] == 'REAL'
+    assert monthly.columns[2] == 'DATE'
 
     # Check that we can retrieve cached versions
-    assert len(ensset3.get_df('unsmry-monthly')) == 380
-    assert len(ensset3.get_df('unsmry-yearly')) == 50
+    assert len(ensset3.get_df('unsmry--monthly')) == 380
+    assert len(ensset3.get_df('unsmry--yearly')) == 50
     monthly.to_csv(os.path.join(tmp, 'ensset-monthly.csv'), index=False)
 
     with pytest.raises(ValueError):
-        ensset3.get_df('unsmry-weekly')
+        ensset3.get_df('unsmry--weekly')
 
     # Check errors when we ask for stupid stuff
     with pytest.raises(ValueError):
@@ -149,10 +151,10 @@ def test_ensembleset_reek001(tmp='TMP'):
 
     # Initialize differently, using only the root path containing
     # realization-*
-    ensset4 = ensemble.EnsembleSet("foo", frompath=ensdir)
+    ensset4 = EnsembleSet("foo", frompath=ensdir)
     assert len(ensset4) == 2
-    assert isinstance(ensset4['iter-0'], ensemble.ScratchEnsemble)
-    assert isinstance(ensset4['iter-1'], ensemble.ScratchEnsemble)
+    assert isinstance(ensset4['iter-0'], ScratchEnsemble)
+    assert isinstance(ensset4['iter-1'], ScratchEnsemble)
 
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
@@ -188,16 +190,16 @@ def test_pred_dir():
     # Initialize differently, using only the root path containing
     # realization-*. The frompath argument does not support
     # anything but iter-* naming convention for ensembles (yet?)
-    ensset = ensemble.EnsembleSet("foo", frompath=ensdir)
+    ensset = EnsembleSet("foo", frompath=ensdir)
     assert len(ensset) == 2
-    assert isinstance(ensset['iter-0'], ensemble.ScratchEnsemble)
-    assert isinstance(ensset['iter-1'], ensemble.ScratchEnsemble)
+    assert isinstance(ensset['iter-0'], ScratchEnsemble)
+    assert isinstance(ensset['iter-1'], ScratchEnsemble)
 
     # We need to be more explicit to include the pred-dg3 directory:
-    pred_ens = ensemble.ScratchEnsemble('pred-dg3',
-                                        ensdir + "realization-*/pred-dg3")
+    pred_ens = ScratchEnsemble('pred-dg3',
+                               ensdir + "realization-*/pred-dg3")
     ensset.add_ensemble(pred_ens)
-    assert isinstance(ensset['pred-dg3'], ensemble.ScratchEnsemble)
+    assert isinstance(ensset['pred-dg3'], ScratchEnsemble)
     assert len(ensset) == 3
 
     # Check the flagging in aggregated data:
@@ -211,8 +213,8 @@ def test_pred_dir():
     assert 'iter-1' in ens_list
 
     # Try to add a new ensemble with a similar name to an existing:
-    foo_ens = ensemble.ScratchEnsemble('pred-dg3',
-                                       ensdir + "realization-*/iter-1")
+    foo_ens = ScratchEnsemble('pred-dg3',
+                              ensdir + "realization-*/iter-1")
     with pytest.raises(ValueError):
         ensset.add_ensemble(foo_ens)
     assert len(ensset) == 3
@@ -237,7 +239,7 @@ def test_mangling_data():
     ensdir = os.path.join(testdir,
                           "data/testensemble-reek001/")
 
-    # Copy iter-0 to iter-1, creating an identical ensemble
+    # Copy iter-0 to iter-1, creating an identical ensemble<
     # we can load for testing. Delete in case it exists
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         if os.path.exists(realizationdir + '/iter-1'):
@@ -254,15 +256,15 @@ def test_mangling_data():
                            realizationcomponent.replace('iter-0', 'iter-1'))
 
     # Trigger warnings:
-    assert not ensemble.EnsembleSet()  # warning given
-    assert not ensemble.EnsembleSet(['bargh'])  # warning given
-    assert not ensemble.EnsembleSet('bar')  # No warning, just empty
-    ensemble.EnsembleSet('foobar', frompath="foobarth")  # trigger warning
+    assert not EnsembleSet()  # warning given
+    assert not EnsembleSet(['bargh'])  # warning given
+    assert not EnsembleSet('bar')  # No warning, just empty
+    EnsembleSet('foobar', frompath="foobarth")  # trigger warning
 
-    ensset = ensemble.EnsembleSet("foo", frompath=ensdir)
+    ensset = EnsembleSet("foo", frompath=ensdir)
     assert len(ensset) == 2
-    assert isinstance(ensset['iter-0'], ensemble.ScratchEnsemble)
-    assert isinstance(ensset['iter-1'], ensemble.ScratchEnsemble)
+    assert isinstance(ensset['iter-0'], ScratchEnsemble)
+    assert isinstance(ensset['iter-1'], ScratchEnsemble)
 
     assert 'parameters.txt' in ensset.keys()
 
@@ -273,7 +275,7 @@ def test_mangling_data():
 
     ensset.load_txt('outputs.txt')
     assert 'outputs.txt' in ensset.keys()
-    assert len(ensset.get_df('outputs.txt') == 4)
+    assert len(ensset.get_df('outputs.txt')) == 4
 
     # When it does not exist in any of the ensembles, we
     # should error
@@ -283,3 +285,88 @@ def test_mangling_data():
     # Delete the symlinks when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
         shutil.rmtree(realizationdir + '/iter-1')
+
+
+def test_filestructures(tmp='TMP'):
+    """Generate filepath structures that we want to be able to initialize
+    as ensemblesets.
+
+    This function generatate dummy data
+    """
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+    ensdir = os.path.join(testdir, tmp,
+                          "data/dummycase/")
+    if os.path.exists(ensdir):
+        shutil.rmtree(ensdir)
+    os.makedirs(ensdir)
+    no_reals = 5
+    no_iters = 4
+    for real in range(no_reals):
+        for iterr in range(no_iters):  # 'iter' is a builtin..
+            runpath1 = os.path.join(ensdir,
+                                    "iter_" + str(iterr),
+                                    "real_" + str(real))
+            runpath2 = os.path.join(ensdir,
+                                    "real-" + str(real),
+                                    "iteration" + str(iterr))
+            os.makedirs(runpath1)
+            os.makedirs(runpath2)
+            open(os.path.join(runpath1,
+                              'parameters.txt'), 'w')\
+                .write('REALTIMESITER ' + str(real * iterr) + '\n')
+            open(os.path.join(runpath1,
+                              'parameters.txt'), 'w')\
+                .write('REALTIMESITERX2 ' + str(real * iterr * 2) + '\n')
+
+    # Initializing from this ensemble root should give nothing,
+    # we do not recognize this iter_*/real_* by default
+    assert not EnsembleSet('dummytest1', frompath=ensdir)
+
+    # Try to initialize providing the path to be globbed,
+    # should still not work because the naming is non-standard:
+    assert not EnsembleSet('dummytest2',
+                           frompath=ensdir
+                           + 'iter_*/real_*')
+    # If we also provide regexpes, we should be able to:
+    dummy = EnsembleSet('dummytest3',
+                        frompath=ensdir + 'iter_*/real_*',
+                        realidxregexp=re.compile(r'real_(\d+)'),
+                        iterregexp=r'iter_(\d+)')
+    # (regexpes can also be supplied as strings)
+
+    assert len(dummy) == no_iters
+    assert len(dummy[dummy.ensemblenames[0]]) == no_reals
+    # Ensemble name should be set depending on the iterregexp we supply:
+    assert len(dummy.ensemblenames[0]) == len('X')
+    for ens_name in dummy.ensemblenames:
+        print(dummy[ens_name])
+    dummy2 = EnsembleSet('dummytest4',
+                         frompath=ensdir + 'iter_*/real_*',
+                         realidxregexp=re.compile(r'real_(\d+)'),
+                         iterregexp=re.compile(r'(iter_\d+)'))
+    # Different regexp for iter, so we get different ensemble names:
+    assert len(dummy2.ensemblenames[0]) == len('iter-X')
+
+    dummy3 = EnsembleSet('dummytest5',
+                         frompath=ensdir + 'real-*/iteration*',
+                         realidxregexp=re.compile(r'real-(\d+)'),
+                         iterregexp=re.compile(r'iteration(\d+)'))
+    assert len(dummy3) == no_iters
+    assert len(dummy3[dummy3.ensemblenames[0]]) == no_reals
+
+    # Difficult question whether this code should fail hard
+    # or be forgiving for the "erroneous" (ambigous) user input
+    dummy6 = EnsembleSet('dummytest6',
+                         frompath=ensdir + 'real-*/iteration*',
+                         realidxregexp=re.compile(r'real-(\d+)'))
+    # Only one ensemble is distingushed because we did not tell
+    # the code how the ensembles are named:
+    assert len(dummy6) == 1
+    # There are 20 realizations in the file structure, but
+    # only 5 unique realization indices. We get back an ensemble
+    # with 5 members, but exactly which is not defined (or tested)
+    assert len(dummy6[dummy6.ensemblenames[0]]) == 5
