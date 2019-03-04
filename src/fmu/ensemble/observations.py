@@ -191,6 +191,14 @@ class Observations(object):
         # This is not correctly implemented yet..
         return len(self.observations.keys())
 
+    @property
+    def empty(self):
+        """Decide if the observation set is empty
+
+        An empty observation set is has zero observation
+        unit count"""
+        return not self.__len__()
+
     def keys(self):
         """Return a list of observation units present.
 
