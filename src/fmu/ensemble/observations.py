@@ -160,7 +160,7 @@ class Observations(object):
         # get_smry() API that will interpolate its known data.
         # That means we have to guess which dataset to load for
         # smry data, and we cannot support arbitrary time indices
-        data_name = 'unsmry-' + str(time_index)
+        data_name = 'unsmry--' + str(time_index)
 
         # A ValueError will be thrown if the realization does not have
         # the smry data loaded, and a KeyError if incorrect summary vector name
@@ -190,6 +190,14 @@ class Observations(object):
         """Return the number of observation units present"""
         # This is not correctly implemented yet..
         return len(self.observations.keys())
+
+    @property
+    def empty(self):
+        """Decide if the observation set is empty
+
+        An empty observation set is has zero observation
+        unit count"""
+        return not self.__len__()
 
     def keys(self):
         """Return a list of observation units present.
@@ -292,7 +300,7 @@ class Observations(object):
                                                OBSVALUE=unit['value'],
                                                SIMVALUE=sim_value,
                                                L1=abs(mismatch),
-                                               L2=abs(mismatch),
+                                               L2=abs(mismatch)**2,
                                                SIGN=sign))
         return pd.DataFrame(mismatches)
 

@@ -329,7 +329,8 @@ def test_ensemble_ecl():
     # Check user supplied quantiles
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPT'],
                                            time_index='yearly',
-                                           quantiles=[0,15,50,85,100])
+                                           quantiles=[0, 15, 50,
+                                                      85, 100])
     statistics = df_stats.index.levels[0]
     assert 'p0' in statistics
     assert 'p15' in statistics
@@ -343,31 +344,13 @@ def test_ensemble_ecl():
 
     with pytest.raises(ValueError):
         reekensemble.get_smry_stats(column_keys=['FOPT'],
-                                           time_index='yearly',
-                                           quantiles=['foobar'])
+                                    time_index='yearly',
+                                    quantiles=['foobar'])
 
     noquantiles = reekensemble.get_smry_stats(column_keys=['FOPT'],
-                                           time_index='yearly',
-                                           quantiles=[])
+                                              time_index='yearly',
+                                              quantiles=[])
     assert len(noquantiles.index.levels[0]) == 3
-
-def test_deprecation():
-    """Eclipse specific functionality"""
-
-    if '__file__' in globals():
-        # Easen up copying test code into interactive sessions
-        testdir = os.path.dirname(os.path.abspath(__file__))
-    else:
-        testdir = os.path.abspath('.')
-
-    reekensemble = ScratchEnsemble('reektest',
-                                   testdir +
-                                   '/data/testensemble-reek001/' +
-                                   'realization-*/iter-0')
-
-    # Load summary using deprecated function call
-    # This should trigger a depreciation warning
-    reekensemble.from_smry(time_index='monthly')
 
 
 def test_filter():

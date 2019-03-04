@@ -200,10 +200,11 @@ class ScratchRealization(object):
                            'BASENAME': os.path.split(localpath)[-1]}
                 self.files = self.files.append(filerow, ignore_index=True)
             try:
-                value = pd.read_table(fullpath, header=None, engine='python',
-                                      skip_blank_lines=skip_blank_lines,
-                                      skipinitialspace=skipinitialspace,
-                                      comment=comment).iloc[0, 0]
+                value = pd.read_csv(fullpath, header=None, sep='',
+                                    engine='python',
+                                    skip_blank_lines=skip_blank_lines,
+                                    skipinitialspace=skipinitialspace,
+                                    comment=comment).iloc[0, 0]
             except pd.errors.EmptyDataError:
                 value = ""
             if convert_numeric:
@@ -271,10 +272,10 @@ class ScratchRealization(object):
                            'BASENAME': os.path.split(localpath)[-1]}
                 self.files = self.files.append(filerow, ignore_index=True)
             try:
-                keyvalues = pd.read_table(fullpath, sep=r'\s+',
-                                          index_col=0, dtype=str,
-                                          usecols=[0,1],
-                                          header=None)[1].to_dict()
+                keyvalues = pd.read_csv(fullpath, sep=r'\s+',
+                                        index_col=0, dtype=str,
+                                        usecols=[0,1],
+                                        header=None)[1].to_dict()
             except pd.errors.EmptyDataError:
                 keyvalues = {}
             if convert_numeric:
@@ -354,18 +355,25 @@ class ScratchRealization(object):
             # to be present.
             return pd.DataFrame()  # will be empty
         errorcolumns = ['error' + str(x) for x in range(0, 10)]
-        status = pd.read_table(statusfile, sep=r'\s+', skiprows=1,
-                               header=None,
-                               names=['FORWARD_MODEL', 'colon',
-                                      'STARTTIME', 'dots', 'ENDTIME'] +
-                               errorcolumns,
-                               dtype=str,
-                               engine='python',
-                               error_bad_lines=False,
-                               warn_bad_lines=True)
+        status = pd.read_csv(statusfile, sep=r'\s+', skiprows=1,
+                             header=None,
+                             names=['FORWARD_MODEL', 'colon',
+                                   'STARTTIME', 'dots', 'ENDTIME'] +
+                             errorcolumns,
+                             dtype=str,
+                             engine='python',
+                             error_bad_lines=False,
+                             warn_bad_lines=True)
 
-        # dtype str messes up a little bit:
+        # dtype str messes up a little bit, pre-Pandas 0.24.1 gives 'None' as
+        # a string where data is missing.
         status.replace('None', '', inplace=True)
+        # While Pandas 0.24.1 will insert proper Null values in those cells,
+        # we fill them with the empty string for the rest of this code to work
+        status.fillna('', inplace=True)
+        # It should be ok to have both of these statements running, but the
+        # replace() is probably superfluous when pandas 0.23 is gone.
+
         errorjobs = status[errorcolumns[0]] != ''
 
         # Merge any error strings:
@@ -861,11 +869,14 @@ class ScratchRealization(object):
                 # Only asking for column presence
                 return kwargs['column'] in self.data[localpath].columns
             if 'column' in kwargs and 'columncontains' in kwargs:
-                # Treat 'DATE' column specifically
+                # If we are dealing with the DATE column,
+                # convert everything to pandas datatime64 for comparisons,
+                # otherwise we revert to simpler check.
                 if kwargs['column'] == 'DATE':
-                    return dateutil.parser.parse(kwargs['columncontains']) in \
-                        self.data[localpath][kwargs['column']]\
-                            .astype(datetime).values
+                    return (pd.to_datetime(dateutil.parser\
+                                           .parse(kwargs['columncontains']))
+                            == pd.to_datetime(self.data[localpath]
+                                              [kwargs['column']])).any()
                 else:
                     return kwargs['columncontains'] in \
                         self.data[localpath][kwargs['column']].values
