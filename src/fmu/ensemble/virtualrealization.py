@@ -318,7 +318,7 @@ class VirtualRealization(object):
         # Get a list ala ['yearly', 'daily']
         available_smry = [x.split('/')[-1]
                           .replace('.csv', '')
-                          .replace('unsmry-', '') for x in self.keys()
+                          .replace('unsmry--', '') for x in self.keys()
                           if 'unsmry' in x]
 
         if (isinstance(time_index, str) and time_index not in available_smry)\
@@ -344,7 +344,7 @@ class VirtualRealization(object):
 
         logger.info("Using " + chosen_smry + " for interpolation")
 
-        smry = self.get_df('unsmry-' + chosen_smry)[
+        smry = self.get_df('unsmry--' + chosen_smry)[
             ['DATE'] + column_keys]
 
         # Add the extra datetimes to interpolate at.
