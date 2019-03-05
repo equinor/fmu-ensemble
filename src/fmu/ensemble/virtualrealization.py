@@ -371,6 +371,7 @@ class VirtualRealization(object):
             .fillna(method='bfill')\
             .fillna(value=0)
 
+        smry.index = smry.index.set_names(['DATE'])
         return smry.loc[pd.to_datetime(time_index_dt)]
 
     def _get_smry_dates(self, freq='monthly', normalize=False):
