@@ -73,6 +73,8 @@ class ScratchRealization(object):
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
+        if isinstance(realidxregexp, str):
+            raise ValueError("Supplied realidxregexp not valid")
 
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
