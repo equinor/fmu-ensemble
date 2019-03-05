@@ -386,27 +386,71 @@ class VirtualEnsemble(object):
         Function analoguous to the EclSum direct get'ters in ScratchEnsemble,
         but here we have to resort to what we have internalized.
 
-        Resampling support can happen here, to be implemented later.
+        This will perform interpolation in each realizations data to
+        the requested time_index, this is done by creating VirtualRealization
+        object for all realizations, which can do the interpolation, and
+        the result is merged and returned. This creates some overhead, so
+        if you do not need the interpolation, stick with get_df() instead.
         """
-        if time_index == 'monthly':
-            dataname = 'unsmry--monthly'
-        elif time_index == 'yearly':
-            dataname = 'unsmry--yearly'
-        elif time_index == 'daily':
-            dataname = 'unsmry--daily'
-        else:
-            raise ValueError("Unsupported time index " + str(time_index))
-        data = self.get_df(dataname)
-        if not len(data):  # pylint: disable=len-as-condition
-            raise ValueError("No data found")
 
-        # We have to reproduce the column keys globbing support.
-        columns = []
-        for col_key in column_keys:
-            regexp = re.compile(fnmatch.translate(col_key)).match
-            if regexp:
-                columns = columns + filter(regexp, data.columns)
-        return data[['REAL', 'DATE'] + columns]
+        # Determine which of the internalized dataframes we should use
+        # for interpolation. Or, should we merge some of them for even
+        # higher accuracy?
+
+        # Get a list ala ['yearly', 'daily']
+        available_smry = [x.split('/')[-1]
+                          .replace('.csv', '')
+                          .replace('unsmry--', '') for x in self.keys()
+                          if 'unsmry' in x]
+
+        if (isinstance(time_index, str) and time_index not in available_smry)\
+           or isinstance(time_index, list):
+            # Suboptimal code, we always pick the finest available
+            # time resolution:
+            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly']
+            # (could also sort them by number of rows, or we could
+            #  even merge them all)
+            # (could have priorities as a dict, for example so we
+            #  can interpolate from monthly if we ask for yearly)
+            chosen_smry = ''
+            for candidate in priorities:
+                if candidate in available_smry:
+                    chosen_smry = candidate
+                    break
+            if not chosen_smry:
+                logger.error("No internalized summary data "
+                             + "to interpolate from")
+                return pd.DataFrame()
+        else:
+            chosen_smry = time_index
+
+        logger.info("Using " + chosen_smry + " for interpolation")
+
+        # Explicit creation of VirtualRealization allows for later
+        # multiprocessing of the interpolation.
+        # We do not use the internal function get_realization() because
+        # that copies all internalized data, while we only need
+        # summary data.
+
+        smry_path = 'unsmry--' + chosen_smry
+        smry = self.get_df(smry_path)
+        smry_interpolated = []
+        for realidx in smry['REAL'].unique():
+            vreal = VirtualRealization()
+            # Inject the summary data for that specific realization
+            vreal.append(smry_path, smry[smry['REAL'] == realidx])
+
+            # Now ask the VirtualRealization to do interpolation
+            interp = vreal.get_smry(column_keys, time_index)
+            # Assume we get back a dataframe indexed by the dates from vreal
+            # We must reset that index, and ensure the index column
+            # gets a correct name
+            interp.index = interp.index.set_names(['DATE'])
+            interp = interp.reset_index()
+            interp['REAL'] = realidx
+            smry_interpolated.append(interp)
+        concatenated = pd.concat(smry_interpolated, ignore_index=True)
+        return(concatenated)
 
     def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
