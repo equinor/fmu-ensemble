@@ -438,7 +438,8 @@ class VirtualEnsemble(object):
             vreal.append(smry_path, smry[smry['REAL'] == realidx])
 
             # Now ask the VirtualRealization to do interpolation
-            interp = vreal.get_smry(column_keys, time_index)
+            interp = vreal.get_smry(column_keys=column_keys,
+                                    time_index=time_index)
             # Assume we get back a dataframe indexed by the dates from vreal
             # We must reset that index, and ensure the index column
             # gets a correct name
@@ -449,13 +450,16 @@ class VirtualEnsemble(object):
         concatenated = pd.concat(smry_interpolated, ignore_index=True)
         return(concatenated)
 
-    def get_smry_stats(self, column_keys=None, time_index='monthly'):
+    def get_smry_stats(self, column_keys=None, time_index='monthly',
+                       quantiles=None):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
 
-        Output format of the function is tailored towards webviz_fan_chart
-        (data layout and column naming)
+        Compared to the agg() function, this function only works on summary
+        data (time series), and will only operate on actually requested data,
+        independent of what is internalized. It accesses the summary files
+        directly and can thus obtain data at any time frequency.
 
         In a virtual ensemble, this function can only provide data it has
         internalized. There is no resampling functionality yet.
@@ -466,39 +470,43 @@ class VirtualEnsemble(object):
                default is None, which returns the raw Eclipse report times
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
+            quantiles: list of ints between 0 and 100 for which quantiles
+               to compute. Quantiles refer to oil industry convention, and
+               the quantile number 10 will be calculated as Pandas p90.
         Returns:
-            A dictionary. Index by column key to the corresponding ensemble
-            summary statistics dataframe. Each dataframe has the dates in a
-        column called 'index', and statistical data in 'min', 'max', 'mean',
-        'p10', 'p90'. The column 'p10' contains the oil industry version of
-        'p10', and is calculated using the Pandas p90 functionality.
+            A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
+            'mean', 'p10', 'p90', inner index are the dates. Column names
+            are the different vectors. The column 'p10' contains the oil
+            industry version of 'p10', and is calculated using the Pandas p90
+            functionality. If quantiles are explicitly supplied, the 'pXX'
+            strings in the outer index are changed accordingly.
         """
+        if quantiles is None:
+            quantiles = [10, 90]
+
+        # Check validity of quantiles to compute:
+        quantiles = list(map(int, quantiles))  # Potentially raise ValueError
+        for quantile in quantiles:
+            if quantile < 0 or quantile > 100:
+                raise ValueError("Quantiles must be integers between 0 and 100")
+
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble. This will fail if we don't have the
         # time frequency already internalized.
-        dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
+        dframe = self.get_smry(time_index=time_index,
+                               column_keys=column_keys).drop(columns='REAL')\
+                               .groupby('DATE')
 
-        data = {}  # dict to be returned
-        for key in column_keys:
-            dates = dframe.groupby('DATE').first().index.values
-            name = [key] * len(dates)
-            mean = dframe.groupby('DATE').mean()[key].values
-            p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
-            p90 = dframe.groupby('DATE').quantile(q=0.10)[key].values
-            maximum = dframe.groupby('DATE').max()[key].values
-            minimum = dframe.groupby('DATE').min()[key].values
+        # Build a dictionary of dataframes to be concatenated
+        dframes = {}
+        dframes['mean'] = dframe.mean()
+        for quantile in quantiles:
+            quantile_str = 'p' + str(quantile)
+            dframes[quantile_str] = dframe.quantile(q=1 - quantile / 100.0)
+        dframes['maximum'] = dframe.max()
+        dframes['minimum'] = dframe.min()
 
-            data[key] = pd.DataFrame({
-                'index': dates,
-                'name': name,
-                'mean': mean,
-                'p10': p10,
-                'p90': p90,
-                'max': maximum,
-                'min': minimum
-            })
-
-        return data
+        return pd.concat(dframes, names=['STATISTIC'], sort=False)
 
     @property
     def parameters(self):
