@@ -855,7 +855,7 @@ class ScratchEnsemble(object):
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
 
-    def get_smry(self, time_index=None, column_keys=None, stacked=True):
+    def get_smry(self, time_index=None, column_keys=None):
         """
         Aggregates summary data from all realizations.
 
@@ -868,31 +868,20 @@ class ScratchEnsemble(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
-            stacked: boolean determining the dataframe layout. If
-                true, the realization index is a column, and dates are repeated
-                for each realization in the DATES column.
-                If false, a dictionary of dataframes is returned, indexed
-                by vector name, and with realization index as columns.
-                This only works when time_index is the same for all
-                realizations. Not implemented yet!
-
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)
-        if stacked:
-            dflist = []
-            for index, realization in self._realizations.items():
-                dframe = realization.get_smry(time_index=time_index,
-                                              column_keys=column_keys)
-                dframe.insert(0, 'REAL', index)
-                dframe.index.name = 'DATE'
-                dflist.append(dframe)
-            return pd.concat(dflist, sort=False).reset_index()
-        else:
-            raise NotImplementedError
+        dflist = []
+        for index, realization in self._realizations.items():
+            dframe = realization.get_smry(time_index=time_index,
+                                          column_keys=column_keys)
+            dframe.insert(0, 'REAL', index)
+            dframe.index.name = 'DATE'
+            dflist.append(dframe)
+        return pd.concat(dflist, sort=False).reset_index()
 
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
         """
