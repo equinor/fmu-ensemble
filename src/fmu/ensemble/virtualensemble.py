@@ -403,7 +403,8 @@ class VirtualEnsemble(object):
            or isinstance(time_index, list):
             # Suboptimal code, we always pick the finest available
             # time resolution:
-            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly']
+            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly',
+                          'custom']
             # (could also sort them by number of rows, or we could
             #  even merge them all)
             # (could have priorities as a dict, for example so we
