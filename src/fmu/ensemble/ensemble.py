@@ -462,6 +462,34 @@ class ScratchEnsemble(object):
         return self.get_df('share/results/tables/unsmry--' +
                            time_index + '.csv')
 
+    def get_volumetric_rates(self, column_keys=None, time_index=None):
+        """Compute volumetric rates from cumulative summary vectors
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+
+        """
+        vol_dfs = []
+        for realidx, realization in self._realizations.items():
+            vol_real = realization.get_volumetric_rates(column_keys=column_keys,
+                                                        time_index=time_index)
+            vol_real.insert(0, 'REAL', realidx)
+            vol_dfs.append(vol_real)
+        return pd.concat(vol_dfs, ignore_index=True, sort=False)
+
     def filter(self, localpath, inplace=True, **kwargs):
         """Filter realizations or data within realizations
 
