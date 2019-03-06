@@ -351,7 +351,8 @@ class VirtualRealization(object):
         # Add the extra datetimes to interpolate at.
         smry.set_index('DATE', inplace=True)
         smry.index = pd.to_datetime(smry.index)
-        smry = smry.append(pd.DataFrame(index=pd.to_datetime(time_index_dt)))
+        smry = smry.append(pd.DataFrame(index=pd.to_datetime(time_index_dt)),
+                           sort=False)
         # Drop duplicated dates. It is always the first one which is the
         # original.
         smry = smry[~smry.index.duplicated(keep='first')]
