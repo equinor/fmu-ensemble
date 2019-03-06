@@ -1073,6 +1073,9 @@ def normalize_dates(start_date, end_date, freq):
         if end_date != end_date.replace(day=1, month=1):
             end_date = end_date.replace(day=1, month=1)\
                                              + relativedelta(years=1)
+    elif freq == 'daily':
+        # This we don't need to normalize, but we should not give any warnings
+        pass
     else:
         logger.warning("Unrecognized frequency for date normalization")
     return (start_date, end_date)
