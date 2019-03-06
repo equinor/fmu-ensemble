@@ -174,16 +174,12 @@ def test_get_smry_interpolation():
         difference = int_m['FOPT'] - true_m['FOPT']
 
         # The interpolation error should be zero at each 1st of January
-        # but most likely nonzero elsewhere (at least for this realization)
+        # but most likely nonzero elsewhere (at least for these realization)
         assert difference.loc['2001-01-01'] < 0.0001
         assert abs(difference.loc['2001-06-01']) > 0
         assert difference.loc['2002-01-01'] < 0.0001
         assert abs(difference.loc['2002-06-01']) > 0
         assert difference.loc['2003-01-01'] < 0.0001
-        #print("**************************' " + str(realidx))
-        #print(int_m)
-        #print(true_m)
-        #print(difference)
 
     daily = vens_yearly.get_smry(column_keys=['FOPT', 'FOPR'],
                                  time_index='daily')
