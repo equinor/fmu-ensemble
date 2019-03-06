@@ -393,10 +393,6 @@ class VirtualEnsemble(object):
         if you do not need the interpolation, stick with get_df() instead.
         """
 
-        # Determine which of the internalized dataframes we should use
-        # for interpolation. Or, should we merge some of them for even
-        # higher accuracy?
-
         # Get a list ala ['yearly', 'daily']
         available_smry = [x.split('/')[-1]
                           .replace('.csv', '')
