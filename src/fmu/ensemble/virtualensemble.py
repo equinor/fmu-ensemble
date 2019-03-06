@@ -447,8 +447,8 @@ class VirtualEnsemble(object):
             interp = interp.reset_index()
             interp['REAL'] = realidx
             smry_interpolated.append(interp)
-        concatenated = pd.concat(smry_interpolated, ignore_index=True)
-        return(concatenated)
+        return pd.concat(smry_interpolated, ignore_index=True,
+                         sort=False)
 
     def get_smry_stats(self, column_keys=None, time_index='monthly',
                        quantiles=None):
