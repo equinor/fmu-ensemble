@@ -141,6 +141,7 @@ def test_single_realization():
         # code that floated around early
         ensemble.ScratchRealization("MyEnsemble", "/foo/bar/com")
 
+
 def test_datenormalization():
     """Test normalization of dates, where
     dates can be ensured to be on dategrid boundaries"""
@@ -175,6 +176,19 @@ def test_datenormalization():
     assert str(monthly.index[-1]) == '2003-02-01'
     yearly = real.get_smry(column_keys='FOPT', time_index='yearly')
     assert str(yearly.index[-1]) == '2004-01-01'
+
+    # Check that we get the same correct normalization
+    # with load_smry()
+    real.load_smry(column_keys='FOPT', time_index='daily')
+    assert str(real.get_df('unsmry--daily')['DATE']
+               .values[-1]) == '2003-01-02'
+    real.load_smry(column_keys='FOPT', time_index='monthly')
+    assert str(real.get_df('unsmry--monthly')['DATE']
+               .values[-1]) == '2003-02-01'
+    real.load_smry(column_keys='FOPT', time_index='yearly')
+    assert str(real.get_df('unsmry--yearly')['DATE']
+               .values[-1]) == '2004-01-01'
+
 
 def test_singlereal_ecl(tmp='TMP'):
     """Test Eclipse specific functionality for realizations"""
