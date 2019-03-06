@@ -547,7 +547,7 @@ class ScratchEnsemble(object):
             except ValueError:
                 pass  # Allow localpath to be missing in some realizations
 
-    def get_smry_dates(self, freq='monthly'):
+    def get_smry_dates(self, freq='monthly', normalize=True):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
@@ -557,9 +557,13 @@ class ScratchEnsemble(object):
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
                'last' will give out the last date (maximum).
+            normalize:  Whether to normalize backwards at the start
+                and forwards at the end to ensure the raw
+                date range is covered.
         Returns:
             list of datetimes.
         """
+        from .realization import normalize_dates
         # Build list of eclsum objects that are not None
         eclsums = []
         for _, realization in self._realizations.items():
@@ -578,6 +582,10 @@ class ScratchEnsemble(object):
         else:
             start_date = min([eclsum.start_date for eclsum in eclsums])
             end_date = max([eclsum.end_date for eclsum in eclsums])
+
+            if normalize:
+                (start_date, end_date) = normalize_dates(start_date, end_date,
+                                                         freq)
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
