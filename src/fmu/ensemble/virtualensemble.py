@@ -465,14 +465,15 @@ class VirtualEnsemble(object):
         internalized. There is no resampling functionality yet.
 
         Args:
-            column_keys: list of column key wildcards
+            column_keys: list of column key wildcards. Defaults
+                to match all available columns
             time_index: list of DateTime if interpolation is wanted
-               default is None, which returns the raw Eclipse report times
-               If a string is supplied, that string is attempted used
-               via get_smry_dates() in order to obtain a time index.
+                default is None, which returns the raw Eclipse report times
+                If a string is supplied, that string is attempted used
+                via get_smry_dates() in order to obtain a time index.
             quantiles: list of ints between 0 and 100 for which quantiles
-               to compute. Quantiles refer to oil industry convention, and
-               the quantile number 10 will be calculated as Pandas p90.
+                to compute. Quantiles refer to oil industry convention, and
+                the quantile number 10 will be calculated as Pandas p90.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
@@ -483,6 +484,9 @@ class VirtualEnsemble(object):
         """
         if quantiles is None:
             quantiles = [10, 90]
+
+        if column_keys == None:
+            column_keys = '*'
 
         # Check validity of quantiles to compute:
         quantiles = list(map(int, quantiles))  # Potentially raise ValueError

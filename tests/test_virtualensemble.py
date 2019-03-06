@@ -62,6 +62,12 @@ def test_virtualensemble():
     assert 'FGPT' not in fopt.columns
     assert len(fopt) == 25
 
+    # Check that we can default get_smry()
+    alldefaults = vens.get_smry()
+    # This should glob to all columns, and monthly time frequency
+    assert len(alldefaults) == 245
+    assert len(alldefaults.columns) == 51
+
     # Eclipse summary vector statistics for a given ensemble
     df_stats = vens.get_smry_stats(column_keys=['FOPR', 'FGPR'],
                                    time_index='yearly')

@@ -225,6 +225,16 @@ def test_get_smry2():
     assert len(daily2['FOPT'].unique()) == \
         len(daily['FOPT'].unique())
 
+    # Check defaults handling:
+    monthly_length = len(vreal.get_smry(column_keys='FOPR',
+                                        time_index='monthly'))
+    assert len(vreal.get_smry(column_keys='FOPR')) \
+        == monthly_length
+
+    alldefaults = vreal.get_smry()
+    assert len(alldefaults) == monthly_length
+    assert len(alldefaults.columns) == 49
+
 
 def test_get_smry_cumulative():
     """Test the cumulative boolean function"""

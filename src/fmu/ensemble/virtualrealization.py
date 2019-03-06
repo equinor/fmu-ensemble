@@ -295,16 +295,23 @@ class VirtualRealization(object):
 
         Args:
             column_keys: str or list of str with column names,
-                may contain wildcards (glob-style)
+                may contain wildcards (glob-style). Default is
+                to match every key that is known (contrary to
+                behaviour in a ScratchRealization)
             time_index: str or list of datetimes
 
         """
+        if not column_keys:
+            column_keys = '*'  # Match everything
+
         column_keys = self._glob_smry_keys(column_keys)
         if not column_keys:
             raise ValueError("No column keys found")
+
         if not time_index:
             time_index = 'monthly'
-        elif isinstance(time_index, str):
+
+        if isinstance(time_index, str):
             time_index_dt = self._get_smry_dates(time_index)
         elif isinstance(time_index, list):
             time_index_dt = time_index
@@ -464,6 +471,8 @@ class VirtualRealization(object):
             matches = matches.union(
                 [x for x in available_keys
                  if fnmatch.fnmatch(x, key)])
+        if 'DATE' in matches:
+            matches.remove('DATE')
         return list(matches)
 
     def _smry_cumulative(self, column_keys):
