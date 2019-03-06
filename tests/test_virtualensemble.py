@@ -54,6 +54,7 @@ def test_virtualensemble():
     assert len(vens['outputs.txt']) == 4
 
     # Check that get_smry() works
+    # (here is with no interpolation necessary)
     fopt = vens.get_smry(column_keys=['FOPT'], time_index='yearly')
     assert 'FOPT' in fopt.columns
     assert 'DATE' in fopt.columns
@@ -131,3 +132,68 @@ def test_virtualensemble():
 
     # Betterdata should be returned as a dictionary
     assert isinstance(vens.agg('min').get_df('betterdata'), dict)
+
+
+def test_get_smry_interpolation():
+    """Test the summary resampling code for virtual ensembles"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+    reekensemble.load_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.load_scalar('npv.txt')
+    vens_yearly = reekensemble.to_virtual()
+    reekensemble.load_smry(time_index='monthly', column_keys=['F*'])
+    # Create a vens that contains both monthly and yearly:
+    vens_monthly = reekensemble.to_virtual()
+    reekensemble.load_smry(time_index='daily', column_keys=['F*'])
+    vens_daily = reekensemble.to_virtual()  # monthly, yearly *and* daily
+
+    # Resample yearly to monthly:
+    monthly = vens_yearly.get_smry(column_keys='FOPT', time_index='monthly')
+    assert 'FOPT' in monthly.columns
+    assert 'REAL' in monthly.columns
+    assert 'DATE' in monthly.columns
+    assert len(monthly['REAL'].unique()) == 5
+
+    # 12 months pr. year, including final 1. jan, four years, 5 realizations:
+    assert len(monthly) == (12 * 4 + 1) * 5
+
+    for realidx in monthly['REAL'].unique():
+        int_m = monthly.set_index('REAL').loc[realidx].set_index('DATE')
+        true_m = reekensemble.get_smry(column_keys='FOPT',
+                                       time_index='monthly')\
+                             .set_index('REAL').loc[realidx].set_index('DATE')
+        difference = int_m['FOPT'] - true_m['FOPT']
+
+        # The interpolation error should be zero at each 1st of January
+        # but most likely nonzero elsewhere (at least for this realization)
+        assert difference.loc['2001-01-01'] < 0.0001
+        assert abs(difference.loc['2001-06-01']) > 0
+        assert difference.loc['2002-01-01'] < 0.0001
+        assert abs(difference.loc['2002-06-01']) > 0
+        assert difference.loc['2003-01-01'] < 0.0001
+        #print("**************************' " + str(realidx))
+        #print(int_m)
+        #print(true_m)
+        #print(difference)
+
+    daily = vens_yearly.get_smry(column_keys=['FOPT', 'FOPR'],
+                                 time_index='daily')
+    assert 'FOPT' in daily.columns
+    assert 'REAL' in daily.columns
+    assert 'DATE' in daily.columns
+    assert len(daily['REAL'].unique()) == 5
+    assert len(daily) == (365 * 4 + 2) * 5  # 2003-01-01 and 2003-01-02 at end
+
+    # Linear interpolation will give almost unique values everywhere:
+    assert len(daily['FOPT'].unique()) > (365 * 4) * 5
+    # While bfill for rates cannot be more unique than the yearly input
+    assert len(daily['FOPR'].unique()) < 4 * 5  # Must be less than the numbers
