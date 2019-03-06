@@ -270,15 +270,28 @@ def test_ensemble_ecl():
     # Date list handling:
     assert len(reekensemble.get_smry_dates(freq='report')) == 641
     assert len(reekensemble.get_smry_dates(freq='raw')) == 641
-    assert len(reekensemble.get_smry_dates(freq='yearly')) == 4
-    assert len(reekensemble.get_smry_dates(freq='monthly')) == 37
+    assert len(reekensemble.get_smry_dates(freq='yearly')) == 5
+    assert len(reekensemble.get_smry_dates(freq='monthly')) == 38
     assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
     assert len(reekensemble.get_smry_dates(freq='last')) == 1
+
+    assert str(reekensemble.get_smry_dates(freq='report')[-1])\
+        == '2003-01-02 00:00:00'
+    assert str(reekensemble.get_smry_dates(freq='raw')[-1])\
+        == '2003-01-02 00:00:00'
+    assert str(reekensemble.get_smry_dates(freq='yearly')[-1])\
+        == '2004-01-01'
+    assert str(reekensemble.get_smry_dates(freq='monthly')[-1])\
+        == '2003-02-01'
+    assert str(reekensemble.get_smry_dates(freq='daily')[-1])\
+        == '2003-01-02'
+    assert str(reekensemble.get_smry_dates(freq='last')[-1])\
+        == '2003-01-02'
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
     assert len(reekensemble.load_smry(column_keys=['FOPT'],
-                                      time_index=yearly)) == 20
+                                      time_index=yearly)) == 25
     # NB: This is cached in unsmry-custom.csv, not unsmry--yearly!
     # This usage is discouraged. Use 'yearly' in such cases.
 
@@ -307,7 +320,7 @@ def test_ensemble_ecl():
     assert isinstance(df_stats, pd.DataFrame)
     assert len(df_stats.columns) == 2
     assert isinstance(df_stats['FOPR']['mean'], pd.Series)
-    assert len(df_stats['FOPR']['mean'].index) == 37
+    assert len(df_stats['FOPR']['mean'].index) == 38
 
     # check if wild cards also work for get_smry_stats
     df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
@@ -322,8 +335,8 @@ def test_ensemble_ecl():
     assert 'p10' in stats
     assert 'p90' in stats
     assert 'mean' in stats
-    assert df_stats['FOPR']['minimum'].iloc[-1] < \
-        df_stats['FOPR']['maximum'].iloc[-1]
+    assert df_stats['FOPR']['minimum'].iloc[-2] < \
+        df_stats['FOPR']['maximum'].iloc[-2]
 
     # Check user supplied quantiles
     df_stats = reekensemble.get_smry_stats(column_keys=['FOPT'],
