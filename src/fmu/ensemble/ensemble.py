@@ -486,6 +486,9 @@ class ScratchEnsemble(object):
         for realidx, realization in self._realizations.items():
             vol_real = realization.get_volumetric_rates(column_keys=column_keys,
                                                         time_index=time_index)
+            if 'DATE' not in vol_real.columns and vol_real.index.name == 'DATE':
+                # This should be true, if not we might be in trouble.
+                vol_real.reset_index(inplace=True)
             vol_real.insert(0, 'REAL', realidx)
             vol_dfs.append(vol_real)
         return pd.concat(vol_dfs, ignore_index=True, sort=False)

@@ -383,16 +383,16 @@ def test_volumetric_rates():
                           time_index='yearly')
     vol_rate_df = ens.get_volumetric_rates(column_keys=['F*T', 'W*T*'],
                                            time_index='yearly')
+    assert 'DATE' in vol_rate_df
+    assert 'FWCR' not in vol_rate_df
+    assert 'FOPR' in vol_rate_df
+    assert 'FWPR' in vol_rate_df
+
     # Test each realization individually
     for realidx in vol_rate_df['REAL'].unique():
         vol_rate_real = vol_rate_df.set_index('REAL').loc[realidx]
         cum_real = cum_df.set_index('REAL').loc[realidx]
-        assert 'FWCR' not in vol_rate_real
-        assert 'FOPR' in vol_rate_real
-        assert 'FWPR' in vol_rate_real
-        assert len(vol_rate_real) == 6
-        print(vol_rate_real['FOPR'])
-        print(cum_real['FOPT'])
+        assert len(vol_rate_real) == 5
         assert vol_rate_real['FOPR'].sum() == cum_real['FOPT'].iloc[-1]
 
 
