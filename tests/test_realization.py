@@ -161,6 +161,7 @@ def test_volumetric_rates():
                            time_index='yearly')
     vol_rate_df = real.get_volumetric_rates(column_keys=['F*T', 'W*T*'],
                                             time_index='yearly')
+    assert vol_rate_df.index.name == 'DATE'
     assert 'FWCR' not in vol_rate_df  # We should not compute FWCT..
     assert 'FOPR' in vol_rate_df
     assert 'FWPR' in vol_rate_df

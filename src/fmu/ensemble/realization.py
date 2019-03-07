@@ -730,6 +730,8 @@ class ScratchRealization(object):
         opposed to rates coming directly from the Eclipse simulator which
         are valid backwards in time.
 
+        The returned dataframe is indexed by DATE.
+
         Args:
             column_keys: str or list of strings, cumulative summary vectors
             time_index: str or list of datetimes
@@ -767,6 +769,7 @@ class ScratchRealization(object):
             elif 'T:' in vec:
                 rate_names.append(vec.replace('T:', 'R:'))
         diff_cum.columns = rate_names
+        diff_cum.index.name = 'DATE'
         return(diff_cum)
 
     def get_smryvalues(self, props_wildcard=None):
