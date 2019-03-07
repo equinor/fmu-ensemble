@@ -208,6 +208,31 @@ def test_volumetric_rates():
     # here.
     assert cumulative_error / ddcum['FOPR'].sum() < 0.000001
 
+    # Test the time_unit feature.
+    vol_rate_days = real.get_volumetric_rates(column_keys=['F*T'],
+                                              time_index='yearly',
+                                              time_unit='days')
+    vol_rate_months = real.get_volumetric_rates(column_keys=['F*T'],
+                                                time_index='yearly',
+                                                time_unit='months')
+    vol_rate_years = real.get_volumetric_rates(column_keys=['F*T'],
+                                               time_index='yearly',
+                                               time_unit='years')
+
+    # When time_unit is in effect, it is harder to sum up to cumulatives
+    # again (days in a month vary) as this is not properly implemented.
+    assert (vol_rate_days['FWIR'] * 30.5
+            - vol_rate_months['FWIR']).abs().sum() < 10
+    assert (vol_rate_days['FWIR'] * 365.25
+            - vol_rate_years['FWIR']).abs().sum() < 300
+    assert (vol_rate_months['FWIR'] * 12
+            - vol_rate_years['FWIR']).abs().sum() < 30000  # WOW, big error.
+
+    with pytest.raises(ValueError):
+        real.get_volumetric_rates(column_keys=['F*T'],
+                                  time_index='yearly',
+                                  time_unit='bogus')
+
 
 def test_datenormalization():
     """Test normalization of dates, where

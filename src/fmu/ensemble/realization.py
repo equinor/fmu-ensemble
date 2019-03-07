@@ -715,7 +715,8 @@ class ScratchRealization(object):
                 keys = keys.union(set(self._eclsum.keys(key)))
         return list(keys)
 
-    def get_volumetric_rates(self, column_keys=None, time_index=None):
+    def get_volumetric_rates(self, column_keys=None, time_index=None,
+                             time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
 
         Column names that are not referring to cumulative summary
@@ -735,8 +736,23 @@ class ScratchRealization(object):
         Args:
             column_keys: str or list of strings, cumulative summary vectors
             time_index: str or list of datetimes
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be approximately scaled to correspond to daily, monthly
+                or yearly rates. Beware the current implementation is
+                not accurate in number of days pr. month.
 
         """
+        if isinstance(time_unit, str):
+            if time_unit not in ['days', 'months', 'years']:
+                raise ValueError("Unsupported time_unit " + time_unit
+                                 + " for volumetric rates")
+            if time_unit in ['months', 'years']:
+                logger.warning('Monthly and yearly rate calculations '
+                               + 'are not accurate')
+
         column_keys = self._glob_smry_keys(column_keys)
 
         # Be strict and only include certain summary vectors that look
@@ -751,12 +767,33 @@ class ScratchRealization(object):
             return pd.DataFrame()
 
         cum_df = self.get_smry(column_keys=column_keys, time_index=time_index)
+        # get_smry() for realizations return a dataframe indexed by 'DATE'
 
         # Compute row-wise difference, shift back one row
         # to get the NaN to the end, and then drop the NaN.
         # The "rate" given for a specific date is then
         # valid from that date until the next date.
         diff_cum = cum_df.diff().shift(-1).fillna(value=0)
+
+        if time_unit:
+            # Calculate time_delta between each timestep.
+            diff_cum['EPOCHTIME'] \
+                = pd.to_timedelta(pd.to_datetime(diff_cum.index).astype(int))
+            diff_cum['DAYS'] \
+                = diff_cum['EPOCHTIME']\
+                .diff().shift(-1)\
+                       .fillna(pd.Timedelta(seconds=0)).dt.days
+            # This is NOT accurate:
+            #  (Consider using Pythons relativedelta module)
+            diff_cum['MONTHS'] = diff_cum['DAYS'] / 30.5
+            diff_cum['YEARS'] = diff_cum['DAYS'] / 365.2425
+            for vec in column_keys:
+                diff_cum[vec] = diff_cum[vec] \
+                                / diff_cum[time_unit.upper()]
+            # Set NaN at the final row to zero
+            diff_cum.drop(['EPOCHTIME', 'DAYS', 'MONTHS', 'YEARS'],
+                          inplace=True, axis=1)
+            diff_cum.fillna(value=0, inplace=True)
 
         # Translate the column vectors
         # Expressive code to avoid hard-to-read regexp
