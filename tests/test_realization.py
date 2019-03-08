@@ -168,6 +168,15 @@ def test_volumetric_rates():
     assert 'FOPR' in vol_rate_df
     assert 'FWPR' in vol_rate_df
 
+    # Also check the static method that is inside here directly
+    assert not real._cum_smrycol2rate('FOPR')
+    assert real._cum_smrycol2rate('FOPT') == 'FOPR'
+    assert not real._cum_smrycol2rate('FWCT')
+    assert not real._cum_smrycol2rate('WOPR:A-H')
+    assert not real._cum_smrycol2rate('FOPT:FOPT:FOPT')
+    assert real._cum_smrycol2rate('WOPT:A-1H') == 'WOPR:A-1H'
+    assert real._cum_smrycol2rate('WOPTH:A-2H') == 'WOPRH:A-2H'
+
     # Test that computed rates can be summed up to cumulative at end:
     assert vol_rate_df['FOPR'].sum() == cum_df['FOPT'].iloc[-1]
     assert vol_rate_df['FGPR'].sum() == cum_df['FGPT'].iloc[-1]
@@ -177,6 +186,12 @@ def test_volumetric_rates():
     # row should have a zero, since that is the final simulated
     # date for the cumulative vector
     assert vol_rate_df['FOPR'].iloc[-1] == 0
+
+    # Check that we allow cumulative allocated vectors:
+    c = real.get_volumetric_rates(column_keys=['F*TH', 'W*TH*'])
+    assert not c.empty
+    assert 'FOPRH' in c
+    assert 'WOPRH:OP_1' in c
 
     assert real.get_volumetric_rates(column_keys='FOOBAR').empty
     assert real.get_volumetric_rates(column_keys=['FOOBAR']).empty

@@ -771,15 +771,14 @@ class ScratchRealization(object):
         # Be strict and only include certain summary vectors that look
         # cumulative by their name:
         column_keys = [x for x in column_keys if
-                       (x.endswith('T') and ':' not in x and 'CT' not in x)
-                       or ('T:' in x and 'CT:' not in x)]
-
+                       realization._cum_smrycol2rate(x)]
         if not column_keys:
             logger.error("No valid cumulative columns given "
                          + "to volumetric computation")
             return pd.DataFrame()
 
-        cum_df = realization.get_smry(column_keys=column_keys, time_index=time_index)
+        cum_df = realization.get_smry(column_keys=column_keys,
+                                      time_index=time_index)
         # get_smry() for realizations return a dataframe indexed by 'DATE'
 
         # Compute row-wise difference, shift back one row
@@ -832,18 +831,38 @@ class ScratchRealization(object):
             diff_cum.fillna(value=0, inplace=True)
 
         # Translate the column vectors, 'FOPT' -> 'FOPR' etc.
-        # Expressive code to avoid hard-to-read regexp
         rate_names = []
         for vec in diff_cum.columns:
-            if vec.endswith('T') and ':' not in vec:
-                lvec = list(vec)
-                lvec[-1] = 'R'
-                rate_names.append(''.join(lvec))
-            elif 'T:' in vec:
-                rate_names.append(vec.replace('T:', 'R:'))
+            ratename = realization._cum_smrycol2rate(vec)
+            if ratename:
+                rate_names.append(ratename)
         diff_cum.columns = rate_names
         diff_cum.index.name = 'DATE'
         return(diff_cum)
+
+    @staticmethod
+    def _cum_smrycol2rate(smrycolumn):
+        """Returns None if a smrycolumn is not assumed
+        to be cumulative, and returns a string with the corresponding
+        rate column if it is cumulative
+
+        F.ex. _cum_smrycol2rate('FOPT') will return 'FOPR'
+        """
+        # Split by colon into components:
+        comps = smrycolumn.split(':')
+        if len(comps) > 2:
+            # Do not support more than one colon.
+            return None
+        if 'CT' in comps[0]:
+            # No watercuts.
+            return None
+        if 'T' not in comps[0]:
+            return None
+        comps[0] = comps[0].replace('T', 'R')
+        if len(comps) > 1:
+            return comps[0] + ':' + comps[1]
+        else:
+            return comps[0]
 
     def get_smryvalues(self, props_wildcard=None):
         """
