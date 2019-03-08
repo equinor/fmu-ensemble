@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import fnmatch
 import shutil
 import pandas as pd
 
@@ -314,6 +315,236 @@ class VirtualRealization(object):
         # this shorthand could point to. Return as is, and let the
         # calling function handle further errors.
         return shortpath
+
+    def get_smry(self, column_keys=None, time_index=None):
+        """Analog function to get_smry() in ScratchRealization
+
+        Accesses the internalized summary data and performs
+        interpolation if needed.
+
+        Returns data for those columns that are known, unknown
+        columns will be issued a warning for.
+
+        BUG: If some columns are available only in certain dataframes,
+        we might miss them (e.g. we ask for yearly FOPT, and we have
+        yearly smry with only WOPT data, and FOPT is only in daily
+        smry). Resolution is perhaps to merge all relevant data
+        upfront.
+
+        Args:
+            column_keys: str or list of str with column names,
+                may contain wildcards (glob-style). Default is
+                to match every key that is known (contrary to
+                behaviour in a ScratchRealization)
+            time_index: str or list of datetimes
+
+        """
+        if not column_keys:
+            column_keys = '*'  # Match everything
+
+        column_keys = self._glob_smry_keys(column_keys)
+        if not column_keys:
+            raise ValueError("No column keys found")
+
+        if not time_index:
+            time_index = 'monthly'
+
+        if isinstance(time_index, str):
+            time_index_dt = self._get_smry_dates(time_index)
+        elif isinstance(time_index, list):
+            time_index_dt = time_index
+        else:
+            raise TypeError
+
+        # Determine which of the internalized dataframes we should use
+        # for interpolation. Or, should we merge some of them for even
+        # higher accuracy?
+
+        # Get a list ala ['yearly', 'daily']
+        available_smry = [x.split('/')[-1]
+                          .replace('.csv', '')
+                          .replace('unsmry--', '') for x in self.keys()
+                          if 'unsmry' in x]
+
+        if (isinstance(time_index, str) and time_index not in available_smry)\
+           or isinstance(time_index, list):
+            # Suboptimal code, we always pick the finest available
+            # time resolution:
+            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly',
+                          'custom']
+            # (could also sort them by number of rows, or we could
+            #  even merge them all)
+            # (could have priorities as a dict, for example so we
+            #  can interpolate from monthly if we ask for yearly)
+            chosen_smry = ''
+            for candidate in priorities:
+                if candidate in available_smry:
+                    chosen_smry = candidate
+                    break
+            if not chosen_smry:
+                logger.error("No internalized summary data "
+                             + "to interpolate from")
+                return pd.DataFrame()
+        else:
+            chosen_smry = time_index
+
+        logger.info("Using " + chosen_smry + " for interpolation")
+
+        smry = self.get_df('unsmry--' + chosen_smry)[
+            ['DATE'] + column_keys]
+
+        # Add the extra datetimes to interpolate at.
+        smry.set_index('DATE', inplace=True)
+        smry.index = pd.to_datetime(smry.index)
+        smry = smry.append(pd.DataFrame(index=pd.to_datetime(time_index_dt)),
+                           sort=False)
+        # Drop duplicated dates. It is always the first one which is the
+        # original.
+        smry = smry[~smry.index.duplicated(keep='first')]
+
+        smry.sort_index(inplace=True)
+        smry = smry.apply(pd.to_numeric)
+
+        cummask = self._smry_cumulative(column_keys)
+        cum_columns = [column_keys[i] for i in range(len(column_keys))
+                       if cummask[i]]
+        noncum_columns = [column_keys[i] for i in range(len(column_keys))
+                          if not cummask[i]]
+        smry[cum_columns] = smry[cum_columns]\
+            .interpolate(method='time')\
+            .fillna(method='ffill')\
+            .fillna(method='bfill')
+        smry[noncum_columns] = smry[noncum_columns]\
+            .fillna(method='bfill')\
+            .fillna(value=0)
+
+        smry.index = smry.index.set_names(['DATE'])
+        return smry.loc[pd.to_datetime(time_index_dt)]
+
+    def _get_smry_dates(self, freq='monthly', normalize=False):
+        """Return list of datetimes available in the realization
+
+        Similar to the function in ScratchRealization,
+        but start and end date is taken from internalized
+        smry dataframes.
+
+                Args:
+            freq: string denoting requested frequency for
+                the list of datetimes.
+                'daily', 'monthly' and 'yearly'.
+                'last' will give out the last date (maximum),
+                as a list with one element.
+            normalize: Whether to normalize backwards at the start
+                and forwards at the end to ensure the entire
+                date range is covered.
+        Returns:
+            list of datetimes. Empty if no summary data is available.
+        """
+        available_smry = [x for x in self.keys()
+                          if 'unsmry' in x]
+        if not available_smry:
+            raise ValueError("No summary to get start and end date from")
+
+        # Infer start and end-date from internalized smry data
+        available_dates = set()
+        for smry in available_smry:
+            available_dates = available_dates.union(
+                self.get_df(smry)['DATE'].values)
+
+        # Parse every date to datetime, needed?
+        available_dates = \
+            [pd.to_datetime(x) for x in list(available_dates)]
+        start_date = min(available_dates)
+        end_date = max(available_dates)
+        pd_freq_mnenomics = {'monthly': 'MS',
+                             'yearly': 'YS',
+                             'daily': 'D'}
+        if normalize:
+            raise NotImplementedError
+            # (start_date, end_date) = normalize_dates(start_date, end_date,
+            #                                         freq)
+        if freq not in pd_freq_mnenomics:
+            raise ValueError('Requested frequency %s not supported' % freq)
+        datetimes = pd.date_range(start_date, end_date,
+                                  freq=pd_freq_mnenomics[freq])
+        # Convert from Pandas' datetime64 to datetime.date:
+        return [x.date() for x in datetimes]
+
+    def _glob_smry_keys(self, column_keys):
+        """Glob a list of column keys
+
+        Given a list of wildcard summary vectors,
+        expand the list to the known summary vectors
+        (in any internalized smry dataframe)
+
+        Returns empty list if no columns match the
+        wildcard(s). This will also happen if there
+        is no internalized smry dataframes
+
+        Args:
+            column_keys: str or list of str, like
+                ['F*PR', 'F*PT']
+
+        Returns:
+            list of strings
+        """
+        if isinstance(column_keys, str):
+            column_keys = [column_keys]
+
+        # Get a list ala ['yearly', 'daily']
+        available_smry = [x for x in self.keys()
+                          if 'unsmry' in x]
+
+        if not available_smry:
+            raise ValueError("No summary data to glob from")
+
+        # Merge all internalized columns:
+        available_keys = set()
+        for smry in available_smry:
+            available_keys = available_keys.union(
+                self.get_df(smry).columns)
+
+        matches = set()
+        for key in column_keys:
+            matches = matches.union(
+                [x for x in available_keys
+                 if fnmatch.fnmatch(x, key)])
+        if 'DATE' in matches:
+            matches.remove('DATE')
+        return list(matches)
+
+    def _smry_cumulative(self, column_keys):
+        """Determine whether smry vectors are cumulative
+
+        Returns list of booleans, indicating whether a certain
+        column_key in summary dataframes corresponds to a cumulative
+        column.
+
+        The current implementation checks for the letter 'T' in the
+        column key, but this behaviour is not guaranteed in the
+        future, in case the cumulative information gets internalized
+
+        Since the current implementation might not be reliable (but
+        sufficient for use in the interpolation code), it is not
+        exposed as a public API.
+
+        Warning: This code is duplicated in realization.py, even though
+        a ScratchRealization has access to the EclSum object which can
+        give the true answer
+
+        Args:
+            column_keys: str or list of strings with summary vector
+                names
+        Returns:
+            list of booleans, corresponding to each inputted
+                summary vector name.
+        """
+        if isinstance(column_keys, str):
+            column_keys = [column_keys]
+        if not isinstance(column_keys, list):
+            raise TypeError("column_keys must be str or list of str")
+        return [(x.endswith('T') and ':' not in x and 'CT' not in x)
+                or ('T:' in x and 'CT:' not in x) for x in column_keys]
 
     @property
     def parameters(self):
