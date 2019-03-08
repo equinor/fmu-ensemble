@@ -197,3 +197,33 @@ def test_get_smry_interpolation():
     assert len(daily['FOPT'].unique()) > (365 * 4) * 5
     # While bfill for rates cannot be more unique than the yearly input
     assert len(daily['FOPR'].unique()) < 4 * 5  # Must be less than the numbers
+
+
+def test_volumetric_rates():
+    """Test the summary resampling code for virtual ensembles
+
+    We only need to test the aggregation here.
+    """
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+    reekensemble.load_smry(time_index='yearly', column_keys=['F*'])
+    reekensemble.load_scalar('npv.txt')
+    vens = reekensemble.to_virtual()
+
+    vol_rates = vens.get_volumetric_rates(column_keys='FOPT',
+                                          time_index='yearly')
+    assert isinstance(vol_rates, pd.DataFrame)
+    assert 'REAL' in vol_rates
+    assert 'DATE' in vol_rates
+    assert 'FOPR' in vol_rates
+    assert len(vol_rates) == 25
+

@@ -512,6 +512,57 @@ class VirtualEnsemble(object):
 
         return pd.concat(dframes, names=['STATISTIC'], sort=False)
 
+    def get_volumetric_rates(self, column_keys=None, time_index='monthly',
+                             time_unit=None):
+        """Compute volumetric rates from internalized cumulative summary
+        vectors
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
+
+        """
+        vol_rates_dfs = []
+        for realidx in self.realindices:
+            # Warning: This is potentially a big overhead
+            # if a lot of non-summary-related data has been
+            # internalized:
+            vreal = self.get_realization(realidx)
+            vol_rate_df = vreal.get_volumetric_rates(column_keys,
+                                                     time_index,
+                                                     time_unit)
+            # Indexed by DATE, ensure index name is correct:
+            vol_rate_df.index = vol_rate_df.index.set_names(['DATE'])
+            vol_rate_df.reset_index(inplace=True)
+            vol_rate_df['REAL'] = realidx
+            vol_rates_dfs.append(vol_rate_df)
+        return pd.concat(vol_rates_dfs, ignore_index=True,
+                         sort=False)
+
     @property
     def parameters(self):
         """Quick access to parameters"""
