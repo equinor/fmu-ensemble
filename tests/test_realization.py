@@ -9,11 +9,13 @@ import os
 import datetime
 import shutil
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 import pytest
 import ecl.summary
 
-from numpy import random
+import numpy as np
+
 from fmu import config
 from fmu import ensemble
 
@@ -191,7 +193,7 @@ def test_volumetric_rates():
 
     # Pick 10 **random** dates to get the volumetric rates between:
     daily_dates = real.get_smry_dates(freq='daily', normalize=False)
-    subset_dates = random.choice(daily_dates, size=10, replace=False)
+    subset_dates = np.random.choice(daily_dates, size=10, replace=False)
     subset_dates.sort()
     dcum = real.get_smry(column_keys='FOPT', time_index=subset_dates)
     ddcum = real.get_volumetric_rates(column_keys='FOPT',
@@ -219,19 +221,53 @@ def test_volumetric_rates():
                                                time_index='yearly',
                                                time_unit='years')
 
-    # When time_unit is in effect, it is harder to sum up to cumulatives
-    # again (days in a month vary) as this is not properly implemented.
-    assert (vol_rate_days['FWIR'] * 30.5
-            - vol_rate_months['FWIR']).abs().sum() < 10
-    assert (vol_rate_days['FWIR'] * 365.25
-            - vol_rate_years['FWIR']).abs().sum() < 300
-    assert (vol_rate_months['FWIR'] * 12
-            - vol_rate_years['FWIR']).abs().sum() < 30000  # WOW, big error.
+    # Sample test on correctness.
+    # Fine-accuracy (wrt leap days) is not tested here:
+    assert vol_rate_days['FWIR'].iloc[0] * 27.9 \
+        < vol_rate_months['FWIR'].iloc[0]
+    assert vol_rate_days['FWIR'].iloc[0] * 31.1 \
+        > vol_rate_months['FWIR'].iloc[0]
+    assert vol_rate_months['FWIR'].iloc[0] * 12 \
+        == pytest.approx(vol_rate_years['FWIR'].iloc[0])
+
+    assert vol_rate_days['FWIR'].iloc[0] * 364.9 \
+        < vol_rate_years['FWIR'].iloc[0]
+    assert vol_rate_days['FWIR'].iloc[0] * 366.1 \
+        > vol_rate_years['FWIR'].iloc[0]
 
     with pytest.raises(ValueError):
         real.get_volumetric_rates(column_keys=['F*T'],
                                   time_index='yearly',
                                   time_unit='bogus')
+
+    # Try with the random dates
+    dayscum = real.get_volumetric_rates(column_keys='FOPT',
+                                           time_index=subset_dates,
+                                           time_unit='days')
+    assert all(np.isfinite(dayscum['FOPR']))
+    diffdays = pd.DataFrame(pd.to_datetime(dayscum.index)).diff().shift(-1)
+    dayscum['DIFFDAYS'] = [x.days for x in diffdays['DATE']]
+    # Calculate cumulative production from the computed volumetric daily rates:
+    dayscum['FOPRcum'] = dayscum['FOPR'] * dayscum['DIFFDAYS']
+    # Check that this sum is equal to FOPT between first and last date:
+    assert dayscum['FOPRcum'].sum() \
+        == pytest.approx(dcum['FOPT'][-1] - dcum['FOPT'][0])
+    # (here we could catch an error in case we don't support leap days)
+
+    # Monthly rates between the random dates:
+    m = real.get_volumetric_rates(column_keys='FOPT',
+                                  time_index=subset_dates,
+                                  time_unit='months')
+    assert all(np.isfinite(m['FOPR']))
+
+    # Total number of months in production period
+    delta = relativedelta(vol_rate_days.index[-1], vol_rate_days.index[0])
+    months = delta.years * 12 + delta.months
+    tworows = real.get_volumetric_rates(column_keys='FOPT',
+                                        time_index=[vol_rate_days.index[0],
+                                                    vol_rate_days.index[-1]],
+                                        time_unit='months')
+    assert tworows['FOPR'].iloc[0] * months == pytest.approx(cum_df['FOPT'].iloc[-1])
 
 
 def test_datenormalization():

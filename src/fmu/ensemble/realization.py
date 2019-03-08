@@ -731,6 +731,12 @@ class ScratchRealization(object):
         opposed to rates coming directly from the Eclipse simulator which
         are valid backwards in time.
 
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
         The returned dataframe is indexed by DATE.
 
         Args:
@@ -740,18 +746,16 @@ class ScratchRealization(object):
                 be the difference in cumulative between each included
                 time step (where the time interval can vary arbitrarily)
                 If set to 'days', 'months' or 'years', the rates will
-                be approximately scaled to correspond to daily, monthly
-                or yearly rates. Beware the current implementation is
-                not accurate in number of days pr. month.
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
 
         """
+        import calendar
+        from dateutil.relativedelta import relativedelta
         if isinstance(time_unit, str):
             if time_unit not in ['days', 'months', 'years']:
                 raise ValueError("Unsupported time_unit " + time_unit
                                  + " for volumetric rates")
-            if time_unit in ['months', 'years']:
-                logger.warning('Monthly and yearly rate calculations '
-                               + 'are not accurate')
 
         column_keys = self._glob_smry_keys(column_keys)
 
@@ -776,26 +780,49 @@ class ScratchRealization(object):
         diff_cum = cum_df.diff().shift(-1).fillna(value=0)
 
         if time_unit:
-            # Calculate time_delta between each timestep.
-            diff_cum['EPOCHTIME'] \
-                = pd.to_timedelta(pd.to_datetime(diff_cum.index).astype(int))
-            diff_cum['DAYS'] \
-                = diff_cum['EPOCHTIME']\
-                .diff().shift(-1)\
-                       .fillna(pd.Timedelta(seconds=0)).dt.days
-            # This is NOT accurate:
-            #  (Consider using Pythons relativedelta module)
-            diff_cum['MONTHS'] = diff_cum['DAYS'] / 30.5
-            diff_cum['YEARS'] = diff_cum['DAYS'] / 365.2425
+            # Calculate the relative timedelta between consecutive
+            # DateIndices. relativedeltas are correct in terms
+            # of number of years and number of months, but it will
+            # only give us integer months, and then leftover days.
+            rel_deltas = [relativedelta(t[1], t[0])
+                          for t in zip(diff_cum.index, diff_cum.index[1:])]
+            whole_days = [(t[1] - t[0]).days
+                          for t in zip(diff_cum.index, diff_cum.index[1:])]
+            # Need to know which years are leap years for our index:
+            dayspryear = [365 if not calendar.isleap(x.year) else 366
+                          for x in pd.to_datetime(diff_cum.index[1:])]
+            # Float-contribution to years from days:
+            days = [t[0] / float(t[1])
+                    for t in zip([r.days for r in rel_deltas],
+                                 dayspryear)]
+            floatyearsnodays = [r.years + r.months / 12.0
+                                for r in rel_deltas]
+            floatyears = [x + y for x, y in zip(floatyearsnodays, days)]
+
+            # Calculate month-difference:
+            floatmonthsnodays = [r.years * 12.0 + r.months
+                                 for r in rel_deltas]
+            # How many days pr. month? We check this for the right
+            # end of the relevant time interval.
+            daysprmonth = [calendar.monthrange(t.year, t.month)[1]
+                           for t in diff_cum.index[1:]]
+            days = [t[0] / float(t[1])
+                    for t in zip([r.days for r in rel_deltas], daysprmonth)]
+            floatmonths = [x + y for x, y in zip(floatmonthsnodays, days)]
+
+            diff_cum['DAYS'] = whole_days + [0]
+            diff_cum['MONTHS'] = floatmonths + [0]
+            diff_cum['YEARS'] = floatyears + [0]
             for vec in column_keys:
                 diff_cum[vec] = diff_cum[vec] \
                                 / diff_cum[time_unit.upper()]
-            # Set NaN at the final row to zero
-            diff_cum.drop(['EPOCHTIME', 'DAYS', 'MONTHS', 'YEARS'],
+            # Drop temporary columns
+            diff_cum.drop(['DAYS', 'MONTHS', 'YEARS'],
                           inplace=True, axis=1)
+            # Set NaN at the final row to zero
             diff_cum.fillna(value=0, inplace=True)
 
-        # Translate the column vectors
+        # Translate the column vectors, 'FOPT' -> 'FOPR' etc.
         # Expressive code to avoid hard-to-read regexp
         rate_names = []
         for vec in diff_cum.columns:
