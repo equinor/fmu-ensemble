@@ -278,6 +278,7 @@ class VirtualRealization(object):
                 is compatible with the date index and the cumulative data.
 
         """
+        from fmu.ensemble import ScratchRealization
         return ScratchRealization._get_volumetric_rates(self, column_keys, time_index,
                                                         time_unit)
 

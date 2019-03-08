@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import pytest
+import numpy as np
 import pandas as pd
 import datetime
 from fmu import config
@@ -282,6 +283,32 @@ def test_get_smry_dates():
 
     with pytest.raises(ValueError):
         assert vreal._get_smry_dates(freq='foobar')
+
+
+def test_volumetric_rates():
+    """Test computation of volumetric rates from cumulative vectors
+
+    This function is primarily tested in test_realization.py. Here
+    we only check that the wrapper in VirtualRealization is actually
+    working
+    """
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    fopt = real.load_smry(column_keys='FOPT', time_index='monthly')
+    vreal = real.to_virtual()
+    fopr = vreal.get_volumetric_rates(column_keys='FOPT', time_index='monthly')
+    assert fopt['FOPT'].iloc[-1] \
+        == pytest.approx(fopr['FOPR'].sum())
+    fopr = vreal.get_volumetric_rates(column_keys='FOPT', time_index='yearly',
+                                      time_unit='months')
+    assert all(np.isfinite(fopr['FOPR']))
 
 
 def test_glob_smry_keys():
