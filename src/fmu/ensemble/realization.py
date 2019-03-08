@@ -750,6 +750,15 @@ class ScratchRealization(object):
                 is compatible with the date index and the cumulative data.
 
         """
+        return self._get_volumetric_rates(self, column_keys, time_index,
+                                          time_unit)
+    @staticmethod
+    def _get_volumetric_rates(realization, column_keys, time_index,
+                              time_unit):
+        """Static method for volumetric rates
+
+        This method is to be used by both ScratchRealization
+        and VirtualRealization, and is documented there."""
         import calendar
         from dateutil.relativedelta import relativedelta
         if isinstance(time_unit, str):
@@ -757,7 +766,7 @@ class ScratchRealization(object):
                 raise ValueError("Unsupported time_unit " + time_unit
                                  + " for volumetric rates")
 
-        column_keys = self._glob_smry_keys(column_keys)
+        column_keys = realization._glob_smry_keys(column_keys)
 
         # Be strict and only include certain summary vectors that look
         # cumulative by their name:
@@ -770,7 +779,7 @@ class ScratchRealization(object):
                          + "to volumetric computation")
             return pd.DataFrame()
 
-        cum_df = self.get_smry(column_keys=column_keys, time_index=time_index)
+        cum_df = realization.get_smry(column_keys=column_keys, time_index=time_index)
         # get_smry() for realizations return a dataframe indexed by 'DATE'
 
         # Compute row-wise difference, shift back one row
