@@ -62,7 +62,7 @@ def test_ensemblecombination_basic():
     assert isinstance(df_stats, pd.DataFrame)
     assert len(df_stats.columns) == 2
     assert isinstance(df_stats['FOPR']['mean'], pd.Series)
-    assert len(df_stats['FOPR']['mean'].index) == 37
+    assert len(df_stats['FOPR']['mean'].index) == 38
 
     # check if wild cards also work for get_smry_stats
     df_stats = reekensemble.get_smry_stats(column_keys=['FOP*', 'FGP*'],
@@ -77,8 +77,8 @@ def test_ensemblecombination_basic():
     assert 'p10' in stats
     assert 'p90' in stats
     assert 'mean' in stats
-    assert df_stats['FOPR']['minimum'].iloc[-1] < \
-        df_stats['FOPR']['maximum'].iloc[-1]
+    assert df_stats['FOPR']['minimum'].iloc[-2] < \
+        df_stats['FOPR']['maximum'].iloc[-2]
 
     # Virtualization of ensemble combinations
     # (equals comutation of everything)

@@ -141,6 +141,7 @@ def test_single_realization():
         # code that floated around early
         ensemble.ScratchRealization("MyEnsemble", "/foo/bar/com")
 
+
 def test_datenormalization():
     """Test normalization of dates, where
     dates can be ensured to be on dategrid boundaries"""
@@ -149,8 +150,6 @@ def test_datenormalization():
 
     start = date(1997, 11, 5)
     end = date(2020, 3, 2)
-
-    print(normalize_dates(start, end, 'monthly'))
 
     assert normalize_dates(start, end, 'monthly') == \
         (date(1997, 11, 1), date(2020, 4, 1))
@@ -164,6 +163,31 @@ def test_datenormalization():
     assert normalize_dates(date(1997, 1, 1),
                            date(2021, 1, 1), 'yearly') == \
         (date(1997, 1, 1), date(2021, 1, 1))
+
+    # Check that we normalize correctly with get_smry():
+    # realization-0 here has its last summary date at 2003-01-02
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+    daily = real.get_smry(column_keys='FOPT', time_index='daily')
+    assert str(daily.index[-1]) == '2003-01-02'
+    monthly = real.get_smry(column_keys='FOPT', time_index='monthly')
+    assert str(monthly.index[-1]) == '2003-02-01'
+    yearly = real.get_smry(column_keys='FOPT', time_index='yearly')
+    assert str(yearly.index[-1]) == '2004-01-01'
+
+    # Check that we get the same correct normalization
+    # with load_smry()
+    real.load_smry(column_keys='FOPT', time_index='daily')
+    assert str(real.get_df('unsmry--daily')['DATE']
+               .values[-1]) == '2003-01-02'
+    real.load_smry(column_keys='FOPT', time_index='monthly')
+    assert str(real.get_df('unsmry--monthly')['DATE']
+               .values[-1]) == '2003-02-01'
+    real.load_smry(column_keys='FOPT', time_index='yearly')
+    assert str(real.get_df('unsmry--yearly')['DATE']
+               .values[-1]) == '2004-01-01'
 
 
 def test_singlereal_ecl(tmp='TMP'):
