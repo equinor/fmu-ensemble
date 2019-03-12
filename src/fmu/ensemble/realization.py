@@ -797,7 +797,8 @@ class ScratchRealization(object):
         dates = self._eclsum.get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
 
-    def get_smry_dates(self, freq='monthly', normalize=True):
+    def get_smry_dates(self, freq='monthly', normalize=True,
+                       start_date=None, end_date=None):
         """Return list of datetimes available in the realization
 
         Args:
@@ -811,9 +812,34 @@ class ScratchRealization(object):
             normalize: Whether to normalize backwards at the start
                 and forwards at the end to ensure the raw
                 date range is covered.
+            start_date: str or date with first date to include
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included. Overrides
+                normalized dates.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overrides
+                normalized dates.
         Returns:
             list of datetimes. None if no summary data is available.
         """
+        import dateutil.parser
+        if start_date:
+            if isinstance(start_date, str):
+                start_date = dateutil.parser.parse(start_date).date()
+            elif isinstance(start_date, datetime.date):
+                pass
+            else:
+                raise TypeError("start_date had unknown type")
+
+        if end_date:
+            if isinstance(end_date, str):
+                end_date = dateutil.parser.parse(end_date).date()
+            elif isinstance(end_date, datetime.date):
+                pass
+            else:
+                raise TypeError("end_date had unknown type")
+
         if not self.get_eclsum():
             return None
         if freq == 'raw':
@@ -821,20 +847,41 @@ class ScratchRealization(object):
         elif freq == 'last':
             return [self.get_eclsum().end_date]
         else:
-            start_date = self.get_eclsum().start_date
-            end_date = self.get_eclsum().end_date
+
+            start_smry = self.get_eclsum().start_date
+            end_smry = self.get_eclsum().end_date
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
-            if normalize:
-                (start_date, end_date) = normalize_dates(start_date, end_date,
-                                                         freq)
+
+            (start_n, end_n) = normalize_dates(start_smry, end_smry,
+                                               freq) 
+
+            if not start_date and not normalize:
+                start_date = start_smry
+            if not start_date and normalize:
+                start_date = start_n
+
+            if not end_date and not normalize:
+                end_date = end_smry
+            if not end_date and normalize:
+                end_date = end_n
+
             if freq not in pd_freq_mnenomics:
                 raise ValueError('Requested frequency %s not supported' % freq)
             datetimes = pd.date_range(start_date, end_date,
                                       freq=pd_freq_mnenomics[freq])
+
             # Convert from Pandas' datetime64 to datetime.date:
-            return [x.date() for x in datetimes]
+            datetimes = [x.date() for x in datetimes]
+
+            # pd.date_range will not include random dates that do not
+            # fit on frequency boundary. Force include these:
+            if start_date not in datetimes:
+                datetimes = [start_date] + datetimes
+            if end_date not in datetimes:
+                datetimes = datetimes + [end_date]
+            return datetimes
 
     def contains(self, localpath, **kwargs):
         """Boolean function for asking the realization for presence
