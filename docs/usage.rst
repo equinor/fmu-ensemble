@@ -122,6 +122,7 @@ Script authors can set a different default logging level by inserting
 the lines
 
 .. code-block:: python
+
     from fmu.config import etc
     fmux = etc.Interaction()
     logger = fmux.basiclogger(__name__, level='WARNING')
@@ -129,6 +130,7 @@ the lines
 while users can always override this by setting an environment variable:
 
 .. code-block:: console
+
     export FMU_LOGGING_LEVEL=WARNING  # If bash shell
     setenv FMU_LOGGING_LEVEL WARNING  # Default shell in equinor
 
