@@ -771,7 +771,7 @@ class ScratchRealization(object):
         # Be strict and only include certain summary vectors that look
         # cumulative by their name:
         column_keys = [x for x in column_keys if
-                       realization._cum_smrycol2rate(x)]
+                       ScratchRealization._cum_smrycol2rate(x)]
         if not column_keys:
             logger.error("No valid cumulative columns given "
                          + "to volumetric computation")
@@ -833,7 +833,7 @@ class ScratchRealization(object):
         # Translate the column vectors, 'FOPT' -> 'FOPR' etc.
         rate_names = []
         for vec in diff_cum.columns:
-            ratename = realization._cum_smrycol2rate(vec)
+            ratename = ScratchRealization._cum_smrycol2rate(vec)
             if ratename:
                 rate_names.append(ratename)
         diff_cum.columns = rate_names
