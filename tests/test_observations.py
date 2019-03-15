@@ -274,7 +274,6 @@ def test_ensset_mismatch():
         == mismatch[mismatch.ENSEMBLE == 'iter-1'].L1.sum()
 
     # This is quite hard to input in dict-format. Better via YAML..
-    # Note that the date in there must be a datetime, can't be a string.
     obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
                                      'comment':
                                      'Pressure observations well OP_1',
@@ -287,6 +286,24 @@ def test_ensset_mismatch():
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10
+ 
+    # We should also be able to input dates as strings, and they
+    # should be attempted parsed to datetime.date:
+    obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
+                                     'observations': [{'value': 250,
+                                                       'error':1,
+                                                       'date':
+                                                       '2001-01-01'}]}]})
+    mis_pr2 = obs_pr.mismatch(ensset)
+    assert len(mis_pr) == 10
+
+    # But a wrongly formatted date should give an error:
+    obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
+                                     'observations': [{'value': 250,
+                                                       'error':1,
+                                                       'date':
+                                                       '01-01-2001'}]}]})
+
 
 
 def test_virtual_observations():
