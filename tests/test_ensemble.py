@@ -176,7 +176,7 @@ def test_emptyens():
     else:
         testdir = os.path.abspath('.')
 
-    ens.add_realizations(testdir + '/data/testensemble-reek001/' 
+    ens.add_realizations(testdir + '/data/testensemble-reek001/'
                          + 'realization-0/iter-0')
     assert len(ens) == 1
 
@@ -497,6 +497,7 @@ def test_filter():
                                    inplace=False)
     # Last one is zero because it implies 00:00:00, it does not round!
 
+
 def test_ertrunpathfile():
     """Initialize an ensemble from an ERT runpath file"""
 
@@ -506,8 +507,14 @@ def test_ertrunpathfile():
     else:
         testdir = os.path.abspath('.')
 
-    #ens = ScratchEnsemble('ensfromrunpath', runpath=testdir + 'data/ert-runpath-file')  
-    #ZZassert len(ens) == 5
+    ens = ScratchEnsemble('ensfromrunpath', runpathfile=testdir
+                          + '/data/ert-runpath-file')
+    assert len(ens) == 5
+
+    # Check that the UNSMRY files has been discovered, they should always be
+    # because ECLBASE is given in the runpathfile
+    assert sum(['UNSMRY' in x for x in ens.files['BASENAME'].unique()]) == 5
+
 
 def test_nonexisting():
     """Test what happens when we try to initialize from a

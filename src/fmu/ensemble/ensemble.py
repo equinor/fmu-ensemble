@@ -54,7 +54,7 @@ class ScratchEnsemble(object):
     """
 
     def __init__(self, ensemble_name, paths=None, realidxregexp=None,
-            runpathfile=None, runpathfilter=None):
+                 runpathfile=None, runpathfilter=None):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on
@@ -65,6 +65,20 @@ class ScratchEnsemble(object):
                 Optional to have it consistent with f.ex. iter-0 in the path.
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
+                If omitted, ensemble will be empty unless runpathfile
+                is used.
+            realidxregexp: str or regexp - used to deduce the realization index
+                from the file path. Default tailored for realization-X
+            runpathfile: str. Filename (absolute or relative) of an ERT
+                runpath file, consisting of four space separated text fields,
+                first column is realization index, second column is absolute
+                or relative path to a realization RUNPATH, third column is
+                the basename of the Eclipse simulation, relative to RUNPATH.
+                Fourth column is not used.
+            runpathfilter: str. If supplied, the only the runpaths in
+                the runpathfile which contains this string will be included
+                Use to select only a specific realization f.ex.
+
         """
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
@@ -75,28 +89,34 @@ class ScratchEnsemble(object):
         self._global_grid = None
         self.obs = None
 
-        if not paths:
-            logger.info("Initialized empty ScratchEnsemble")
-            return
-
         if isinstance(paths, str):
             paths = [paths]
 
-        # Glob incoming paths to determine
-        # paths for each realization (flatten and uniqify)
-        globbedpaths = [glob.glob(path) for path in paths]
-        globbedpaths = list(set([item for sublist in globbedpaths
-                                 for item in sublist]))
-        if not globbedpaths:
-            logger.warning("No files found, or no access")
+        if paths and runpathfile:
+            logger.error("Cannot initizalize from both path and runpathfile")
             return
-        else:
+
+        globbedpaths = None
+        if isinstance(paths, list):
+            # Glob incoming paths to determine
+            # paths for each realization (flatten and uniqify)
+            globbedpaths = [glob.glob(path) for path in paths]
+            globbedpaths = list(set([item for sublist in globbedpaths
+                                     for item in sublist]))
+        if not globbedpaths and not runpathfile:
+            logger.warning("Initialized empty ScratchEnsemble")
+            return
+
+        if globbedpaths:
             logger.info("Loading ensemble from dirs: %s",
                         " ".join(globbedpaths))
 
-        # Search and locate minimal set of files
-        # representing the realizations.
-        count = self.add_realizations(paths, realidxregexp)
+            # Search and locate minimal set of files
+            # representing the realizations.
+            count = self.add_realizations(paths, realidxregexp)
+
+        if runpathfile:
+            count = self.add_from_runpathfile(runpathfile, runpathfilter)
 
         logger.info('ScratchEnsemble initialized with %d realizations',
                     count)
@@ -190,6 +210,35 @@ class ScratchEnsemble(object):
         logger.info('add_realizations() found %d realizations',
                     len(self._realizations))
         return count
+
+    def add_from_runpathfile(self, runpathfile, runpathfilter=None):
+        """Add realizations from a runpath file typically
+        coming from ERT.
+
+        Args:
+            runpathfile: str with filename, absolute or relative
+            runpathfilter: str which each filepath has to match
+                in order to be included. Default None which means not filter
+
+        Returns:
+            int - Number of successfully added realizations.
+        """
+        prelength = len(self)
+        runpath_df = pd.read_csv(runpathfile, sep=r'\s+', engine='python',
+                                 names=['index', 'runpath', 'eclbase', 'foo'])
+        for idx, row in runpath_df.iterrows():
+            if runpathfilter and runpathfilter not in row['runpath']:
+                continue
+            logger.info("Adding realization from " + row['runpath'])
+            realization = ScratchRealization(row['runpath'],
+                                             index=int(row['index']))
+            # Use the ECLBASE from the runpath file to
+            # ensure we recognize the correct UNSMRY file
+            realization.find_files(row['eclbase'] + ".DATA")
+            realization.find_files(row['eclbase'] + ".UNSMRY")
+            self._realizations[int(row['index'])] = realization
+
+        return len(self) - prelength
 
     def remove_data(self, localpaths):
         """Remove certain datatypes from each realizations

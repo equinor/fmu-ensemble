@@ -67,8 +67,10 @@ class ScratchRealization(object):
             from the path. First match is the index.
             Default: realization-(\d+)
             Only needs to match path components.
+        index: int, the realization index to be used, will
+            override anything else.
     """
-    def __init__(self, path, realidxregexp=None):
+    def __init__(self, path, realidxregexp=None, index=None):
         self._origpath = path
 
         if not realidxregexp:
@@ -91,15 +93,19 @@ class ScratchRealization(object):
         self._actnum = None
 
         abspath = os.path.abspath(path)
-        for path_comp in reversed(os.path.abspath(path)
-                                  .split(os.path.sep)):
-            realidxmatch = re.match(realidxregexp, path_comp)
-            if realidxmatch:
-                self.index = int(realidxmatch.group(1))
-                break
+
+        if not index:
+            for path_comp in reversed(os.path.abspath(path)
+                                      .split(os.path.sep)):
+                realidxmatch = re.match(realidxregexp, path_comp)
+                if realidxmatch:
+                    self.index = int(realidxmatch.group(1))
+                    break
+            else:
+                logger.warn('Realization %s not valid, skipping',
+                            abspath)
         else:
-            logger.warn('Realization %s not valid, skipping',
-                        abspath)
+            self.index = int(index)
 
         # Now look for some common files, but don't require any
         if os.path.exists(os.path.join(abspath, 'STATUS')):
@@ -282,7 +288,7 @@ class ScratchRealization(object):
             try:
                 keyvalues = pd.read_csv(fullpath, sep=r'\s+',
                                         index_col=0, dtype=str,
-                                        usecols=[0,1],
+                                        usecols=[0, 1],
                                         header=None)[1].to_dict()
             except pd.errors.EmptyDataError:
                 keyvalues = {}
@@ -366,7 +372,7 @@ class ScratchRealization(object):
         status = pd.read_csv(statusfile, sep=r'\s+', skiprows=1,
                              header=None,
                              names=['FORWARD_MODEL', 'colon',
-                                   'STARTTIME', 'dots', 'ENDTIME'] +
+                                    'STARTTIME', 'dots', 'ENDTIME'] +
                              errorcolumns,
                              dtype=str,
                              engine='python',
@@ -881,7 +887,7 @@ class ScratchRealization(object):
                 # convert everything to pandas datatime64 for comparisons,
                 # otherwise we revert to simpler check.
                 if kwargs['column'] == 'DATE':
-                    return (pd.to_datetime(dateutil.parser\
+                    return (pd.to_datetime(dateutil.parser
                                            .parse(kwargs['columncontains']))
                             == pd.to_datetime(self.data[localpath]
                                               [kwargs['column']])).any()
