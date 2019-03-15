@@ -297,15 +297,13 @@ def test_ensset_mismatch():
     mis_pr2 = obs_pr.mismatch(ensset)
     assert len(mis_pr2) == 10
 
-    # This NON-ISO date actually gets parsed by dateutil.parse...
-    # With an assumptions on DD-MM vs. MM-DD that sometimes will break,
-    # should we be strict and disallow this??
-    obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
-                                     'observations': [{'value': 250,
-                                                       'error': 1,
-                                                       'date':
-                                                       '01-01-2001'}]}]})
-    assert len(obs_pr.mismatch(ensset)) == 10
+    # We are strict and DO NOT ALLOW non-ISO dates like this:
+    with pytest.raises(ValueError):
+        obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
+                                         'observations': [{'value': 250,
+                                                           'error': 1,
+                                                           'date':
+                                                           '01-01-2001'}]}]})
 
     # Erroneous date will raise Exception
     with pytest.raises(ValueError):

@@ -387,7 +387,7 @@ class Observations(object):
                 # Check if strings need to be parsed as dates:
                 for observation in unit['observations']:
                     if isinstance(observation['date'], str):
-                        observation['date'] = dateutil.parser.parse(observation['date']).date()
+                        observation['date'] = dateutil.parser.isoparse(observation['date']).date()
                     if not isinstance(observation['date'], datetime.date):
                         logger.error('Date not understood' + str(observation['date']))
                         continue 
