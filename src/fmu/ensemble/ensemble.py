@@ -53,7 +53,8 @@ class ScratchEnsemble(object):
                     '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
     """
 
-    def __init__(self, ensemble_name, paths=None, realidxregexp=None):
+    def __init__(self, ensemble_name, paths=None, realidxregexp=None,
+            runpathfile=None, runpathfilter=None):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on
@@ -73,6 +74,10 @@ class ScratchEnsemble(object):
         self._global_size = None
         self._global_grid = None
         self.obs = None
+
+        if not paths:
+            logger.info("Initialized empty ScratchEnsemble")
+            return
 
         if isinstance(paths, str):
             paths = [paths]

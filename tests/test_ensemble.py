@@ -165,6 +165,22 @@ def test_reek001(tmp='TMP'):
     assert len(reekensemble.keys()) == keycount - 1
 
 
+def test_emptyens():
+    """Check that we can initialize an empty ensemble"""
+    ens = ScratchEnsemble('emptyens')
+    assert len(ens) == 0
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ens.add_realizations(testdir + '/data/testensemble-reek001/' 
+                         + 'realization-0/iter-0')
+    assert len(ens) == 1
+
+
 def test_reek001_scalars():
     """Test import of scalar values from files
 
