@@ -11,6 +11,8 @@ import os
 import math
 import yaml
 import pandas as pd
+import dateutil
+import datetime
 from collections import OrderedDict
 
 from fmu.config import etc
@@ -87,6 +89,7 @@ class Observations(object):
             raise ValueError("Unsupported object for observations")
 
         # Remove unsupported observations
+        # Identify and warn about errors in observation syntax (dates etc)
         self._clean_observations()
 
     def __getitem__(self, object):
@@ -345,6 +348,8 @@ class Observations(object):
         Will log warnings about things that are removed.
 
         Returns number of usable observation units.
+
+        Ensure that dates are parsed into datetime.date objects.
         """
         supported_categories = ['smry', 'smryh', 'txt', 'scalar', 'rft']
 
@@ -379,6 +384,13 @@ class Observations(object):
                                    + 'deleting: ' + str(unit))
                     del smryunits[smryunits.index(unit)]
                     continue
+                # Check if strings need to be parsed as dates:
+                for observation in unit['observations']:
+                    if isinstance(observation['date'], str):
+                        observation['date'] = dateutil.parser.parse(observation['date']).date()
+                    if not isinstance(observation['date'], datetime.date):
+                        logger.error('Date not understood' + str(observation['date']))
+                        continue 
             # If everything is deleted from 'smry', delete it
             if not len(smryunits):
                 del self.observations['smry']
