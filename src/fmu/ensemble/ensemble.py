@@ -53,7 +53,7 @@ class ScratchEnsemble(object):
                     '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
     """
 
-    def __init__(self, ensemble_name, paths, realidxregexp=None):
+    def __init__(self, ensemble_name, paths=None, realidxregexp=None):
         """Initialize an ensemble from disk
 
         Upon initialization, only a subset of the files on

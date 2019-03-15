@@ -481,6 +481,17 @@ def test_filter():
                                    inplace=False)
     # Last one is zero because it implies 00:00:00, it does not round!
 
+def test_ertrunpathfile():
+    """Initialize an ensemble from an ERT runpath file"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    #ens = ScratchEnsemble('ensfromrunpath', runpath=testdir + 'data/ert-runpath-file')  
+    #ZZassert len(ens) == 5
 
 def test_nonexisting():
     """Test what happens when we try to initialize from a
