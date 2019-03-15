@@ -274,45 +274,46 @@ def test_ensset_mismatch():
         == mismatch[mismatch.ENSEMBLE == 'iter-1'].L1.sum()
 
     # This is quite hard to input in dict-format. Better via YAML..
-    obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
-                                     'comment':
-                                     'Pressure observations well OP_1',
-                                     'observations': [{'value': 250,
-                                                       'error': 1,
-                                                       'date':
-                                                       datetime.date(2001,
-                                                                     1, 1)
-                                                      }]}]})
+    obs_pr = Observations({'smry':
+                           [{'key': 'WBP4:OP_1',
+                             'comment':
+                             'Pressure observations well OP_1',
+                             'observations': [{'value': 250,
+                                               'error': 1,
+                                               'date':
+                                               datetime.date(2001,
+                                                             1, 1)}]}]})
 
     mis_pr = obs_pr.mismatch(ensset)
     assert len(mis_pr) == 10
- 
+
     # We should also be able to input dates as strings, and they
     # should be attempted parsed to datetime.date:
     obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
                                      'observations': [{'value': 250,
-                                                       'error':1,
+                                                       'error': 1,
                                                        'date':
                                                        '2001-01-01'}]}]})
     mis_pr2 = obs_pr.mismatch(ensset)
-    assert len(mis_pr) == 10
+    assert len(mis_pr2) == 10
 
     # This NON-ISO date actually gets parsed by dateutil.parse...
+    # With an assumptions on DD-MM vs. MM-DD that sometimes will break,
+    # should we be strict and disallow this??
     obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
                                      'observations': [{'value': 250,
-                                                       'error':1,
+                                                       'error': 1,
                                                        'date':
                                                        '01-01-2001'}]}]})
     assert len(obs_pr.mismatch(ensset)) == 10
 
-    # Erroneous date will raise Exception 
+    # Erroneous date will raise Exception
     with pytest.raises(ValueError):
         obs_pr = Observations({'smry': [{'key': 'WBP4:OP_1',
                                          'observations': [{'value': 250,
-                                                           'error':1,
+                                                           'error': 1,
                                                            'date':
                                                            '3011-45-443'}]}]})
-
 
 
 def test_virtual_observations():
