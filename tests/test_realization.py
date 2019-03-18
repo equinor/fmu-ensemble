@@ -245,7 +245,7 @@ def test_singlereal_ecl(tmp='TMP'):
     assert len(real.get_smry_dates(start_date='2000-06-05',
                                    end_date='2000-06-07',
                                    freq='monthly')) == 2
-    # Date normaliztion should be overriden here:
+    # Date normalization should be overriden here:
     assert len(real.get_smry_dates(start_date='2000-06-05',
                                    end_date='2000-06-07',
                                    freq='monthly',
@@ -266,7 +266,16 @@ def test_singlereal_ecl(tmp='TMP'):
                                    end_date='2030-01-01',
                                    freq='yearly',
                                    normalize=True)) == 53
-    
+
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='raw',
+                                   normalize=True)) == 2
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='raw',
+                                   normalize=False)) == 2
+
     # Test caching/internalization of summary files
 
     # This should be false, since only the full localpath is in keys():

@@ -819,7 +819,7 @@ class ScratchRealization(object):
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overrides
-                normalized dates.
+                normalized dates. Overriden if freq is 'last'.
         Returns:
             list of datetimes. None if no summary data is available.
         """
@@ -843,7 +843,20 @@ class ScratchRealization(object):
         if not self.get_eclsum():
             return None
         if freq == 'raw':
-            return self.get_eclsum().dates
+            datetimes = self.get_eclsum().dates
+            # Clip if wanted:
+            if start_date:
+                # Convert to datetime (at 00:00:00)
+                start_date = datetime.combine(start_date, datetime.min.time())
+                datetimes = [x for x in datetimes if
+                             x > start_date]
+                datetimes = [start_date] + datetimes
+            if end_date:
+                end_date = datetime.combine(end_date, datetime.min.time())
+                datetimes = [x for x in datetimes if
+                             x < end_date]
+                datetimes = datetimes + [end_date]
+            return datetimes
         elif freq == 'last':
             return [self.get_eclsum().end_date]
         else:
@@ -855,7 +868,7 @@ class ScratchRealization(object):
                                  'daily': 'D'}
 
             (start_n, end_n) = normalize_dates(start_smry, end_smry,
-                                               freq) 
+                                               freq)
 
             if not start_date and not normalize:
                 start_date = start_smry
