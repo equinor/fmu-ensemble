@@ -823,78 +823,13 @@ class ScratchRealization(object):
         Returns:
             list of datetimes. None if no summary data is available.
         """
-        import dateutil.parser
-        if start_date:
-            if isinstance(start_date, str):
-                start_date = dateutil.parser.parse(start_date).date()
-            elif isinstance(start_date, datetime.date):
-                pass
-            else:
-                raise TypeError("start_date had unknown type")
-
-        if end_date:
-            if isinstance(end_date, str):
-                end_date = dateutil.parser.parse(end_date).date()
-            elif isinstance(end_date, datetime.date):
-                pass
-            else:
-                raise TypeError("end_date had unknown type")
-
-        if not self.get_eclsum():
+        from .ensemble import ScratchEnsemble
+        eclsum = self.get_eclsum()
+        if not eclsum:
             return None
-        if freq == 'raw':
-            datetimes = self.get_eclsum().dates
-            # Clip if wanted:
-            if start_date:
-                # Convert to datetime (at 00:00:00)
-                start_date = datetime.combine(start_date, datetime.min.time())
-                datetimes = [x for x in datetimes if
-                             x > start_date]
-                datetimes = [start_date] + datetimes
-            if end_date:
-                end_date = datetime.combine(end_date, datetime.min.time())
-                datetimes = [x for x in datetimes if
-                             x < end_date]
-                datetimes = datetimes + [end_date]
-            return datetimes
-        elif freq == 'last':
-            return [self.get_eclsum().end_date]
-        else:
-
-            start_smry = self.get_eclsum().start_date
-            end_smry = self.get_eclsum().end_date
-            pd_freq_mnenomics = {'monthly': 'MS',
-                                 'yearly': 'YS',
-                                 'daily': 'D'}
-
-            (start_n, end_n) = normalize_dates(start_smry, end_smry,
-                                               freq)
-
-            if not start_date and not normalize:
-                start_date = start_smry
-            if not start_date and normalize:
-                start_date = start_n
-
-            if not end_date and not normalize:
-                end_date = end_smry
-            if not end_date and normalize:
-                end_date = end_n
-
-            if freq not in pd_freq_mnenomics:
-                raise ValueError('Requested frequency %s not supported' % freq)
-            datetimes = pd.date_range(start_date, end_date,
-                                      freq=pd_freq_mnenomics[freq])
-
-            # Convert from Pandas' datetime64 to datetime.date:
-            datetimes = [x.date() for x in datetimes]
-
-            # pd.date_range will not include random dates that do not
-            # fit on frequency boundary. Force include these:
-            if start_date not in datetimes:
-                datetimes = [start_date] + datetimes
-            if end_date not in datetimes:
-                datetimes = datetimes + [end_date]
-            return datetimes
+        return ScratchEnsemble._get_smry_dates([eclsum], freq,
+                                               normalize,
+                                               start_date, end_date)
 
     def contains(self, localpath, **kwargs):
         """Boolean function for asking the realization for presence

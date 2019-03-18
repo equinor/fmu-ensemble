@@ -17,6 +17,7 @@ import glob
 import six
 
 import warnings
+from datetime import datetime, date, time
 import pandas as pd
 from ecl import EclDataType
 from ecl.eclfile import EclKW
@@ -576,7 +577,8 @@ class ScratchEnsemble(object):
             results.append(result)
         return pd.concat(results, sort=False, ignore_index=True)
 
-    def get_smry_dates(self, freq='monthly', normalize=True):
+    def get_smry_dates(self, freq='monthly', normalize=True,
+                       start_date=None, end_date=None):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
@@ -589,41 +591,111 @@ class ScratchEnsemble(object):
             normalize:  Whether to normalize backwards at the start
                 and forwards at the end to ensure the raw
                 date range is covered.
+            start_date: str or date with first date to include
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included. Overrides
+                normalized dates.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overrides
+                normalized dates. Overriden if freq is 'last'.
+
         Returns:
             list of datetimes.
         """
-        from .realization import normalize_dates
+
         # Build list of eclsum objects that are not None
         eclsums = []
         for _, realization in self._realizations.items():
             if realization.get_eclsum():
                 eclsums.append(realization.get_eclsum())
+        return ScratchEnsemble._get_smry_dates(eclsums, freq, normalize,
+                                               start_date, end_date)
+
+    @staticmethod
+    def _get_smry_dates(eclsums, freq, normalize,
+                        start_date, end_date):
+        """Internal static method to be used by ScratchEnsemble and
+        ScratchRealization.
+
+        If called from ScratchRealization, the list of eclsums passed
+        in will have length 1, if not, it can be larger.
+
+        """
+        import dateutil.parser
+        from .realization import normalize_dates
+        if start_date:
+            if isinstance(start_date, str):
+                start_date = dateutil.parser.parse(start_date).date()
+            elif isinstance(start_date, datetime.date):
+                pass
+            else:
+                raise TypeError("start_date had unknown type")
+
+        if end_date:
+            if isinstance(end_date, str):
+                end_date = dateutil.parser.parse(end_date).date()
+            elif isinstance(end_date, datetime.date):
+                pass
+            else:
+                raise TypeError("end_date had unknown type")
+
         if freq == 'report' or freq == 'raw':
-            dates = set()
+            datetimes = set()
             for eclsum in eclsums:
-                dates = dates.union(eclsum.dates)
-            dates = list(dates)
-            dates.sort()
-            return dates
+                datetimes = datetimes.union(eclsum.dates)
+            datetimes = list(datetimes)
+            datetimes.sort()
+            if start_date:
+                # Convert to datetime (at 00:00:00)
+                start_date = datetime.combine(start_date, datetime.min.time())
+                datetimes = [x for x in datetimes if
+                             x > start_date]
+                datetimes = [start_date] + datetimes
+            if end_date:
+                end_date = datetime.combine(end_date, datetime.min.time())
+                datetimes = [x for x in datetimes if
+                             x < end_date]
+                datetimes = datetimes + [end_date]
+            return datetimes
         elif freq == 'last':
             end_date = max([eclsum.end_date for eclsum in eclsums])
             return [end_date]
         else:
-            start_date = min([eclsum.start_date for eclsum in eclsums])
-            end_date = max([eclsum.end_date for eclsum in eclsums])
-
-            if normalize:
-                (start_date, end_date) = normalize_dates(start_date, end_date,
-                                                         freq)
+            start_smry = min([eclsum.start_date for eclsum in eclsums])
+            end_smry = max([eclsum.end_date for eclsum in eclsums])
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
+
+            (start_n, end_n) = normalize_dates(start_smry, end_smry,
+                                               freq)
+
+            if not start_date and not normalize:
+                start_date = start_smry
+            if not start_date and normalize:
+                start_date = start_n
+
+            if not end_date and not normalize:
+                end_date = end_smry
+            if not end_date and normalize:
+                end_date = end_n
+
             if freq not in pd_freq_mnenomics:
                 raise ValueError('Requested frequency %s not supported' % freq)
             datetimes = pd.date_range(start_date, end_date,
                                       freq=pd_freq_mnenomics[freq])
+
             # Convert from Pandas' datetime64 to datetime.date:
-            return [x.date() for x in datetimes]
+            datetimes = [x.date() for x in datetimes]
+
+            # pd.date_range will not include random dates that do not
+            # fit on frequency boundary. Force include these:
+            if start_date not in datetimes:
+                datetimes = [start_date] + datetimes
+            if end_date not in datetimes:
+                datetimes = datetimes + [end_date]
+            return datetimes
 
     def get_smry_stats(self, column_keys=None, time_index='monthly',
                        quantiles=None):
