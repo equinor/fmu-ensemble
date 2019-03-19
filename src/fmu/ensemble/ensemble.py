@@ -584,7 +584,8 @@ class ScratchEnsemble(object):
         return pd.concat(results, sort=False, ignore_index=True)
 
     def get_smry_dates(self, freq='monthly', normalize=True,
-                       start_date=None, end_date=None):
+                       start_date=None, end_date=None,
+                       cache_eclsum=True):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:

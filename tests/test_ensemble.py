@@ -540,6 +540,17 @@ def test_eclsumcaching():
     df = ens.get_smry(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
+    df = ens.get_smry_stats()
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    df = ens.get_smry_stats(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    some_dates = ens.get_smry_dates()
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    some_dates = ens.get_smry_dates(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
 def test_filedescriptors():
     """Test how filedescriptors are used.
