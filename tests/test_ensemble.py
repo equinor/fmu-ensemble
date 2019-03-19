@@ -506,6 +506,43 @@ def test_nonexisting():
     assert not nopermission
 
 
+def test_eclsumcaching():
+    """Test caching of eclsum"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    dirs = testdir + '/data/testensemble-reek001/' + \
+        'realization-*/iter-0'
+    ens = ScratchEnsemble('reektest', dirs)
+
+    # The problem here is if you load in a lot of UNSMRY files
+    # and the Python process keeps them in memory. Not sure
+    # how to check in code that an object has been garbage collected
+    # but for garbage collection to work, at least the realization
+    # _eclsum variable must be None.
+
+    ens.load_smry()
+    # Default is to do caching, so these will not be None:
+    assert ens[0]._eclsum
+    assert ens[1]._eclsum
+    assert ens[2]._eclsum
+    assert ens[3]._eclsum
+    assert ens[4]._eclsum
+
+    # If we redo this operation, the same objects should all
+    # be None afterwards:
+    ens.load_smry(cache_eclsum=None)
+    assert not ens[0]._eclsum
+    assert not ens[1]._eclsum
+    assert not ens[2]._eclsum
+    assert not ens[3]._eclsum
+    assert not ens[4]._eclsum
+
+
 def test_filedescriptors():
     """Test how filedescriptors are used.
 
