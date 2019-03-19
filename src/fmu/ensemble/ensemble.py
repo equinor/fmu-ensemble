@@ -417,7 +417,8 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def load_smry(self, time_index='raw', column_keys=None, stacked=True):
+    def load_smry(self, time_index='raw', column_keys=None, stacked=True,
+                  cache_eclsum=True):
         """
         Fetch summary data from all realizations.
 
@@ -443,6 +444,9 @@ class ScratchEnsemble(object):
                 by vector name, and with realization index as columns.
                 This only works when time_index is the same for all
                 realizations. Not implemented yet!
+            cache_eclsum: Boolean for whether we should cache the EclSum
+                objects. Set to False if you cannot keep all EclSum files in
+                memory simultaneously
 
         Returns:
             A DataFame of summary vectors for the ensemble, or
@@ -451,13 +455,15 @@ class ScratchEnsemble(object):
         if not stacked:
             raise NotImplementedError
         # Future: Multithread this!
-        for _, realization in self._realizations.items():
+        for realidx, realization in self._realizations.items():
             # We do not store the returned DataFrames here,
             # instead we look them up afterwards using get_df()
             # Downside is that we have to compute the name of the
             # cached object as it is not returned.
+            logger.info("Loading smry from realization %s", realidx)
             realization.load_smry(time_index=time_index,
-                                  column_keys=column_keys)
+                                  column_keys=column_keys,
+                                  cache_eclsum=cache_eclsum)
         if isinstance(time_index, list):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry--' +
@@ -698,7 +704,7 @@ class ScratchEnsemble(object):
             return datetimes
 
     def get_smry_stats(self, column_keys=None, time_index='monthly',
-                       quantiles=None):
+                       quantiles=None, cache_eclsum=True):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -740,8 +746,10 @@ class ScratchEnsemble(object):
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
         dframe = self.get_smry(time_index=time_index,
-                               column_keys=column_keys).drop(columns='REAL')\
-                                                       .groupby('DATE')
+                               column_keys=column_keys,
+                               cache_eclsum=cache_eclsum)\
+                     .drop(columns='REAL')\
+                     .groupby('DATE')
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
@@ -956,7 +964,8 @@ class ScratchEnsemble(object):
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def get_smry(self, time_index=None, column_keys=None,
+                 cache_eclsum=True):
         """
         Aggregates summary data from all realizations.
 
@@ -969,6 +978,9 @@ class ScratchEnsemble(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
+            cache_eclsum: boolean for whether to cache the EclSum
+                objects. Defaults to True. Set to False if
+                not enough memory to keep all summary files in memory.
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -978,7 +990,8 @@ class ScratchEnsemble(object):
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_smry(time_index=time_index,
-                                          column_keys=column_keys)
+                                          column_keys=column_keys,
+                                          cache_eclsum=cache_eclsum)
             dframe.insert(0, 'REAL', index)
             dframe.index.name = 'DATE'
             dflist.append(dframe)

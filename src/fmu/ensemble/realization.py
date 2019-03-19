@@ -644,7 +644,7 @@ class ScratchRealization(object):
         """
         return self.data['parameters.txt']
 
-    def get_eclsum(self):
+    def get_eclsum(self, cache=True):
         """
         Fetch the Eclipse Summary file from the realization
         and return as a libecl EclSum object
@@ -655,6 +655,11 @@ class ScratchRealization(object):
         Warning: If you have multiple UNSMRY files and have not
         performed explicit discovery, this function will
         not help you (yet).
+
+        Arguments:
+            cache: boolean indicating whether we should keep an
+                object reference to the EclSum object. Set to
+                false if you need to conserve memory.
 
         Returns:
            EclSum: object representing the summary file. None if
@@ -684,11 +689,13 @@ class ScratchRealization(object):
             logger.warning('Failed to create summary instance from %s',
                            unsmry_filename)
             return None
-        # Cache result
-        self._eclsum = eclsum
-        return self._eclsum
 
-    def load_smry(self, time_index='raw', column_keys=None):
+        if cache:
+            self._eclsum = eclsum
+
+        return eclsum
+
+    def load_smry(self, time_index='raw', column_keys=None, cache_eclsum=True):
         """Produce dataframe from Summary data from the realization
 
         When this function is called, the dataframe will be cached.
@@ -711,18 +718,21 @@ class ScratchRealization(object):
                If a list of DateTime is supplied, data will be resampled
                to these.
             column_keys: list of column key wildcards.
+            cache_eclsum: boolean for whether to keep the loaded EclSum
+                object in memory after data has been loaded.
 
         Returns:
             DataFrame with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
-        if not self.get_eclsum():
+        if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
         time_index_path = time_index
         if time_index == 'raw':
             time_index_arg = None
         elif isinstance(time_index, str):
+            # Note: This call will recache the smry object.
             time_index_arg = self.get_smry_dates(freq=time_index)
         if isinstance(time_index, list):
             time_index_arg = time_index
@@ -732,7 +742,8 @@ class ScratchRealization(object):
             column_keys = [column_keys]
 
         # Do the actual work:
-        dframe = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        dframe = self.get_eclsum(cache=cache_eclsum)\
+                     .pandas_frame(time_index_arg, column_keys)
         dframe = dframe.reset_index()
         dframe.rename(columns={'index': 'DATE'}, inplace=True)
 
@@ -740,14 +751,23 @@ class ScratchRealization(object):
         localpath = 'share/results/tables/unsmry--' +\
                     time_index_path + '.csv'
         self.data[localpath] = dframe
+
+        # Do this to ensure that we cut the rope to the EclSum object
+        # Can be critical for garbage collection
+        if not cache_eclsum:
+            self._eclsum = None
         return dframe
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def get_smry(self, time_index=None, column_keys=None,
+                 cache_eclsum=True):
         """Wrapper for EclSum.pandas_frame
 
         This gives access to the underlying data on disk without
         touching internalized dataframes.
 
+        Arguments:
+            cache: Boolean for wheter the EclSum object is to be cached.
+                defaults to True.
         Returns empty dataframe if there is no summary file
         """
         if not isinstance(column_keys, list):
@@ -759,8 +779,13 @@ class ScratchRealization(object):
         else:
             time_index_arg = time_index
 
-        if self.get_eclsum():
-            return self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        if self.get_eclsum(cache=cache_eclsum):
+            df = self.get_eclsum(cache=cache_eclsum)\
+                     .pandas_frame(time_index_arg, column_keys)
+            if not cache_eclsum:
+                # Ensure EclSum object can be garbage collected
+                self._eclsum = None
+            return df
         else:
             return pd.DataFrame()
 
