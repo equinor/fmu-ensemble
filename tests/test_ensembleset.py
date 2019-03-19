@@ -15,6 +15,7 @@ import pytest
 
 from fmu import config
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
+from fmu.tools import volumetrics
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__, level='WARNING')
@@ -148,6 +149,33 @@ def test_ensembleset_reek001(tmp='TMP'):
     predel_len = len(ensset3.keys())
     ensset3.drop('parameters.txt')
     assert len(ensset3.keys()) == predel_len - 1
+
+    # Test callback functionality, that we can convert rms
+    # volumetrics in each realization. First we need a
+    # wrapper which is able to work on ScratchRealizations.
+    def rms_vol2df(kwargs):
+        fullpath = os.path.join(kwargs['realization'].runpath(),
+                                kwargs['filename'])
+        # The supplied callback should not fail too easy.
+        if os.path.exists(fullpath):
+            return volumetrics.rmsvolumetrics_txt2df(fullpath)
+        else:
+            return pd.DataFrame()
+    rmsvols_df = ensset3.apply(rms_vol2df,
+                               filename='share/results/volumes/'
+                               + 'geogrid_vol_oil_1.txt')
+    assert rmsvols_df['STOIIP_OIL'].sum() > 0
+    assert len(rmsvols_df['REAL'].unique()) == 4
+    assert len(rmsvols_df['ENSEMBLE'].unique()) == 2
+
+    # Test that we can dump to disk as well and load from csv:
+    ensset3.apply(rms_vol2df, filename='share/results/volumes/'
+                  + 'geogrid_vol_oil_1.txt',
+                  localpath='share/results/volumes/geogrid--oil.csv',
+                  dumptodisk=True)
+    geogrid_oil = ensset3.load_csv('share/results/volumes/geogrid--oil.csv')
+    assert len(geogrid_oil['REAL'].unique()) == 4
+    assert len(geogrid_oil['ENSEMBLE'].unique()) == 2
 
     # Initialize differently, using only the root path containing
     # realization-*

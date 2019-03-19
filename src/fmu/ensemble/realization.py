@@ -128,6 +128,15 @@ class ScratchRealization(object):
 
         logger.info('Initialized %s', abspath)
 
+    def runpath(self):
+        """Return the runpath ("root") of the realization
+
+        Returns:
+            str with a filesystem path which at least existeda
+                at time of object initialization.
+        """
+        return self._origpath
+
     def to_virtual(self, name=None, deepcopy=True):
         """Convert the current ScratchRealization object
         to a VirtualRealization
@@ -436,6 +445,63 @@ class ScratchRealization(object):
                            inplace=True)
         self.data['STATUS'] = status
         return status
+
+    def apply(self, callback, **kwargs):
+        """Callback functionality
+
+        A function handle can be supplied which will be executed on
+        this realization. The function supplied *must* return
+        a Pandas DataFrame. The function can accept an additional
+        kwargs dictionary with extra information. Special keys
+        in the kwargs data are 'realization', which will hold
+        the current realization object. The key 'localpath' is
+        also reserved for the use inside this apply(), as it
+        is used for the name of the internalized data.
+
+        If the key 'dumptofile' is a boolean and set to True,
+        the resulting dataframe is also attempted written
+        to disk using the supplied 'localpath'.
+
+        Args:
+            **kwargs: dict which is supplied to the callbacked function,
+            in which the key 'localpath' also points the the name
+            used for data internalization.
+        """
+
+        if not kwargs:
+            kwargs = {}
+        if 'realization' in kwargs:
+            raise ValueError("Never supply realization= to apply()")
+        kwargs['realization'] = self
+
+        # Allow for calling functions which cannot take any
+        # arguments:
+        try:
+            result = callback(kwargs)
+        except TypeError:
+            result = callback()
+
+        if not isinstance(result, pd.DataFrame):
+            raise ValueError("Returned value from applied "
+                             + "function must be a dataframe")
+
+        # Only internalize if 'localpath' is given
+        if 'localpath' in kwargs:
+            self.data[kwargs['localpath']] = result
+
+        if 'dumptodisk' in kwargs and kwargs['dumptodisk']:
+            if not kwargs['localpath']:
+                raise ValueError("localpath must be supplied when"
+                                 + "dumptodisk is used")
+            fullpath = os.path.join(self.runpath(),
+                                    kwargs['localpath'])
+            if not os.path.exists(os.path.dirname(fullpath)):
+                os.makedirs(os.path.dirname(fullpath))
+            if os.path.exists(fullpath):
+                os.unlink(fullpath)
+            logger.info("Writing result of function call to " + fullpath)
+            result.to_csv(fullpath, index=False)
+        return result
 
     def __getitem__(self, localpath):
         """Direct access to the realization data structure

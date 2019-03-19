@@ -13,6 +13,7 @@ import pytest
 
 from fmu import config
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
+from fmu.tools import volumetrics
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__, level='WARNING')
@@ -553,3 +554,50 @@ def test_read_eclgrid():
 
     assert len(grid_df.columns) == 35
     assert len(grid_df['i']) == 35840
+
+def test_apply(tmp='TMP'):
+    """
+    Test the callback functionality
+    """
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ens = ScratchEnsemble('reektest',
+                          testdir +
+                          '/data/testensemble-reek001/' +
+                          'realization-*/iter-0')
+
+    def ex_func1():
+        return pd.DataFrame(index=['1', '2'], columns=['foo', 'bar'],
+                            data=[[1, 2], [3, 4]])
+    result = ens.apply(ex_func1)
+    assert isinstance(result, pd.DataFrame)
+    assert 'REAL' in result.columns
+    assert len(result) == 10
+
+    # Check that we can internalize as well
+    ens.apply(ex_func1, localpath='df-1234')
+    int_df = ens.get_df('df-1234')
+    assert 'REAL' in int_df
+    assert len(int_df) == len(result)
+
+    # Test if we can wrap the volumetrics-parser in fmu.tools:
+    # It cannot be applied directly, as we need to combine the
+    # realization's root directory with the relative path coming in:
+    def rms_vol2df(kwargs):
+        fullpath = os.path.join(kwargs['realization'].runpath(),
+                                kwargs['filename'])
+        # The supplied callback should not fail too easy.
+        if os.path.exists(fullpath):
+            return volumetrics.rmsvolumetrics_txt2df(fullpath)
+        else:
+            return pd.DataFrame()
+
+    rmsvols_df = ens.apply(rms_vol2df,
+                           filename='share/results/volumes/'
+                           + 'geogrid_vol_oil_1.txt')
+    assert rmsvols_df['STOIIP_OIL'].sum() > 0
+    assert len(rmsvols_df['REAL'].unique()) == 4
