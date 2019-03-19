@@ -261,7 +261,7 @@ def test_ensemble_ecl():
 
     # Check that there is now a cached version with raw dates:
     assert isinstance(reekensemble.get_df('unsmry--raw.csv'), pd.DataFrame)
-    # The columns are not similar, this is allowed!
+    # The columns are not similar, this is allowed!'
 
     # If you get 3205 here, it means that you are using the union of
     # raw dates from all realizations, which is not correct
@@ -548,6 +548,10 @@ def test_eclsumcaching():
 
     some_dates = ens.get_smry_dates()
     assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    # Clear the cached objects because the statement above has cached it..
+    for _, realization in ens._realizations.items():
+        realization._eclsum = None
 
     some_dates = ens.get_smry_dates(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])

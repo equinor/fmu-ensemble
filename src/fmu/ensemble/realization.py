@@ -852,7 +852,7 @@ class ScratchRealization(object):
         eclsum = self.get_eclsum()
         if not eclsum:
             return None
-        return ScratchEnsemble._get_smry_dates([eclsum], freq,
+        return ScratchEnsemble._get_smry_dates([eclsum.dates], freq,
                                                normalize,
                                                start_date, end_date)
 

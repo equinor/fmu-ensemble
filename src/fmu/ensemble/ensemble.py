@@ -611,22 +611,23 @@ class ScratchEnsemble(object):
             list of datetimes.
         """
 
-        # Build list of eclsum objects that are not None
-        eclsums = []
+        # Build list of list of eclsum dates
+        eclsumsdates = []
         for _, realization in self._realizations.items():
-            if realization.get_eclsum():
-                eclsums.append(realization.get_eclsum())
-        return ScratchEnsemble._get_smry_dates(eclsums, freq, normalize,
+            if realization.get_eclsum(cache=cache_eclsum):
+                eclsumsdates.append(realization\
+                                   .get_eclsum(cache=cache_eclsum).dates)
+        return ScratchEnsemble._get_smry_dates(eclsumsdates, freq, normalize,
                                                start_date, end_date)
 
     @staticmethod
-    def _get_smry_dates(eclsums, freq, normalize,
+    def _get_smry_dates(eclsumsdates, freq, normalize,
                         start_date, end_date):
         """Internal static method to be used by ScratchEnsemble and
         ScratchRealization.
 
         If called from ScratchRealization, the list of eclsums passed
-        in will have length 1, if not, it can be larger.
+        in will have length' 1, if not, it can be larger.
 
         """
         import dateutil.parser
@@ -649,8 +650,8 @@ class ScratchEnsemble(object):
 
         if freq == 'report' or freq == 'raw':
             datetimes = set()
-            for eclsum in eclsums:
-                datetimes = datetimes.union(eclsum.dates)
+            for eclsumdatelist in eclsumsdates:
+                datetimes = datetimes.union(eclsumdatelist)
             datetimes = list(datetimes)
             datetimes.sort()
             if start_date:
@@ -666,25 +667,28 @@ class ScratchEnsemble(object):
                 datetimes = datetimes + [end_date]
             return datetimes
         elif freq == 'last':
-            end_date = max([eclsum.end_date for eclsum in eclsums])
+            end_date = max([max(x) for x in eclsumsdates]).date()
             return [end_date]
         else:
-            start_smry = min([eclsum.start_date for eclsum in eclsums])
-            end_smry = max([eclsum.end_date for eclsum in eclsums])
+            # These are datetime.datetime, not datetime.date
+            start_smry = min([min(x) for x in eclsumsdates])
+            end_smry = max([max(x) for x in eclsumsdates])
+
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
 
-            (start_n, end_n) = normalize_dates(start_smry, end_smry,
+            (start_n, end_n) = normalize_dates(start_smry.date(),
+                                               end_smry.date(),
                                                freq)
 
             if not start_date and not normalize:
-                start_date = start_smry
+                start_date = start_smry.date()
             if not start_date and normalize:
                 start_date = start_n
 
             if not end_date and not normalize:
-                end_date = end_smry
+                end_date = end_smry.date()
             if not end_date and normalize:
                 end_date = end_n
 
