@@ -275,6 +275,8 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smry_dates(freq='monthly')) == 38
     assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
     assert len(reekensemble.get_smry_dates(freq='last')) == 1
+    assert reekensemble.get_smry_dates(freq='last') == \
+        reekensemble.get_smry_dates(freq='last', end_date='2050-02-01')
 
     assert str(reekensemble.get_smry_dates(freq='report')[-1])\
         == '2003-01-02 00:00:00'
@@ -288,6 +290,13 @@ def test_ensemble_ecl():
         == '2003-01-02'
     assert str(reekensemble.get_smry_dates(freq='last')[-1])\
         == '2003-01-02'
+
+    assert str(reekensemble.get_smry_dates(freq='daily',
+                                           end_date='2002-03-03')[-1]) \
+        == '2002-03-03'
+    assert str(reekensemble.get_smry_dates(freq='daily',
+                                           start_date='2002-03-03')[0]) \
+        == '2002-03-03'
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')

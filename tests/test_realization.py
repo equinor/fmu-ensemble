@@ -236,6 +236,46 @@ def test_singlereal_ecl(tmp='TMP'):
     assert len(monthly) == 38
     assert len(real.get_smry_dates(freq='daily')) == 1098
 
+    # start and end should be included:
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='daily')) == 3
+    # No month boundary between start and end, but we
+    # should have the starts and ends included
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='monthly')) == 2
+    # Date normalization should be overriden here:
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='monthly',
+                                   normalize=True)) == 2
+
+    # Start_date and end_date at the same date should work
+    assert len(real.get_smry_dates(start_date='2000-01-01',
+                                   end_date='2000-01-01')) == 1
+    assert len(real.get_smry_dates(start_date='2000-01-01',
+                                   end_date='2000-01-01',
+                                   normalize=True)) == 1
+
+    # Check that we can go way outside the smry daterange:
+    assert len(real.get_smry_dates(start_date='1978-01-01',
+                                   end_date='2030-01-01',
+                                   freq='yearly')) == 53
+    assert len(real.get_smry_dates(start_date='1978-01-01',
+                                   end_date='2030-01-01',
+                                   freq='yearly',
+                                   normalize=True)) == 53
+
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='raw',
+                                   normalize=True)) == 2
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='raw',
+                                   normalize=False)) == 2
+
     # Test caching/internalization of summary files
 
     # This should be false, since only the full localpath is in keys():
