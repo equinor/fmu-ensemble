@@ -527,20 +527,12 @@ def test_eclsumcaching():
 
     ens.load_smry()
     # Default is to do caching, so these will not be None:
-    assert ens[0]._eclsum
-    assert ens[1]._eclsum
-    assert ens[2]._eclsum
-    assert ens[3]._eclsum
-    assert ens[4]._eclsum
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
     # If we redo this operation, the same objects should all
     # be None afterwards:
     ens.load_smry(cache_eclsum=None)
-    assert not ens[0]._eclsum
-    assert not ens[1]._eclsum
-    assert not ens[2]._eclsum
-    assert not ens[3]._eclsum
-    assert not ens[4]._eclsum
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
 
 def test_filedescriptors():
