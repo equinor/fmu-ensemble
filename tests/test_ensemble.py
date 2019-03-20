@@ -391,6 +391,37 @@ def test_ensemble_ecl():
     assert len(noquantiles.index.levels[0]) == 3
 
 
+def test_volumetric_rates():
+    """Test computation of cumulative compatible rates
+    """
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ens = ScratchEnsemble('reektest',
+                          testdir +
+                          '/data/testensemble-reek001/' +
+                          'realization-*/iter-0')
+    cum_df = ens.get_smry(column_keys=['F*T', 'W*T*'],
+                          time_index='yearly')
+    vol_rate_df = ens.get_volumetric_rates(column_keys=['F*T', 'W*T*'],
+                                           time_index='yearly')
+    assert 'DATE' in vol_rate_df
+    assert 'FWCR' not in vol_rate_df
+    assert 'FOPR' in vol_rate_df
+    assert 'FWPR' in vol_rate_df
+
+    # Test each realization individually
+    for realidx in vol_rate_df['REAL'].unique():
+        vol_rate_real = vol_rate_df.set_index('REAL').loc[realidx]
+        cum_real = cum_df.set_index('REAL').loc[realidx]
+        assert len(vol_rate_real) == 5
+        assert vol_rate_real['FOPR'].sum() == cum_real['FOPT'].iloc[-1]
+
+
 def test_filter():
     """Test filtering of realizations in ensembles
 
