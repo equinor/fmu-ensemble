@@ -184,8 +184,10 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert isinstance(ensset4['iter-0'], ScratchEnsemble)
     assert isinstance(ensset4['iter-1'], ScratchEnsemble)
 
-    # Delete the symlinks when we are done.
+    # Delete the symlink and leftover from apply-testing when we are done.
     for realizationdir in glob.glob(ensdir + '/realization-*'):
+        os.remove(realizationdir
+                  + '/iter-0/share/results/volumes/geogrid--oil.csv')
         os.remove(realizationdir + '/iter-1')
 
 
