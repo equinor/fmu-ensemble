@@ -417,7 +417,8 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
-    def load_smry(self, time_index='raw', column_keys=None, stacked=True):
+    def load_smry(self, time_index='raw', column_keys=None, stacked=True,
+                  cache_eclsum=True):
         """
         Fetch summary data from all realizations.
 
@@ -443,6 +444,9 @@ class ScratchEnsemble(object):
                 by vector name, and with realization index as columns.
                 This only works when time_index is the same for all
                 realizations. Not implemented yet!
+            cache_eclsum: Boolean for whether we should cache the EclSum
+                objects. Set to False if you cannot keep all EclSum files in
+                memory simultaneously
 
         Returns:
             A DataFame of summary vectors for the ensemble, or
@@ -451,13 +455,15 @@ class ScratchEnsemble(object):
         if not stacked:
             raise NotImplementedError
         # Future: Multithread this!
-        for _, realization in self._realizations.items():
+        for realidx, realization in self._realizations.items():
             # We do not store the returned DataFrames here,
             # instead we look them up afterwards using get_df()
             # Downside is that we have to compute the name of the
             # cached object as it is not returned.
+            logger.info("Loading smry from realization %s", realidx)
             realization.load_smry(time_index=time_index,
-                                  column_keys=column_keys)
+                                  column_keys=column_keys,
+                                  cache_eclsum=cache_eclsum)
         if isinstance(time_index, list):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry--' +
@@ -578,7 +584,8 @@ class ScratchEnsemble(object):
         return pd.concat(results, sort=False, ignore_index=True)
 
     def get_smry_dates(self, freq='monthly', normalize=True,
-                       start_date=None, end_date=None):
+                       start_date=None, end_date=None,
+                       cache_eclsum=True):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
@@ -604,22 +611,23 @@ class ScratchEnsemble(object):
             list of datetimes.
         """
 
-        # Build list of eclsum objects that are not None
-        eclsums = []
+        # Build list of list of eclsum dates
+        eclsumsdates = []
         for _, realization in self._realizations.items():
-            if realization.get_eclsum():
-                eclsums.append(realization.get_eclsum())
-        return ScratchEnsemble._get_smry_dates(eclsums, freq, normalize,
+            if realization.get_eclsum(cache=cache_eclsum):
+                eclsumsdates.append(realization\
+                                   .get_eclsum(cache=cache_eclsum).dates)
+        return ScratchEnsemble._get_smry_dates(eclsumsdates, freq, normalize,
                                                start_date, end_date)
 
     @staticmethod
-    def _get_smry_dates(eclsums, freq, normalize,
+    def _get_smry_dates(eclsumsdates, freq, normalize,
                         start_date, end_date):
         """Internal static method to be used by ScratchEnsemble and
         ScratchRealization.
 
         If called from ScratchRealization, the list of eclsums passed
-        in will have length 1, if not, it can be larger.
+        in will have length' 1, if not, it can be larger.
 
         """
         import dateutil.parser
@@ -642,8 +650,8 @@ class ScratchEnsemble(object):
 
         if freq == 'report' or freq == 'raw':
             datetimes = set()
-            for eclsum in eclsums:
-                datetimes = datetimes.union(eclsum.dates)
+            for eclsumdatelist in eclsumsdates:
+                datetimes = datetimes.union(eclsumdatelist)
             datetimes = list(datetimes)
             datetimes.sort()
             if start_date:
@@ -659,25 +667,28 @@ class ScratchEnsemble(object):
                 datetimes = datetimes + [end_date]
             return datetimes
         elif freq == 'last':
-            end_date = max([eclsum.end_date for eclsum in eclsums])
+            end_date = max([max(x) for x in eclsumsdates]).date()
             return [end_date]
         else:
-            start_smry = min([eclsum.start_date for eclsum in eclsums])
-            end_smry = max([eclsum.end_date for eclsum in eclsums])
+            # These are datetime.datetime, not datetime.date
+            start_smry = min([min(x) for x in eclsumsdates])
+            end_smry = max([max(x) for x in eclsumsdates])
+
             pd_freq_mnenomics = {'monthly': 'MS',
                                  'yearly': 'YS',
                                  'daily': 'D'}
 
-            (start_n, end_n) = normalize_dates(start_smry, end_smry,
+            (start_n, end_n) = normalize_dates(start_smry.date(),
+                                               end_smry.date(),
                                                freq)
 
             if not start_date and not normalize:
-                start_date = start_smry
+                start_date = start_smry.date()
             if not start_date and normalize:
                 start_date = start_n
 
             if not end_date and not normalize:
-                end_date = end_smry
+                end_date = end_smry.date()
             if not end_date and normalize:
                 end_date = end_n
 
@@ -698,7 +709,7 @@ class ScratchEnsemble(object):
             return datetimes
 
     def get_smry_stats(self, column_keys=None, time_index='monthly',
-                       quantiles=None):
+                       quantiles=None, cache_eclsum=True):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -740,8 +751,10 @@ class ScratchEnsemble(object):
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
         dframe = self.get_smry(time_index=time_index,
-                               column_keys=column_keys).drop(columns='REAL')\
-                                                       .groupby('DATE')
+                               column_keys=column_keys,
+                               cache_eclsum=cache_eclsum)\
+                     .drop(columns='REAL')\
+                     .groupby('DATE')
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
@@ -956,7 +969,8 @@ class ScratchEnsemble(object):
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def get_smry(self, time_index=None, column_keys=None,
+                 cache_eclsum=True):
         """
         Aggregates summary data from all realizations.
 
@@ -969,6 +983,9 @@ class ScratchEnsemble(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
+            cache_eclsum: boolean for whether to cache the EclSum
+                objects. Defaults to True. Set to False if
+                not enough memory to keep all summary files in memory.
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -978,7 +995,8 @@ class ScratchEnsemble(object):
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_smry(time_index=time_index,
-                                          column_keys=column_keys)
+                                          column_keys=column_keys,
+                                          cache_eclsum=cache_eclsum)
             dframe.insert(0, 'REAL', index)
             dframe.index.name = 'DATE'
             dflist.append(dframe)
