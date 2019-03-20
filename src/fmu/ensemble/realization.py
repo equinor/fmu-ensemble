@@ -778,7 +778,7 @@ class ScratchRealization(object):
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
-        if time_index == 'raw':
+        if isinstance(time_index, str) and time_index == 'raw':
             time_index_arg = None
         elif isinstance(time_index, str):
             time_index_arg = self.get_smry_dates(freq=time_index)
@@ -794,6 +794,172 @@ class ScratchRealization(object):
             return df
         else:
             return pd.DataFrame()
+
+    def _glob_smry_keys(self, column_keys):
+        """Utility function for globbing column names
+
+        Use this to expand 'F*' to the list of Eclipse summary
+        vectors matching.
+
+        Args:
+            column_keys: str or list of strings with patterns
+        """
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+        keys = set()
+        for key in column_keys:
+            if isinstance(key, str):
+                keys = keys.union(set(self._eclsum.keys(key)))
+        return list(keys)
+
+    def get_volumetric_rates(self, column_keys=None, time_index=None,
+                             time_unit=None):
+        """Compute volumetric rates from cumulative summary vectors
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
+        The returned dataframe is indexed by DATE.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
+
+        """
+        return self._get_volumetric_rates(self, column_keys, time_index,
+                                          time_unit)
+    @staticmethod
+    def _get_volumetric_rates(realization, column_keys, time_index,
+                              time_unit):
+        """Static method for volumetric rates
+
+        This method is to be used by both ScratchRealization
+        and VirtualRealization, and is documented there."""
+        import calendar
+        from dateutil.relativedelta import relativedelta
+        if isinstance(time_unit, str):
+            if time_unit not in ['days', 'months', 'years']:
+                raise ValueError("Unsupported time_unit " + time_unit
+                                 + " for volumetric rates")
+
+        column_keys = realization._glob_smry_keys(column_keys)
+
+        # Be strict and only include certain summary vectors that look
+        # cumulative by their name:
+        column_keys = [x for x in column_keys if
+                       ScratchRealization._cum_smrycol2rate(x)]
+        if not column_keys:
+            logger.error("No valid cumulative columns given "
+                         + "to volumetric computation")
+            return pd.DataFrame()
+
+        cum_df = realization.get_smry(column_keys=column_keys,
+                                      time_index=time_index)
+        # get_smry() for realizations return a dataframe indexed by 'DATE'
+
+        # Compute row-wise difference, shift back one row
+        # to get the NaN to the end, and then drop the NaN.
+        # The "rate" given for a specific date is then
+        # valid from that date until the next date.
+        diff_cum = cum_df.diff().shift(-1).fillna(value=0)
+
+        if time_unit:
+            # Calculate the relative timedelta between consecutive
+            # DateIndices. relativedeltas are correct in terms
+            # of number of years and number of months, but it will
+            # only give us integer months, and then leftover days.
+            rel_deltas = [relativedelta(t[1], t[0])
+                          for t in zip(diff_cum.index, diff_cum.index[1:])]
+            whole_days = [(t[1] - t[0]).days
+                          for t in zip(diff_cum.index, diff_cum.index[1:])]
+            # Need to know which years are leap years for our index:
+            dayspryear = [365 if not calendar.isleap(x.year) else 366
+                          for x in pd.to_datetime(diff_cum.index[1:])]
+            # Float-contribution to years from days:
+            days = [t[0] / float(t[1])
+                    for t in zip([r.days for r in rel_deltas],
+                                 dayspryear)]
+            floatyearsnodays = [r.years + r.months / 12.0
+                                for r in rel_deltas]
+            floatyears = [x + y for x, y in zip(floatyearsnodays, days)]
+
+            # Calculate month-difference:
+            floatmonthsnodays = [r.years * 12.0 + r.months
+                                 for r in rel_deltas]
+            # How many days pr. month? We check this for the right
+            # end of the relevant time interval.
+            daysprmonth = [calendar.monthrange(t.year, t.month)[1]
+                           for t in diff_cum.index[1:]]
+            days = [t[0] / float(t[1])
+                    for t in zip([r.days for r in rel_deltas], daysprmonth)]
+            floatmonths = [x + y for x, y in zip(floatmonthsnodays, days)]
+
+            diff_cum['DAYS'] = whole_days + [0]
+            diff_cum['MONTHS'] = floatmonths + [0]
+            diff_cum['YEARS'] = floatyears + [0]
+            for vec in column_keys:
+                diff_cum[vec] = diff_cum[vec] \
+                                / diff_cum[time_unit.upper()]
+            # Drop temporary columns
+            diff_cum.drop(['DAYS', 'MONTHS', 'YEARS'],
+                          inplace=True, axis=1)
+            # Set NaN at the final row to zero
+            diff_cum.fillna(value=0, inplace=True)
+
+        # Translate the column vectors, 'FOPT' -> 'FOPR' etc.
+        rate_names = []
+        for vec in diff_cum.columns:
+            ratename = ScratchRealization._cum_smrycol2rate(vec)
+            if ratename:
+                rate_names.append(ratename)
+        diff_cum.columns = rate_names
+        diff_cum.index.name = 'DATE'
+        return(diff_cum)
+
+    @staticmethod
+    def _cum_smrycol2rate(smrycolumn):
+        """Returns None if a smrycolumn is not assumed
+        to be cumulative, and returns a string with the corresponding
+        rate column if it is cumulative
+
+        F.ex. _cum_smrycol2rate('FOPT') will return 'FOPR'
+        """
+        # Split by colon into components:
+        comps = smrycolumn.split(':')
+        if len(comps) > 2:
+            # Do not support more than one colon.
+            return None
+        if 'CT' in comps[0]:
+            # No watercuts.
+            return None
+        if 'T' not in comps[0]:
+            return None
+        comps[0] = comps[0].replace('T', 'R')
+        if len(comps) > 1:
+            return comps[0] + ':' + comps[1]
+        else:
+            return comps[0]
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -812,13 +978,8 @@ class ScratchRealization(object):
         if not self._eclsum:
             return pd.DataFrame()
 
-        if not props_wildcard:
-            props_wildcard = [None]
-        if isinstance(props_wildcard, str):
-            props_wildcard = [props_wildcard]
-        props = set()
-        for prop in props_wildcard:
-            props = props.union(set(self._eclsum.keys(prop)))
+        props = self._glob_smry_keys(props_wildcard)
+
         if 'numpy_vector' in dir(self._eclsum):
             data = {prop: self._eclsum.numpy_vector(prop, report_only=False)
                     for prop in props}

@@ -386,78 +386,182 @@ class VirtualEnsemble(object):
         Function analoguous to the EclSum direct get'ters in ScratchEnsemble,
         but here we have to resort to what we have internalized.
 
-        Resampling support can happen here, to be implemented later.
+        This will perform interpolation in each realizations data to
+        the requested time_index, this is done by creating VirtualRealization
+        object for all realizations, which can do the interpolation, and
+        the result is merged and returned. This creates some overhead, so
+        if you do not need the interpolation, stick with get_df() instead.
         """
-        if time_index == 'monthly':
-            dataname = 'unsmry--monthly'
-        elif time_index == 'yearly':
-            dataname = 'unsmry--yearly'
-        elif time_index == 'daily':
-            dataname = 'unsmry--daily'
+
+        # Get a list ala ['yearly', 'daily']
+        available_smry = [x.split('/')[-1]
+                          .replace('.csv', '')
+                          .replace('unsmry--', '') for x in self.keys()
+                          if 'unsmry' in x]
+
+        if (isinstance(time_index, str) and time_index not in available_smry)\
+           or isinstance(time_index, list):
+            # Suboptimal code, we always pick the finest available
+            # time resolution:
+            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly',
+                          'custom']
+            # (could also sort them by number of rows, or we could
+            #  even merge them all)
+            # (could have priorities as a dict, for example so we
+            #  can interpolate from monthly if we ask for yearly)
+            chosen_smry = ''
+            for candidate in priorities:
+                if candidate in available_smry:
+                    chosen_smry = candidate
+                    break
+            if not chosen_smry:
+                logger.error("No internalized summary data "
+                             + "to interpolate from")
+                return pd.DataFrame()
         else:
-            raise ValueError("Unsupported time index " + str(time_index))
-        data = self.get_df(dataname)
-        if not len(data):  # pylint: disable=len-as-condition
-            raise ValueError("No data found")
+            chosen_smry = time_index
 
-        # We have to reproduce the column keys globbing support.
-        columns = []
-        for col_key in column_keys:
-            regexp = re.compile(fnmatch.translate(col_key)).match
-            if regexp:
-                columns = columns + filter(regexp, data.columns)
-        return data[['REAL', 'DATE'] + columns]
+        logger.info("Using " + chosen_smry + " for interpolation")
 
-    def get_smry_stats(self, column_keys=None, time_index='monthly'):
+        # Explicit creation of VirtualRealization allows for later
+        # multiprocessing of the interpolation.
+        # We do not use the internal function get_realization() because
+        # that copies all internalized data, while we only need
+        # summary data.
+
+        smry_path = 'unsmry--' + chosen_smry
+        smry = self.get_df(smry_path)
+        smry_interpolated = []
+        for realidx in smry['REAL'].unique():
+            vreal = VirtualRealization()
+            # Inject the summary data for that specific realization
+            vreal.append(smry_path, smry[smry['REAL'] == realidx])
+
+            # Now ask the VirtualRealization to do interpolation
+            interp = vreal.get_smry(column_keys=column_keys,
+                                    time_index=time_index)
+            # Assume we get back a dataframe indexed by the dates from vreal
+            # We must reset that index, and ensure the index column
+            # gets a correct name
+            interp.index = interp.index.set_names(['DATE'])
+            interp = interp.reset_index()
+            interp['REAL'] = realidx
+            smry_interpolated.append(interp)
+        return pd.concat(smry_interpolated, ignore_index=True,
+                         sort=False)
+
+    def get_smry_stats(self, column_keys=None, time_index='monthly',
+                       quantiles=None):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
 
-        Output format of the function is tailored towards webviz_fan_chart
-        (data layout and column naming)
+        Compared to the agg() function, this function only works on summary
+        data (time series), and will only operate on actually requested data,
+        independent of what is internalized. It accesses the summary files
+        directly and can thus obtain data at any time frequency.
 
         In a virtual ensemble, this function can only provide data it has
         internalized. There is no resampling functionality yet.
 
         Args:
-            column_keys: list of column key wildcards
+            column_keys: list of column key wildcards. Defaults
+                to match all available columns
             time_index: list of DateTime if interpolation is wanted
-               default is None, which returns the raw Eclipse report times
-               If a string is supplied, that string is attempted used
-               via get_smry_dates() in order to obtain a time index.
+                default is None, which returns the raw Eclipse report times
+                If a string is supplied, that string is attempted used
+                via get_smry_dates() in order to obtain a time index.
+            quantiles: list of ints between 0 and 100 for which quantiles
+                to compute. Quantiles refer to oil industry convention, and
+                the quantile number 10 will be calculated as Pandas p90.
         Returns:
-            A dictionary. Index by column key to the corresponding ensemble
-            summary statistics dataframe. Each dataframe has the dates in a
-        column called 'index', and statistical data in 'min', 'max', 'mean',
-        'p10', 'p90'. The column 'p10' contains the oil industry version of
-        'p10', and is calculated using the Pandas p90 functionality.
+            A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
+            'mean', 'p10', 'p90', inner index are the dates. Column names
+            are the different vectors. The column 'p10' contains the oil
+            industry version of 'p10', and is calculated using the Pandas p90
+            functionality. If quantiles are explicitly supplied, the 'pXX'
+            strings in the outer index are changed accordingly.
         """
+        if quantiles is None:
+            quantiles = [10, 90]
+
+        if column_keys == None:
+            column_keys = '*'
+
+        # Check validity of quantiles to compute:
+        quantiles = list(map(int, quantiles))  # Potentially raise ValueError
+        for quantile in quantiles:
+            if quantile < 0 or quantile > 100:
+                raise ValueError("Quantiles must be integers between 0 and 100")
+
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble. This will fail if we don't have the
         # time frequency already internalized.
-        dframe = self.get_smry(time_index=time_index, column_keys=column_keys)
+        dframe = self.get_smry(time_index=time_index,
+                               column_keys=column_keys).drop(columns='REAL')\
+                               .groupby('DATE')
 
-        data = {}  # dict to be returned
-        for key in column_keys:
-            dates = dframe.groupby('DATE').first().index.values
-            name = [key] * len(dates)
-            mean = dframe.groupby('DATE').mean()[key].values
-            p10 = dframe.groupby('DATE').quantile(q=0.90)[key].values
-            p90 = dframe.groupby('DATE').quantile(q=0.10)[key].values
-            maximum = dframe.groupby('DATE').max()[key].values
-            minimum = dframe.groupby('DATE').min()[key].values
+        # Build a dictionary of dataframes to be concatenated
+        dframes = {}
+        dframes['mean'] = dframe.mean()
+        for quantile in quantiles:
+            quantile_str = 'p' + str(quantile)
+            dframes[quantile_str] = dframe.quantile(q=1 - quantile / 100.0)
+        dframes['maximum'] = dframe.max()
+        dframes['minimum'] = dframe.min()
 
-            data[key] = pd.DataFrame({
-                'index': dates,
-                'name': name,
-                'mean': mean,
-                'p10': p10,
-                'p90': p90,
-                'max': maximum,
-                'min': minimum
-            })
+        return pd.concat(dframes, names=['STATISTIC'], sort=False)
 
-        return data
+    def get_volumetric_rates(self, column_keys=None, time_index='monthly',
+                             time_unit=None):
+        """Compute volumetric rates from internalized cumulative summary
+        vectors
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
+
+        """
+        vol_rates_dfs = []
+        for realidx in self.realindices:
+            # Warning: This is potentially a big overhead
+            # if a lot of non-summary-related data has been
+            # internalized:
+            vreal = self.get_realization(realidx)
+            vol_rate_df = vreal.get_volumetric_rates(column_keys,
+                                                     time_index,
+                                                     time_unit)
+            # Indexed by DATE, ensure index name is correct:
+            vol_rate_df.index = vol_rate_df.index.set_names(['DATE'])
+            vol_rate_df.reset_index(inplace=True)
+            vol_rate_df['REAL'] = realidx
+            vol_rates_dfs.append(vol_rate_df)
+        return pd.concat(vol_rates_dfs, ignore_index=True,
+                         sort=False)
 
     @property
     def parameters(self):
