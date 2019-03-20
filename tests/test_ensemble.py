@@ -165,6 +165,22 @@ def test_reek001(tmp='TMP'):
     assert len(reekensemble.keys()) == keycount - 1
 
 
+def test_emptyens():
+    """Check that we can initialize an empty ensemble"""
+    ens = ScratchEnsemble('emptyens')
+    assert len(ens) == 0
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ens.add_realizations(testdir + '/data/testensemble-reek001/'
+                         + 'realization-0/iter-0')
+    assert len(ens) == 1
+
+
 def test_reek001_scalars():
     """Test import of scalar values from files
 
@@ -489,6 +505,24 @@ def test_filter():
                                    columncontains='2000-01-07',
                                    inplace=False)
     # Last one is zero because it implies 00:00:00, it does not round!
+
+
+def test_ertrunpathfile():
+    """Initialize an ensemble from an ERT runpath file"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ens = ScratchEnsemble('ensfromrunpath', runpathfile=testdir
+                          + '/data/ert-runpath-file')
+    assert len(ens) == 5
+
+    # Check that the UNSMRY files has been discovered, they should always be
+    # because ECLBASE is given in the runpathfile
+    assert sum(['UNSMRY' in x for x in ens.files['BASENAME'].unique()]) == 5
 
 
 def test_nonexisting():
