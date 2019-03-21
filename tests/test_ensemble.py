@@ -315,10 +315,13 @@ def test_ensemble_ecl():
         == '2002-03-03'
 
     # Start and end outside of orig data and on the "wrong side"
-    assert str(reekensemble.get_smry_dates(end_date='1999-03-03')) \
-        == '1999-03-03'
-    assert str(reekensemble.get_smry_dates(start_date='2099-03-03')) \
-        == '2099-03-03'
+    dates = reekensemble.get_smry_dates(end_date='1999-03-03')
+    assert len(dates) == 1
+    assert str(dates[0]) == '1999-03-03'
+
+    dates = reekensemble.get_smry_dates(start_date='2099-03-03')
+    assert len(dates) == 1
+    assert str(dates[0]) == '2099-03-03'
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')

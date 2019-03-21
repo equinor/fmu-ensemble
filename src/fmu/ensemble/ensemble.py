@@ -782,28 +782,35 @@ class ScratchEnsemble(object):
                                                freq)
 
             if not start_date and not normalize:
-                start_date = start_smry.date()
-            if not start_date and normalize:
-                start_date = start_n
+                start_date_range = start_smry.date()
+            elif not start_date and normalize:
+                start_date_range = start_n
+            else:
+                start_date_range = start_date
 
             if not end_date and not normalize:
-                end_date = end_smry.date()
-            if not end_date and normalize:
-                end_date = end_n
+                end_date_range = end_smry.date()
+            elif not end_date and normalize:
+                end_date_range = end_n
+            else:
+                end_date_range = end_date
 
             if freq not in pd_freq_mnenomics:
                 raise ValueError('Requested frequency %s not supported' % freq)
-            datetimes = pd.date_range(start_date, end_date,
+            print(start_date)
+            print(end_date)
+            datetimes = pd.date_range(start_date_range, end_date_range,
                                       freq=pd_freq_mnenomics[freq])
-
+            print(datetimes)
             # Convert from Pandas' datetime64 to datetime.date:
             datetimes = [x.date() for x in datetimes]
 
             # pd.date_range will not include random dates that do not
-            # fit on frequency boundary. Force include these:
-            if start_date not in datetimes:
+            # fit on frequency boundary. Force include these if
+            # supplied as user arguments.
+            if start_date and start_date not in datetimes:
                 datetimes = [start_date] + datetimes
-            if end_date not in datetimes:
+            if end_date and end_date not in datetimes:
                 datetimes = datetimes + [end_date]
             return datetimes
 
