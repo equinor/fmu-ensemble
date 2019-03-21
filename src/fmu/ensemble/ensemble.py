@@ -472,25 +472,31 @@ class ScratchEnsemble(object):
             raise ValueError("No data found for " + localpath)
 
     def load_smry(self, time_index='raw', column_keys=None, stacked=True,
-                  cache_eclsum=True):
+                  cache_eclsum=True, start_date=None, end_date=None):
         """
         Fetch summary data from all realizations.
 
-        The pr. realization results will be cached by each
-        realization object, and can be retrieved through get_df().
+        The fetched summary data will be cached/internalized by each
+        realization object, and can be retrieved through get_df(). The
+
+        If you create a virtual ensemble of this ensemble object, all
+        internalized summary data will be kept, as opposed to if
+        you have retrieved it through get_smry()
 
         Wraps around Realization.load_smry() which wraps around
         ecl.summary.EclSum.pandas_frame()
 
-        Beware that the default time_index or ensembles is 'monthly',
+        Beware that the default time_index for ensembles is 'monthly',
         differing from realizations which use raw dates by default.
 
         Args:
             time_index: list of DateTime if interpolation is wanted
-               default is None, which returns the raw Eclipse report times
-               If a string is supplied, that string is attempted used
-               via get_smry_dates() in order to obtain a time index.
-            column_keys: list of column key wildcards
+                default is None, which returns the raw Eclipse report times
+                If a string is supplied, that string is attempted used
+                via get_smry_dates() in order to obtain a time index.
+                Default: 'monthly'
+            column_keys: list of column key wildcards. Default is '*'
+                which will match all vectors in the Eclipse output.
             stacked: boolean determining the dataframe layout. If
                 true, the realization index is a column, and dates are repeated
                 for each realization in the DATES column.
@@ -501,7 +507,13 @@ class ScratchEnsemble(object):
             cache_eclsum: Boolean for whether we should cache the EclSum
                 objects. Set to False if you cannot keep all EclSum files in
                 memory simultaneously
-
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -517,7 +529,9 @@ class ScratchEnsemble(object):
             logger.info("Loading smry from realization %s", realidx)
             realization.load_smry(time_index=time_index,
                                   column_keys=column_keys,
-                                  cache_eclsum=cache_eclsum)
+                                  cache_eclsum=cache_eclsum,
+                                  start_date=start_date,
+                                  end_date=end_date)
         if isinstance(time_index, list):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry--' +
@@ -683,7 +697,7 @@ class ScratchEnsemble(object):
             normalize:  Whether to normalize backwards at the start
                 and forwards at the end to ensure the raw
                 date range is covered.
-            start_date: str or date with first date to include
+            start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overrides
                 normalized dates.
@@ -768,33 +782,41 @@ class ScratchEnsemble(object):
                                                freq)
 
             if not start_date and not normalize:
-                start_date = start_smry.date()
-            if not start_date and normalize:
-                start_date = start_n
+                start_date_range = start_smry.date()
+            elif not start_date and normalize:
+                start_date_range = start_n
+            else:
+                start_date_range = start_date
 
             if not end_date and not normalize:
-                end_date = end_smry.date()
-            if not end_date and normalize:
-                end_date = end_n
+                end_date_range = end_smry.date()
+            elif not end_date and normalize:
+                end_date_range = end_n
+            else:
+                end_date_range = end_date
 
             if freq not in pd_freq_mnenomics:
                 raise ValueError('Requested frequency %s not supported' % freq)
-            datetimes = pd.date_range(start_date, end_date,
+            print(start_date)
+            print(end_date)
+            datetimes = pd.date_range(start_date_range, end_date_range,
                                       freq=pd_freq_mnenomics[freq])
-
+            print(datetimes)
             # Convert from Pandas' datetime64 to datetime.date:
             datetimes = [x.date() for x in datetimes]
 
             # pd.date_range will not include random dates that do not
-            # fit on frequency boundary. Force include these:
-            if start_date not in datetimes:
+            # fit on frequency boundary. Force include these if
+            # supplied as user arguments.
+            if start_date and start_date not in datetimes:
                 datetimes = [start_date] + datetimes
-            if end_date not in datetimes:
+            if end_date and end_date not in datetimes:
                 datetimes = datetimes + [end_date]
             return datetimes
 
     def get_smry_stats(self, column_keys=None, time_index='monthly',
-                       quantiles=None, cache_eclsum=True):
+                       quantiles=None, cache_eclsum=True,
+                       start_date=None, end_date=None):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -813,6 +835,15 @@ class ScratchEnsemble(object):
             quantiles: list of ints between 0 and 100 for which quantiles
                to compute. Quantiles refer to oil industry convention, and
                the quantile number 10 will be calculated as Pandas p90.
+            cache_eclsum: boolean for whether to keep the loaded EclSum
+                object in memory after data has been loaded.
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
@@ -837,7 +868,9 @@ class ScratchEnsemble(object):
         # the entire ensemble.
         dframe = self.get_smry(time_index=time_index,
                                column_keys=column_keys,
-                               cache_eclsum=cache_eclsum)\
+                               cache_eclsum=cache_eclsum,
+                               start_date=start_date,
+                               end_date=end_date)\
                      .drop(columns='REAL')\
                      .groupby('DATE')
 
@@ -1055,7 +1088,8 @@ class ScratchEnsemble(object):
         return result
 
     def get_smry(self, time_index=None, column_keys=None,
-                 cache_eclsum=True):
+                 cache_eclsum=True, start_date=None,
+                 end_date=None):
         """
         Aggregates summary data from all realizations.
 
@@ -1071,12 +1105,20 @@ class ScratchEnsemble(object):
             cache_eclsum: boolean for whether to cache the EclSum
                 objects. Defaults to True. Set to False if
                 not enough memory to keep all summary files in memory.
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
         if isinstance(time_index, str):
-            time_index = self.get_smry_dates(time_index)
+            time_index = self.get_smry_dates(time_index, start_date=start_date,
+                                             end_date=end_date)
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_smry(time_index=time_index,

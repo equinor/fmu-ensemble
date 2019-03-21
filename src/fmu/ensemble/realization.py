@@ -701,7 +701,8 @@ class ScratchRealization(object):
 
         return eclsum
 
-    def load_smry(self, time_index='raw', column_keys=None, cache_eclsum=True):
+    def load_smry(self, time_index='raw', column_keys=None, cache_eclsum=True,
+                  start_date=None, end_date=None):
         """Produce dataframe from Summary data from the realization
 
         When this function is called, the dataframe will be cached.
@@ -726,7 +727,13 @@ class ScratchRealization(object):
             column_keys: list of column key wildcards.
             cache_eclsum: boolean for whether to keep the loaded EclSum
                 object in memory after data has been loaded.
-
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
         Returns:
             DataFrame with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
@@ -739,7 +746,9 @@ class ScratchRealization(object):
             time_index_arg = None
         elif isinstance(time_index, str):
             # Note: This call will recache the smry object.
-            time_index_arg = self.get_smry_dates(freq=time_index)
+            time_index_arg = self.get_smry_dates(freq=time_index,
+                                                 start_date=start_date,
+                                                 end_date=end_date)
         if isinstance(time_index, list):
             time_index_arg = time_index
             time_index_path = 'custom'
@@ -765,7 +774,8 @@ class ScratchRealization(object):
         return dframe
 
     def get_smry(self, time_index=None, column_keys=None,
-                 cache_eclsum=True):
+                 cache_eclsum=True, start_date=None,
+                 end_date=None):
         """Wrapper for EclSum.pandas_frame
 
         This gives access to the underlying data on disk without
@@ -781,7 +791,9 @@ class ScratchRealization(object):
         if isinstance(time_index, str) and time_index == 'raw':
             time_index_arg = None
         elif isinstance(time_index, str):
-            time_index_arg = self.get_smry_dates(freq=time_index)
+            time_index_arg = self.get_smry_dates(freq=time_index,
+                                                 start_date=start_date,
+                                                 end_date=end_date)
         else:
             time_index_arg = time_index
 
