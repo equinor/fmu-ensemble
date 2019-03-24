@@ -16,7 +16,6 @@ import os
 import glob
 import six
 
-import warnings
 from datetime import datetime, date, time
 import pandas as pd
 from ecl import EclDataType
@@ -558,10 +557,11 @@ class ScratchEnsemble(object):
 
         """
         vol_dfs = []
-        for realidx, realization in self._realizations.items():
-            vol_real = realization.get_volumetric_rates(column_keys=column_keys,
-                                                        time_index=time_index)
-            if 'DATE' not in vol_real.columns and vol_real.index.name == 'DATE':
+        for realidx, real in self._realizations.items():
+            vol_real = real.get_volumetric_rates(column_keys=column_keys,
+                                                 time_index=time_index)
+            if 'DATE' not in vol_real.columns \
+               and vol_real.index.name == 'DATE':
                 # This should be true, if not we might be in trouble.
                 vol_real.reset_index(inplace=True)
             vol_real.insert(0, 'REAL', realidx)
@@ -714,8 +714,8 @@ class ScratchEnsemble(object):
         eclsumsdates = []
         for _, realization in self._realizations.items():
             if realization.get_eclsum(cache=cache_eclsum):
-                eclsumsdates.append(realization\
-                                   .get_eclsum(cache=cache_eclsum).dates)
+                eclsumsdates.append(realization
+                                    .get_eclsum(cache=cache_eclsum).dates)
         return ScratchEnsemble._get_smry_dates(eclsumsdates, freq, normalize,
                                                start_date, end_date)
 
@@ -862,7 +862,8 @@ class ScratchEnsemble(object):
         quantiles = list(map(int, quantiles))  # Potentially raise ValueError
         for quantile in quantiles:
             if quantile < 0 or quantile > 100:
-                raise ValueError("Quantiles must be integers between 0 and 100")
+                raise ValueError("Quantiles must be integers "
+                                 + "between 0 and 100")
 
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
@@ -1186,7 +1187,8 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return 0
         if self._global_size is None:
-            self._global_size = list(self._realizations.values())[0].global_size
+            self._global_size = list(self._realizations
+                                     .values())[0].global_size
         return self._global_size
 
     def _get_grid_index(self, active=True):
@@ -1196,7 +1198,8 @@ class ScratchEnsemble(object):
         """
         if not self._realizations:
             return None
-        return list(self._realizations.values())[0].get_grid_index(active=active)
+        return list(self._realizations.values())[0]\
+            .get_grid_index(active=active)
 
     @property
     def init_keys(self):
