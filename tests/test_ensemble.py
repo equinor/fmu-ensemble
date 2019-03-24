@@ -138,7 +138,6 @@ def test_reek001(tmp='TMP'):
     reekensemble.remove_realizations([1, 3])
     assert len(reekensemble) == 3
 
-    reekensemble.files.to_csv('foo1.csv')
     # Readd the same realizations
     reekensemble.add_realizations([testdir +
                                    '/data/testensemble-reek001/' +
@@ -147,7 +146,6 @@ def test_reek001(tmp='TMP'):
                                    '/data/testensemble-reek001/' +
                                    'realization-3/iter-0'])
     assert len(reekensemble) == 5
-    reekensemble.files.to_csv('foo2.csv')
     assert len(reekensemble.files) == 24
 
     # File discovery must be repeated for the newly added realizations

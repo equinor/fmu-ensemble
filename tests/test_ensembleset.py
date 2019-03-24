@@ -176,7 +176,10 @@ def test_ensembleset_reek001(tmp='TMP'):
     geogrid_oil = ensset3.load_csv('share/results/volumes/geogrid--oil.csv')
     assert len(geogrid_oil['REAL'].unique()) == 4
     assert len(geogrid_oil['ENSEMBLE'].unique()) == 2
-
+    # Clean up what we just dumped:
+    for real_dir in glob.glob(ensdir + '/realization-*'):
+        os.remove(real_dir + '/iter-0/share/results/volumes/geogrid--oil.csv')
+    
     # Initialize differently, using only the root path containing
     # realization-*
     ensset4 = EnsembleSet("foo", frompath=ensdir)
