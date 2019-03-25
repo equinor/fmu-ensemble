@@ -178,8 +178,10 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert len(geogrid_oil['ENSEMBLE'].unique()) == 2
     # Clean up what we just dumped:
     for real_dir in glob.glob(ensdir + '/realization-*'):
-        os.remove(real_dir + '/iter-0/share/results/volumes/geogrid--oil.csv')
-    
+        csvfile = real_dir + '/iter-0/share/results/volumes/geogrid--oil.csv'
+        if os.path.exists(csvfile):
+            os.remove(csvfile)
+
     # Initialize differently, using only the root path containing
     # realization-*
     ensset4 = EnsembleSet("foo", frompath=ensdir)
@@ -188,10 +190,12 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert isinstance(ensset4['iter-1'], ScratchEnsemble)
 
     # Delete the symlink and leftover from apply-testing when we are done.
-    for realizationdir in glob.glob(ensdir + '/realization-*'):
-        os.remove(realizationdir
-                  + '/iter-0/share/results/volumes/geogrid--oil.csv')
-        os.remove(realizationdir + '/iter-1')
+    for real_Dir in glob.glob(ensdir + '/realization-*'):
+        csvfile = real_dir + '/iter-0/share/results/volumes/geogrid--oil.csv'
+        if os.path.exists(csvfile):
+            os.remove(csvfile)
+        if os.path.exists(real_dir + '/iter-1'):
+            os.remove(real_dir + '/iter-1')
 
 
 def test_pred_dir():
