@@ -910,7 +910,6 @@ class ScratchEnsemble(object):
             summary file or no matched well names.
 
         """
-
         if isinstance(well_match, str):
             well_match = [well_match]
         result = set()
@@ -928,12 +927,14 @@ class ScratchEnsemble(object):
     def get_groupnames(self, group_match=None):
         """
         Return a union of all Eclipse Summary group names
-        in all realizations (union). In addition, can return a list
-        based on matches to an input string pattern.
+        in all realizations (union).
+
+        Optionally, the well names can be filtered.
 
         Args:
             well_match: `Optional`. String (or list of strings)
-               with wildcard filter. If None, all wells are returned
+               with wildcard filter (globbing). If None, all
+               wells are returned. Empty string does not match anything.
         Returns:
             list of strings with eclipse well names. Empty list if no
             summary file or no matched well names.

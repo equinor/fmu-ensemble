@@ -111,6 +111,12 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert monthly.columns[1] == 'REAL'
     assert monthly.columns[2] == 'DATE'
 
+    # Eclipse well names
+    assert len(ensset3.get_wellnames('OP*')) == 5
+    assert len(ensset3.get_wellnames('WI*')) == 3
+    assert len(ensset3.get_wellnames('')) == 0
+    assert len(ensset3.get_wellnames()) == 8
+
     # Check that we can retrieve cached versions
     assert len(ensset3.get_df('unsmry--monthly')) == 380
     assert len(ensset3.get_df('unsmry--yearly')) == 50
@@ -136,6 +142,13 @@ def test_ensembleset_reek001(tmp='TMP'):
     assert 'FGOR' in smry
     assert 'DATE' in smry
     assert len(smry) == 40
+
+    # Eclipse well names list
+    assert len(ensset3.get_wellnames('OP*')) == 5
+    assert len(ensset3.get_wellnames(None)) == 8
+    assert len(ensset3.get_wellnames()) == 8
+    assert len(ensset3.get_wellnames('')) == 0
+    assert len(ensset3.get_wellnames(['OP*', 'WI*'])) == 8
 
     # Test aggregation of csv files:
     vol_df = ensset3.load_csv('share/results/volumes/' +

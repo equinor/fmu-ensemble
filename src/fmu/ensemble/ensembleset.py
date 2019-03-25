@@ -590,3 +590,23 @@ class EnsembleSet(object):
                                       freq=pd_freq_mnenomics[freq])
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
+
+    def get_wellnames(self, well_match=None):
+        """Return a union of all Eclipse summary well names in all ensembles
+        realizations (union).
+
+        Optionally, the well names can be filtered.
+
+        Args:
+            well_match: `Optional`. String (or list of strings)
+               with wildcard filter (globbing). If None, all wells ar
+               returned. Empty string will not match anything.
+        Returns:
+            list of strings with eclipse well names. Empty list if no
+            summary file or no matched well names.
+
+        """
+        result = set()
+        for _, ensemble in self._ensembles.items():
+            result = result.union(ensemble.get_wellnames(well_match))
+        return sorted(list(result))
