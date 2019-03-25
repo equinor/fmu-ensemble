@@ -797,11 +797,8 @@ class ScratchEnsemble(object):
 
             if freq not in pd_freq_mnenomics:
                 raise ValueError('Requested frequency %s not supported' % freq)
-            print(start_date)
-            print(end_date)
             datetimes = pd.date_range(start_date_range, end_date_range,
                                       freq=pd_freq_mnenomics[freq])
-            print(datetimes)
             # Convert from Pandas' datetime64 to datetime.date:
             datetimes = [x.date() for x in datetimes]
 
@@ -1037,8 +1034,6 @@ class ScratchEnsemble(object):
             # We have to recognize scalars.
             if len(aggregated) == 1 and aggregated.index.values[0] == key:
                 aggregated = parse_number(aggregated.values[0])
-                print(aggregated)
-                print(type(aggregated))
             vreal.append(key, aggregated)
         return vreal
 
