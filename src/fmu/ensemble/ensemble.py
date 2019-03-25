@@ -1122,8 +1122,8 @@ class ScratchEnsemble(object):
                 end_date will always be included. Overriden if time_index
                 is 'last'.
         Returns:
-            A DataFame of summary vectors for the ensemble, or
-            a dict of dataframes if stacked=False.
+            A DataFame of summary vectors for the ensemble. The column
+            REAL with integers is added to distinguish realizations.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index, start_date=start_date,

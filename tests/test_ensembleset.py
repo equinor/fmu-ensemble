@@ -125,6 +125,18 @@ def test_ensembleset_reek001(tmp='TMP'):
     with pytest.raises(ValueError):
         ensset3.get_df('bogus.csv')
 
+    # Check get_smry()
+    smry = ensset3.get_smry(time_index='yearly', column_keys=['FWCT', 'FGOR'],
+                            end_date='2002-02-01')
+    assert 'ENSEMBLE' in smry
+    assert 'REAL' in smry
+    assert len(smry['ENSEMBLE'].unique()) == 2
+    assert len(smry['REAL'].unique()) == 5
+    assert 'FWCT' in smry
+    assert 'FGOR' in smry
+    assert 'DATE' in smry
+    assert len(smry) == 40
+
     # Test aggregation of csv files:
     vol_df = ensset3.load_csv('share/results/volumes/' +
                               'simulator_volume_fipnum.csv')
