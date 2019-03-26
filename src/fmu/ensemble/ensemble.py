@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module for parsing an ensemble from FMU. This class represents an
-ensemble, which is nothing but a collection of realizations.
-
-The typical task of this class is book-keeping of each realization,
-and abilities to aggregate any information that each realization can
-provide.
+"""Module containing the ScratchEnsemble class
 """
 
 from __future__ import absolute_import
@@ -44,42 +39,37 @@ class ScratchEnsemble(object):
     Realizations in an ensembles are uniquely determined
     by their realization index (integer).
 
-    Attributes:
-        files: A dataframe containing discovered files.
-
-    Example:
-        >>> import fmu.ensemble
-        >>> myensemble = ensemble.Ensemble('ensemblename',
+    Example for initialization:
+        >>> from fmu import ensemble
+        >>> ens = ensemble.ScratchEnsemble('ensemblename',
                     '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
+
+    Upon initialization, only a subset of the files on
+    disk will be discovered. More files must be expliclitly
+    discovered and/or loaded.
+
+    Args:
+        ensemble_name (str): Name identifier for the ensemble.
+            Optional to have it consistent with f.ex. iter-0 in the path.
+        paths (list/str): String or list of strings with wildcards
+            to file system. Absolute or relative paths.
+            If omitted, ensemble will be empty unless runpathfile
+            is used.
+        realidxregexp: str or regexp - used to deduce the realization index
+            from the file path. Default tailored for realization-X
+        runpathfile: str. Filename (absolute or relative) of an ERT
+            runpath file, consisting of four space separated text fields,
+            first column is realization index, second column is absolute
+            or relative path to a realization RUNPATH, third column is
+            the basename of the Eclipse simulation, relative to RUNPATH.
+            Fourth column is not used.
+        runpathfilter: str. If supplied, the only the runpaths in
+            the runpathfile which contains this string will be included
+            Use to select only a specific realization f.ex.
     """
 
     def __init__(self, ensemble_name, paths=None, realidxregexp=None,
                  runpathfile=None, runpathfilter=None):
-        """Initialize an ensemble from disk
-
-        Upon initialization, only a subset of the files on
-        disk will be discovered.
-
-        Args:
-            ensemble_name (str): Name identifier for the ensemble.
-                Optional to have it consistent with f.ex. iter-0 in the path.
-            paths (list/str): String or list of strings with wildcards
-                to file system. Absolute or relative paths.
-                If omitted, ensemble will be empty unless runpathfile
-                is used.
-            realidxregexp: str or regexp - used to deduce the realization index
-                from the file path. Default tailored for realization-X
-            runpathfile: str. Filename (absolute or relative) of an ERT
-                runpath file, consisting of four space separated text fields,
-                first column is realization index, second column is absolute
-                or relative path to a realization RUNPATH, third column is
-                the basename of the Eclipse simulation, relative to RUNPATH.
-                Fourth column is not used.
-            runpathfilter: str. If supplied, the only the runpaths in
-                the runpathfile which contains this string will be included
-                Use to select only a specific realization f.ex.
-
-        """
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
@@ -122,7 +112,7 @@ class ScratchEnsemble(object):
                     count)
 
     def __getitem__(self, realizationindex):
-        """Get one of the realizations.
+        """Get one of the ScratchRealization objects.
 
         Indexed by integers."""
         return self._realizations[realizationindex]
@@ -132,7 +122,8 @@ class ScratchEnsemble(object):
         Return the union of all keys available in realizations.
 
         Keys refer to the realization datastore, a dictionary
-        of dataframes or dicts.
+        of dataframes or dicts. Examples would be `parameters.txt`,
+        `STATUS`, `share/results/tables/unsmry--monthly.csv`
         """
         allkeys = set()
         for realization in self._realizations.values():
@@ -153,9 +144,8 @@ class ScratchEnsemble(object):
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
-
-        CODE DUPLICATION from realization.py
         """
+        # Warning: CODE DUPLICATION from realization.py
         basenames = list(map(os.path.basename, self.keys()))
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in self.keys()}
@@ -263,8 +253,8 @@ class ScratchEnsemble(object):
         """Remove specific realizations from the ensemble
 
         Args:
-            realindices : int or list of ints for the realization
-            indices to be removed
+            realindices: int or list of ints for the realization
+                indices to be removed
         """
         if isinstance(realindices, int):
             realindices = [realindices]
@@ -277,9 +267,9 @@ class ScratchEnsemble(object):
     def to_virtual(self, name=None):
         """Convert the ScratchEnsemble to a VirtualEnsemble.
 
-        This means that all imported data in realizations is
-        aggregated and stored as dataframes in the virtual ensemble's
-        data store.
+        This means that all imported data in each realization is
+        aggregated and stored as dataframes in the returned
+        VirtualEnsemble
         """
         vens = VirtualEnsemble(name=name)
 
@@ -304,6 +294,15 @@ class ScratchEnsemble(object):
         the value, different from non-existing files.
 
         Parsing is performed individually in each realization
+
+        Args:
+            localpath: path to the text file, relative to each realization
+            convert_numeric: If set to True, assume that 
+                the value is numerical, and treat strings as
+                errors.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
         """
         return self.load_file(localpath, 'scalar',
                               convert_numeric, force_reread)
@@ -430,12 +429,14 @@ class ScratchEnsemble(object):
         return list(result)
 
     def get_df(self, localpath):
-        """Load data from each realization and aggregate vertically
+        """Load data from each realization and aggregate (vertically)
+
+        Data must be internalized up-front.
 
         Each row is tagged by the realization index in the column 'REAL'
 
         Args:
-            localpath: string, filename local to the realizations
+            localpath: string, refers to the internalized name.
         Returns:
            dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
@@ -473,10 +474,19 @@ class ScratchEnsemble(object):
     def load_smry(self, time_index='raw', column_keys=None, stacked=True,
                   cache_eclsum=True, start_date=None, end_date=None):
         """
-        Fetch summary data from all realizations.
+        Fetch and internalize summary data from all realizations.
 
         The fetched summary data will be cached/internalized by each
-        realization object, and can be retrieved through get_df(). The
+        realization object, and can be retrieved through get_df().
+
+        The name of the internalized dataframe is "unsmry--" + a string
+        for the time index, 'monthly', 'yearly', 'daily' or 'raw'.
+
+        Multiple calls to this function with differnent time indices
+        will lead to multiple storage of internalized dataframes, so
+        your ensemble can both contain a yearly and a monthly dataset.
+        There is no requirement for the column_keys to be consistent, but
+        care should be taken if they differ.
 
         If you create a virtual ensemble of this ensemble object, all
         internalized summary data will be kept, as opposed to if
@@ -1208,7 +1218,7 @@ class ScratchEnsemble(object):
 
     @property
     def unrst_keys(self):
-        """ Keys availible in the eclipse unrst file """
+        """ Keys availaible in the eclipse unrst file """
         if not self._realizations:
             return None
         all_keys = set.union(
@@ -1320,7 +1330,7 @@ def _convert_numeric_columns(dataframe):
     Columns with mostly integer
 
     Args:
-        dataframe : any dataframe with strings as column datatypes
+        dataframe: any Pandas dataframe with strings as column datatypes
 
     Returns:
         A dataframe where some columns have had their datatypes
