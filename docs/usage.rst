@@ -3,8 +3,7 @@ Usage
 
 fmu-ensemble is designed for use in several scenarios:
 
-* Interactive use in the (i)python interpreter
-* Interactive usage inside a Jupyter environment
+* Interactive use in the (i)python interpreter or Jupyter
 * Part of an ERT workflow, typically after the ensemble is finished as
   a *POST_WORKFLOW_HOOK*
 * Part of other scripts or utilities, either for analysis or
@@ -12,7 +11,7 @@ fmu-ensemble is designed for use in several scenarios:
 
 As an introduction to the module, we will go through interactive usage
 in the python interpreter. Whether you use ipython or jupyter does not
-matter. It is recommended to choose ipython over python.
+matter. It is recommended to choose `ipython` over `python`.
 
 
 Prerequisites
@@ -20,9 +19,10 @@ Prerequisites
 
 Basic knowlegde of Python is needed to use the module. For simple use,
 copy-paste from other projects will take you far. For something extra,
-it is strongly recommended to spend time learning the `Pandas`_
+it is strongly recommended to spend time learning the `Pandas_`
 library and understand how you can in very short Python code do a lot
-of data processing and handling.
+of data processing and handling. Most data is exposed as Pandas
+dataframes.
 
 .. _Pandas: https://pandas.pydata.org/
 
@@ -47,19 +47,19 @@ into Python's memory first.
    # the output should be something like
    #   <Ensemble reek_r001_iter0, 50 realizations>
             
-You name your ensemble in the first argument. This name is used when
-you combine the ensemble with other ensembles into an
-``EnsembleSet``. The path is where on the filesystem your realizations
-root are. The realization root is also called RUNPATH in ERT
-terminology, and is where you have the ``STATUS`` file among others.
+You name your ensemble in the first argument. This name is used when you combine
+the ensemble with other ensembles into an ``EnsembleSet``. The path is where on
+the filesystem your realizations roots are. The realization root is also called
+RUNPATH in ERT terminology, and is where you have the ``STATUS`` file among
+others.
 
-When you initialize single ensembles, ensure you do not mix ``iter-3``
-with ``iter-*``, where the latter only makes sense when you
-initialize an *EnsembleSet*, see below.
+When you initialize single ensembles, ensure you do not mix ``iter-3`` with
+``iter-*``, where the latter only makes sense when you initialize an
+*EnsembleSet*, see below.
 
-When doing this, only rudimentary loading of the ensemble is
-performed, like loading ``STATUS`` and ``parameters.txt``. It is the intention
-that this operation should be fast, and any heavy data lifting is not
+When a `ScratchEnsemble` object is intialized, only rudimentary loading of the
+ensemble is performed, like loading ``STATUS`` and ``parameters.txt``. It is the
+intention that this operation should be fast, and any heavy data parsing is not
 done until the user requests it.
 
 When an ensemble is loaded into memory, you can ask for certain properties,
@@ -69,7 +69,7 @@ When an ensemble is loaded into memory, you can ask for certain properties,
     # Obtain a Pandas Dataframe of the parameters
     ens.parameters
 
-    # Unique realizations indices in the ensemble:
+    # Unique realizations indices with parameters.txt 
     ens.parameters['REAL'].unique()
 
     # List of parameters available:
@@ -105,6 +105,19 @@ ensemble member. A difference is that aggregated data structures
 always have an extra column called ``ENSEMBLE`` that contains the
 ensemble names.
 
+If you in ERT have exported a "runpath file", you can initialize an
+EnsembleSet from that file with
+
+.. code-block:: python
+
+    # Load from an ERT runpath file
+    ens_set = ensemble.EnsembleSet('hm',
+        runpath='/foo/bar/ert-runpath-file')
+
+The realization and iteration integers are taken directly from the information
+in this file. For runpath files with only one ensemble, it is also possible
+to initialize ScratchEnsembles directly.
+
 It is possible to load directory structures like ``iter_*/real_*``,
 but you will need to look more closely into the API for the
 EnsembleSet object, and provide regular expressions for determining
@@ -137,30 +150,34 @@ while users can always override this by setting an environment variable:
 Reading Eclipse data
 ^^^^^^^^^^^^^^^^^^^^
 
-The ensemble class has specific features for output from Eclipse
-simulations, or output from any simulator in the binary format used by
-Eclipse (e.g. OPM etc).
+The ensemble class has specific support for parsing binary files produced
+by reservoir simulator outputting the Eclipse binary format. This support
+is through `libecl_`.
+
+.. _libecl: https://github.com/equinor/libecl
 
 .. code-block:: python
 
     # Get a dataframe with monthly summary data for all field vectors
     # and all well vectors
-    smry = ens.load_smry(column_keys=['F*', 'W*'], time_index='monthly')
+    smry = ens.get_smry(column_keys=['F*', 'W*'], time_index='monthly')
 
-The python object ``smry`` is now a Pandas DataFrame (a table)
+The Python object ``smry`` is now a Pandas DataFrame (a table)
 containing the summary data you requested. Each row is the values for
 a specific realization at a specific time. Pandas DataFrames can be
 written to disk as CSV files quite easily using e.g.
 ``smry.to_csv('summaryvectors.csv', index=False)``. Look up Pandas
 documentation for further possibilities.
 
-By default, Eclipse summary files will be searched for in
-`eclipse/model`, and then files with the suffix `*.UNSMRY`. In case
-you either have multiple `UNSMRY` files in that directory, or if you
-have them in a different directory you need to hint to the exact
-location beforehand, using the *file discovery* feature. If your
-Eclipse output files is at the realization root (the old standard),
-you only need to issue
+If you replace `get_smry` with `load_smry` the same dataframe will also be
+internalized, see below.
+
+By default, Eclipse summary files will be searched for in `eclipse/model`,
+and then files with the suffix `*.UNSMRY`. In case you either have multiple
+`UNSMRY` files in that directory, or if you have them in a different
+directory you need to hint to the exact location beforehand, using the
+*file discovery* (`find_files()`) feature. If your Eclipse output files is
+at the realization root (the old standard), you only need to issue
 
 .. code-block:: python
 
@@ -168,14 +185,16 @@ you only need to issue
 
 prior to running `load_smry()`. If your problem is multiple Eclipse
 run in the same directory, you have to explicitly discover the full
-path for the file in the call to `find_files()`.
+path for the file in the call to `find_files()`. If you have used the
+`runpathfile` feature of ensemble initialization, file discovery of
+the correct `UNSMRY` file is done automatically.
 
 
 Internalized data
 ^^^^^^^^^^^^^^^^^
 
 The ensemble object (which is just a collection of realization
-objects) will internalize the data it reads when you call
+objects) will internalize the data it reads if and when you call
 ``load_<something>()``, meaning that it will keep the dataframes
 produced in memory for later retrieval. You can ask the ensemble
 objects for what data it currently contains by calling ``ens.keys()``
