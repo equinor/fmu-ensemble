@@ -7,23 +7,23 @@ at some point
 Realization
 -----------
 
-A realization is one isolated realization, with every parameter
-determined, and one single result for all output parameters. It
-usually includes one Eclipse run, but that is not a requirement. As
-long as you have a done some compuational job that has left files on
-the filesystem, it can be possible to load in results using
-fmu-ensemble.
+A realization is a single model run, where parameters are determined (but
+can be drawn stochastically at the Ensemble level). It usually includes one
+Eclipse run, but that is not a requirement. As long as you have a done some
+computational job that has left (supported) files on the filesystem, it can
+be possible to load in results using fmu-ensemble.
 
 
 ScratchRealization
 ^^^^^^^^^^^^^^^^^^
 
-The class ScratchRealization is a Python object that can load
+The class `ScratchRealization` is a Python object that can load
 realization results (and input) from the filesystem, typically located
-on /scratch. You can ask the object to load in and *internalize* data,
+on `/scratch`. You can ask the object to load and thereby *internalize* data,
 with the `load_*()` functions. The internalization is an important
 concept. All data that you internalize will be stored in the object,
-and then can be used further.
+it can be easily reaccessed, statistics can be computed, and it will
+be added to a corresponding VirtualRealization (see below).
 
 Additionally, you may find `get_*()` functions that can access certain
 datatypes. Common for these is that they will *not* modify the object,
@@ -35,7 +35,7 @@ internalize all the data into the object.
 VirtualRealization
 ^^^^^^^^^^^^^^^^^^
 
-A virtual realization is typically a ScratchRealization that has lost
+A `VirtualRealization` is typically a `ScratchRealization` that has lost
 its knowledge of the original data on disk. The object only knows of
 the data that was internalized, and the main access function is
 `get_df()`. Another typical source for a virtual realization is a
@@ -82,16 +82,18 @@ A `ScratchEnsemble` is an ensemble that is initialized from a
 directory of realization-runs on the file system, typically on
 `/scratch`. This object can do a full initialization of all
 `ScratchRealization` in a specific directory, and collect them into a
-Ensemble object.
+ensemble object.
 
 
 VirtualEnsemble
 ^^^^^^^^^^^^^^^
 
 Analogous to the relationship between `ScratchRealization` and
-`VirtualRealization`, a `VirtualEnsemble` holds a list of
-`VirtualRealization` objects, with limitations imposed by those of
-`VirtualRealization`.
+`VirtualRealization`, a `VirtualEnsemble` is an ensemble with no
+strings attached to the original filesystem. All data from its underlying
+realizations is aggregated and full dataframes are stored. The object
+is able to construct new `VirtualRealization` objects from its data, both
+by picking by index, or from statistical aggregations.
 
 
 EnsembleCombination
