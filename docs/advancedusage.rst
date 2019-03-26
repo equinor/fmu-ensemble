@@ -40,8 +40,8 @@ all the data, over the realizations for scalars, for each point in
 time for time-series.
 
 As an example, oil, gas, and pressure profiles in a statistical
-realization, will typically not be compatible, it that it can be
-physically impossible for the reality to obtain these profiles. Use
+realization, will typically not be compatible, in that it can be
+physically impossible in reality to obtain these profiles. Use
 and interpret with care!
 
 Supported statistical aggregations are ``mean``, ``median``, ``min``,
@@ -73,9 +73,9 @@ to ``p90`` before beint sent to Pandas and Numpy for computation.
 Comparing realizations or ensembles
 -----------------------------------
 
-Any linear combinations of ensembles or realizations is possible to
-compute, in a pointwise manner. This includes all common data in the
-linear combination.
+Any linear combination of ensembles or realizations is possible to
+compute, in a pointwise manner. This includes the data that is shared
+in the linear combination.
 
 Computing the sum of two realizations is only a matter of adding them
 in your Python interpreter. The end result is a object you can treat

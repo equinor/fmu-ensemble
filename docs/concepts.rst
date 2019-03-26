@@ -19,13 +19,13 @@ ScratchRealization
 
 The class `ScratchRealization` is a Python object that can load
 realization results (and input) from the filesystem, typically located
-on `/scratch`. You can ask the object to load and thereby *internalize* data,
-with the `load_*()` functions. The internalization is an important
+on ``/scratch``. You can ask the object to load and thereby *internalize* data,
+with the ``load_*()`` functions. The internalization is an important
 concept. All data that you internalize will be stored in the object,
 it can be easily reaccessed, statistics can be computed, and it will
 be added to a corresponding VirtualRealization (see below).
 
-Additionally, you may find `get_*()` functions that can access certain
+Additionally, you may find ``get_*()`` functions that can access certain
 datatypes. Common for these is that they will *not* modify the object,
 it is a read-once operation. This is particularly relevant for Eclipse
 summary data, where you at different times may ask for different
@@ -38,20 +38,21 @@ VirtualRealization
 A `VirtualRealization` is typically a `ScratchRealization` that has lost
 its knowledge of the original data on disk. The object only knows of
 the data that was internalized, and the main access function is
-`get_df()`. Another typical source for a virtual realization is a
+``get_df()``. Another typical source for a virtual realization is a
 calculated realization, either as a point-wise statistical aggregate
 of a collection of realizations (ensemble), or maybe from a linear
 combination of realizations (then coming from the object
-`RealizationCombination`.
+``RealizationCombination``.
 
+There are no 
 Virtual realizations have features to write their internal data to
-disk, the `to_disk()` feature. This can be used to store stripped down
+disk, the ``to_disk()`` feature. This can be used to store stripped down
 versions of realizations, or to be able to store computed
 realizations. You may both write to disk into a file structure that
 would resemble the original realization (and you can edit the files if
 you are bold enough). The virtual realization can later be
-instantiated from the dumped disk structure by `load_disk()`. Another
-variant for storage is to use `to_json()` which will dump all data in
+instantiated from the dumped disk structure by ``load_disk()``. Another
+variant for storage is to use ``to_json()`` which will dump all data in
 as a *json* datatype, for which there probably exists use cases.
 
 RealizationCombination
@@ -72,7 +73,7 @@ collections of realizations, but if the realizations do not share
 anything, they can always be collected in simple Python lists as well.
 
 A requirement is that each member of the ensembled are referred to by
-an *integer*, and will always be present in the column `REAL` in
+an *integer*, and will always be present in the column ``REAL`` in
 aggregated dataframes.
 
 ScratchEnsemble
@@ -95,6 +96,11 @@ realizations is aggregated and full dataframes are stored. The object
 is able to construct new `VirtualRealization` objects from its data, both
 by picking by index, or from statistical aggregations.
 
+You can ask a VirtualEnsemble for ``get_smry()`` in which it will try its
+best to locate internalized Eclipse summary data, and then interpolate the
+data to your chosen time index. This is opposed to a ScratchEnsemble which
+in that case would go back to the original binary files and give the correct
+answer.
 
 EnsembleCombination
 ^^^^^^^^^^^^^^^^^^^
