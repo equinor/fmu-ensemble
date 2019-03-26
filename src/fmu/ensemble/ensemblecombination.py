@@ -162,7 +162,7 @@ class EnsembleCombination(object):
 
     def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
-       Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
 
         Compared to the agg() function, this function only works on summary
