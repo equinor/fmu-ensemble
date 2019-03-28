@@ -108,7 +108,7 @@ Use flake8 and/or pylint to check
 
   make flake   # for all
 
-The pylint is rather strict and sometimes excpetions are needed... , but anyway quite useful!
+The pylint is rather strict and sometimes exceptions are needed... , but anyway quite useful!
 
   python -m pylint mycode.py
 
