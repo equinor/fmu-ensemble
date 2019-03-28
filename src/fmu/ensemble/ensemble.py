@@ -145,21 +145,24 @@ class ScratchEnsemble(object):
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
         """
-        # Warning: CODE DUPLICATION from realization.py
-        basenames = list(map(os.path.basename, self.keys()))
+        return self._shortcut2path(self.keys(), shortpath)
+
+    @staticmethod
+    def _shortcut2path(keys, shortpath):
+        basenames = list(map(os.path.basename, keys))
         if basenames.count(shortpath) == 1:
-            short2path = {os.path.basename(x): x for x in self.keys()}
+            short2path = {os.path.basename(x): x for x in keys}
             return short2path[shortpath]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        noexts = [''.join(x.split('.')[:-1]) for x in keys]
         if noexts.count(shortpath) == 1:
             short2path = {''.join(x.split('.')[:-1]): x
-                          for x in self.keys()}
+                          for x in keys}
             return short2path[shortpath]
         basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.keys()]
+                          for x in keys]
         if basenamenoexts.count(shortpath) == 1:
             short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                          for x in self.keys()}
+                          for x in keys}
             return short2path[shortpath]
         # If we get here, we did not find anything that
         # this shorthand could point to. Return as is, and let the
