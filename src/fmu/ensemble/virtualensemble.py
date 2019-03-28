@@ -495,21 +495,22 @@ class VirtualEnsemble(object):
         if quantiles is None:
             quantiles = [10, 90]
 
-        if column_keys == None:
+        if column_keys is None:
             column_keys = '*'
 
         # Check validity of quantiles to compute:
         quantiles = list(map(int, quantiles))  # Potentially raise ValueError
         for quantile in quantiles:
             if quantile < 0 or quantile > 100:
-                raise ValueError("Quantiles must be integers between 0 and 100")
+                raise ValueError("Quantiles must be integers "
+                                 + "between 0 and 100")
 
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble. This will fail if we don't have the
         # time frequency already internalized.
         dframe = self.get_smry(time_index=time_index,
                                column_keys=column_keys).drop(columns='REAL')\
-                               .groupby('DATE')
+                     .groupby('DATE')
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
