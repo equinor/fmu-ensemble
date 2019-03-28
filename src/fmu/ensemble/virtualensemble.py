@@ -170,7 +170,7 @@ class VirtualEnsemble(object):
         if not overwrite and realidx in self.realindices:
             raise ValueError("Error, realization index already present")
         if overwrite and realidx in self.realindices:
-            self.remove_realization(realidx)
+            self.remove_realizations(realidx)
 
         # Add the data from the incoming realization key by key
         for key in realization.keys():
@@ -289,7 +289,7 @@ class VirtualEnsemble(object):
             if not (int in dtypes or float in dtypes):
                 logger.info("No numerical data to aggregate in %s", key)
                 continue
-            if len(groupby):
+            if groupby:
                 aggobject = data.groupby(groupby)
             else:
                 aggobject = data
@@ -431,7 +431,7 @@ class VirtualEnsemble(object):
         else:
             chosen_smry = time_index
 
-        logger.info("Using " + chosen_smry + " for interpolation")
+        logger.info("Using %s for interpolation", chosen_smry)
 
         # Explicit creation of VirtualRealization allows for later
         # multiprocessing of the interpolation.
