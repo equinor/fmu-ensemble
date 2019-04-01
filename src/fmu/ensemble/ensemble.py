@@ -358,8 +358,8 @@ class ScratchEnsemble(object):
             except ValueError:
                 # This would at least occur for unsupported fileformat,
                 # and that we should not skip.
-                logger.critical('load_file() failed')
-                raise ValueError  # (this might hide traceback from try:)
+                logger.critical('load_file() failed in realization %d', index)
+                raise ValueError
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations

@@ -389,7 +389,7 @@ class Observations(object):
                     if isinstance(observation['date'], str):
                         observation['date'] = dateutil.parser.isoparse(observation['date']).date()
                     if not isinstance(observation['date'], datetime.date):
-                        logger.error('Date not understood' + str(observation['date']))
+                        logger.error('Date not understood %s', str(observation['date']))
                         continue 
             # If everything is deleted from 'smry', delete it
             if not len(smryunits):
