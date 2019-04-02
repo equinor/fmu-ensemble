@@ -478,7 +478,8 @@ class EnsembleSet(object):
             dflist.append(dframe)
         return pd.concat(dflist, sort=False)
 
-    def load_smry(self, time_index=None, column_keys=None):
+    def load_smry(self, time_index=None, column_keys=None,
+                  cache_eclsum=True, start_date=None, end_date=None):
         """
         Fetch summary data from all ensembles
 
@@ -499,6 +500,17 @@ class EnsembleSet(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
+            cache_eclsum: Boolean for whether we should cache the EclSum
+                objects. Set to False if you cannot keep all EclSum files in
+                memory simultaneously
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
+
         Returns:
             A DataFame of summary vectors for the ensembleset.
             The column 'ENSEMBLE' will denote each ensemble's name
@@ -506,13 +518,17 @@ class EnsembleSet(object):
         # Future: Multithread this:
         for _, ensemble in self._ensembles.items():
             ensemble.load_smry(time_index=time_index,
-                               column_keys=column_keys)
+                               column_keys=column_keys,
+                               cache_eclsum=cache_eclsum,
+                               start_date=start_date,
+                               end_date=end_date)
         if isinstance(time_index, list):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry--' +
                            time_index + '.csv')
 
-    def get_smry_dates(self, freq='monthly'):
+    def get_smry_dates(self, freq='monthly', cache_eclsum=True,
+                       start_date=None, end_date=None):
         """Return list of datetimes from an ensembleset
 
         Datetimes from each realization in each ensemble can
@@ -524,13 +540,26 @@ class EnsembleSet(object):
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
+            cache_eclsum: Boolean for whether we should cache the EclSum
+                objects. Set to False if you cannot keep all EclSum files in
+                memory simultaneously
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
         Returns:
             list of datetime.date.
         """
 
         rawdates = set()
         for _, ensemble in self._ensembles.items():
-            rawdates = rawdates.union(ensemble.get_smry_dates(freq='report'))
+            rawdates = rawdates.union(ensemble.get_smry_dates(freq='report',
+                                                   cache_eclsum=cache_eclsum,
+                                                   start_date=start_date,
+                                                   end_date=end_date))
         rawdates = list(rawdates)
         rawdates.sort()
         if freq == 'report':

@@ -277,7 +277,7 @@ def test_ensemble_ecl():
 
     # Check that there is now a cached version with raw dates:
     assert isinstance(reekensemble.get_df('unsmry--raw.csv'), pd.DataFrame)
-    # The columns are not similar, this is allowed!
+    # The columns are not similar, this is allowed!'
 
     # If you get 3205 here, it means that you are using the union of
     # raw dates from all realizations, which is not correct
@@ -291,6 +291,8 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smry_dates(freq='monthly')) == 38
     assert len(reekensemble.get_smry_dates(freq='daily')) == 1098
     assert len(reekensemble.get_smry_dates(freq='last')) == 1
+    assert reekensemble.get_smry_dates(freq='last') == \
+        reekensemble.get_smry_dates(freq='last', end_date='2050-02-01')
 
     assert str(reekensemble.get_smry_dates(freq='report')[-1])\
         == '2003-01-02 00:00:00'
@@ -304,6 +306,22 @@ def test_ensemble_ecl():
         == '2003-01-02'
     assert str(reekensemble.get_smry_dates(freq='last')[-1])\
         == '2003-01-02'
+
+    assert str(reekensemble.get_smry_dates(freq='daily',
+                                           end_date='2002-03-03')[-1]) \
+        == '2002-03-03'
+    assert str(reekensemble.get_smry_dates(freq='daily',
+                                           start_date='2002-03-03')[0]) \
+        == '2002-03-03'
+
+    # Start and end outside of orig data and on the "wrong side"
+    dates = reekensemble.get_smry_dates(end_date='1999-03-03')
+    assert len(dates) == 1
+    assert str(dates[0]) == '1999-03-03'
+
+    dates = reekensemble.get_smry_dates(start_date='2099-03-03')
+    assert len(dates) == 1
+    assert str(dates[0]) == '2099-03-03'
 
     # Time interpolated dataframes with summary data:
     yearly = reekensemble.get_smry_dates(freq='yearly')
@@ -380,6 +398,37 @@ def test_ensemble_ecl():
                                               time_index='yearly',
                                               quantiles=[])
     assert len(noquantiles.index.levels[0]) == 3
+
+
+def test_volumetric_rates():
+    """Test computation of cumulative compatible rates
+    """
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ens = ScratchEnsemble('reektest',
+                          testdir +
+                          '/data/testensemble-reek001/' +
+                          'realization-*/iter-0')
+    cum_df = ens.get_smry(column_keys=['F*T', 'W*T*'],
+                          time_index='yearly')
+    vol_rate_df = ens.get_volumetric_rates(column_keys=['F*T', 'W*T*'],
+                                           time_index='yearly')
+    assert 'DATE' in vol_rate_df
+    assert 'FWCR' not in vol_rate_df
+    assert 'FOPR' in vol_rate_df
+    assert 'FWPR' in vol_rate_df
+
+    # Test each realization individually
+    for realidx in vol_rate_df['REAL'].unique():
+        vol_rate_real = vol_rate_df.set_index('REAL').loc[realidx]
+        cum_real = cum_df.set_index('REAL').loc[realidx]
+        assert len(vol_rate_real) == 5
+        assert vol_rate_real['FOPR'].sum() == cum_real['FOPT'].iloc[-1]
 
 
 def test_filter():
@@ -530,6 +579,56 @@ def test_nonexisting():
                                    'foo/realization-*/iter-0')
     assert not nopermission
 
+
+def test_eclsumcaching():
+    """Test caching of eclsum"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    dirs = testdir + '/data/testensemble-reek001/' + \
+        'realization-*/iter-0'
+    ens = ScratchEnsemble('reektest', dirs)
+
+    # The problem here is if you load in a lot of UNSMRY files
+    # and the Python process keeps them in memory. Not sure
+    # how to check in code that an object has been garbage collected
+    # but for garbage collection to work, at least the realization
+    # _eclsum variable must be None.
+
+    ens.load_smry()
+    # Default is to do caching, so these will not be None:
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    # If we redo this operation, the same objects should all
+    # be None afterwards:
+    ens.load_smry(cache_eclsum=None)
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    df = ens.get_smry()
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    df = ens.get_smry(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    df = ens.get_smry_stats()
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    df = ens.get_smry_stats(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    some_dates = ens.get_smry_dates()
+    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+
+    # Clear the cached objects because the statement above has cached it..
+    for _, realization in ens._realizations.items():
+        realization._eclsum = None
+
+    some_dates = ens.get_smry_dates(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
 def test_filedescriptors():
     """Test how filedescriptors are used.

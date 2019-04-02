@@ -110,15 +110,21 @@ class EnsembleCombination(object):
             vens.append(key, self.get_df(key))
         return vens
 
-    def get_smry_dates(self, freq='monthly'):
+    def get_smry_dates(self, freq='monthly', normalize=True,
+                       start_date=None, end_date=None):
         """Create a union of dates available in the
         involved ensembles
         """
-        dates = set(self.ref.get_smry_dates(freq))
+        dates = set(self.ref.get_smry_dates(freq, normalize,
+                                            start_date, end_date))
         if self.add:
-            dates = dates.union(set(self.add.get_smry_dates(freq)))
+            dates = dates.union(set(self.add.get_smry_dates(freq, normalize,
+                                                            start_date,
+                                                            end_date)))
         if self.sub:
-            dates = dates.union(set(self.sub.get_smry_dates(freq)))
+            dates = dates.union(set(self.sub.get_smry_dates(freq, normalize,
+                                                            start_date,
+                                                            end_date)))
         dates = list(dates)
         dates.sort()
         return dates
@@ -156,7 +162,7 @@ class EnsembleCombination(object):
 
     def get_smry_stats(self, column_keys=None, time_index='monthly'):
         """
-       Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
+        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
 
         Compared to the agg() function, this function only works on summary

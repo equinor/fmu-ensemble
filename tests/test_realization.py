@@ -9,9 +9,12 @@ import os
 import datetime
 import shutil
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 import pytest
 import ecl.summary
+
+import numpy as np
 
 from fmu import config
 from fmu import ensemble
@@ -143,6 +146,146 @@ def test_single_realization():
         ensemble.ScratchRealization("MyEnsemble", "/foo/bar/com")
 
 
+def test_volumetric_rates():
+    """Test computation of volumetric rates from cumulative vectors"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    realdir = os.path.join(testdir, 'data/testensemble-reek001',
+                           'realization-0/iter-0')
+    real = ensemble.ScratchRealization(realdir)
+
+    # Should work without prior internalization:
+    cum_df = real.get_smry(column_keys=['F*T', 'W*T*'],
+                           time_index='yearly')
+    vol_rate_df = real.get_volumetric_rates(column_keys=['F*T', 'W*T*'],
+                                            time_index='yearly')
+    assert vol_rate_df.index.name == 'DATE'
+    assert 'FWCR' not in vol_rate_df  # We should not compute FWCT..
+    assert 'FOPR' in vol_rate_df
+    assert 'FWPR' in vol_rate_df
+
+    # Also check the static method that is inside here directly
+    assert not real._cum_smrycol2rate('FOPR')
+    assert real._cum_smrycol2rate('FOPT') == 'FOPR'
+    assert not real._cum_smrycol2rate('FWCT')
+    assert not real._cum_smrycol2rate('WOPR:A-H')
+    assert not real._cum_smrycol2rate('FOPT:FOPT:FOPT')
+    assert real._cum_smrycol2rate('WOPT:A-1H') == 'WOPR:A-1H'
+    assert real._cum_smrycol2rate('WOPTH:A-2H') == 'WOPRH:A-2H'
+
+    # Test that computed rates can be summed up to cumulative at end:
+    assert vol_rate_df['FOPR'].sum() == cum_df['FOPT'].iloc[-1]
+    assert vol_rate_df['FGPR'].sum() == cum_df['FGPT'].iloc[-1]
+    assert vol_rate_df['FWPR'].sum() == cum_df['FWPT'].iloc[-1]
+
+    # Since rates are valid forwards in time, the last
+    # row should have a zero, since that is the final simulated
+    # date for the cumulative vector
+    assert vol_rate_df['FOPR'].iloc[-1] == 0
+
+    # Check that we allow cumulative allocated vectors:
+    c = real.get_volumetric_rates(column_keys=['F*TH', 'W*TH*'])
+    assert not c.empty
+    assert 'FOPRH' in c
+    assert 'WOPRH:OP_1' in c
+
+    assert real.get_volumetric_rates(column_keys='FOOBAR').empty
+    assert real.get_volumetric_rates(column_keys=['FOOBAR']).empty
+    assert real.get_volumetric_rates(column_keys={}).empty
+
+    with pytest.raises(ValueError):
+        real.get_volumetric_rates(column_keys='FOPT',
+                                  time_index='bogus')
+
+    mcum = real.get_smry(column_keys='FOPT', time_index='monthly')
+    dmcum = real.get_volumetric_rates(column_keys='FOPT',
+                                      time_index='monthly')
+    assert dmcum['FOPR'].sum() == mcum['FOPT'].iloc[-1]
+
+    # Pick 10 **random** dates to get the volumetric rates between:
+    daily_dates = real.get_smry_dates(freq='daily', normalize=False)
+    subset_dates = np.random.choice(daily_dates, size=10, replace=False)
+    subset_dates.sort()
+    dcum = real.get_smry(column_keys='FOPT', time_index=subset_dates)
+    ddcum = real.get_volumetric_rates(column_keys='FOPT',
+                                      time_index=subset_dates)
+    assert ddcum['FOPR'].iloc[-1] == 0
+
+    # We are probably neither at the start or at the end of the production
+    # interval.
+    cumulative_error = ddcum['FOPR'].sum() - \
+        (dcum['FOPT'].loc[subset_dates[-1]]
+         - dcum['FOPT'].loc[subset_dates[0]])
+
+    # Give some slack, we might have done a lot of interpolation
+    # here.
+    assert cumulative_error / ddcum['FOPR'].sum() < 0.000001
+
+    # Test the time_unit feature.
+    vol_rate_days = real.get_volumetric_rates(column_keys=['F*T'],
+                                              time_index='yearly',
+                                              time_unit='days')
+    vol_rate_months = real.get_volumetric_rates(column_keys=['F*T'],
+                                                time_index='yearly',
+                                                time_unit='months')
+    vol_rate_years = real.get_volumetric_rates(column_keys=['F*T'],
+                                               time_index='yearly',
+                                               time_unit='years')
+
+    # Sample test on correctness.
+    # Fine-accuracy (wrt leap days) is not tested here:
+    assert vol_rate_days['FWIR'].iloc[0] * 27.9 \
+        < vol_rate_months['FWIR'].iloc[0]
+    assert vol_rate_days['FWIR'].iloc[0] * 31.1 \
+        > vol_rate_months['FWIR'].iloc[0]
+    assert vol_rate_months['FWIR'].iloc[0] * 12 \
+        == pytest.approx(vol_rate_years['FWIR'].iloc[0])
+
+    assert vol_rate_days['FWIR'].iloc[0] * 364.9 \
+        < vol_rate_years['FWIR'].iloc[0]
+    assert vol_rate_days['FWIR'].iloc[0] * 366.1 \
+        > vol_rate_years['FWIR'].iloc[0]
+
+    with pytest.raises(ValueError):
+        real.get_volumetric_rates(column_keys=['F*T'],
+                                  time_index='yearly',
+                                  time_unit='bogus')
+
+    # Try with the random dates
+    dayscum = real.get_volumetric_rates(column_keys='FOPT',
+                                           time_index=subset_dates,
+                                           time_unit='days')
+    assert all(np.isfinite(dayscum['FOPR']))
+    diffdays = pd.DataFrame(pd.to_datetime(dayscum.index)).diff().shift(-1)
+    dayscum['DIFFDAYS'] = [x.days for x in diffdays['DATE']]
+    # Calculate cumulative production from the computed volumetric daily rates:
+    dayscum['FOPRcum'] = dayscum['FOPR'] * dayscum['DIFFDAYS']
+    # Check that this sum is equal to FOPT between first and last date:
+    assert dayscum['FOPRcum'].sum() \
+        == pytest.approx(dcum['FOPT'][-1] - dcum['FOPT'][0])
+    # (here we could catch an error in case we don't support leap days)
+
+    # Monthly rates between the random dates:
+    m = real.get_volumetric_rates(column_keys='FOPT',
+                                  time_index=subset_dates,
+                                  time_unit='months')
+    assert all(np.isfinite(m['FOPR']))
+
+    # Total number of months in production period
+    delta = relativedelta(vol_rate_days.index[-1], vol_rate_days.index[0])
+    months = delta.years * 12 + delta.months
+    tworows = real.get_volumetric_rates(column_keys='FOPT',
+                                        time_index=[vol_rate_days.index[0],
+                                                    vol_rate_days.index[-1]],
+                                        time_unit='months')
+    assert tworows['FOPR'].iloc[0] * months == pytest.approx(cum_df['FOPT'].iloc[-1])
+
+
 def test_datenormalization():
     """Test normalization of dates, where
     dates can be ensured to be on dategrid boundaries"""
@@ -235,6 +378,46 @@ def test_singlereal_ecl(tmp='TMP'):
     assert len(real.get_smry_dates(freq='yearly')) == 5
     assert len(monthly) == 38
     assert len(real.get_smry_dates(freq='daily')) == 1098
+
+    # start and end should be included:
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='daily')) == 3
+    # No month boundary between start and end, but we
+    # should have the starts and ends included
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='monthly')) == 2
+    # Date normalization should be overriden here:
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='monthly',
+                                   normalize=True)) == 2
+
+    # Start_date and end_date at the same date should work
+    assert len(real.get_smry_dates(start_date='2000-01-01',
+                                   end_date='2000-01-01')) == 1
+    assert len(real.get_smry_dates(start_date='2000-01-01',
+                                   end_date='2000-01-01',
+                                   normalize=True)) == 1
+
+    # Check that we can go way outside the smry daterange:
+    assert len(real.get_smry_dates(start_date='1978-01-01',
+                                   end_date='2030-01-01',
+                                   freq='yearly')) == 53
+    assert len(real.get_smry_dates(start_date='1978-01-01',
+                                   end_date='2030-01-01',
+                                   freq='yearly',
+                                   normalize=True)) == 53
+
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='raw',
+                                   normalize=True)) == 2
+    assert len(real.get_smry_dates(start_date='2000-06-05',
+                                   end_date='2000-06-07',
+                                   freq='raw',
+                                   normalize=False)) == 2
 
     # Test caching/internalization of summary files
 

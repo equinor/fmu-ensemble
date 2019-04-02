@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implementation of realization classes
+"""Module for the ScratchRealization class
 
 A realization is a set of results from one subsurface model
 realization. A realization can be either defined from
@@ -38,7 +38,7 @@ logger = fmux.basiclogger(__name__)
 class ScratchRealization(object):
     r"""A representation of results still present on disk
 
-    ScratchRealization's point to the filesystem for their
+    ScratchRealizations point to the filesystem for their
     contents.
 
     A realization must at least contain a STATUS file.
@@ -650,7 +650,7 @@ class ScratchRealization(object):
         """
         return self.data['parameters.txt']
 
-    def get_eclsum(self):
+    def get_eclsum(self, cache=True):
         """
         Fetch the Eclipse Summary file from the realization
         and return as a libecl EclSum object
@@ -661,6 +661,11 @@ class ScratchRealization(object):
         Warning: If you have multiple UNSMRY files and have not
         performed explicit discovery, this function will
         not help you (yet).
+
+        Arguments:
+            cache: boolean indicating whether we should keep an
+                object reference to the EclSum object. Set to
+                false if you need to conserve memory.
 
         Returns:
            EclSum: object representing the summary file. None if
@@ -690,11 +695,14 @@ class ScratchRealization(object):
             logger.warning('Failed to create summary instance from %s',
                            unsmry_filename)
             return None
-        # Cache result
-        self._eclsum = eclsum
-        return self._eclsum
 
-    def load_smry(self, time_index='raw', column_keys=None):
+        if cache:
+            self._eclsum = eclsum
+
+        return eclsum
+
+    def load_smry(self, time_index='raw', column_keys=None, cache_eclsum=True,
+                  start_date=None, end_date=None):
         """Produce dataframe from Summary data from the realization
 
         When this function is called, the dataframe will be cached.
@@ -717,19 +725,30 @@ class ScratchRealization(object):
                If a list of DateTime is supplied, data will be resampled
                to these.
             column_keys: list of column key wildcards.
-
+            cache_eclsum: boolean for whether to keep the loaded EclSum
+                object in memory after data has been loaded.
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
         Returns:
             DataFrame with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
-        if not self.get_eclsum():
+        if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
         time_index_path = time_index
         if time_index == 'raw':
             time_index_arg = None
         elif isinstance(time_index, str):
-            time_index_arg = self.get_smry_dates(freq=time_index)
+            # Note: This call will recache the smry object.
+            time_index_arg = self.get_smry_dates(freq=time_index,
+                                                 start_date=start_date,
+                                                 end_date=end_date)
         if isinstance(time_index, list):
             time_index_arg = time_index
             time_index_path = 'custom'
@@ -738,7 +757,8 @@ class ScratchRealization(object):
             column_keys = [column_keys]
 
         # Do the actual work:
-        dframe = self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        dframe = self.get_eclsum(cache=cache_eclsum)\
+                     .pandas_frame(time_index_arg, column_keys)
         dframe = dframe.reset_index()
         dframe.rename(columns={'index': 'DATE'}, inplace=True)
 
@@ -746,29 +766,212 @@ class ScratchRealization(object):
         localpath = 'share/results/tables/unsmry--' +\
                     time_index_path + '.csv'
         self.data[localpath] = dframe
+
+        # Do this to ensure that we cut the rope to the EclSum object
+        # Can be critical for garbage collection
+        if not cache_eclsum:
+            self._eclsum = None
         return dframe
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def get_smry(self, time_index=None, column_keys=None,
+                 cache_eclsum=True, start_date=None,
+                 end_date=None):
         """Wrapper for EclSum.pandas_frame
 
         This gives access to the underlying data on disk without
         touching internalized dataframes.
 
+        Arguments:
+            cache: Boolean for wheter the EclSum object is to be cached.
+                defaults to True.
         Returns empty dataframe if there is no summary file
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
-        if time_index == 'raw':
+        if isinstance(time_index, str) and time_index == 'raw':
             time_index_arg = None
         elif isinstance(time_index, str):
-            time_index_arg = self.get_smry_dates(freq=time_index)
+            time_index_arg = self.get_smry_dates(freq=time_index,
+                                                 start_date=start_date,
+                                                 end_date=end_date)
         else:
             time_index_arg = time_index
 
-        if self.get_eclsum():
-            return self.get_eclsum().pandas_frame(time_index_arg, column_keys)
+        if self.get_eclsum(cache=cache_eclsum):
+            df = self.get_eclsum(cache=cache_eclsum)\
+                     .pandas_frame(time_index_arg, column_keys)
+            if not cache_eclsum:
+                # Ensure EclSum object can be garbage collected
+                self._eclsum = None
+            return df
         else:
             return pd.DataFrame()
+
+    def _glob_smry_keys(self, column_keys):
+        """Utility function for globbing column names
+
+        Use this to expand 'F*' to the list of Eclipse summary
+        vectors matching.
+
+        Args:
+            column_keys: str or list of strings with patterns
+        """
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+        keys = set()
+        for key in column_keys:
+            if isinstance(key, str):
+                keys = keys.union(set(self._eclsum.keys(key)))
+        return list(keys)
+
+    def get_volumetric_rates(self, column_keys=None, time_index=None,
+                             time_unit=None):
+        """Compute volumetric rates from cumulative summary vectors
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
+        The returned dataframe is indexed by DATE.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
+
+        """
+        return self._get_volumetric_rates(self, column_keys, time_index,
+                                          time_unit)
+    @staticmethod
+    def _get_volumetric_rates(realization, column_keys, time_index,
+                              time_unit):
+        """Static method for volumetric rates
+
+        This method is to be used by both ScratchRealization
+        and VirtualRealization, and is documented there."""
+        import calendar
+        from dateutil.relativedelta import relativedelta
+        if isinstance(time_unit, str):
+            if time_unit not in ['days', 'months', 'years']:
+                raise ValueError("Unsupported time_unit " + time_unit
+                                 + " for volumetric rates")
+
+        column_keys = realization._glob_smry_keys(column_keys)
+
+        # Be strict and only include certain summary vectors that look
+        # cumulative by their name:
+        column_keys = [x for x in column_keys if
+                       ScratchRealization._cum_smrycol2rate(x)]
+        if not column_keys:
+            logger.error("No valid cumulative columns given "
+                         + "to volumetric computation")
+            return pd.DataFrame()
+
+        cum_df = realization.get_smry(column_keys=column_keys,
+                                      time_index=time_index)
+        # get_smry() for realizations return a dataframe indexed by 'DATE'
+
+        # Compute row-wise difference, shift back one row
+        # to get the NaN to the end, and then drop the NaN.
+        # The "rate" given for a specific date is then
+        # valid from that date until the next date.
+        diff_cum = cum_df.diff().shift(-1).fillna(value=0)
+
+        if time_unit:
+            # Calculate the relative timedelta between consecutive
+            # DateIndices. relativedeltas are correct in terms
+            # of number of years and number of months, but it will
+            # only give us integer months, and then leftover days.
+            rel_deltas = [relativedelta(t[1], t[0])
+                          for t in zip(diff_cum.index, diff_cum.index[1:])]
+            whole_days = [(t[1] - t[0]).days
+                          for t in zip(diff_cum.index, diff_cum.index[1:])]
+            # Need to know which years are leap years for our index:
+            dayspryear = [365 if not calendar.isleap(x.year) else 366
+                          for x in pd.to_datetime(diff_cum.index[1:])]
+            # Float-contribution to years from days:
+            days = [t[0] / float(t[1])
+                    for t in zip([r.days for r in rel_deltas],
+                                 dayspryear)]
+            floatyearsnodays = [r.years + r.months / 12.0
+                                for r in rel_deltas]
+            floatyears = [x + y for x, y in zip(floatyearsnodays, days)]
+
+            # Calculate month-difference:
+            floatmonthsnodays = [r.years * 12.0 + r.months
+                                 for r in rel_deltas]
+            # How many days pr. month? We check this for the right
+            # end of the relevant time interval.
+            daysprmonth = [calendar.monthrange(t.year, t.month)[1]
+                           for t in diff_cum.index[1:]]
+            days = [t[0] / float(t[1])
+                    for t in zip([r.days for r in rel_deltas], daysprmonth)]
+            floatmonths = [x + y for x, y in zip(floatmonthsnodays, days)]
+
+            diff_cum['DAYS'] = whole_days + [0]
+            diff_cum['MONTHS'] = floatmonths + [0]
+            diff_cum['YEARS'] = floatyears + [0]
+            for vec in column_keys:
+                diff_cum[vec] = diff_cum[vec] \
+                                / diff_cum[time_unit.upper()]
+            # Drop temporary columns
+            diff_cum.drop(['DAYS', 'MONTHS', 'YEARS'],
+                          inplace=True, axis=1)
+            # Set NaN at the final row to zero
+            diff_cum.fillna(value=0, inplace=True)
+
+        # Translate the column vectors, 'FOPT' -> 'FOPR' etc.
+        rate_names = []
+        for vec in diff_cum.columns:
+            ratename = ScratchRealization._cum_smrycol2rate(vec)
+            if ratename:
+                rate_names.append(ratename)
+        diff_cum.columns = rate_names
+        diff_cum.index.name = 'DATE'
+        return(diff_cum)
+
+    @staticmethod
+    def _cum_smrycol2rate(smrycolumn):
+        """Returns None if a smrycolumn is not assumed
+        to be cumulative, and returns a string with the corresponding
+        rate column if it is cumulative
+
+        F.ex. _cum_smrycol2rate('FOPT') will return 'FOPR'
+        """
+        # Split by colon into components:
+        comps = smrycolumn.split(':')
+        if len(comps) > 2:
+            # Do not support more than one colon.
+            return None
+        if 'CT' in comps[0]:
+            # No watercuts.
+            return None
+        if 'T' not in comps[0]:
+            return None
+        comps[0] = comps[0].replace('T', 'R')
+        if len(comps) > 1:
+            return comps[0] + ':' + comps[1]
+        else:
+            return comps[0]
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -787,13 +990,8 @@ class ScratchRealization(object):
         if not self._eclsum:
             return pd.DataFrame()
 
-        if not props_wildcard:
-            props_wildcard = [None]
-        if isinstance(props_wildcard, str):
-            props_wildcard = [props_wildcard]
-        props = set()
-        for prop in props_wildcard:
-            props = props.union(set(self._eclsum.keys(prop)))
+        props = self._glob_smry_keys(props_wildcard)
+
         if 'numpy_vector' in dir(self._eclsum):
             data = {prop: self._eclsum.numpy_vector(prop, report_only=False)
                     for prop in props}
@@ -803,7 +1001,8 @@ class ScratchRealization(object):
         dates = self._eclsum.get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
 
-    def get_smry_dates(self, freq='monthly', normalize=True):
+    def get_smry_dates(self, freq='monthly', normalize=True,
+                       start_date=None, end_date=None):
         """Return list of datetimes available in the realization
 
         Args:
@@ -817,30 +1016,24 @@ class ScratchRealization(object):
             normalize: Whether to normalize backwards at the start
                 and forwards at the end to ensure the raw
                 date range is covered.
+            start_date: str or date with first date to include
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included. Overrides
+                normalized dates.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overrides
+                normalized dates. Overriden if freq is 'last'.
         Returns:
             list of datetimes. None if no summary data is available.
         """
-        if not self.get_eclsum():
+        from .ensemble import ScratchEnsemble
+        eclsum = self.get_eclsum()
+        if not eclsum:
             return None
-        if freq == 'raw':
-            return self.get_eclsum().dates
-        elif freq == 'last':
-            return [self.get_eclsum().end_date]
-        else:
-            start_date = self.get_eclsum().start_date
-            end_date = self.get_eclsum().end_date
-            pd_freq_mnenomics = {'monthly': 'MS',
-                                 'yearly': 'YS',
-                                 'daily': 'D'}
-            if normalize:
-                (start_date, end_date) = normalize_dates(start_date, end_date,
-                                                         freq)
-            if freq not in pd_freq_mnenomics:
-                raise ValueError('Requested frequency %s not supported' % freq)
-            datetimes = pd.date_range(start_date, end_date,
-                                      freq=pd_freq_mnenomics[freq])
-            # Convert from Pandas' datetime64 to datetime.date:
-            return [x.date() for x in datetimes]
+        return ScratchEnsemble._get_smry_dates([eclsum.dates], freq,
+                                               normalize,
+                                               start_date, end_date)
 
     def contains(self, localpath, **kwargs):
         """Boolean function for asking the realization for presence

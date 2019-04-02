@@ -128,15 +128,21 @@ class RealizationCombination(object):
             vreal.append(key, self.get_df(key))
         return vreal
 
-    def get_smry_dates(self, freq='monthly'):
+    def get_smry_dates(self, freq='monthly', normalize=True,
+                       start_date=None, end_date=None):
         """Create a union of dates available in the
         involved ensembles
         """
-        dates = set(self.ref.get_smry_dates(freq))
+        dates = set(self.ref.get_smry_dates(freq, normalize,
+                                            start_date, end_date))
         if self.add:
-            dates = dates.union(set(self.add.get_smry_dates(freq)))
+            dates = dates.union(set(self.add.get_smry_dates(freq, normalize,
+                                                            start_date,
+                                                            end_date)))
         if self.sub:
-            dates = dates.union(set(self.add.get_smry_dates(freq)))
+            dates = dates.union(set(self.add.get_smry_dates(freq, normalize,
+                                                            start_date,
+                                                            end_date)))
         dates = list(dates)
         dates.sort()
         return dates
