@@ -31,10 +31,12 @@ class EnsembleSet(object):
     """
 
     def __init__(self, name=None, ensembles=None, frompath=None,
-                 realidxregexp=None, iterregexp=None, batchregexp=None):
-        """Initiate an ensemble set, either as empty, or from
-        a list of already initialized ensembles, or directly from the
-        filesystem.
+                 runpathfile=None, realidxregexp=None,
+                 iterregexp=None, batchregexp=None):
+        """Initiate an ensemble set, either as empty, or from a list of
+        already initialized ensembles, or directly from the
+        filesystem, or from an ERT runpath file. Only one of these
+        initialization modes can be used.
 
         Args:
         name: Chosen name for the ensemble set. Can be used if aggregated at a
@@ -44,6 +46,8 @@ class EnsembleSet(object):
             Will be globbed by default. If no realizations or iterations
             are detected after globbing, the standard glob
             'realization-*/iter-*/ will be used.
+        runpathfile: string with path to an ert runpath file which will
+            be used to lookup realizations and iterations.
         realidxregexp: regular expression object that will be used to
             determine the realization index (must be integer) from a path
             component (split by /). The default fits realization-*
@@ -51,13 +55,17 @@ class EnsembleSet(object):
             treated as a string.
         batchregexp: similar ot iterregexp, for future support of an extra
             level similar to iterations
+
         """
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
 
-        if ensembles and frompath:
-            logger.error("EnsembleSet cannot initialize from " +
-                         "both list of ensembles and path")
+        if (ensembles and frompath) or (ensembles and runpathfile) \
+           or (runpathfile and ensembles):
+            logger.error("EnsembleSet only supports one initialization mode,"
+                         + "from list of ensembles\n, list of paths or "
+                         + "an ert runpath file")
+            raise ValueError
 
         # Check consistency in arguments.
         if not name:
@@ -85,6 +93,14 @@ class EnsembleSet(object):
         if frompath:
             self.add_ensembles_frompath(frompath, realidxregexp,
                                         iterregexp, batchregexp)
+            if not self._ensembles:
+                logger.warning("No ensembles added to EnsembleSet")
+
+        if runpathfile:
+            if not os.path.exists(runpathfile):
+                logger.error("Could not open runpath file {}".format(runpathfile))
+                raise IOError
+            self.add_ensembles_fromrunpath(runpathfile)
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
 
@@ -230,6 +246,21 @@ class EnsembleSet(object):
             # depending on chosen regexpx
             ens = ScratchEnsemble(str(iterr),
                                   pathsforiter, realidxregexp=realidxregexp)
+            self._ensembles[ens.name] = ens
+
+    def add_ensembles_fromrunpath(self, runpathfile):
+        """Add one or many ensembles from an ERT runpath file.
+        """
+        runpath_df = pd.read_csv(runpathfile, sep=r'\s+', engine='python',
+                                 names=['index', 'runpath', 'eclbase', 'iter'])
+        # If index and iter columns are all integers (typically zero padded),
+        # Pandas has converted them to int64. If not, they will be
+        # strings (objects)
+        for iterr in runpath_df['iter'].unique():
+            # Make a runpath slice, and initialize from that:
+            ens_runpath = runpath_df[runpath_df['iter'] == iterr]
+            ens = ScratchEnsemble('iter-' + str(iterr),
+                                  runpathfile=ens_runpath)
             self._ensembles[ens.name] = ens
 
     def add_ensemble(self, ensembleobject):

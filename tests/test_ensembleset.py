@@ -407,3 +407,68 @@ def test_filestructures(tmp='TMP'):
     # only 5 unique realization indices. We get back an ensemble
     # with 5 members, but exactly which is not defined (or tested)
     assert len(dummy6[dummy6.ensemblenames[0]]) == 5
+
+
+def test_ertrunpathfile(tmp='TMP'):
+    """Initialize an ensemble set from an ERT runpath file
+
+    ERT runpath files look like:
+        <rownumber> <path> <case> <iter>
+    where rownumber is an integer, path is a string,
+    case is usually integer but
+    potentially a string? and iter is a integer."""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    ensdir = os.path.join(testdir,
+                          "data/testensemble-reek001/")
+    # Copy iter-0 to iter-1, creating an identical ensemble<
+    # we can load for testing. Delete in case it exists
+    for realizationdir in glob.glob(ensdir + '/realization-*'):
+        if os.path.exists(realizationdir + '/iter-1'):
+            if os.path.islink(realizationdir + '/iter-1'):
+                os.remove(realizationdir + '/iter-1')
+            else:
+                shutil.rmtree(realizationdir + '/iter-1')
+        # Symlink each file/dir individually (so we can remove some)
+        os.mkdir(realizationdir + '/iter-1')
+        for realizationcomponent in glob.glob(realizationdir + '/iter-0/*'):
+            if ('parameters.txt' not in realizationcomponent) and \
+               ('outputs.txt' not in realizationcomponent):
+                os.symlink(realizationcomponent,
+                           realizationcomponent.replace('iter-0', 'iter-1'))
+
+    # Also construct an artificial ert runpathfile with iter-0 and iter-1,
+    # by modifying a copy of the runpath for iter-0
+
+    iter0runpath = open(testdir + '/data/ert-runpath-file', 'r').readlines()
+
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+
+    enssetrunpathfile = open(tmp + '/ensset-runpath-file', 'w')
+    print(iter0runpath)
+    enssetrunpathfile.write(''.join(iter0runpath))
+    for line in iter0runpath:
+        (real, path, eclname, iter) = line.split()
+        enssetrunpathfile.write(real + ' ')  # CHECK THIS!
+        # Could the first column just be the line number?
+        # Iterate on the ERT official doc when determined.
+        enssetrunpathfile.write(path.replace('iter-0', 'iter-1') + ' ')
+        enssetrunpathfile.write(eclname + ' ')
+        enssetrunpathfile.write('001' + '\n')
+    enssetrunpathfile.close()
+
+    ensset = EnsembleSet('ensfromrunpath',
+                         runpathfile=tmp + '/ensset-runpath-file')
+    assert len(ensset) == 2
+    assert len(ensset['iter-0']) == 5
+    assert len(ensset['iter-1']) == 5
+
+    # Delete the symlinks when we are done.
+    for realizationdir in glob.glob(ensdir + '/realization-*'):
+        shutil.rmtree(realizationdir + '/iter-1')

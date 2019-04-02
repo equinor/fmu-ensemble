@@ -83,7 +83,7 @@ class ScratchEnsemble(object):
             paths = [paths]
 
         if paths and runpathfile:
-            logger.error("Cannot initizalize from both path and runpathfile")
+            logger.error("Cannot initialize from both path and runpathfile")
             return
 
         globbedpaths = None
@@ -93,10 +93,17 @@ class ScratchEnsemble(object):
             globbedpaths = [glob.glob(path) for path in paths]
             globbedpaths = list(set([item for sublist in globbedpaths
                                      for item in sublist]))
-        if not globbedpaths and not runpathfile:
-            logger.warning("Initialized empty ScratchEnsemble")
-            return
+        if not globbedpaths:
+            if isinstance(runpathfile, str):
+                if not runpathfile:
+                    logger.warning("Initialized empty ScratchEnsemble")
+                    return
+            if isinstance(runpathfile, pd.DataFrame):
+                if runpathfile.empty:
+                    logger.warning("Initialized empty ScratchEnsemble")
+                    return
 
+        count = None
         if globbedpaths:
             logger.info("Loading ensemble from dirs: %s",
                         " ".join(globbedpaths))
@@ -105,11 +112,16 @@ class ScratchEnsemble(object):
             # representing the realizations.
             count = self.add_realizations(paths, realidxregexp)
 
-        if runpathfile:
+        if isinstance(runpathfile, str) and runpathfile:
+            count = self.add_from_runpathfile(runpathfile, runpathfilter)
+        if isinstance(runpathfile, pd.DataFrame) and not runpathfile.empty:
             count = self.add_from_runpathfile(runpathfile, runpathfilter)
 
-        logger.info('ScratchEnsemble initialized with %d realizations',
-                    count)
+        if count:
+            logger.info('ScratchEnsemble initialized with %d realizations',
+                        count)
+        else:
+            logger.warning('ScratchEnsemble empty')
 
     def __getitem__(self, realizationindex):
         """Get one of the ScratchRealization objects.
@@ -204,12 +216,20 @@ class ScratchEnsemble(object):
                     len(self._realizations))
         return count
 
-    def add_from_runpathfile(self, runpathfile, runpathfilter=None):
+    def add_from_runpathfile(self, runpath, runpathfilter=None):
         """Add realizations from a runpath file typically
         coming from ERT.
 
+        The runpath file is a space separated table with the columns:
+            index - integer with realization index
+            runpath - string with the full path to the realization
+            eclbase - ECLBASE within the runpath (location of DATA file
+                minus the trailing '.DATA')
+            iter - integer with the iteration number.
+
         Args:
-            runpathfile: str with filename, absolute or relative
+            runpath: str with filename, absolute or relative, or
+                a Pandas DataFrame parsed from a runpath file
             runpathfilter: str which each filepath has to match
                 in order to be included. Default None which means not filter
 
@@ -217,8 +237,19 @@ class ScratchEnsemble(object):
             int - Number of successfully added realizations.
         """
         prelength = len(self)
-        runpath_df = pd.read_csv(runpathfile, sep=r'\s+', engine='python',
-                                 names=['index', 'runpath', 'eclbase', 'foo'])
+        if isinstance(runpath, str):
+            runpath_df = pd.read_csv(runpath, sep=r'\s+', engine='python',
+                                     names=['index', 'runpath',
+                                            'eclbase', 'iter'])
+        elif isinstance(runpath, pd.DataFrame):
+            # We got a readymade dataframe. Perhaps a slice.
+            # Most likely we are getting the slice from an EnsembleSet
+            # initialization.
+            runpath_df = runpath
+            if 'index' not in runpath_df or 'runpath' not in runpath_df \
+               or 'eclbase' not in runpath_df or 'iter' not in runpath_df:
+                raise ValueError("runpath dataframe not correct")
+
         for idx, row in runpath_df.iterrows():
             if runpathfilter and runpathfilter not in row['runpath']:
                 continue
