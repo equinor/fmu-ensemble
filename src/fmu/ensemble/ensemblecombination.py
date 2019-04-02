@@ -179,9 +179,8 @@ class EnsembleCombination(object):
         Returns:
             A MultiLevel dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
-            are the different vectors. The column 'p10' contains the oil
-            industry version of 'p10', and is calculated using the Pandas p90
-            functionality.
+            are the different vectors. Quantiles follow the scientific
+            standard, opposite to the oil industry standard.
 
         TODO: add warning message when failed realizations are removed
         """
@@ -192,8 +191,8 @@ class EnsembleCombination(object):
                                column_keys=column_keys).drop(columns='REAL')\
                                                        .groupby('DATE')
         mean = dframe.mean()
-        p10 = dframe.quantile(q=0.90)
-        p90 = dframe.quantile(q=0.10)
+        p90 = dframe.quantile(q=0.90)
+        p10 = dframe.quantile(q=0.10)
         maximum = dframe.max()
         minimum = dframe.min()
 

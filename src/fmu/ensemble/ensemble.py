@@ -843,8 +843,9 @@ class ScratchEnsemble(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             quantiles: list of ints between 0 and 100 for which quantiles
-               to compute. Quantiles refer to oil industry convention, and
-               the quantile number 10 will be calculated as Pandas p90.
+               to compute. Quantiles refer to scientific standard, which
+               is opposite to the oil industry convention.
+               Ask for p10 if you need the oil industry p90.
             cache_eclsum: boolean for whether to keep the loaded EclSum
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
@@ -857,9 +858,9 @@ class ScratchEnsemble(object):
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
-            are the different vectors. The column 'p10' contains the oil
-            industry version of 'p10', and is calculated using the Pandas p90
-            functionality. If quantiles are explicitly supplied, the 'pXX'
+            are the different vectors. Quantiles refer to the scientific
+            standard, opposite to the oil industry convention.
+            If quantiles are explicitly supplied, the 'pXX'
             strings in the outer index are changed accordingly.
 
         TODO: add warning message when failed realizations are removed
@@ -890,7 +891,7 @@ class ScratchEnsemble(object):
         dframes['mean'] = dframe.mean()
         for quantile in quantiles:
             quantile_str = 'p' + str(quantile)
-            dframes[quantile_str] = dframe.quantile(q=1 - quantile / 100.0)
+            dframes[quantile_str] = dframe.quantile(q=quantile / 100.0)
         dframes['maximum'] = dframe.max()
         dframes['minimum'] = dframe.min()
 
@@ -1034,7 +1035,7 @@ class ScratchEnsemble(object):
 
             if quantilematcher.match(aggregation):
                 quantile = int(quantilematcher.match(aggregation).group(1))
-                aggregated = aggobject.quantile(1 - quantile/100.0)
+                aggregated = aggobject.quantile(quantile/100.0)
             else:
                 # Passing through the variable 'aggregation' to
                 # Pandas, thus supporting more than we have listed in

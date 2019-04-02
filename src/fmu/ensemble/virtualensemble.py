@@ -296,7 +296,7 @@ class VirtualEnsemble(object):
 
             if quantilematcher.match(aggregation):
                 quantile = int(quantilematcher.match(aggregation).group(1))
-                aggregated = aggobject.quantile(1 - quantile/100.0)
+                aggregated = aggobject.quantile(q=quantile/100.0)
             else:
                 # Passing through the variable 'aggregation' to
                 # Pandas, thus supporting more than we have listed in
@@ -482,15 +482,14 @@ class VirtualEnsemble(object):
                 If a string is supplied, that string is attempted used
                 via get_smry_dates() in order to obtain a time index.
             quantiles: list of ints between 0 and 100 for which quantiles
-                to compute. Quantiles refer to oil industry convention, and
-                the quantile number 10 will be calculated as Pandas p90.
+                to compute. Quantiles follow scientific standard, 
+                for the oil industry p10 you should ask for p90.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
-            are the different vectors. The column 'p10' contains the oil
-            industry version of 'p10', and is calculated using the Pandas p90
-            functionality. If quantiles are explicitly supplied, the 'pXX'
-            strings in the outer index are changed accordingly.
+            are the different vectors. The column 'p10' represent the
+            scientific p10, not the oil industry p10 for which you
+            have to ask for p90.
         """
         if quantiles is None:
             quantiles = [10, 90]

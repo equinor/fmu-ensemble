@@ -332,9 +332,9 @@ def test_virtual_observations():
 
     # And we need some VirtualRealizations
     virtreals = {
-        'p10realization': ens.agg('p10'),
+        'p90realization': ens.agg('p90'),
         'meanrealization': ens.agg('mean'),
-        'p90realization': ens.agg('p90')
+        'p10realization': ens.agg('p10')
         }
 
     summaryvector = "FOPT"
@@ -355,5 +355,5 @@ def test_virtual_observations():
         representative_realizations[virtrealname] = closest_realization
 
     assert representative_realizations['meanrealization'] == 4
-    assert representative_realizations['p10realization'] == 2
-    assert representative_realizations['p90realization'] == 1
+    assert representative_realizations['p90realization'] == 2
+    assert representative_realizations['p10realization'] == 1
