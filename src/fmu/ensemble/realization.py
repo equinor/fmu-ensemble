@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Implementation of realization classes
+"""Module for the ScratchRealization class
 
 A realization is a set of results from one subsurface model
 realization. A realization can be either defined from
@@ -38,7 +38,7 @@ logger = fmux.basiclogger(__name__)
 class ScratchRealization(object):
     r"""A representation of results still present on disk
 
-    ScratchRealization's point to the filesystem for their
+    ScratchRealizations point to the filesystem for their
     contents.
 
     A realization must at least contain a STATUS file.

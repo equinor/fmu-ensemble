@@ -7,11 +7,10 @@ from __future__ import print_function
 
 import os
 import re
-import fnmatch
 import pandas as pd
 
 from fmu import config
-from fmu.ensemble.virtualrealization import VirtualRealization
+from .virtualrealization import VirtualRealization
 
 fmux = config.etc.Interaction()
 logger = fmux.basiclogger(__name__)
@@ -20,22 +19,23 @@ logger = fmux.basiclogger(__name__)
 class VirtualEnsemble(object):
     """A computed or archived ensemble
 
-    Computed or archived, one cannot assume to have access to the file
-    system containing original data.
+    Computed or archived, there is no link to the original dataset(s)
+    that once was on a file system.
 
-    Contrary to a ScratchEnsemble, a VirtualEnsemble stores aggregated
-    dataframes. The column REAL signifies the realization index.
+    Contrary to a ScratchEnsemble which contains realization objects
+    with individual data, a VirtualEnsemble stores aggregrated
+    dataframes for its data. The column REAL will in all dataframes
+    signify the realization index.
+
+    Initialization of VirtualEnsembles is typically done by other code, as
+    to_virtual() in a ScratchEnsemble.
+
+    Args:
+        name: string, can be chosen freely
+        data: dict with data to initialize with. Defaults to empty
+        longdescription: string, free form multiline description.
     """
     def __init__(self, name=None, data=None, longdescription=None):
-        """
-        Initialize a virtual ensemble.
-
-        Typical use of this constructor is from ScratchEnsemble.to_virtual()
-        Args:
-            name: string, can be chosen freely
-            data: dict with data to initialize with. Defaults to empty
-            longdescription: string, free form multiline description.
-        """
         if name:
             self._name = name
         else:
@@ -53,7 +53,8 @@ class VirtualEnsemble(object):
         self.realindices = []
 
     def __len__(self):
-        """Return the number of realizations included in the ensemble"""
+        """Return the number of realizations (integer) included in the
+        ensemble"""
         return len(self.realindices)
 
     def update_realindices(self):
@@ -74,7 +75,13 @@ class VirtualEnsemble(object):
         self.realindices = list(idxset)
 
     def keys(self):
-        """Return all keys in the internal datastore"""
+        """Return all keys in the internal datastore
+
+        The keys are also called localpaths, and resemble the the
+        filenames they would be written to if dumped to disk, and also
+        resemble the filenames from which they were originally
+        loaded in a ScratchEnsemble.
+        """
         return self.data.keys()
 
     def shortcut2path(self, shortpath):
@@ -92,36 +99,30 @@ class VirtualEnsemble(object):
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
 
-        CODE DUPLICATION.
         """
-        basenames = list(map(os.path.basename, self.keys()))
-        if basenames.count(shortpath) == 1:
-            short2path = {os.path.basename(x): x for x in self.keys()}
-            return short2path[shortpath]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
-        if noexts.count(shortpath) == 1:
-            short2path = {''.join(x.split('.')[:-1]): x
-                          for x in self.keys()}
-            return short2path[shortpath]
-        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.keys()]
-        if basenamenoexts.count(shortpath) == 1:
-            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                          for x in self.keys()}
-            return short2path[shortpath]
-        # If we get here, we did not find anything that
-        # this shorthand could point to. Return as is, and let the
-        # calling function handle further errors.
-        return shortpath
+        from fmu.ensemble import ScratchEnsemble
+        return ScratchEnsemble._shortcut2path(self.keys(), shortpath)
 
     def __getitem__(self, localpath):
-        """Return a specific datatype, shorthands are allowed"""
+        """Shorthand for .get_df()
+
+        Args:
+            localpath: string with the name of the data requested.
+                shortcuts allowed
+        """
         return self.get_df(localpath)
 
     def get_realization(self, realindex):
         """
         Return a virtual realization object, with data
-        taken from the virtual ensemble.
+        taken from the virtual ensemble. Each dataframe
+        in the ensemble will by sliced by the REAL column.
+
+        Args:
+            realindex: integer for the realization.
+
+        Returns:
+            VirtualRealization, populated with data.
         """
         vreal = VirtualRealization(description="Realization %d from %s" %
                                    (realindex, self._name))
@@ -169,7 +170,7 @@ class VirtualEnsemble(object):
         if not overwrite and realidx in self.realindices:
             raise ValueError("Error, realization index already present")
         if overwrite and realidx in self.realindices:
-            self.remove_realization(realidx)
+            self.remove_realizations(realidx)
 
         # Add the data from the incoming realization key by key
         for key in realization.keys():
@@ -288,7 +289,7 @@ class VirtualEnsemble(object):
             if not (int in dtypes or float in dtypes):
                 logger.info("No numerical data to aggregate in %s", key)
                 continue
-            if len(groupby):
+            if groupby:
                 aggobject = data.groupby(groupby)
             else:
                 aggobject = data
@@ -313,6 +314,15 @@ class VirtualEnsemble(object):
 
         Incoming dataframe MUST have a column called 'REAL' which
         refers to the realization indices already known to the object.
+
+        Args:
+            key: name (localpath) for the data, this will be
+                the name under with the dataframe is stored, for
+                later retrival via get_df().
+            dataframe: a Pandas DataFrame with a REAL column
+            overwrite: boolean - set to True if existing data is
+                to be overwritten. Defaults to false which will
+                only issue a warning if the dataset exists already.
         """
         if not isinstance(dataframe, pd.DataFrame):
             raise ValueError("Can only append dataframes")
@@ -323,8 +333,8 @@ class VirtualEnsemble(object):
             return
         self.data[key] = dataframe
 
-    def to_disk(self):
-        """Dump all data to disk, in a retrieveable manner"""
+    def to_disk(self, path):
+        """Dump all data to disk, in a retrieveable manner."""
         # Mature analogue function in VirtualRealization before commencing this
         raise NotImplementedError
 
@@ -338,7 +348,7 @@ class VirtualEnsemble(object):
         raise NotImplementedError
 
     def __repr__(self):
-        """Representation of the object"""
+        """Textual representation of the object"""
         return "<VirtualEnsemble, {}>".format(self._name)
 
     def get_df(self, localpath):
@@ -421,7 +431,7 @@ class VirtualEnsemble(object):
         else:
             chosen_smry = time_index
 
-        logger.info("Using " + chosen_smry + " for interpolation")
+        logger.info("Using %s for interpolation", chosen_smry)
 
         # Explicit creation of VirtualRealization allows for later
         # multiprocessing of the interpolation.
@@ -485,21 +495,22 @@ class VirtualEnsemble(object):
         if quantiles is None:
             quantiles = [10, 90]
 
-        if column_keys == None:
+        if column_keys is None:
             column_keys = '*'
 
         # Check validity of quantiles to compute:
         quantiles = list(map(int, quantiles))  # Potentially raise ValueError
         for quantile in quantiles:
             if quantile < 0 or quantile > 100:
-                raise ValueError("Quantiles must be integers between 0 and 100")
+                raise ValueError("Quantiles must be integers "
+                                 + "between 0 and 100")
 
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble. This will fail if we don't have the
         # time frequency already internalized.
         dframe = self.get_smry(time_index=time_index,
                                column_keys=column_keys).drop(columns='REAL')\
-                               .groupby('DATE')
+                     .groupby('DATE')
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
