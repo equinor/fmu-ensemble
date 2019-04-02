@@ -11,10 +11,10 @@ import os
 import glob
 import pandas as pd
 
-from fmu.config import etc
+from .etc import Interaction
 from .ensemble import ScratchEnsemble, VirtualEnsemble
 
-xfmu = etc.Interaction()
+xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
 
 

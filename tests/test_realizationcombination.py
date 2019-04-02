@@ -7,12 +7,12 @@ from __future__ import print_function
 
 import os
 
-from fmu import config
+from fmu.ensemble import etc
 from fmu import ensemble
 
 from fmu.ensemble import ScratchEnsemble
 
-fmux = config.etc.Interaction()
+fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():

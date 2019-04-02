@@ -10,10 +10,10 @@ import pytest
 import numpy as np
 import pandas as pd
 import datetime
-from fmu import config
+from fmu.ensemble import etc
 from fmu import ensemble
 
-fmux = config.etc.Interaction()
+fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():

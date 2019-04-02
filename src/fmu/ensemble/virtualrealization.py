@@ -9,9 +9,9 @@ import fnmatch
 import shutil
 import pandas as pd
 
-from fmu import config
+from .etc import Interaction
 
-fmux = config.etc.Interaction()
+fmux = Interaction()
 logger = fmux.basiclogger(__name__)
 
 

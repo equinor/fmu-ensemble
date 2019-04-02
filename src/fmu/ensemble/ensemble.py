@@ -16,15 +16,14 @@ import pandas as pd
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
-
-from fmu.config import etc
+from .etc import Interaction
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .realization import parse_number
 
-xfmu = etc.Interaction()
+xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
 
 

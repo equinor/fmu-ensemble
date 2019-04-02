@@ -26,12 +26,12 @@ import ecl.summary
 from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
-from fmu import config
 
+from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
 
-fmux = config.etc.Interaction()
+fmux = Interaction()
 logger = fmux.basiclogger(__name__)
 
 

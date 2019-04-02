@@ -15,14 +15,14 @@ import dateutil
 import datetime
 from collections import OrderedDict
 
-from fmu.config import etc
+from .etc import Interaction
 from .realization import ScratchRealization
 from .ensemble import ScratchEnsemble
 from .ensembleset import EnsembleSet
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 
-xfmu = etc.Interaction()
+xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
 
 
