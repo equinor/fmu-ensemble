@@ -49,10 +49,10 @@ Supported statistical aggregations are ``mean``, ``median``, ``min``,
 ``00`` and ``99`` being the percentile you want. You access this
 functionality through the function ``agg()`` in the ensemble objects.
 
-Pandas and Numpy is used under the hood for all computations, and for
-percentiles/quantiles, the oil industry has an opposite meaning of
-quantiles. When you ask for ``p10`` ("high case") it will be translated
-to ``p90`` before beint sent to Pandas and Numpy for computation.
+Pandas and Numpy is used under the hood for all computations. The quantile
+integers you supply are forwarded directly to Pandas, beware that this
+is opposite to the usual subsurface understanding of e.g. a "high case
+p10 profile". Translate p10 to p90 if needed in your client code.
 
 .. code-block:: python
 

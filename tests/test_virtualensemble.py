@@ -126,10 +126,10 @@ def test_virtualensemble():
     assert vens.agg('min').get_df('betterdata')['NPV'] == 9
     assert vens.agg('max').get_df('betterdata')['NPV'] == 6000
     assert vens.agg('min').get_df('betterdata')['NPV'] < \
-        vens.agg('p93').get_df('betterdata')['NPV']
-    assert vens.agg('p55').get_df('betterdata')['NPV'] < \
-        vens.agg('p05').get_df('betterdata')['NPV']
-    assert vens.agg('p54').get_df('betterdata')['NPV'] < \
+        vens.agg('p07').get_df('betterdata')['NPV']
+    assert vens.agg('p05').get_df('betterdata')['NPV'] < \
+        vens.agg('p55').get_df('betterdata')['NPV']
+    assert vens.agg('p46').get_df('betterdata')['NPV'] < \
         vens.agg('max').get_df('betterdata')['NPV']
 
     assert 'REAL' not in vens.agg('min')['STATUS'].columns

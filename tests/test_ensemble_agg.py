@@ -42,8 +42,8 @@ def test_ensemble_aggregations(tmp='TMP'):
         'median': reekensemble.agg('median'),
         'min': reekensemble.agg('min'),
         'max': reekensemble.agg('max'),
-        'p90': reekensemble.agg('p90'),  # low estimate
-        'p10': reekensemble.agg('p10')  # high estimate
+        'p10': reekensemble.agg('p10'),  # low estimate
+        'p90': reekensemble.agg('p90')  # high estimate
     }
 
     if not os.path.exists(tmp):
@@ -56,12 +56,12 @@ def test_ensemble_aggregations(tmp='TMP'):
         stats['max']['parameters.txt']['RMS_SEED']
 
     assert stats['min']['parameters.txt']['RMS_SEED'] <= \
-        stats['p90']['parameters.txt']['RMS_SEED']
-    assert stats['p90']['parameters.txt']['RMS_SEED'] <= \
-        stats['median']['parameters.txt']['RMS_SEED']
-    assert stats['median']['parameters.txt']['RMS_SEED'] <= \
         stats['p10']['parameters.txt']['RMS_SEED']
     assert stats['p10']['parameters.txt']['RMS_SEED'] <= \
+        stats['median']['parameters.txt']['RMS_SEED']
+    assert stats['median']['parameters.txt']['RMS_SEED'] <= \
+        stats['p90']['parameters.txt']['RMS_SEED']
+    assert stats['p90']['parameters.txt']['RMS_SEED'] <= \
         stats['max']['parameters.txt']['RMS_SEED']
 
     assert stats['min']['parameters.txt']['RMS_SEED'] <= \
@@ -81,7 +81,7 @@ def test_ensemble_aggregations(tmp='TMP'):
     # Aggregation of STATUS also works. Note that min and max
     # works for string columns, so the available data will vary
     # depending on aggregation method
-    assert stats['p90']['STATUS'].iloc[49]['DURATION'] < \
+    assert stats['p10']['STATUS'].iloc[49]['DURATION'] < \
         stats['max']['STATUS'].iloc[49]['DURATION']
     # job 49 is the Eclipse forward model
 
@@ -94,8 +94,8 @@ def test_ensemble_aggregations(tmp='TMP'):
     assert 'STATUS' not in reekensemble.agg('mean',
                                             keylist=['parameters.txt']).keys()
 
-    assert reekensemble.agg('p99')['parameters']['RMS_SEED'] < \
-        reekensemble.agg('p01')['parameters']['RMS_SEED']
+    assert reekensemble.agg('p01')['parameters']['RMS_SEED'] < \
+        reekensemble.agg('p99')['parameters']['RMS_SEED']
 
     with pytest.raises(ValueError):
         reekensemble.agg('foobar')
