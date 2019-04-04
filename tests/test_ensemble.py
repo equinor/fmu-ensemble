@@ -338,8 +338,12 @@ def test_ensemble_ecl():
                                       time_index='last')) == 5
     assert isinstance(reekensemble.get_df('unsmry--last.csv'), pd.DataFrame)
 
-    # eclipse well names list
+    # Eclipse well names list
     assert len(reekensemble.get_wellnames('OP*')) == 5
+    assert len(reekensemble.get_wellnames(None)) == 8
+    assert len(reekensemble.get_wellnames()) == 8
+    assert len(reekensemble.get_wellnames('')) == 0
+    assert len(reekensemble.get_wellnames(['OP*', 'WI*'])) == 8
 
     # eclipse well groups list
     assert len(reekensemble.get_groupnames()) == 3

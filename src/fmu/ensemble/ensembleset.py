@@ -527,6 +527,48 @@ class EnsembleSet(object):
         return self.get_df('share/results/tables/unsmry--' +
                            time_index + '.csv')
 
+    def get_smry(self, time_index=None, column_keys=None,
+                 cache_eclsum=False, start_date=None,
+                 end_date=None):
+        """Aggregates summary data from all ensembles
+
+        Wraps around Ensemble.get_smry(), which wraps around
+        Realization.get_smry() which wraps around
+        ecl.summary.EclSum.pandas_frame()
+
+        Args:
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+            column_keys: list of column key wildcards
+            cache_eclsum: boolean for whether to cache the EclSum
+                objects. Defaults to False. Set to True if
+                there is enough memory to keep all realizations summary
+                files in memory at once. This will speed up subsequent
+                operations
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
+        Returns:
+            A DataFame of summary vectors for the EnsembleSet. The column
+            ENSEMBLE will distinguish the different ensembles by their
+            respective names.
+        """
+        smrylist = []
+        for _, ensemble in self._ensembles.items():
+            smry = ensemble.get_smry(time_index, column_keys,
+                                     cache_eclsum, start_date,
+                                     end_date)
+            smry.insert(0, 'ENSEMBLE', ensemble.name)
+            smrylist.append(smry)
+        if smrylist:
+            return pd.concat(smrylist, sort=False)
+
     def get_smry_dates(self, freq='monthly', cache_eclsum=True,
                        start_date=None, end_date=None):
         """Return list of datetimes from an ensembleset
@@ -556,10 +598,12 @@ class EnsembleSet(object):
 
         rawdates = set()
         for _, ensemble in self._ensembles.items():
-            rawdates = rawdates.union(ensemble.get_smry_dates(freq='report',
-                                                   cache_eclsum=cache_eclsum,
-                                                   start_date=start_date,
-                                                   end_date=end_date))
+            rawdates = rawdates\
+                       .union(ensemble
+                              .get_smry_dates(freq='report',
+                                              cache_eclsum=cache_eclsum,
+                                              start_date=start_date,
+                                              end_date=end_date))
         rawdates = list(rawdates)
         rawdates.sort()
         if freq == 'report':
@@ -577,3 +621,23 @@ class EnsembleSet(object):
                                       freq=pd_freq_mnenomics[freq])
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
+
+    def get_wellnames(self, well_match=None):
+        """Return a union of all Eclipse summary well names in all ensembles
+        realizations (union).
+
+        Optionally, the well names can be filtered.
+
+        Args:
+            well_match: `Optional`. String (or list of strings)
+               with wildcard filter (globbing). If None, all wells ar
+               returned. Empty string will not match anything.
+        Returns:
+            list of strings with eclipse well names. Empty list if no
+            summary file or no matched well names.
+
+        """
+        result = set()
+        for _, ensemble in self._ensembles.items():
+            result = result.union(ensemble.get_wellnames(well_match))
+        return sorted(list(result))

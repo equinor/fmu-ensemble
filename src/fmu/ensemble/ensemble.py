@@ -942,7 +942,6 @@ class ScratchEnsemble(object):
             summary file or no matched well names.
 
         """
-
         if isinstance(well_match, str):
             well_match = [well_match]
         result = set()
@@ -960,12 +959,14 @@ class ScratchEnsemble(object):
     def get_groupnames(self, group_match=None):
         """
         Return a union of all Eclipse Summary group names
-        in all realizations (union). In addition, can return a list
-        based on matches to an input string pattern.
+        in all realizations (union).
+
+        Optionally, the well names can be filtered.
 
         Args:
             well_match: `Optional`. String (or list of strings)
-               with wildcard filter. If None, all wells are returned
+               with wildcard filter (globbing). If None, all
+               wells are returned. Empty string does not match anything.
         Returns:
             list of strings with eclipse well names. Empty list if no
             summary file or no matched well names.
@@ -1154,8 +1155,8 @@ class ScratchEnsemble(object):
                 end_date will always be included. Overriden if time_index
                 is 'last'.
         Returns:
-            A DataFame of summary vectors for the ensemble, or
-            a dict of dataframes if stacked=False.
+            A DataFame of summary vectors for the ensemble. The column
+            REAL with integers is added to distinguish realizations.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index, start_date=start_date,
