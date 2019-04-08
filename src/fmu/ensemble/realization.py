@@ -67,6 +67,8 @@ class ScratchRealization(object):
             from the path. First match is the index.
             Default: realization-(\d+)
             Only needs to match path components.
+            If a string is supplied, it will be attempted
+            compiled into a regular expression.
         index: int, the realization index to be used, will
             override anything else.
     """
@@ -75,6 +77,9 @@ class ScratchRealization(object):
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
+        # Try to compile the regexp on behalf of the user.
+        if isinstance(realidxregexp, str):
+            realidxregexp = re.compile(realidxregexp)
         if isinstance(realidxregexp, str):
             raise ValueError("Supplied realidxregexp not valid")
 
