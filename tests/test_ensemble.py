@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import numpy
 import pandas as pd
+import shutil
 
 import pytest
 
@@ -403,6 +404,31 @@ def test_ensemble_ecl():
                                               time_index='yearly',
                                               quantiles=[])
     assert len(noquantiles.index.levels[0]) == 3
+
+def test_nonstandard_dirs(tmp='TMP'):
+    ensdir = tmp + '/foo-ens-bar/'
+    
+    if os.path.exists(ensdir):
+        shutil.rmtree(ensdir)
+    os.makedirs(ensdir)
+    os.makedirs(ensdir + "/bar_001/iter_003")
+    os.makedirs(ensdir + "/bar_002/iter_003")
+    os.makedirs(ensdir + "/bar_003/iter_003")
+    enspaths = ensdir + "/bar_*/iter_003"
+
+    ens = ScratchEnsemble('foo', enspaths)
+    # The logger should also print CRITICAL statements here.
+    assert len(ens) == 0
+
+    # But if we specify a realidxregex, it should work
+    ens = ScratchEnsemble('foo', enspaths,
+                          realidxregexp='bar_(\d+)')
+    assert len(ens) == 3
+
+    # Supplying wrong regexpes:
+    ens = ScratchEnsemble('foo', enspaths,
+                          realidxregexp='bar_xx')
+    assert len(ens) == 0
 
 
 def test_volumetric_rates():

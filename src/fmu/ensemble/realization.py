@@ -107,8 +107,11 @@ class ScratchRealization(object):
                     self.index = int(realidxmatch.group(1))
                     break
             else:
-                logger.warn('Realization %s not valid, skipping',
+                logger.warn("Could not determine realization " +
+                            "index for %s, " +
+                            "this cannot be inserted in an Ensemble",
                             abspath)
+                self.index = None
         else:
             self.index = int(index)
 
