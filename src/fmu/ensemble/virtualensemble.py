@@ -9,10 +9,10 @@ import os
 import re
 import pandas as pd
 
-from fmu import config
+from .etc import Interaction
 from .virtualrealization import VirtualRealization
 
-fmux = config.etc.Interaction()
+fmux = Interaction()
 logger = fmux.basiclogger(__name__)
 
 

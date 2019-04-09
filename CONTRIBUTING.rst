@@ -119,12 +119,7 @@ Get Started!
 
 Ready to contribute? Here's how to set up `fmu-ensemble` for local development.
 
-1. You need `fmu-config` installed in *your virtual env*, as fmu-ensemble is dependent
-   on the `fmu.config.etc` module. Clone this repo (as in step 3), enter the folder,
-   and type `make develop`. That's all (but perhaps you need to pull regularly).
-
-
-2. Clone your fork locally::
+1. Clone your fork locally::
 
      $ git clone git@git.equinor.com:<your-user>/fmu-ensemble.git
      $ cd fmu-ensemble

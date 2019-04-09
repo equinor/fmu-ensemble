@@ -16,11 +16,11 @@ import ecl.summary
 
 import numpy as np
 
-from fmu import config
+from fmu.ensemble import etc
 from fmu import ensemble
 from fmu.tools import volumetrics
 
-fmux = config.etc.Interaction()
+fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():

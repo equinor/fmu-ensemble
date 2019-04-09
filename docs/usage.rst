@@ -136,7 +136,7 @@ the lines
 
 .. code-block:: python
 
-    from fmu.config import etc
+    from fmu.ensemble import etc
     fmux = etc.Interaction()
     logger = fmux.basiclogger(__name__, level='WARNING')
 

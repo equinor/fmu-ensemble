@@ -11,11 +11,11 @@ import pandas as pd
 
 import pytest
 
-from fmu import config
+from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 from fmu.tools import volumetrics
 
-fmux = config.etc.Interaction()
+fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level='WARNING')
 
 if not fmux.testsetup():
