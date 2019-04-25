@@ -176,6 +176,35 @@ def test_emptyens():
     else:
         testdir = os.path.abspath('.')
 
+    emptydf = ens.get_smry()
+    assert isinstance(emptydf, pd.DataFrame)
+    assert emptydf.empty
+
+    emptydatelist = ens.get_smry_dates()
+    assert isinstance(emptydatelist, list)
+    assert not emptydatelist
+
+    emptykeys = ens.get_smrykeys()
+    assert isinstance(emptykeys, list)
+    assert not emptykeys
+
+    emptyrates = ens.get_volumetric_rates()
+    assert isinstance(emptyrates, pd.DataFrame)
+    assert emptyrates.empty
+
+    emptystats = ens.get_smry_stats()
+    assert isinstance(emptystats, pd.DataFrame)
+    assert emptystats.empty
+
+    emptywells = ens.get_wellnames()
+    assert isinstance(emptywells, list)
+    assert not emptywells
+
+    emptygroups = ens.get_groupnames()
+    assert isinstance(emptygroups, list)
+    assert not emptygroups
+
+    # Add a realization manually:
     ens.add_realizations(testdir + '/data/testensemble-reek001/'
                          + 'realization-0/iter-0')
     assert len(ens) == 1
@@ -635,6 +664,7 @@ def test_eclsumcaching():
     some_dates = ens.get_smry_dates(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
+
 def test_filedescriptors():
     """Test how filedescriptors are used.
 
@@ -692,6 +722,7 @@ def test_read_eclgrid():
 
     assert len(grid_df.columns) == 35
     assert len(grid_df['i']) == 35840
+
 
 def test_apply(tmp='TMP'):
     """

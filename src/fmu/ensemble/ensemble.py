@@ -330,7 +330,7 @@ class ScratchEnsemble(object):
 
         Args:
             localpath: path to the text file, relative to each realization
-            convert_numeric: If set to True, assume that 
+            convert_numeric: If set to True, assume that
                 the value is numerical, and treat strings as
                 errors.
             force_reread: Force reread from file system. If
@@ -598,6 +598,9 @@ class ScratchEnsemble(object):
             column_keys: str or list of strings, cumulative summary vectors
             time_index: str or list of datetimes
 
+        Returns:
+            DataFrame analoguous to the dataframe returned by get_smry().
+            Empty dataframe if no data found.
         """
         vol_dfs = []
         for realidx, real in self._realizations.items():
@@ -609,6 +612,9 @@ class ScratchEnsemble(object):
                 vol_real.reset_index(inplace=True)
             vol_real.insert(0, 'REAL', realidx)
             vol_dfs.append(vol_real)
+
+        if not vol_dfs:
+            return pd.DataFrame()
         return pd.concat(vol_dfs, ignore_index=True, sort=False)
 
     def filter(self, localpath, inplace=True, **kwargs):
@@ -750,7 +756,7 @@ class ScratchEnsemble(object):
                 normalized dates. Overriden if freq is 'last'.
 
         Returns:
-            list of datetimes.
+            list of datetimes. Empty list if no data found.
         """
 
         # Build list of list of eclsum dates
@@ -769,11 +775,15 @@ class ScratchEnsemble(object):
         ScratchRealization.
 
         If called from ScratchRealization, the list of eclsums passed
-        in will have length' 1, if not, it can be larger.
+        in will have length 1, if not, it can be larger.
 
         """
         import dateutil.parser
         from .realization import normalize_dates
+
+        if not eclsumsdates:
+            return []
+
         if start_date:
             if isinstance(start_date, str):
                 start_date = dateutil.parser.parse(start_date).date()
@@ -891,7 +901,8 @@ class ScratchEnsemble(object):
             are the different vectors. Quantiles refer to the scientific
             standard, opposite to the oil industry convention.
             If quantiles are explicitly supplied, the 'pXX'
-            strings in the outer index are changed accordingly.
+            strings in the outer index are changed accordingly. If no
+            data is found, return empty DataFrame.
 
         TODO: add warning message when failed realizations are removed
         """
@@ -912,9 +923,12 @@ class ScratchEnsemble(object):
                                column_keys=column_keys,
                                cache_eclsum=cache_eclsum,
                                start_date=start_date,
-                               end_date=end_date)\
-                     .drop(columns='REAL')\
-                     .groupby('DATE')
+                               end_date=end_date)
+        if 'REAL' in dframe:
+            dframe = dframe.drop(columns='REAL').groupby('DATE')
+        else:
+            logger.warning("No data found for get_smry_stats")
+            return pd.DataFrame()
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
@@ -1155,7 +1169,8 @@ class ScratchEnsemble(object):
                 is 'last'.
         Returns:
             A DataFame of summary vectors for the ensemble. The column
-            REAL with integers is added to distinguish realizations.
+            REAL with integers is added to distinguish realizations. If
+            no realizations, empty DataFrame is returned.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index, start_date=start_date,
@@ -1168,7 +1183,9 @@ class ScratchEnsemble(object):
             dframe.insert(0, 'REAL', index)
             dframe.index.name = 'DATE'
             dflist.append(dframe)
-        return pd.concat(dflist, sort=False).reset_index()
+        if dflist:
+            return pd.concat(dflist, sort=False).reset_index()
+        return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
         """
