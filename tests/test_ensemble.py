@@ -84,6 +84,7 @@ def test_reek001(tmp='TMP'):
     assert 'NPV' in reekensemble.load_txt('outputs.txt').columns
     # Check implicit discovery
     assert 'outputs.txt' in reekensemble.files['LOCALPATH'].values
+    assert all([os.path.isabs(x) for x in reekensemble.files['FULLPATH']])
 
     # File discovery:
     csvvolfiles = reekensemble.find_files('share/results/volumes/*csv',
@@ -111,6 +112,9 @@ def test_reek001(tmp='TMP'):
 
     # The last invocation of find_files() should not return the metadata
     assert len(newfiles.columns) + 1 == len(csvvolfiles.columns)
+
+    # FULLPATH should always contain absolute paths
+    assert all([os.path.isabs(x) for x in reekensemble.files['FULLPATH']])
 
     # The metadata in the rediscovered files should have been removed
     print(reekensemble.files)
@@ -565,6 +569,7 @@ def test_ertrunpathfile():
                           + '/data/ert-runpath-file')
     assert len(ens) == 5
 
+    assert all([os.path.isabs(x) for x in ens.files['FULLPATH']])
     # Check that the UNSMRY files has been discovered, they should always be
     # because ECLBASE is given in the runpathfile
     assert sum(['UNSMRY' in x for x in ens.files['BASENAME'].unique()]) == 5

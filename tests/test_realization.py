@@ -105,7 +105,10 @@ def test_single_realization():
     # assert real.contains('emptyfile')
     assert 'emptyscalarfile' in real.data
     assert isinstance(real['emptyscalarfile'], str)
-    assert 'emptyscalarfile' in real.files.LOCALPATH.values
+    assert 'emptyscalarfile' in real.files['LOCALPATH'].values
+
+    # Check that FULLPATH always has absolute paths
+    assert all([os.path.isabs(x) for x in real.files['FULLPATH']])
 
     with pytest.raises(IOError):
         real.load_scalar('notexisting.txt')
