@@ -103,7 +103,6 @@ def test_reek001(tmp='TMP'):
     # Check that rediscovery does not mess things up:
 
     filecount = len(reekensemble.files)
-    print(reekensemble.files)
     newfiles = reekensemble.find_files('share/results/volumes/*csv')
     # Also note that we skipped metadata here in rediscovery:
 
@@ -117,7 +116,6 @@ def test_reek001(tmp='TMP'):
     assert all([os.path.isabs(x) for x in reekensemble.files['FULLPATH']])
 
     # The metadata in the rediscovered files should have been removed
-    print(reekensemble.files)
     assert len(reekensemble.files[reekensemble.files['GRID']
                                   == 'simgrid']) == 0
 

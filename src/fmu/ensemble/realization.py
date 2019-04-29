@@ -71,7 +71,7 @@ class ScratchRealization(object):
             override anything else.
     """
     def __init__(self, path, realidxregexp=None, index=None):
-        self._origpath = path
+        self._origpath = os.path.abspath(path)
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
@@ -200,7 +200,7 @@ class ScratchRealization(object):
         Returns:
             the value read from the file.
         """
-        fullpath = os.path.join(self._origpath, localpath)
+        fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
@@ -272,7 +272,7 @@ class ScratchRealization(object):
                 integers, floats or strings. If convert_numeric
                 is False, all values are strings.
         """
-        fullpath = os.path.join(self._origpath, localpath)
+        fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
@@ -320,7 +320,7 @@ class ScratchRealization(object):
             dataframe: The CSV file loaded. Empty dataframe
                 if file is not present.
         """
-        fullpath = os.path.join(self._origpath, localpath)
+        fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
@@ -627,13 +627,14 @@ class ScratchRealization(object):
         for searchpath in paths:
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
+                absmatch = os.path.abspath(match)
                 filerow = {'LOCALPATH': os.path.relpath(match, self._origpath),
                            'FILETYPE': match.split('.')[-1],
-                           'FULLPATH': match,
+                           'FULLPATH': absmatch,
                            'BASENAME': os.path.basename(match)}
                 # Delete this row if it already exists, determined by FULLPATH
-                if match in self.files.FULLPATH.values:
-                    self.files = self.files[self.files.FULLPATH != match]
+                if absmatch in self.files['FULLPATH'].values:
+                    self.files = self.files[self.files['FULLPATH'] != absmatch]
                 if metadata:
                     filerow.update(metadata)
                 self.files = self.files.append(filerow, ignore_index=True)

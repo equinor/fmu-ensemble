@@ -40,6 +40,9 @@ def test_single_realization():
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
 
+    assert os.path.isabs(real.runpath())
+    assert os.path.exists(real.runpath())
+
     assert len(real.files) == 4
     assert 'parameters.txt' in real.data
     assert isinstance(real.parameters['RMS_SEED'], int)
