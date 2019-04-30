@@ -586,12 +586,27 @@ def test_filter():
 def test_ertrunpathfile():
     """Initialize an ensemble from an ERT runpath file"""
 
+    cwd = os.getcwd()
+
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
     else:
         testdir = os.path.abspath('.')
 
+    # The example runpathfile contains relative paths, which is not realistic
+    # for real runpathfiles coming from ERT. But relative paths are more easily
+    # handled in git and with pytest, so we have to try some magic
+    # to get it to work:
+    if 'tests' not in os.getcwd():
+        if os.path.exists('tests'):
+            os.chdir('tests')
+        else:
+            pytest.skip("Did not find test data")
+    if not os.path.exists('data'):
+        pytest.skip("Did not find test data")
+
+    # The ertrunpathfile used here assumes we are in the 'tests' directory
     ens = ScratchEnsemble('ensfromrunpath', runpathfile=testdir
                           + '/data/ert-runpath-file')
     assert len(ens) == 5
@@ -601,6 +616,7 @@ def test_ertrunpathfile():
     # because ECLBASE is given in the runpathfile
     assert sum(['UNSMRY' in x for x in ens.files['BASENAME'].unique()]) == 5
 
+    os.chdir(cwd)
 
 def test_nonexisting():
     """Test what happens when we try to initialize from a
