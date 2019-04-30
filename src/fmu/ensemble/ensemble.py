@@ -319,7 +319,7 @@ class ScratchEnsemble(object):
 
     def load_scalar(self, localpath, convert_numeric=False,
                     force_reread=False):
-        """Parse a single value from a file.
+        """Parse a single value from a file for each realization.
 
         The value can be a string or a number.
 
@@ -336,6 +336,11 @@ class ScratchEnsemble(object):
             force_reread: Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
+        Returns:
+            DataFrame, with aggregated data over the ensemble. The column 'REAL'
+                signifies the realization indices, and a column with the same
+                name as the localpath filename contains the data.
+
         """
         return self.load_file(localpath, 'scalar',
                               convert_numeric, force_reread)
@@ -355,9 +360,26 @@ class ScratchEnsemble(object):
 
     def load_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Parse a CSV file from disk and internalize data in a dataframe
+        """For each realization, load a CSV.
 
-        Parsing is performed individually in each realization."""
+        The CSV file must be present in at least one realization.
+        The parsing is done individually for each realization, and
+        aggregation is on demand (through get_df()) and when
+        this function returns.
+
+        Args:
+            localpath: path to the text file, relative to each realization
+            convert_numeric: If set to True, numerical columns
+                will be searched for and have their dtype set
+                to integers or floats. If scalars, only numerical
+                data will be loaded.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+        Returns:
+            Dataframe, aggregation of the loaded CSV files. Column 'REAL'
+                distuinguishes each realizations data.
+        """
         return self.load_file(localpath, 'csv',
                               convert_numeric, force_reread)
 
@@ -379,7 +401,8 @@ class ScratchEnsemble(object):
                 False, repeated calls to this function will
                 returned cached results.
         Returns:
-            Dataframe with all parameters, indexed by realization index.
+            Dataframe with loaded data aggregated. Column 'REAL'
+                distuinguishes each realizations data.
         """
         for index, realization in self._realizations.items():
             try:
@@ -464,7 +487,8 @@ class ScratchEnsemble(object):
     def get_df(self, localpath):
         """Load data from each realization and aggregate (vertically)
 
-        Data must be internalized up-front.
+        Data must be already have been internalized using
+        a load_*() function.
 
         Each row is tagged by the realization index in the column 'REAL'
 
@@ -474,7 +498,6 @@ class ScratchEnsemble(object):
            dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
                Empty dataframe if no data is found
-
         """
         dflist = {}
         for index, realization in self._realizations.items():
@@ -532,12 +555,12 @@ class ScratchEnsemble(object):
         differing from realizations which use raw dates by default.
 
         Args:
-            time_index: list of DateTime if interpolation is wanted
-                default is None, which returns the raw Eclipse report times
+            time_index: list of DateTime if interpolation is wanted.
+                If defaulted, the raw Eclipse report times will be used.
                 If a string is supplied, that string is attempted used
-                via get_smry_dates() in order to obtain a time index.
-                Default: 'monthly'
-            column_keys: list of column key wildcards. Default is '*'
+                via get_smry_dates() in order to obtain a time index,
+                typically 'monthly', 'daily' or 'yearly'.
+            column_keys: str or list of column key wildcards. Default is '*'
                 which will match all vectors in the Eclipse output.
             stacked: boolean determining the dataframe layout. If
                 true, the realization index is a column, and dates are repeated
@@ -551,11 +574,12 @@ class ScratchEnsemble(object):
                 memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. If string, use
+                ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
-                is 'last'.
+                is 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -749,11 +773,12 @@ class ScratchEnsemble(object):
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overrides
-                normalized dates.
+                normalized dates. If string, use ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overrides
                 normalized dates. Overriden if freq is 'last'.
+                If string, use ISO-format, YYYY-MM-DD.
 
         Returns:
             list of datetimes. Empty list if no data found.
@@ -890,11 +915,12 @@ class ScratchEnsemble(object):
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. If string,
+                use ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
-                is 'last'.
+                is 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
