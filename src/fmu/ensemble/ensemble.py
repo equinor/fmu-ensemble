@@ -209,8 +209,16 @@ class ScratchEnsemble(object):
         for realdir in globbedpaths:
             realization = ScratchRealization(realdir,
                                              realidxregexp=realidxregexp)
-            count += 1
-            self._realizations[realization.index] = realization
+            if not realization.index:
+                logger.critical("Could not determine realization index "
+                + "for path " + realdir)
+                if not realidxregexp:
+                    logger.critical("Maybe you need to supply a regexp.")
+                else:
+                    logger.critical("Your regular expression is maybe wrong.")
+            else:
+                count += 1
+                self._realizations[realization.index] = realization
         logger.info('add_realizations() found %d realizations',
                     len(self._realizations))
         return count
