@@ -266,6 +266,34 @@ def test_reek001_scalars():
         reekensemble.load_scalar('nonexistingfile')
 
 
+def test_noautodiscovery():
+    """Test that we have full control over auto-discovery of UNSMRY files"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0')
+    # Default ensemble construction will include auto-discovery, check
+    # that we got that:
+    assert not reekensemble.get_smry(column_keys='FOPT').empty
+    assert 'UNSMRY' in reekensemble.files['FILETYPE'].values
+
+    # Now try again, with no autodiscovery
+    reekensemble = ScratchEnsemble('reektest',
+                                   testdir +
+                                   '/data/testensemble-reek001/' +
+                                   'realization-*/iter-0', autodiscovery=False)
+    assert reekensemble.get_smry(column_keys='FOPT').empty
+    reekensemble.find_files('eclipse/model/*UNSMRY')
+    assert not reekensemble.get_smry(column_keys='FOPT').empty
+
+
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
 

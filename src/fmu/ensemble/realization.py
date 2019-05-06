@@ -69,9 +69,13 @@ class ScratchRealization(object):
             Only needs to match path components.
         index: int, the realization index to be used, will
             override anything else.
+        autodiscovery: boolean, whether the realization should try to
+            auto-discover certain data (UNSMRY files in standard location)
     """
-    def __init__(self, path, realidxregexp=None, index=None):
+    def __init__(self, path, realidxregexp=None, index=None,
+                 autodiscovery=True):
         self._origpath = os.path.abspath(path)
+        self._autodiscovery = autodiscovery
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
@@ -657,11 +661,12 @@ class ScratchRealization(object):
         and return as a libecl EclSum object
 
         Unless the UNSMRY file has been discovered, it will
-        pick the file from the glob `eclipse/model/*UNSMRY`
+        pick the file from the glob `eclipse/model/*UNSMRY`,
+        as long as autodiscovery is not turned off when
+        the realization object was initialized.
 
-        Warning: If you have multiple UNSMRY files and have not
-        performed explicit discovery, this function will
-        not help you (yet).
+        If you have multiple UNSMRY files in eclipse/model
+        turning off autodiscovery is strongly recommended.
 
         Arguments:
             cache: boolean indicating whether we should keep an
@@ -679,14 +684,21 @@ class ScratchRealization(object):
         unsmry_filename = None
         if len(unsmry_file_row) == 1:
             unsmry_filename = unsmry_file_row.FULLPATH.values[0]
-        else:
+        elif self._autodiscovery:
             unsmry_fileguess = os.path.join(self._origpath, 'eclipse/model',
                                             '*.UNSMRY')
             unsmry_filenamelist = glob.glob(unsmry_fileguess)
             if not unsmry_filenamelist:
                 return None  # No filename matches
+            if len(unsmry_filenamelist) > 1:
+                logger.warning("Multiple UNSMRY files found, "
+                               + "consider turning off auto-discovery")
             unsmry_filename = unsmry_filenamelist[0]
             self.find_files(unsmry_filename)
+        else:
+            # There is no UNSMRY file to be found.
+            return None
+
         if not os.path.exists(unsmry_filename):
             return None
         try:
