@@ -686,6 +686,7 @@ class ScratchRealization(object):
             if not unsmry_filenamelist:
                 return None  # No filename matches
             unsmry_filename = unsmry_filenamelist[0]
+            self.find_files(unsmry_filename)
         if not os.path.exists(unsmry_filename):
             return None
         try:
