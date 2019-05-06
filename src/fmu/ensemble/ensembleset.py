@@ -32,7 +32,8 @@ class EnsembleSet(object):
 
     def __init__(self, name=None, ensembles=None, frompath=None,
                  runpathfile=None, realidxregexp=None,
-                 iterregexp=None, batchregexp=None):
+                 iterregexp=None, batchregexp=None,
+                 autodiscovery=True):
         """Initiate an ensemble set, either as empty, or from a list of
         already initialized ensembles, or directly from the
         filesystem, or from an ERT runpath file. Only one of these
@@ -55,6 +56,9 @@ class EnsembleSet(object):
             treated as a string.
         batchregexp: similar ot iterregexp, for future support of an extra
             level similar to iterations
+        autodiscovery: boolean, sent to initializing Realization objects, 
+            instructing them on whether certain files should be
+            auto-discovered.
 
         """
         self._name = name
@@ -92,7 +96,8 @@ class EnsembleSet(object):
 
         if frompath:
             self.add_ensembles_frompath(frompath, realidxregexp,
-                                        iterregexp, batchregexp)
+                                        iterregexp, batchregexp,
+                                        autodiscovery=autodiscovery)
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
 
@@ -141,7 +146,7 @@ class EnsembleSet(object):
 
     def add_ensembles_frompath(self, paths,
                                realidxregexp=None, iterregexp=None,
-                               batchregexp=None):
+                               batchregexp=None, autodiscovery=True):
         """Convenience function for adding multiple ensembles.
 
         Args:
@@ -156,6 +161,10 @@ class EnsembleSet(object):
                 match strings.
             batchregexp: Similar to real_regexp, but is allowed to
                 match strings.
+            autodiscovery: boolean, sent to initializing Realization objects, 
+                instructing them on whether certain files should be
+                auto-discovered.
+
         """
         # Try to catch the most common use case and make that easy:
         if isinstance(paths, str):
@@ -245,11 +254,16 @@ class EnsembleSet(object):
             # iterr might contain the 'iter-' prefix,
             # depending on chosen regexpx
             ens = ScratchEnsemble(str(iterr),
-                                  pathsforiter, realidxregexp=realidxregexp)
+                                  pathsforiter, realidxregexp=realidxregexp,
+                                  autodiscovery=autodiscovery)
             self._ensembles[ens.name] = ens
 
     def add_ensembles_fromrunpath(self, runpathfile):
         """Add one or many ensembles from an ERT runpath file.
+
+        autodiscovery is not an argument, it is by default set to False
+        for runpath-files, since the location of the UNSMRY-file is given in
+        the runpath file.
         """
         runpath_df = pd.read_csv(runpathfile, sep=r'\s+', engine='python',
                                  names=['index', 'runpath', 'eclbase', 'iter'])
@@ -260,7 +274,8 @@ class EnsembleSet(object):
             # Make a runpath slice, and initialize from that:
             ens_runpath = runpath_df[runpath_df['iter'] == iterr]
             ens = ScratchEnsemble('iter-' + str(iterr),
-                                  runpathfile=ens_runpath)
+                                  runpathfile=ens_runpath,
+                                  autodiscovery=False)
             self._ensembles[ens.name] = ens
 
     def add_ensemble(self, ensembleobject):

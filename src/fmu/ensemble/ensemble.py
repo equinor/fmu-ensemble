@@ -116,11 +116,9 @@ class ScratchEnsemble(object):
                                           autodiscovery=autodiscovery)
 
         if isinstance(runpathfile, str) and runpathfile:
-            count = self.add_from_runpathfile(runpathfile, runpathfilter,
-                                              autodiscovery=autodiscovery)
+            count = self.add_from_runpathfile(runpathfile, runpathfilter)
         if isinstance(runpathfile, pd.DataFrame) and not runpathfile.empty:
-            count = self.add_from_runpathfile(runpathfile, runpathfilter,
-                                              autodiscovery=autodiscovery)
+            count = self.add_from_runpathfile(runpathfile, runpathfilter)
 
         if count:
             logger.info('ScratchEnsemble initialized with %d realizations',
@@ -263,7 +261,8 @@ class ScratchEnsemble(object):
                 continue
             logger.info("Adding realization from " + row['runpath'])
             realization = ScratchRealization(row['runpath'],
-                                             index=int(row['index']))
+                                             index=int(row['index']),
+                                             autodiscovery=False)
             # Use the ECLBASE from the runpath file to
             # ensure we recognize the correct UNSMRY file
             realization.find_files(row['eclbase'] + ".DATA")
