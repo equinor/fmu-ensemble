@@ -293,6 +293,16 @@ def test_noautodiscovery():
     reekensemble.find_files('eclipse/model/*UNSMRY')
     assert not reekensemble.get_smry(column_keys='FOPT').empty
 
+    # Some very basic data is discovered even though we have autodiscovery=False
+    assert 'parameters.txt' in reekensemble.keys()
+    assert 'STATUS' in reekensemble.keys()
+
+    # If these are unwanted, we can delete explicitly:
+    reekensemble.remove_data('parameters.txt')
+    reekensemble.remove_data(['STATUS'])
+    assert not 'parameters.txt' in reekensemble.keys()
+    assert not 'STATUS' in reekensemble.keys()
+
 
 def test_ensemble_ecl():
     """Eclipse specific functionality"""
