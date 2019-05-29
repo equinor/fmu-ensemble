@@ -99,7 +99,7 @@ class ScratchRealization(object):
 
         abspath = os.path.abspath(path)
 
-        if not index:
+        if index is None:
             for path_comp in reversed(os.path.abspath(path)
                                       .split(os.path.sep)):
                 realidxmatch = re.match(realidxregexp, path_comp)

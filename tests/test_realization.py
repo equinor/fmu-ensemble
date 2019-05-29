@@ -146,11 +146,6 @@ def test_single_realization():
     with pytest.raises(IOError):
         real.load_csv('bogus.csv')
 
-    with pytest.raises(ValueError):
-        # Ensure we give error on some erroneous example
-        # code that floated around early
-        ensemble.ScratchRealization("MyEnsemble", "/foo/bar/com")
-
 
 def test_volumetric_rates():
     """Test computation of volumetric rates from cumulative vectors"""

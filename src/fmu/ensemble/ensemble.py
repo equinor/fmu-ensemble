@@ -209,7 +209,7 @@ class ScratchEnsemble(object):
         for realdir in globbedpaths:
             realization = ScratchRealization(realdir,
                                              realidxregexp=realidxregexp)
-            if not realization.index:
+            if realization.index is None:
                 logger.critical("Could not determine realization index "
                 + "for path " + realdir)
                 if not realidxregexp:
