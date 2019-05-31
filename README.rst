@@ -17,5 +17,4 @@ interactive usage in IPython/Jupyter.
 If run as a post-workflow in Ert, a simple script using this library
 can replace and extend the existing *CSV_EXPORT1* workflow
 
-This software is internal to Equinor ASA and shall not be shared
-externally.
+This software is released under GPL v3.0

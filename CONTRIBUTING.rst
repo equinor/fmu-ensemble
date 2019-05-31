@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://git.equinor.com/fmu-utilities/fmu-ensemble/issues.
+Report bugs at https://github.com/equinor/fmu-ensemble/issues.
 
 If you are reporting a bug, please include:
 
@@ -46,7 +46,7 @@ Submit Feedback
 ~~~~~~~~~~~~~~~
 
 The best way to send feedback is to file an issue
-at https://git.equinor.com/fmu-utilities/fmu-ensemble/issues.
+at https://github.com/equinor/fmu-ensemble/issues.
 
 If you are proposing a feature:
 
@@ -86,8 +86,6 @@ PEP8 and PEP20
   * Avoid one or two letter variables, even for counters. And meaningful names, but don't
     overdo it.
 
-  * See also: https://git.equinor.com/fmu-utilities/fmu-coding-practice/blob/master/python-style.md
-
 
 In addition:
 ~~~~~~~~~~~~
@@ -113,20 +111,3 @@ The pylint is rather strict and sometimes exceptions are needed... , but anyway 
   python -m pylint mycode.py
 
   make lint   # for all
-
-Get Started!
-------------
-
-Ready to contribute? Here's how to set up `fmu-ensemble` for local development.
-
-1. Clone your fork locally::
-
-     $ git clone git@git.equinor.com:<your-user>/fmu-ensemble.git
-     $ cd fmu-ensemble
-     $ git remote add upstream git@git.equinor.com:fmu-utilities/fmu-ensemble.git
-
-   This means your `origin` is now your personal fork, while the actual master
-   is at `upstream`.
-
-3. See the rest of recipe here:
-   https://git.equinor.com/fmu-utilities/fmu-coding-practice/blob/master/developer-guide.md
