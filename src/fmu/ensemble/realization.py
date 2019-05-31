@@ -81,6 +81,7 @@ class ScratchRealization(object):
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
+        self._eclsum_include_restart = None  # Flag for cached object
 
         # The datastore for internalized data. Dictionary
         # indexed by filenames (local to the realization).
@@ -674,8 +675,9 @@ class ScratchRealization(object):
            EclSum: object representing the summary file. None if
                nothing was found.
         """
-        if self._eclsum:  # Return cached object if available
-            return self._eclsum
+        if cache and self._eclsum:  # Return cached object if available
+            if self._eclsum_include_restart == include_restart:
+                return self._eclsum
 
         unsmry_file_row = self.files[self.files.FILETYPE == 'UNSMRY']
         unsmry_filename = None
@@ -702,6 +704,7 @@ class ScratchRealization(object):
 
         if cache:
             self._eclsum = eclsum
+            self._eclsum_include_restart = include_restart
 
         return eclsum
 
