@@ -83,6 +83,7 @@ setup(
     author="Jan C. Rivenaes",
     author_email='jriv@statoil.com',
     url='https://git.equinor.com/fmu-utilities/fmu-ensemble',
+    license="GPLv3",
     packages=find_packages('src'),
 #    namespace_packages=['fmu'],
     package_dir={'': 'src'},
