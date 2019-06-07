@@ -126,6 +126,19 @@ def test_real_mismatch():
     assert fopt_mis.loc[0, 'L1'] > 0
     assert fopt_mis.loc[0, 'L1'] != fopt_mis.loc[0, 'L2']
 
+
+    # Test mismatch where some data is missing:
+    obs4 = Observations({'smryh': [{'key': 'FOOBAR',
+                                   'histvec': 'FOOBARH'}]})
+    mis_mis = obs4.mismatch(real)
+    assert mis_mis.empty
+
+    # This test fails, the consistency check is not implemented.
+    # obs_bogus = Observations({'smryh': [{'keddy': 'FOOBAR',
+    #                               'histdddvec': 'FOOBARH'}]})
+    # mis_mis = obs_bogus.mismatch(real)
+    # assert mis_mis.empty
+
     # Test dumping to yaml:
     # Not implemented.
     # yamlobsstr = obs2.to_yaml()
