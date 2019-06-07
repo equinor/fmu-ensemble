@@ -92,6 +92,11 @@ class Observations(object):
         # Identify and warn about errors in observation syntax (dates etc)
         self._clean_observations()
 
+        logger.info("Initialized observation with obstypes " + str(self.keys()))
+        for obskey in self.keys():
+            logger.info(" " + obskey + ": "
+                        + str(len(self.observations[obskey])))
+
     def __getitem__(self, object):
         """Pick objects from the observations dict"""
         return self.observations[object]
@@ -112,7 +117,10 @@ class Observations(object):
         if isinstance(ens_or_real, EnsembleSet):
             mismatches = {}
             for ensname, ens in ens_or_real._ensembles.items():
+                logger.info("Calculating mismatch for ensemble " + ensname)
                 for realidx, real in ens._realizations.items():
+                    logger.info("Calculating mismatch for realization "
+                                + str(realidx))
                     mismatches[(ensname, realidx)] \
                         = self._realization_mismatch(real)
                     mismatches[(ensname, realidx)]['REAL'] = realidx
