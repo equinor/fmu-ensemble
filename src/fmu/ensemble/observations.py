@@ -279,12 +279,13 @@ class Observations(object):
                 if obstype == "smryh":
                     # Will use raw times when available.
                     # Time index is always identical
-                    sim_hist = real.get_smry(
-                        column_keys=[obsunit["key"], obsunit["histvec"]]
-                    )
-                    sim_hist["mismatch"] = (
-                        sim_hist[obsunit["key"]] - sim_hist[obsunit["histvec"]]
-                    )
+                    sim_hist = real.get_smry(column_keys=[obsunit['key'],
+                                                          obsunit['histvec']])
+                    # If empty df returned, we don't have the data for this:
+                    if sim_hist.empty:
+                        continue
+                    sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
+                        sim_hist[obsunit['histvec']]
                     measerror = 1
                     mismatches.append(
                         dict(
@@ -407,13 +408,11 @@ class Observations(object):
                     del smryunits[smryunits.index(unit)]
                     continue
                 # Check if strings need to be parsed as dates:
-                for observation in unit["observations"]:
-                    if isinstance(observation["date"], str):
-                        observation["date"] = dateutil.parser.isoparse(
-                            observation["date"]
-                        ).date()
-                    if not isinstance(observation["date"], datetime.date):
-                        logger.error("Date not understood %s", str(observation["date"]))
+                for observation in unit['observations']:
+                    if isinstance(observation['date'], str):
+                        observation['date'] = dateutil.parser.isoparse(observation['date']).date()
+                    if not isinstance(observation['date'], datetime.date):
+                        logger.error('Date not understood %s', str(observation['date']))
                         continue
             # If everything is deleted from 'smry', delete it
             if not len(smryunits):
