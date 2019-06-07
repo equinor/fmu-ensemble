@@ -238,9 +238,20 @@ class Observations(object):
         mismatches = []
         for obstype in self.observations.keys():
             for obsunit in self.observations[obstype]:  # (list)
-                if obstype == "txt":
-                    sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
-                    mismatch = float(sim_value - obsunit["value"])
+                if obstype == 'txt':
+                    try:
+                        sim_value = real.get_df(obsunit[
+                            'localpath'])[obsunit['key']]
+                    except KeyError:
+                        logger.warning(obsunit['key'] + " in " +
+                                       obsunit['localpath'] +
+                                       " not found, ignored")
+                        continue
+                    except ValueError:
+                        logger.warning(obsunit['localpath']
+                                       + " not found, ignored")
+                        continue
+                    mismatch = float(sim_value - obsunit['value'])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(dict(OBSTYPE=obstype,
