@@ -314,11 +314,17 @@ class Observations(object):
                 if obstype == "smry":
                     # For 'smry', there is a list of
                     # observations (indexed by date)
-                    for unit in obsunit["observations"]:
-                        sim_value = real.get_smry(
-                            time_index=[unit["date"]], column_keys=obsunit["key"]
-                        )[obsunit["key"]].values[0]
-                        mismatch = float(sim_value - unit["value"])
+                    for unit in obsunit['observations']:
+                        try:
+                            sim_value = real.get_smry(time_index=[unit['date']],
+                                                      column_keys=obsunit['key'])[
+                                                          obsunit['key']].values[0]
+                        except ValueError:
+                            logger.warning("No data found for smry: " +
+                                           obsunit['key'] + " at "
+                                           + str(unit["date"]) + ",  ignored.")
+                            continue
+                        mismatch = float(sim_value - unit['value'])
                         sign = (mismatch > 0) - (mismatch < 0)
                         mismatches.append(
                             dict(
