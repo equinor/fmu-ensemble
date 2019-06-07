@@ -714,9 +714,11 @@ class ScratchRealization(object):
                   start_date=None, end_date=None):
         """Produce dataframe from Summary data from the realization
 
-        When this function is called, the dataframe will be cached.
-        Caching supports different time_index, but there is no handling
-        of multiple sets of column_keys. The cached data will be called
+        When this function is called, the dataframe will be
+        internalized.  Internalization of summary data in a
+        realization object supports different time_index, but there is
+        no handling of multiple sets of column_keys. The cached data
+        will be called
 
           'share/results/tables/unsmry--<time_index>.csv'
 
@@ -727,13 +729,15 @@ class ScratchRealization(object):
 
         Wraps ecl.summary.EclSum.pandas_frame()
 
+        See also get_smry()
+
         Args:
             time_index: string indicating a resampling frequency,
                'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
                return the simulated report steps (also default).
                If a list of DateTime is supplied, data will be resampled
                to these.
-            column_keys: list of column key wildcards.
+            column_keys: list of column key wildcards. None means everything.
             cache_eclsum: boolean for whether to keep the loaded EclSum
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
@@ -745,7 +749,9 @@ class ScratchRealization(object):
                 is 'last'.
         Returns:
             DataFrame with summary keys as columns and dates as indices.
-                Empty dataframe if no summary is available.
+                Empty dataframe if no summary is available or column
+                keys do not exist.
+
         """
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
@@ -785,15 +791,36 @@ class ScratchRealization(object):
     def get_smry(self, time_index=None, column_keys=None,
                  cache_eclsum=True, start_date=None,
                  end_date=None):
-        """Wrapper for EclSum.pandas_frame
+        """Return a dataframe of summary data from the realization.
+
+        Wraps the EclSum.pandas_frame() function with some more support
+        functionality on date handling.
+
+        Compared to load_smry(), this function does not internalize
+        the returned dataframe.
 
         This gives access to the underlying data on disk without
         touching internalized dataframes.
 
         Arguments:
-            cache: Boolean for wheter the EclSum object is to be cached.
-                defaults to True.
-        Returns empty dataframe if there is no summary file
+            time_index: string indicating a resampling frequency,
+               'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
+               return the simulated report steps (also default).
+               If a list of DateTime is supplied, data will be resampled
+               to these.
+            column_keys: list of column key wildcards. None means everything.
+            cache_eclsum: boolean for whether to keep the loaded EclSum
+                object in memory after data has been loaded.
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
+
+        Returns empty dataframe if there is no summary file, or if the
+        column_keys are not existing.
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
@@ -807,8 +834,12 @@ class ScratchRealization(object):
             time_index_arg = time_index
 
         if self.get_eclsum(cache=cache_eclsum):
-            df = self.get_eclsum(cache=cache_eclsum)\
-                     .pandas_frame(time_index_arg, column_keys)
+            try:
+                df = self.get_eclsum(cache=cache_eclsum)\
+                         .pandas_frame(time_index_arg, column_keys)
+            except ValueError:
+                # We get here if we have requested non-existing column keys
+                return pd.DataFrame()
             if not cache_eclsum:
                 # Ensure EclSum object can be garbage collected
                 self._eclsum = None
