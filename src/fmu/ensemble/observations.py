@@ -243,24 +243,24 @@ class Observations(object):
                     mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
-                    mismatches.append(
-                        dict(
-                            OBSTYPE=obstype,
-                            OBSKEY=str(obsunit["localpath"])
-                            + "/"
-                            + str(obsunit["key"]),
-                            MISMATCH=mismatch,
-                            L1=abs(mismatch),
-                            L2=abs(mismatch) ** 2,
-                            SIMVALUE=sim_value,
-                            OBSVALUE=obsunit["value"],
-                            MEASERROR=measerror,
-                            SIGN=sign,
-                        )
-                    )
-                if obstype == "scalar":
-                    sim_value = real.get_df(obsunit["key"])
-                    mismatch = float(sim_value - obsunit["value"])
+                    mismatches.append(dict(OBSTYPE=obstype,
+                                           OBSKEY=str(obsunit['localpath'])
+                                           + '/' + str(obsunit['key']),
+                                           MISMATCH=mismatch,
+                                           L1=abs(mismatch),
+                                           L2=abs(mismatch)**2,
+                                           SIMVALUE=sim_value,
+                                           OBSVALUE=obsunit['value'],
+                                           MEASERROR=measerror,
+                                           SIGN=sign))
+                if obstype == 'scalar':
+                    try:
+                        sim_value = real.get_df(obsunit['key'])
+                    except ValueError:
+                        logger.warning("No data found for scalar: " +
+                                       obsunit['key'] + ",  ignored.")
+                        continue
+                    mismatch = float(sim_value - obsunit['value'])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(
@@ -283,6 +283,9 @@ class Observations(object):
                                                           obsunit['histvec']])
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
+                        logger.warning("No data found for smryh: " +
+                                       obsunit['key'] + " and " +
+                                       obsunit['histvec'] + ", ignored.")
                         continue
                     sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
                         sim_hist[obsunit['histvec']]

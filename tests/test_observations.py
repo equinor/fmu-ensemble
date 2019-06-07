@@ -140,6 +140,10 @@ def test_real_mismatch():
     # mis_mis = obs_bogus.mismatch(real)
     # assert mis_mis.empty
 
+    obs_bogus_scalar = Observations({'scalar': [{'key': 'nonexistingnpv.txt',
+                                     'value': 3400}]})
+    assert obs_bogus_scalar.mismatch(real).empty
+
     # Test dumping to yaml:
     # Not implemented.
     # yamlobsstr = obs2.to_yaml()
