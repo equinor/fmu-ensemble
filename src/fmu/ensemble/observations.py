@@ -258,7 +258,12 @@ class Observations(object):
                                            MEASERROR=measerror,
                                            SIGN=sign))
                 if obstype == 'scalar':
-                    sim_value = real.get_df(obsunit['key'])
+                    try:
+                        sim_value = real.get_df(obsunit['key'])
+                    except ValueError:
+                        logger.warning("No data found for scalar: " +
+                                       obsunit['key'] + ",  ignored.")
+                        continue
                     mismatch = float(sim_value - obsunit['value'])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
@@ -277,6 +282,9 @@ class Observations(object):
                                                           obsunit['histvec']])
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
+                        logger.warning("No data found for smryh: " +
+                                       obsunit['key'] + " and " +
+                                       obsunit['histvec'] + ", ignored.")
                         continue
                     sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
                         sim_hist[obsunit['histvec']]
