@@ -141,7 +141,20 @@ def test_real_mismatch():
 
     obs_bogus_scalar = Observations({'scalar': [{'key': 'nonexistingnpv.txt',
                                      'value': 3400}]})
+    # (a warning should be logged)
     assert obs_bogus_scalar.mismatch(real).empty
+
+    obs_bogus_param = Observations({'txt': [{'localpath': 'bogusparameters.txt',
+                                             'key': 'RMS_SEED',
+                                             'value': 600000000}]})
+    # (a warning should be logged)
+    assert obs_bogus_param.mismatch(real).empty
+
+    obs_bogus_param = Observations({'txt': [{'localpath': 'parameters.txt',
+                                             'key': 'RMS_SEEEEEEED',
+                                             'value': 600000000}]})
+    # (a warning should be logged)
+    assert obs_bogus_param.mismatch(real).empty
 
     # Test dumping to yaml:
     # Not implemented.
