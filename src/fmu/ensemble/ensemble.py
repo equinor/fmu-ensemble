@@ -209,8 +209,16 @@ class ScratchEnsemble(object):
         for realdir in globbedpaths:
             realization = ScratchRealization(realdir,
                                              realidxregexp=realidxregexp)
-            count += 1
-            self._realizations[realization.index] = realization
+            if realization.index is None:
+                logger.critical("Could not determine realization index "
+                + "for path " + realdir)
+                if not realidxregexp:
+                    logger.critical("Maybe you need to supply a regexp.")
+                else:
+                    logger.critical("Your regular expression is maybe wrong.")
+            else:
+                count += 1
+                self._realizations[realization.index] = realization
         logger.info('add_realizations() found %d realizations',
                     len(self._realizations))
         return count
@@ -319,7 +327,7 @@ class ScratchEnsemble(object):
 
     def load_scalar(self, localpath, convert_numeric=False,
                     force_reread=False):
-        """Parse a single value from a file.
+        """Parse a single value from a file for each realization.
 
         The value can be a string or a number.
 
@@ -330,12 +338,17 @@ class ScratchEnsemble(object):
 
         Args:
             localpath: path to the text file, relative to each realization
-            convert_numeric: If set to True, assume that 
+            convert_numeric: If set to True, assume that
                 the value is numerical, and treat strings as
                 errors.
             force_reread: Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
+        Returns:
+            DataFrame, with aggregated data over the ensemble. The column 'REAL'
+                signifies the realization indices, and a column with the same
+                name as the localpath filename contains the data.
+
         """
         return self.load_file(localpath, 'scalar',
                               convert_numeric, force_reread)
@@ -355,9 +368,26 @@ class ScratchEnsemble(object):
 
     def load_csv(self, localpath, convert_numeric=True,
                  force_reread=False):
-        """Parse a CSV file from disk and internalize data in a dataframe
+        """For each realization, load a CSV.
 
-        Parsing is performed individually in each realization."""
+        The CSV file must be present in at least one realization.
+        The parsing is done individually for each realization, and
+        aggregation is on demand (through get_df()) and when
+        this function returns.
+
+        Args:
+            localpath: path to the text file, relative to each realization
+            convert_numeric: If set to True, numerical columns
+                will be searched for and have their dtype set
+                to integers or floats. If scalars, only numerical
+                data will be loaded.
+            force_reread: Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+        Returns:
+            Dataframe, aggregation of the loaded CSV files. Column 'REAL'
+                distuinguishes each realizations data.
+        """
         return self.load_file(localpath, 'csv',
                               convert_numeric, force_reread)
 
@@ -379,7 +409,8 @@ class ScratchEnsemble(object):
                 False, repeated calls to this function will
                 returned cached results.
         Returns:
-            Dataframe with all parameters, indexed by realization index.
+            Dataframe with loaded data aggregated. Column 'REAL'
+                distuinguishes each realizations data.
         """
         for index, realization in self._realizations.items():
             try:
@@ -464,7 +495,8 @@ class ScratchEnsemble(object):
     def get_df(self, localpath):
         """Load data from each realization and aggregate (vertically)
 
-        Data must be internalized up-front.
+        Data must be already have been internalized using
+        a load_*() function.
 
         Each row is tagged by the realization index in the column 'REAL'
 
@@ -474,7 +506,6 @@ class ScratchEnsemble(object):
            dataframe: Merged data from each realization.
                Realizations with missing data are ignored.
                Empty dataframe if no data is found
-
         """
         dflist = {}
         for index, realization in self._realizations.items():
@@ -505,7 +536,8 @@ class ScratchEnsemble(object):
             raise ValueError("No data found for " + localpath)
 
     def load_smry(self, time_index='raw', column_keys=None, stacked=True,
-                  cache_eclsum=True, start_date=None, end_date=None):
+                  cache_eclsum=True, start_date=None, end_date=None,
+                  include_restart=True):
         """
         Fetch and internalize summary data from all realizations.
 
@@ -532,12 +564,12 @@ class ScratchEnsemble(object):
         differing from realizations which use raw dates by default.
 
         Args:
-            time_index: list of DateTime if interpolation is wanted
-                default is None, which returns the raw Eclipse report times
+            time_index: list of DateTime if interpolation is wanted.
+                If defaulted, the raw Eclipse report times will be used.
                 If a string is supplied, that string is attempted used
-                via get_smry_dates() in order to obtain a time index.
-                Default: 'monthly'
-            column_keys: list of column key wildcards. Default is '*'
+                via get_smry_dates() in order to obtain a time index,
+                typically 'monthly', 'daily' or 'yearly'.
+            column_keys: str or list of column key wildcards. Default is '*'
                 which will match all vectors in the Eclipse output.
             stacked: boolean determining the dataframe layout. If
                 true, the realization index is a column, and dates are repeated
@@ -551,11 +583,14 @@ class ScratchEnsemble(object):
                 memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. If string, use
+                ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
-                is 'last'.
+                is 'last'. If string, use ISO-format, YYYY-MM-DD.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -573,7 +608,8 @@ class ScratchEnsemble(object):
                                   column_keys=column_keys,
                                   cache_eclsum=cache_eclsum,
                                   start_date=start_date,
-                                  end_date=end_date)
+                                  end_date=end_date,
+                                  include_restart=include_restart)
         if isinstance(time_index, list):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry--' +
@@ -598,6 +634,9 @@ class ScratchEnsemble(object):
             column_keys: str or list of strings, cumulative summary vectors
             time_index: str or list of datetimes
 
+        Returns:
+            DataFrame analoguous to the dataframe returned by get_smry().
+            Empty dataframe if no data found.
         """
         vol_dfs = []
         for realidx, real in self._realizations.items():
@@ -609,6 +648,9 @@ class ScratchEnsemble(object):
                 vol_real.reset_index(inplace=True)
             vol_real.insert(0, 'REAL', realidx)
             vol_dfs.append(vol_real)
+
+        if not vol_dfs:
+            return pd.DataFrame()
         return pd.concat(vol_dfs, ignore_index=True, sort=False)
 
     def filter(self, localpath, inplace=True, **kwargs):
@@ -727,7 +769,7 @@ class ScratchEnsemble(object):
 
     def get_smry_dates(self, freq='monthly', normalize=True,
                        start_date=None, end_date=None,
-                       cache_eclsum=True):
+                       cache_eclsum=True, include_restart=True):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
@@ -743,22 +785,27 @@ class ScratchEnsemble(object):
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overrides
-                normalized dates.
+                normalized dates. If string, use ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overrides
                 normalized dates. Overriden if freq is 'last'.
+                If string, use ISO-format, YYYY-MM-DD.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
 
         Returns:
-            list of datetimes.
+            list of datetimes. Empty list if no data found.
         """
 
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self._realizations.items():
-            if realization.get_eclsum(cache=cache_eclsum):
+            if realization.get_eclsum(cache=cache_eclsum,
+                                      include_restart=include_restart):
                 eclsumsdates.append(realization
-                                    .get_eclsum(cache=cache_eclsum).dates)
+                                    .get_eclsum(cache=cache_eclsum,
+                                                include_restart=include_restart).dates)
         return ScratchEnsemble._get_smry_dates(eclsumsdates, freq, normalize,
                                                start_date, end_date)
 
@@ -769,11 +816,15 @@ class ScratchEnsemble(object):
         ScratchRealization.
 
         If called from ScratchRealization, the list of eclsums passed
-        in will have length' 1, if not, it can be larger.
+        in will have length 1, if not, it can be larger.
 
         """
         import dateutil.parser
         from .realization import normalize_dates
+
+        if not eclsumsdates:
+            return []
+
         if start_date:
             if isinstance(start_date, str):
                 start_date = dateutil.parser.parse(start_date).date()
@@ -880,18 +931,20 @@ class ScratchEnsemble(object):
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. If string,
+                use ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
-                is 'last'.
+                is 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
             are the different vectors. Quantiles refer to the scientific
             standard, opposite to the oil industry convention.
             If quantiles are explicitly supplied, the 'pXX'
-            strings in the outer index are changed accordingly.
+            strings in the outer index are changed accordingly. If no
+            data is found, return empty DataFrame.
 
         TODO: add warning message when failed realizations are removed
         """
@@ -912,9 +965,12 @@ class ScratchEnsemble(object):
                                column_keys=column_keys,
                                cache_eclsum=cache_eclsum,
                                start_date=start_date,
-                               end_date=end_date)\
-                     .drop(columns='REAL')\
-                     .groupby('DATE')
+                               end_date=end_date)
+        if 'REAL' in dframe:
+            dframe = dframe.drop(columns='REAL').groupby('DATE')
+        else:
+            logger.warning("No data found for get_smry_stats")
+            return pd.DataFrame()
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
@@ -1130,7 +1186,7 @@ class ScratchEnsemble(object):
 
     def get_smry(self, time_index=None, column_keys=None,
                  cache_eclsum=True, start_date=None,
-                 end_date=None):
+                 end_date=None, include_restart=True):
         """
         Aggregates summary data from all realizations.
 
@@ -1153,22 +1209,30 @@ class ScratchEnsemble(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
                 is 'last'.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
+
         Returns:
             A DataFame of summary vectors for the ensemble. The column
-            REAL with integers is added to distinguish realizations.
+            REAL with integers is added to distinguish realizations. If
+            no realizations, empty DataFrame is returned.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index, start_date=start_date,
-                                             end_date=end_date)
+                                             end_date=end_date,
+                                             include_restart=include_restart)
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_smry(time_index=time_index,
                                           column_keys=column_keys,
-                                          cache_eclsum=cache_eclsum)
+                                          cache_eclsum=cache_eclsum,
+                                          include_restart=include_restart)
             dframe.insert(0, 'REAL', index)
             dframe.index.name = 'DATE'
             dflist.append(dframe)
-        return pd.concat(dflist, sort=False).reset_index()
+        if dflist:
+            return pd.concat(dflist, sort=False).reset_index()
+        return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
         """
