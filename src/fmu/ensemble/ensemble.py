@@ -70,8 +70,15 @@ class ScratchEnsemble(object):
             off to gain more fined tuned control.
     """
 
-    def __init__(self, ensemble_name, paths=None, realidxregexp=None,
-                 runpathfile=None, runpathfilter=None, autodiscovery=True):
+    def __init__(
+        self,
+        ensemble_name,
+        paths=None,
+        realidxregexp=None,
+        runpathfile=None,
+        runpathfilter=None,
+        autodiscovery=True,
+    ):
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
@@ -93,8 +100,9 @@ class ScratchEnsemble(object):
             # Glob incoming paths to determine
             # paths for each realization (flatten and uniqify)
             globbedpaths = [glob.glob(path) for path in paths]
-            globbedpaths = list(set([item for sublist in globbedpaths
-                                     for item in sublist]))
+            globbedpaths = list(
+                set([item for sublist in globbedpaths for item in sublist])
+            )
         if not globbedpaths:
             if isinstance(runpathfile, str):
                 if not runpathfile:
@@ -107,13 +115,13 @@ class ScratchEnsemble(object):
 
         count = None
         if globbedpaths:
-            logger.info("Loading ensemble from dirs: %s",
-                        " ".join(globbedpaths))
+            logger.info("Loading ensemble from dirs: %s", " ".join(globbedpaths))
 
             # Search and locate minimal set of files
             # representing the realizations.
-            count = self.add_realizations(paths, realidxregexp,
-                                          autodiscovery=autodiscovery)
+            count = self.add_realizations(
+                paths, realidxregexp, autodiscovery=autodiscovery
+            )
 
         if isinstance(runpathfile, str) and runpathfile:
             count = self.add_from_runpathfile(runpathfile, runpathfilter)
@@ -121,10 +129,9 @@ class ScratchEnsemble(object):
             count = self.add_from_runpathfile(runpathfile, runpathfilter)
 
         if count:
-            logger.info('ScratchEnsemble initialized with %d realizations',
-                        count)
+            logger.info("ScratchEnsemble initialized with %d realizations", count)
         else:
-            logger.warning('ScratchEnsemble empty')
+            logger.warning("ScratchEnsemble empty")
 
     def __getitem__(self, realizationindex):
         """Get one of the ScratchRealization objects.
@@ -168,16 +175,13 @@ class ScratchEnsemble(object):
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in keys}
             return short2path[shortpath]
-        noexts = [''.join(x.split('.')[:-1]) for x in keys]
+        noexts = ["".join(x.split(".")[:-1]) for x in keys]
         if noexts.count(shortpath) == 1:
-            short2path = {''.join(x.split('.')[:-1]): x
-                          for x in keys}
+            short2path = {"".join(x.split(".")[:-1]): x for x in keys}
             return short2path[shortpath]
-        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in keys]
+        basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in keys]
         if basenamenoexts.count(shortpath) == 1:
-            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                          for x in keys}
+            short2path = {"".join(os.path.basename(x).split(".")[:-1]): x for x in keys}
             return short2path[shortpath]
         # If we get here, we did not find anything that
         # this shorthand could point to. Return as is, and let the
@@ -206,19 +210,21 @@ class ScratchEnsemble(object):
         if isinstance(paths, list):
             globbedpaths = [glob.glob(path) for path in paths]
             # Flatten list and uniquify:
-            globbedpaths = list(set([item for sublist in globbedpaths
-                                     for item in sublist]))
+            globbedpaths = list(
+                set([item for sublist in globbedpaths for item in sublist])
+            )
         else:
             globbedpaths = glob.glob(paths)
 
         count = 0
         for realdir in globbedpaths:
-            realization = ScratchRealization(realdir,
-                                             realidxregexp=realidxregexp,
-                                             autodiscovery=autodiscovery)
+            realization = ScratchRealization(
+                realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
+            )
             if realization.index is None:
-                logger.critical("Could not determine realization index "
-                + "for path " + realdir)
+                logger.critical(
+                    "Could not determine realization index " + "for path " + realdir
+                )
                 if not realidxregexp:
                     logger.critical("Maybe you need to supply a regexp.")
                 else:
@@ -226,8 +232,7 @@ class ScratchEnsemble(object):
             else:
                 count += 1
                 self._realizations[realization.index] = realization
-        logger.info('add_realizations() found %d realizations',
-                    len(self._realizations))
+        logger.info("add_realizations() found %d realizations", len(self._realizations))
         return count
 
     def add_from_runpathfile(self, runpath, runpathfilter=None):
@@ -252,30 +257,37 @@ class ScratchEnsemble(object):
         """
         prelength = len(self)
         if isinstance(runpath, str):
-            runpath_df = pd.read_csv(runpath, sep=r'\s+', engine='python',
-                                     names=['index', 'runpath',
-                                            'eclbase', 'iter'])
+            runpath_df = pd.read_csv(
+                runpath,
+                sep=r"\s+",
+                engine="python",
+                names=["index", "runpath", "eclbase", "iter"],
+            )
         elif isinstance(runpath, pd.DataFrame):
             # We got a readymade dataframe. Perhaps a slice.
             # Most likely we are getting the slice from an EnsembleSet
             # initialization.
             runpath_df = runpath
-            if 'index' not in runpath_df or 'runpath' not in runpath_df \
-               or 'eclbase' not in runpath_df or 'iter' not in runpath_df:
+            if (
+                "index" not in runpath_df
+                or "runpath" not in runpath_df
+                or "eclbase" not in runpath_df
+                or "iter" not in runpath_df
+            ):
                 raise ValueError("runpath dataframe not correct")
 
         for idx, row in runpath_df.iterrows():
-            if runpathfilter and runpathfilter not in row['runpath']:
+            if runpathfilter and runpathfilter not in row["runpath"]:
                 continue
-            logger.info("Adding realization from " + row['runpath'])
-            realization = ScratchRealization(row['runpath'],
-                                             index=int(row['index']),
-                                             autodiscovery=False)
+            logger.info("Adding realization from " + row["runpath"])
+            realization = ScratchRealization(
+                row["runpath"], index=int(row["index"]), autodiscovery=False
+            )
             # Use the ECLBASE from the runpath file to
             # ensure we recognize the correct UNSMRY file
-            realization.find_files(row['eclbase'] + ".DATA")
-            realization.find_files(row['eclbase'] + ".UNSMRY")
-            self._realizations[int(row['index'])] = realization
+            realization.find_files(row["eclbase"] + ".DATA")
+            realization.find_files(row["eclbase"] + ".UNSMRY")
+            self._realizations[int(row["index"])] = realization
 
         return len(self) - prelength
 
@@ -311,7 +323,7 @@ class ScratchEnsemble(object):
         for index in realindices:
             self._realizations.pop(index, None)
             popped += 1
-        logger.info('removed %d realization(s)', popped)
+        logger.info("removed %d realization(s)", popped)
 
     def to_virtual(self, name=None):
         """Convert the ScratchEnsemble to a VirtualEnsemble.
@@ -331,10 +343,9 @@ class ScratchEnsemble(object):
     def parameters(self):
         """Getter for get_parameters(convert_numeric=True)
         """
-        return self.load_txt('parameters.txt')
+        return self.load_txt("parameters.txt")
 
-    def load_scalar(self, localpath, convert_numeric=False,
-                    force_reread=False):
+    def load_scalar(self, localpath, convert_numeric=False, force_reread=False):
         """Parse a single value from a file for each realization.
 
         The value can be a string or a number.
@@ -358,11 +369,9 @@ class ScratchEnsemble(object):
                 name as the localpath filename contains the data.
 
         """
-        return self.load_file(localpath, 'scalar',
-                              convert_numeric, force_reread)
+        return self.load_file(localpath, "scalar", convert_numeric, force_reread)
 
-    def load_txt(self, localpath, convert_numeric=True,
-                 force_reread=False):
+    def load_txt(self, localpath, convert_numeric=True, force_reread=False):
         """Parse a key-value text file from disk and internalize data
 
         Parses text files on the form
@@ -371,11 +380,9 @@ class ScratchEnsemble(object):
 
         Parsing is performed individually in each realization
         """
-        return self.load_file(localpath, 'txt',
-                              convert_numeric, force_reread)
+        return self.load_file(localpath, "txt", convert_numeric, force_reread)
 
-    def load_csv(self, localpath, convert_numeric=True,
-                 force_reread=False):
+    def load_csv(self, localpath, convert_numeric=True, force_reread=False):
         """For each realization, load a CSV.
 
         The CSV file must be present in at least one realization.
@@ -396,11 +403,9 @@ class ScratchEnsemble(object):
             Dataframe, aggregation of the loaded CSV files. Column 'REAL'
                 distuinguishes each realizations data.
         """
-        return self.load_file(localpath, 'csv',
-                              convert_numeric, force_reread)
+        return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
-    def load_file(self, localpath, fformat, convert_numeric=False,
-                  force_reread=False):
+    def load_file(self, localpath, fformat, convert_numeric=False, force_reread=False):
         """Function for calling load_file() in every realization
 
         This function may utilize multithreading.
@@ -422,20 +427,18 @@ class ScratchEnsemble(object):
         """
         for index, realization in self._realizations.items():
             try:
-                realization.load_file(localpath, fformat,
-                                      convert_numeric, force_reread)
+                realization.load_file(localpath, fformat, convert_numeric, force_reread)
             except ValueError:
                 # This would at least occur for unsupported fileformat,
                 # and that we should not skip.
-                logger.critical('load_file() failed in realization %d', index)
+                logger.critical("load_file() failed in realization %d", index)
                 raise ValueError
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
-                logger.warn('Could not read %s for realization %d', localpath,
-                            index)
+                logger.warn("Could not read %s for realization %d", localpath, index)
         if self.get_df(localpath).empty:
-            raise ValueError('No ensemble data found for %s', localpath)
+            raise ValueError("No ensemble data found for %s", localpath)
         return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None):
@@ -461,14 +464,15 @@ class ScratchEnsemble(object):
         for index, realization in self._realizations.items():
             df_list[index] = realization.find_files(paths, metadata)
         if df_list:
-            return pd.concat(df_list, sort=False)\
-                     .reset_index()\
-                     .rename(columns={'level_0': 'REAL'})\
-                     .drop('level_1', axis='columns')
+            return (
+                pd.concat(df_list, sort=False)
+                .reset_index()
+                .rename(columns={"level_0": "REAL"})
+                .drop("level_1", axis="columns")
+            )
 
     def __repr__(self):
-        return "<ScratchEnsemble {}, {} realizations>".format(self.name,
-                                                              len(self))
+        return "<ScratchEnsemble {}, {} realizations>".format(self.name, len(self))
 
     def __len__(self):
         return len(self._realizations)
@@ -497,7 +501,7 @@ class ScratchEnsemble(object):
                     for vector in vector_match:
                         result = result.union(set(eclsum.keys(vector)))
             else:
-                logger.warn('No EclSum available for realization %d', index)
+                logger.warn("No EclSum available for realization %d", index)
         return list(result)
 
     def get_df(self, localpath):
@@ -522,13 +526,11 @@ class ScratchEnsemble(object):
                 if isinstance(data, dict):
                     data = pd.DataFrame(index=[1], data=data)
                 elif isinstance(data, (str, int, float)):
-                    data = pd.DataFrame(index=[1], columns=[localpath],
-                                        data=data)
+                    data = pd.DataFrame(index=[1], columns=[localpath], data=data)
                 if isinstance(data, pd.DataFrame):
                     dflist[index] = data
                 else:
-                    raise ValueError("Unkown datatype returned " +
-                                     "from realization")
+                    raise ValueError("Unkown datatype returned " + "from realization")
             except ValueError:
                 # No logging here, those error messages
                 # should have appeared at construction using load_*()
@@ -537,15 +539,22 @@ class ScratchEnsemble(object):
             # Merge a dictionary of dataframes. The dict key is
             # the realization index, and end up in a MultiIndex
             dframe = pd.concat(dflist, sort=False).reset_index()
-            dframe.rename(columns={'level_0': 'REAL'}, inplace=True)
-            del dframe['level_1']  # This is the indices from each real
+            dframe.rename(columns={"level_0": "REAL"}, inplace=True)
+            del dframe["level_1"]  # This is the indices from each real
             return dframe
         else:
             raise ValueError("No data found for " + localpath)
 
-    def load_smry(self, time_index='raw', column_keys=None, stacked=True,
-                  cache_eclsum=True, start_date=None, end_date=None,
-                  include_restart=True):
+    def load_smry(
+        self,
+        time_index="raw",
+        column_keys=None,
+        stacked=True,
+        cache_eclsum=True,
+        start_date=None,
+        end_date=None,
+        include_restart=True,
+    ):
         """
         Fetch and internalize summary data from all realizations.
 
@@ -612,16 +621,17 @@ class ScratchEnsemble(object):
             # Downside is that we have to compute the name of the
             # cached object as it is not returned.
             logger.info("Loading smry from realization %s", realidx)
-            realization.load_smry(time_index=time_index,
-                                  column_keys=column_keys,
-                                  cache_eclsum=cache_eclsum,
-                                  start_date=start_date,
-                                  end_date=end_date,
-                                  include_restart=include_restart)
+            realization.load_smry(
+                time_index=time_index,
+                column_keys=column_keys,
+                cache_eclsum=cache_eclsum,
+                start_date=start_date,
+                end_date=end_date,
+                include_restart=include_restart,
+            )
         if isinstance(time_index, list):
-            time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry--' +
-                           time_index + '.csv')
+            time_index = "custom"
+        return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None):
         """Compute volumetric rates from cumulative summary vectors
@@ -648,13 +658,13 @@ class ScratchEnsemble(object):
         """
         vol_dfs = []
         for realidx, real in self._realizations.items():
-            vol_real = real.get_volumetric_rates(column_keys=column_keys,
-                                                 time_index=time_index)
-            if 'DATE' not in vol_real.columns \
-               and vol_real.index.name == 'DATE':
+            vol_real = real.get_volumetric_rates(
+                column_keys=column_keys, time_index=time_index
+            )
+            if "DATE" not in vol_real.columns and vol_real.index.name == "DATE":
                 # This should be true, if not we might be in trouble.
                 vol_real.reset_index(inplace=True)
-            vol_real.insert(0, 'REAL', realidx)
+            vol_real.insert(0, "REAL", realidx)
             vol_dfs.append(vol_real)
 
         if not vol_dfs:
@@ -771,13 +781,19 @@ class ScratchEnsemble(object):
         for realidx, realization in self._realizations.items():
             result = realization.apply(callback, **kwargs).copy()
             # (we took a copy since we are modifying it here:)
-            result['REAL'] = realidx
+            result["REAL"] = realidx
             results.append(result)
         return pd.concat(results, sort=False, ignore_index=True)
 
-    def get_smry_dates(self, freq='monthly', normalize=True,
-                       start_date=None, end_date=None,
-                       cache_eclsum=True, include_restart=True):
+    def get_smry_dates(
+        self,
+        freq="monthly",
+        normalize=True,
+        start_date=None,
+        end_date=None,
+        cache_eclsum=True,
+        include_restart=True,
+    ):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
@@ -809,17 +825,20 @@ class ScratchEnsemble(object):
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self._realizations.items():
-            if realization.get_eclsum(cache=cache_eclsum,
-                                      include_restart=include_restart):
-                eclsumsdates.append(realization
-                                    .get_eclsum(cache=cache_eclsum,
-                                                include_restart=include_restart).dates)
-        return ScratchEnsemble._get_smry_dates(eclsumsdates, freq, normalize,
-                                               start_date, end_date)
+            if realization.get_eclsum(
+                cache=cache_eclsum, include_restart=include_restart
+            ):
+                eclsumsdates.append(
+                    realization.get_eclsum(
+                        cache=cache_eclsum, include_restart=include_restart
+                    ).dates
+                )
+        return ScratchEnsemble._get_smry_dates(
+            eclsumsdates, freq, normalize, start_date, end_date
+        )
 
     @staticmethod
-    def _get_smry_dates(eclsumsdates, freq, normalize,
-                        start_date, end_date):
+    def _get_smry_dates(eclsumsdates, freq, normalize, start_date, end_date):
         """Internal static method to be used by ScratchEnsemble and
         ScratchRealization.
 
@@ -849,7 +868,7 @@ class ScratchEnsemble(object):
             else:
                 raise TypeError("end_date had unknown type")
 
-        if freq == 'report' or freq == 'raw':
+        if freq == "report" or freq == "raw":
             datetimes = set()
             for eclsumdatelist in eclsumsdates:
                 datetimes = datetimes.union(eclsumdatelist)
@@ -858,16 +877,14 @@ class ScratchEnsemble(object):
             if start_date:
                 # Convert to datetime (at 00:00:00)
                 start_date = datetime.combine(start_date, datetime.min.time())
-                datetimes = [x for x in datetimes if
-                             x > start_date]
+                datetimes = [x for x in datetimes if x > start_date]
                 datetimes = [start_date] + datetimes
             if end_date:
                 end_date = datetime.combine(end_date, datetime.min.time())
-                datetimes = [x for x in datetimes if
-                             x < end_date]
+                datetimes = [x for x in datetimes if x < end_date]
                 datetimes = datetimes + [end_date]
             return datetimes
-        elif freq == 'last':
+        elif freq == "last":
             end_date = max([max(x) for x in eclsumsdates]).date()
             return [end_date]
         else:
@@ -875,13 +892,9 @@ class ScratchEnsemble(object):
             start_smry = min([min(x) for x in eclsumsdates])
             end_smry = max([max(x) for x in eclsumsdates])
 
-            pd_freq_mnenomics = {'monthly': 'MS',
-                                 'yearly': 'YS',
-                                 'daily': 'D'}
+            pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
 
-            (start_n, end_n) = normalize_dates(start_smry.date(),
-                                               end_smry.date(),
-                                               freq)
+            (start_n, end_n) = normalize_dates(start_smry.date(), end_smry.date(), freq)
 
             if not start_date and not normalize:
                 start_date_range = start_smry.date()
@@ -898,9 +911,10 @@ class ScratchEnsemble(object):
                 end_date_range = end_date
 
             if freq not in pd_freq_mnenomics:
-                raise ValueError('Requested frequency %s not supported' % freq)
-            datetimes = pd.date_range(start_date_range, end_date_range,
-                                      freq=pd_freq_mnenomics[freq])
+                raise ValueError("Requested frequency %s not supported" % freq)
+            datetimes = pd.date_range(
+                start_date_range, end_date_range, freq=pd_freq_mnenomics[freq]
+            )
             # Convert from Pandas' datetime64 to datetime.date:
             datetimes = [x.date() for x in datetimes]
 
@@ -913,9 +927,15 @@ class ScratchEnsemble(object):
                 datetimes = datetimes + [end_date]
             return datetimes
 
-    def get_smry_stats(self, column_keys=None, time_index='monthly',
-                       quantiles=None, cache_eclsum=True,
-                       start_date=None, end_date=None):
+    def get_smry_stats(
+        self,
+        column_keys=None,
+        time_index="monthly",
+        quantiles=None,
+        cache_eclsum=True,
+        start_date=None,
+        end_date=None,
+    ):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -964,32 +984,33 @@ class ScratchEnsemble(object):
         quantiles = list(map(int, quantiles))  # Potentially raise ValueError
         for quantile in quantiles:
             if quantile < 0 or quantile > 100:
-                raise ValueError("Quantiles must be integers "
-                                 + "between 0 and 100")
+                raise ValueError("Quantiles must be integers " + "between 0 and 100")
 
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
-        dframe = self.get_smry(time_index=time_index,
-                               column_keys=column_keys,
-                               cache_eclsum=cache_eclsum,
-                               start_date=start_date,
-                               end_date=end_date)
-        if 'REAL' in dframe:
-            dframe = dframe.drop(columns='REAL').groupby('DATE')
+        dframe = self.get_smry(
+            time_index=time_index,
+            column_keys=column_keys,
+            cache_eclsum=cache_eclsum,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if "REAL" in dframe:
+            dframe = dframe.drop(columns="REAL").groupby("DATE")
         else:
             logger.warning("No data found for get_smry_stats")
             return pd.DataFrame()
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
-        dframes['mean'] = dframe.mean()
+        dframes["mean"] = dframe.mean()
         for quantile in quantiles:
-            quantile_str = 'p' + str(quantile)
+            quantile_str = "p" + str(quantile)
             dframes[quantile_str] = dframe.quantile(q=quantile / 100.0)
-        dframes['maximum'] = dframe.max()
-        dframes['minimum'] = dframe.min()
+        dframes["maximum"] = dframe.max()
+        dframes["minimum"] = dframe.min()
 
-        return pd.concat(dframes, names=['STATISTIC'], sort=False)
+        return pd.concat(dframes, names=["STATISTIC"], sort=False)
 
     def get_wellnames(self, well_match=None):
         """
@@ -1070,12 +1091,13 @@ class ScratchEnsemble(object):
 
         WARNING: This code is duplicated in virtualensemble.py
         """
-        quantilematcher = re.compile(r'p(\d\d)')
-        supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
-        if aggregation not in supported_aggs and \
-           not quantilematcher.match(aggregation):
-            raise ValueError("{arg} is not a".format(arg=aggregation) +
-                             "supported ensemble aggregation")
+        quantilematcher = re.compile(r"p(\d\d)")
+        supported_aggs = ["mean", "median", "min", "max", "std", "var"]
+        if aggregation not in supported_aggs and not quantilematcher.match(aggregation):
+            raise ValueError(
+                "{arg} is not a".format(arg=aggregation)
+                + "supported ensemble aggregation"
+            )
 
         # Generate a new empty object:
         vreal = VirtualRealization(self.name + " " + aggregation)
@@ -1097,25 +1119,30 @@ class ScratchEnsemble(object):
             data = self.get_df(key)
 
             # This column should never appear in aggregated data
-            del data['REAL']
+            del data["REAL"]
 
             # Look for data we should group by. This would be beneficial
             # to get from a metadata file, and not by pure guesswork.
-            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
-                                       'JOBINDEX', 'Zone', 'Region_index']
+            groupbycolumncandidates = [
+                "DATE",
+                "FIPNUM",
+                "ZONE",
+                "REGION",
+                "JOBINDEX",
+                "Zone",
+                "Region_index",
+            ]
 
             # Pick up string columns (or non-numeric values)
             # (when strings are used as values, this breaks, but it is also
             # meaningless to aggregate them. Most likely, strings in columns
             # is a label we should group over)
-            stringcolumns = [x for x in data.columns if
-                             data.dtypes[x] == 'object']
+            stringcolumns = [x for x in data.columns if data.dtypes[x] == "object"]
 
-            groupby = [x for x in groupbycolumncandidates
-                       if x in data.columns]
+            groupby = [x for x in groupbycolumncandidates if x in data.columns]
 
             # Add string columns
-            if key != 'STATUS':  # STATUS dataframe contains too many strings..
+            if key != "STATUS":  # STATUS dataframe contains too many strings..
                 groupby = list(set(groupby + stringcolumns))
 
             dtypes = data.dtypes.unique()
@@ -1130,7 +1157,7 @@ class ScratchEnsemble(object):
 
             if quantilematcher.match(aggregation):
                 quantile = int(quantilematcher.match(aggregation).group(1))
-                aggregated = aggobject.quantile(quantile/100.0)
+                aggregated = aggobject.quantile(quantile / 100.0)
             else:
                 # Passing through the variable 'aggregation' to
                 # Pandas, thus supporting more than we have listed in
@@ -1152,7 +1179,7 @@ class ScratchEnsemble(object):
         filedflist = []
         for realidx, realization in self._realizations.items():
             realfiles = realization.files.copy()
-            realfiles.insert(0, 'REAL', realidx)
+            realfiles.insert(0, "REAL", realidx)
             filedflist.append(realfiles)
         return pd.concat(filedflist, ignore_index=True, sort=False)
 
@@ -1166,7 +1193,7 @@ class ScratchEnsemble(object):
         if isinstance(newname, str):
             self._name = newname
         else:
-            raise ValueError('Name input is not a string')
+            raise ValueError("Name input is not a string")
 
     def __sub__(self, other):
         result = EnsembleCombination(ref=self, sub=other)
@@ -1192,9 +1219,15 @@ class ScratchEnsemble(object):
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
 
-    def get_smry(self, time_index=None, column_keys=None,
-                 cache_eclsum=True, start_date=None,
-                 end_date=None, include_restart=True):
+    def get_smry(
+        self,
+        time_index=None,
+        column_keys=None,
+        cache_eclsum=True,
+        start_date=None,
+        end_date=None,
+        include_restart=True,
+    ):
         """
         Aggregates summary data from all realizations.
 
@@ -1226,23 +1259,28 @@ class ScratchEnsemble(object):
             no realizations, empty DataFrame is returned.
         """
         if isinstance(time_index, str):
-            time_index = self.get_smry_dates(time_index, start_date=start_date,
-                                             end_date=end_date,
-                                             include_restart=include_restart)
+            time_index = self.get_smry_dates(
+                time_index,
+                start_date=start_date,
+                end_date=end_date,
+                include_restart=include_restart,
+            )
         dflist = []
         for index, realization in self._realizations.items():
-            dframe = realization.get_smry(time_index=time_index,
-                                          column_keys=column_keys,
-                                          cache_eclsum=cache_eclsum,
-                                          include_restart=include_restart)
-            dframe.insert(0, 'REAL', index)
-            dframe.index.name = 'DATE'
+            dframe = realization.get_smry(
+                time_index=time_index,
+                column_keys=column_keys,
+                cache_eclsum=cache_eclsum,
+                include_restart=include_restart,
+            )
+            dframe.insert(0, "REAL", index)
+            dframe.index.name = "DATE"
             dflist.append(dframe)
         if dflist:
             return pd.concat(dflist, sort=False).reset_index()
         return pd.DataFrame()
 
-    def get_eclgrid(self, props, report=0, agg='mean', active_only=False):
+    def get_eclgrid(self, props, report=0, agg="mean", active_only=False):
         """
         Returns the grid (i,j,k) and (x,y), and any requested init
         and/or unrst property. The values are aggregated over the
@@ -1264,15 +1302,15 @@ class ScratchEnsemble(object):
         corners = ref.get_grid_corners(grid_index)
         centre = ref.get_grid_centre(grid_index)
         dframe = grid_index.reset_index().join(corners).join(centre)
-        dframe['realizations_active'] = self.global_active.numpy_copy()
+        dframe["realizations_active"] = self.global_active.numpy_copy()
         for prop in props:
-            print('Reading the grid property: '+prop)
+            print("Reading the grid property: " + prop)
             if prop in self.init_keys:
                 dframe[prop] = self.get_init(prop, agg=agg)
             if prop in self.unrst_keys:
                 dframe[prop] = self.get_unrst(prop, agg=agg, report=report)
-        dframe.drop('index', axis=1, inplace=True)
-        dframe.set_index(['i', 'j', 'k', 'active'])
+        dframe.drop("index", axis=1, inplace=True)
+        dframe.set_index(["i", "j", "k", "active"])
         return dframe
 
     @property
@@ -1282,9 +1320,9 @@ class ScratchEnsemble(object):
             the number of realizations where the cell is active.
         """
         if not self._global_active:
-            self._global_active = EclKW('eactive',
-                                        self.global_size,
-                                        EclDataType.ECL_INT)
+            self._global_active = EclKW(
+                "eactive", self.global_size, EclDataType.ECL_INT
+            )
             for realization in self._realizations.values():
                 self._global_active += realization.actnum
 
@@ -1299,8 +1337,7 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return 0
         if self._global_size is None:
-            self._global_size = list(self._realizations
-                                     .values())[0].global_size
+            self._global_size = list(self._realizations.values())[0].global_size
         return self._global_size
 
     def _get_grid_index(self, active=True):
@@ -1310,8 +1347,7 @@ class ScratchEnsemble(object):
         """
         if not self._realizations:
             return None
-        return list(self._realizations.values())[0]\
-            .get_grid_index(active=active)
+        return list(self._realizations.values())[0].get_grid_index(active=active)
 
     @property
     def init_keys(self):
@@ -1319,8 +1355,11 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return None
         all_keys = set.union(
-            *[set(realization.get_init().keys())
-              for _, realization in six.iteritems(self._realizations)])
+            *[
+                set(realization.get_init().keys())
+                for _, realization in six.iteritems(self._realizations)
+            ]
+        )
         return all_keys
 
     @property
@@ -1329,8 +1368,11 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return None
         all_keys = set.union(
-            *[set(realization.get_unrst().keys())
-              for _, realization in six.iteritems(self._realizations)])
+            *[
+                set(realization.get_unrst().keys())
+                for _, realization in six.iteritems(self._realizations)
+            ]
+        )
         return all_keys
 
     def get_unrst_report_dates(self):
@@ -1338,12 +1380,15 @@ class ScratchEnsemble(object):
         if not self._realizations:
             return None
         all_report_dates = set.union(
-            *[set(realization.report_dates)
-              for _, realization in six.iteritems(self._realizations)])
+            *[
+                set(realization.report_dates)
+                for _, realization in six.iteritems(self._realizations)
+            ]
+        )
         all_report_dates = list(all_report_dates)
         all_report_dates.sort()
-        dframe = pd.DataFrame(all_report_dates, columns=['Dates'])
-        dframe.index.names = ['Report']
+        dframe = pd.DataFrame(all_report_dates, columns=["Dates"])
+        dframe.index.names = ["Report"]
         return dframe
 
     def get_init(self, prop, agg):
@@ -1353,14 +1398,11 @@ class ScratchEnsemble(object):
             and corresponding values for given property as values.
         :raises ValueError: If prop is not found.
         """
-        if agg == 'mean':
-            mean = self._keyword_mean(prop,
-                                      self.global_active)
+        if agg == "mean":
+            mean = self._keyword_mean(prop, self.global_active)
             return pd.Series(mean.numpy_copy(), name=prop)
-        if agg == 'std':
-            std_dev = self._keyword_std_dev(prop,
-                                            self.global_active,
-                                            mean)
+        if agg == "std":
+            std_dev = self._keyword_std_dev(prop, self.global_active, mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
     def get_unrst(self, prop, report, agg):
@@ -1372,15 +1414,13 @@ class ScratchEnsemble(object):
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
 
-        if agg == 'mean':
-            mean = self._keyword_mean(prop,
-                                      self.global_active,
-                                      report=report)
+        if agg == "mean":
+            mean = self._keyword_mean(prop, self.global_active, report=report)
             return pd.Series(mean.numpy_copy(), name=prop)
-        if agg == 'std':
-            std_dev = self._keyword_std_dev(prop,
-                                            self.global_active,
-                                            mean, report=report)
+        if agg == "std":
+            std_dev = self._keyword_std_dev(
+                prop, self.global_active, mean, report=report
+            )
             return pd.Series(std_dev.numpy_copy(), name=prop)
 
     def _keyword_mean(self, prop, global_active, report=None):
@@ -1394,8 +1434,7 @@ class ScratchEnsemble(object):
         if report:
             mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
             for real, realization in six.iteritems(self._realizations):
-                mean += realization.get_global_unrst_keyword(prop,
-                                                             report)
+                mean += realization.get_global_unrst_keyword(prop, report)
             mean.safe_div(global_active)
             return mean
         else:

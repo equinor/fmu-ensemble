@@ -51,15 +51,15 @@ class _BColors(object):
     # 40=black, 41=red, 42=green, 43=yellow, 44=blue, 45=pink, 46 cyan
 
     # pylint: disable=too-few-public-methods
-    HEADER = '\033[1;96m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARN = '\033[93;43m'
-    ERROR = '\033[93;41m'
-    CRITICAL = '\033[1;91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[1;96m"
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARN = "\033[93;43m"
+    ERROR = "\033[93;41m"
+    CRITICAL = "\033[1;91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
     def __init__(self):
         pass
@@ -77,18 +77,18 @@ class Interaction(object):
         self._caller = None
         self._lformat = None
         self._lformatlevel = 1
-        self._logginglevel = 'CRITICAL'
-        self._loggingname = ''
+        self._logginglevel = "CRITICAL"
+        self._loggingname = ""
         self._syslevel = 1
         self._test_env = True
-        self._tmpdir = 'TMP'
+        self._tmpdir = "TMP"
         self._testpath = None
 
         # a string, for Python logging:
-        logginglevel = os.environ.get('FMU_LOGGING_LEVEL')
+        logginglevel = os.environ.get("FMU_LOGGING_LEVEL")
 
         # a number, for format, 1 is simple, 2 is more info etc
-        loggingformat = os.environ.get('FMU_LOGGING_FORMAT')
+        loggingformat = os.environ.get("FMU_LOGGING_FORMAT")
 
         if logginglevel is not None:
             self.logginglevel = logginglevel
@@ -106,22 +106,23 @@ class Interaction(object):
     def logginglevel(self, level):
         # pylint: disable=pointless-statement
 
-        validlevels = ('INFO', 'WARNING', 'DEBUG', 'CRITICAL')
+        validlevels = ("INFO", "WARNING", "DEBUG", "CRITICAL")
         if level in validlevels:
             self._logginglevel = level
         else:
-            raise ValueError('Invalid level given, must be '
-                             'in {}'.format(validlevels))
+            raise ValueError(
+                "Invalid level given, must be " "in {}".format(validlevels)
+            )
 
     @property
     def numericallogginglevel(self):
         """Return a numerical logging level (read only)"""
         llo = logging.CRITICAL
-        if self._logginglevel == 'INFO':
+        if self._logginglevel == "INFO":
             llo = logging.INFO
-        elif self._logginglevel == 'WARNING':
+        elif self._logginglevel == "WARNING":
             llo = logging.WARNING
-        elif self._logginglevel == 'DEBUG':
+        elif self._logginglevel == "DEBUG":
             llo = logging.DEBUG
 
         return llo
@@ -136,12 +137,14 @@ class Interaction(object):
         """Returns the format string to be used in logging"""
 
         if self._lformatlevel <= 1:
-            self._lformat = '%(levelname)8s: \t%(message)s'
+            self._lformat = "%(levelname)8s: \t%(message)s"
         else:
-            self._lformat = '%(asctime)s Line: %(lineno)4d %(name)44s '\
-                + '[%(funcName)40s()]'\
-                + '%(levelname)8s:'\
-                + '\t%(message)s'
+            self._lformat = (
+                "%(asctime)s Line: %(lineno)4d %(name)44s "
+                + "[%(funcName)40s()]"
+                + "%(levelname)8s:"
+                + "\t%(message)s"
+            )
 
         return self._lformat
 
@@ -167,22 +170,21 @@ class Interaction(object):
 
             fmux.print_fmu_header('fmu.ensemble, '0.2.1', info='Beta release!')
         """
-        cur_version = 'Python ' + str(sys.version_info[0]) + '.'
-        cur_version += str(sys.version_info[1]) + '.' \
-            + str(sys.version_info[2])
+        cur_version = "Python " + str(sys.version_info[0]) + "."
+        cur_version += str(sys.version_info[1]) + "." + str(sys.version_info[2])
 
-        app = 'This is ' + appname + ', v. ' + str(appversion)
+        app = "This is " + appname + ", v. " + str(appversion)
         if info:
-            app = app + ' (' + info + ')'
+            app = app + " (" + info + ")"
 
-        print('')
+        print("")
         print(_BColors.HEADER)
-        print('#' * 79)
-        print('#{}#'.format(app.center(77)))
-        print('#{}#'.format(cur_version.center(77)))
-        print('#' * 79)
+        print("#" * 79)
+        print("#{}#".format(app.center(77)))
+        print("#{}#".format(cur_version.center(77)))
+        print("#" * 79)
         print(_BColors.ENDC)
-        print('')
+        print("")
 
     def basiclogger(self, name, level=None):
         """Initiate the logger by some default settings."""
@@ -206,7 +208,7 @@ class Interaction(object):
         logger.addHandler(logging.NullHandler())
         return logger
 
-    def testsetup(self, path='TMP'):
+    def testsetup(self, path="TMP"):
         """Basic setup for FMU testing (developer only; relevant for tests)"""
 
         try:
@@ -288,7 +290,7 @@ class Interaction(object):
 
         self._output(idx, level, string)
         if sysexit:
-            raise SystemExit('STOP!')
+            raise SystemExit("STOP!")
 
     def get_callerinfo(self, caller, frame):
         """Get caller info for logging (developer stuff)"""
@@ -296,7 +298,7 @@ class Interaction(object):
 
         # just keep the last class element
         xname = str(the_class)
-        xname = xname.split('.')
+        xname = xname.split(".")
         the_class = xname[-1]
 
         self._caller = caller
@@ -315,11 +317,11 @@ class Interaction(object):
             args, _, _, value_dict = inspect.getargvalues(frame)
             # we check the first parameter for the frame function is
             # named 'self'
-            if args and args[0] == 'self':
-                instance = value_dict.get('self', None)
+            if args and args[0] == "self":
+                instance = value_dict.get("self", None)
                 if instance:
                     # return its class
-                    return getattr(instance, '__class__', None)
+                    return getattr(instance, "__class__", None)
         else:
             # python3 is incomplete (need more coffee)
             current = inspect.currentframe()
@@ -333,23 +335,23 @@ class Interaction(object):
 
         # pylint: disable=too-many-branches
 
-        prefix = ''
-        endfix = ''
+        prefix = ""
+        endfix = ""
 
         if idx == 0:
-            prefix = '++'
+            prefix = "++"
         elif idx == 1:
-            prefix = '**'
+            prefix = "**"
         elif idx == 3:
-            prefix = '>>'
+            prefix = ">>"
         elif idx == 6:
-            prefix = _BColors.WARN + '##'
+            prefix = _BColors.WARN + "##"
             endfix = _BColors.ENDC
         elif idx == 8:
-            prefix = _BColors.ERROR + '!#'
+            prefix = _BColors.ERROR + "!#"
             endfix = _BColors.ENDC
         elif idx == 9:
-            prefix = _BColors.CRITICAL + '!!'
+            prefix = _BColors.CRITICAL + "!!"
             endfix = _BColors.ENDC
 
         prompt = False
@@ -358,15 +360,17 @@ class Interaction(object):
 
         if prompt:
             if self._syslevel <= 1:
-                print('{} {}{}'.format(prefix, string, endfix))
+                print("{} {}{}".format(prefix, string, endfix))
             else:
                 ulevel = str(level)
                 if level == -5:
-                    ulevel = 'M'
+                    ulevel = "M"
                 if level == -8:
-                    ulevel = 'E'
+                    ulevel = "E"
                 if level == -9:
-                    ulevel = 'W'
-                print('{0} <{1}> [{2:23s}->{3:>33s}] {4}{5}'
-                      .format(prefix, ulevel, self._callclass,
-                              self._caller, string, endfix))
+                    ulevel = "W"
+                print(
+                    "{0} <{1}> [{2:23s}->{3:>33s}] {4}{5}".format(
+                        prefix, ulevel, self._callclass, self._caller, string, endfix
+                    )
+                )

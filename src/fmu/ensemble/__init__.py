@@ -3,6 +3,7 @@
 """Top-level package for fmu.ensemble"""
 
 from ._theversion import theversion
+
 __version__ = theversion()
 
 del theversion

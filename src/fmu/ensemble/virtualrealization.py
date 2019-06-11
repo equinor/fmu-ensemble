@@ -26,6 +26,7 @@ class VirtualRealization(object):
     by the localpath in the files dataframe from ScratchRealization-
 
     """
+
     def __init__(self, description=None, data=None, longdescription=None):
         self._description = description
         self._longdescription = longdescription
@@ -56,7 +57,7 @@ class VirtualRealization(object):
         nothing will be appended unless overwrite is set to True
         """
         if key in self.data.keys() and not overwrite:
-            logger.warning('Ignoring %s, data already exists', key)
+            logger.warning("Ignoring %s, data already exists", key)
             return
         self.data[key] = dataframe
 
@@ -86,14 +87,12 @@ class VirtualRealization(object):
         else:
             os.mkdir(filesystempath)
 
-        with open(os.path.join(filesystempath, '_description'),
-                  'w') as fhandle:
+        with open(os.path.join(filesystempath, "_description"), "w") as fhandle:
             fhandle.write(self._description)
         if self._longdescription:
-            with open(os.path.join(filesystempath, '_longdescription'),
-                      'w') as fhandle:
+            with open(os.path.join(filesystempath, "_longdescription"), "w") as fhandle:
                 fhandle.write(str(self._longdescription))
-        with open(os.path.join(filesystempath, '__repr__'), 'w') as fhandle:
+        with open(os.path.join(filesystempath, "__repr__"), "w") as fhandle:
             fhandle.write(self.__repr__())
 
         for key in self.keys():
@@ -108,17 +107,20 @@ class VirtualRealization(object):
                 logger.info("Dumping %s", key)
                 data.to_csv(filename, index=False)
             elif isinstance(data, dict):
-                with open(filename, 'w') as fhandle:
+                with open(filename, "w") as fhandle:
                     for paramkey in data.keys():
-                        fhandle.write(paramkey + " " +
-                                      str(data[paramkey]) + "\n")
-            elif (isinstance(data, str) or isinstance(data, float) or
-                  isinstance(data, int)):
-                with open(filename, 'w') as fhandle:
+                        fhandle.write(paramkey + " " + str(data[paramkey]) + "\n")
+            elif (
+                isinstance(data, str)
+                or isinstance(data, float)
+                or isinstance(data, int)
+            ):
+                with open(filename, "w") as fhandle:
                     fhandle.write(str(data))
             else:
-                logger.warning("Don't know how to dump %s " +
-                               "of type %s to disk", key, type(key))
+                logger.warning(
+                    "Don't know how to dump %s " + "of type %s to disk", key, type(key)
+                )
 
     def load_disk(self, filesystempath):
         """Load data for a virtual realization from disk.
@@ -143,15 +145,15 @@ class VirtualRealization(object):
         logger.info("Loading virtual realization from %s", filesystempath)
         for root, _, filenames in os.walk(filesystempath):
             for filename in filenames:
-                if filename == '_description':
-                    self._description = ' '.join(open(os.path.join(
-                        root, filename)).readlines())
-                    logger.info('got name as %s', self._description)
-                elif filename == 'STATUS':
-                    self.append('STATUS', pd.read_csv(os.path.join(root,
-                                                                   filename)))
-                    logger.info('got STATUS')
-                elif filename == '__repr__':
+                if filename == "_description":
+                    self._description = " ".join(
+                        open(os.path.join(root, filename)).readlines()
+                    )
+                    logger.info("got name as %s", self._description)
+                elif filename == "STATUS":
+                    self.append("STATUS", pd.read_csv(os.path.join(root, filename)))
+                    logger.info("got STATUS")
+                elif filename == "__repr__":
                     # Not implemented..
                     continue
                 else:
@@ -162,7 +164,7 @@ class VirtualRealization(object):
                     linecount = 0
                     with open(os.path.join(root, filename)) as realfile:
                         line1 = realfile.next()
-                        commafields = len(line1.split(','))
+                        commafields = len(line1.split(","))
                         spacefields = len(line1.split())
                         try:
                             realfile.next()
@@ -172,25 +174,30 @@ class VirtualRealization(object):
                     print(filename, commafields, spacefields, linecount)
                     if spacefields == 2 and commafields == 1:
                         # key-value txt file!
-                        self.append(filename,
-                                    pd.read_csv(os.path.join(root, filename),
-                                                sep=r'\s+', index_col=0,
-                                                header=None)[1].to_dict())
-                        logger.info('Read txt file %s', filename)
-                    elif (spacefields == 1 and linecount == 1 and
-                          commafields == 1):
+                        self.append(
+                            filename,
+                            pd.read_csv(
+                                os.path.join(root, filename),
+                                sep=r"\s+",
+                                index_col=0,
+                                header=None,
+                            )[1].to_dict(),
+                        )
+                        logger.info("Read txt file %s", filename)
+                    elif spacefields == 1 and linecount == 1 and commafields == 1:
                         # scalar file
-                        value = pd.read_csv(os.path.join(root, filename),
-                                            sep=r'\s+', header=None,
-                                            engine='python').iloc[0, 0]
-                        logger.info('Read scalar file %s', filename)
+                        value = pd.read_csv(
+                            os.path.join(root, filename),
+                            sep=r"\s+",
+                            header=None,
+                            engine="python",
+                        ).iloc[0, 0]
+                        logger.info("Read scalar file %s", filename)
                         self.append(filename, value)
-                    elif (spacefields == 1 and linecount > 1 and
-                          commafields > 1):
+                    elif spacefields == 1 and linecount > 1 and commafields > 1:
                         # CSV file!
-                        self.append(filename,
-                                    pd.read_csv(os.path.join(root, filename)))
-                        logger.info('Read csv file %s', filename)
+                        self.append(filename, pd.read_csv(os.path.join(root, filename)))
+                        logger.info("Read csv file %s", filename)
 
     def to_json(self):
         """
@@ -237,14 +244,12 @@ class VirtualRealization(object):
             return data.to_dict()
         elif isinstance(data, dict):
             return data
-        elif (isinstance(data, str) or isinstance(data, int) or
-              isinstance(data, float)):
+        elif isinstance(data, str) or isinstance(data, int) or isinstance(data, float):
             return data
         else:
             raise ValueError("BUG: Unknown datatype")
 
-    def get_volumetric_rates(self, column_keys=None, time_index=None,
-                             time_unit=None):
+    def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
 
         Column names that are not referring to cumulative summary
@@ -279,9 +284,10 @@ class VirtualRealization(object):
 
         """
         from fmu.ensemble import ScratchRealization
-        return ScratchRealization._get_volumetric_rates(self, column_keys,
-                                                        time_index,
-                                                        time_unit)
+
+        return ScratchRealization._get_volumetric_rates(
+            self, column_keys, time_index, time_unit
+        )
 
     def shortcut2path(self, shortpath):
         """
@@ -302,16 +308,17 @@ class VirtualRealization(object):
         if basenames.count(shortpath) == 1:
             shortcut2path = {os.path.basename(x): x for x in self.keys()}
             return shortcut2path[shortpath]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        noexts = ["".join(x.split(".")[:-1]) for x in self.keys()]
         if noexts.count(shortpath) == 1:
-            shortcut2path = {''.join(x.split('.')[:-1]): x
-                             for x in self.keys()}
+            shortcut2path = {"".join(x.split(".")[:-1]): x for x in self.keys()}
             return shortcut2path[shortpath]
-        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.keys()]
+        basenamenoexts = [
+            "".join(os.path.basename(x).split(".")[:-1]) for x in self.keys()
+        ]
         if basenamenoexts.count(shortpath) == 1:
-            shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                             for x in self.keys()}
+            shortcut2path = {
+                "".join(os.path.basename(x).split(".")[:-1]): x for x in self.keys()
+            }
             return shortcut2path[shortpath]
         # If we get here, we did not find anything that
         # this shorthand could point to. Return as is, and let the
@@ -342,14 +349,14 @@ class VirtualRealization(object):
 
         """
         if not column_keys:
-            column_keys = '*'  # Match everything
+            column_keys = "*"  # Match everything
 
         column_keys = self._glob_smry_keys(column_keys)
         if not column_keys:
             raise ValueError("No column keys found")
 
         if not time_index:
-            time_index = 'monthly'
+            time_index = "monthly"
 
         if isinstance(time_index, str):
             time_index_dt = self._get_smry_dates(time_index)
@@ -363,67 +370,69 @@ class VirtualRealization(object):
         # higher accuracy?
 
         # Get a list ala ['yearly', 'daily']
-        available_smry = [x.split('/')[-1]
-                          .replace('.csv', '')
-                          .replace('unsmry--', '') for x in self.keys()
-                          if 'unsmry' in x]
+        available_smry = [
+            x.split("/")[-1].replace(".csv", "").replace("unsmry--", "")
+            for x in self.keys()
+            if "unsmry" in x
+        ]
 
-        if (isinstance(time_index, str) and time_index not in available_smry)\
-           or isinstance(time_index, list):
+        if (
+            isinstance(time_index, str) and time_index not in available_smry
+        ) or isinstance(time_index, list):
             # Suboptimal code, we always pick the finest available
             # time resolution:
-            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly',
-                          'custom']
+            priorities = ["raw", "daily", "monthly", "weekly", "yearly", "custom"]
             # (could also sort them by number of rows, or we could
             #  even merge them all)
             # (could have priorities as a dict, for example so we
             #  can interpolate from monthly if we ask for yearly)
-            chosen_smry = ''
+            chosen_smry = ""
             for candidate in priorities:
                 if candidate in available_smry:
                     chosen_smry = candidate
                     break
             if not chosen_smry:
-                logger.error("No internalized summary data "
-                             + "to interpolate from")
+                logger.error("No internalized summary data " + "to interpolate from")
                 return pd.DataFrame()
         else:
             chosen_smry = time_index
 
         logger.info("Using " + chosen_smry + " for interpolation")
 
-        smry = self.get_df('unsmry--' + chosen_smry)[
-            ['DATE'] + column_keys]
+        smry = self.get_df("unsmry--" + chosen_smry)[["DATE"] + column_keys]
 
         # Add the extra datetimes to interpolate at.
-        smry.set_index('DATE', inplace=True)
+        smry.set_index("DATE", inplace=True)
         smry.index = pd.to_datetime(smry.index)
-        smry = smry.append(pd.DataFrame(index=pd.to_datetime(time_index_dt)),
-                           sort=False)
+        smry = smry.append(
+            pd.DataFrame(index=pd.to_datetime(time_index_dt)), sort=False
+        )
         # Drop duplicated dates. It is always the first one which is the
         # original.
-        smry = smry[~smry.index.duplicated(keep='first')]
+        smry = smry[~smry.index.duplicated(keep="first")]
 
         smry.sort_index(inplace=True)
         smry = smry.apply(pd.to_numeric)
 
         cummask = self._smry_cumulative(column_keys)
-        cum_columns = [column_keys[i] for i in range(len(column_keys))
-                       if cummask[i]]
-        noncum_columns = [column_keys[i] for i in range(len(column_keys))
-                          if not cummask[i]]
-        smry[cum_columns] = smry[cum_columns]\
-            .interpolate(method='time')\
-            .fillna(method='ffill')\
-            .fillna(method='bfill')
-        smry[noncum_columns] = smry[noncum_columns]\
-            .fillna(method='bfill')\
-            .fillna(value=0)
+        cum_columns = [column_keys[i] for i in range(len(column_keys)) if cummask[i]]
+        noncum_columns = [
+            column_keys[i] for i in range(len(column_keys)) if not cummask[i]
+        ]
+        smry[cum_columns] = (
+            smry[cum_columns]
+            .interpolate(method="time")
+            .fillna(method="ffill")
+            .fillna(method="bfill")
+        )
+        smry[noncum_columns] = (
+            smry[noncum_columns].fillna(method="bfill").fillna(value=0)
+        )
 
-        smry.index = smry.index.set_names(['DATE'])
+        smry.index = smry.index.set_names(["DATE"])
         return smry.loc[pd.to_datetime(time_index_dt)]
 
-    def _get_smry_dates(self, freq='monthly', normalize=False):
+    def _get_smry_dates(self, freq="monthly", normalize=False):
         """Return list of datetimes available in the realization
 
         Similar to the function in ScratchRealization,
@@ -442,33 +451,27 @@ class VirtualRealization(object):
         Returns:
             list of datetimes. Empty if no summary data is available.
         """
-        available_smry = [x for x in self.keys()
-                          if 'unsmry' in x]
+        available_smry = [x for x in self.keys() if "unsmry" in x]
         if not available_smry:
             raise ValueError("No summary to get start and end date from")
 
         # Infer start and end-date from internalized smry data
         available_dates = set()
         for smry in available_smry:
-            available_dates = available_dates.union(
-                self.get_df(smry)['DATE'].values)
+            available_dates = available_dates.union(self.get_df(smry)["DATE"].values)
 
         # Parse every date to datetime, needed?
-        available_dates = \
-            [pd.to_datetime(x) for x in list(available_dates)]
+        available_dates = [pd.to_datetime(x) for x in list(available_dates)]
         start_date = min(available_dates)
         end_date = max(available_dates)
-        pd_freq_mnenomics = {'monthly': 'MS',
-                             'yearly': 'YS',
-                             'daily': 'D'}
+        pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
         if normalize:
             raise NotImplementedError
             # (start_date, end_date) = normalize_dates(start_date, end_date,
             #                                         freq)
         if freq not in pd_freq_mnenomics:
-            raise ValueError('Requested frequency %s not supported' % freq)
-        datetimes = pd.date_range(start_date, end_date,
-                                  freq=pd_freq_mnenomics[freq])
+            raise ValueError("Requested frequency %s not supported" % freq)
+        datetimes = pd.date_range(start_date, end_date, freq=pd_freq_mnenomics[freq])
         # Convert from Pandas' datetime64 to datetime.date:
         return [x.date() for x in datetimes]
 
@@ -494,8 +497,7 @@ class VirtualRealization(object):
             column_keys = [column_keys]
 
         # Get a list ala ['yearly', 'daily']
-        available_smry = [x for x in self.keys()
-                          if 'unsmry' in x]
+        available_smry = [x for x in self.keys() if "unsmry" in x]
 
         if not available_smry:
             raise ValueError("No summary data to glob from")
@@ -503,16 +505,15 @@ class VirtualRealization(object):
         # Merge all internalized columns:
         available_keys = set()
         for smry in available_smry:
-            available_keys = available_keys.union(
-                self.get_df(smry).columns)
+            available_keys = available_keys.union(self.get_df(smry).columns)
 
         matches = set()
         for key in column_keys:
             matches = matches.union(
-                [x for x in available_keys
-                 if fnmatch.fnmatch(x, key)])
-        if 'DATE' in matches:
-            matches.remove('DATE')
+                [x for x in available_keys if fnmatch.fnmatch(x, key)]
+            )
+        if "DATE" in matches:
+            matches.remove("DATE")
         return list(matches)
 
     def _smry_cumulative(self, column_keys):
@@ -545,13 +546,16 @@ class VirtualRealization(object):
             column_keys = [column_keys]
         if not isinstance(column_keys, list):
             raise TypeError("column_keys must be str or list of str")
-        return [(x.endswith('T') and ':' not in x and 'CT' not in x)
-                or ('T:' in x and 'CT:' not in x) for x in column_keys]
+        return [
+            (x.endswith("T") and ":" not in x and "CT" not in x)
+            or ("T:" in x and "CT:" not in x)
+            for x in column_keys
+        ]
 
     @property
     def parameters(self):
         """Convenience getter for parameters.txt"""
-        return self.data['parameters.txt']
+        return self.data["parameters.txt"]
 
     @property
     def name(self):

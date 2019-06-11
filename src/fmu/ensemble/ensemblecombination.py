@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import pandas as pd
 
-from .etc import Interaction 
+from .etc import Interaction
 from fmu.ensemble.virtualensemble import VirtualEnsemble
 
 xfmu = Interaction()
@@ -22,6 +22,7 @@ class EnsembleCombination(object):
     computed before the results are actually asked for - lazy
     evaluation.
     """
+
     def __init__(self, ref, scale=None, add=None, sub=None):
         """Set up an object for a linear combination of ensembles.
 
@@ -78,27 +79,27 @@ class EnsembleCombination(object):
         # We can pandas.add when the index is set correct.
         # WE MUST GUESS!
         indexlist = []
-        indexcandidates = ['REAL', 'DATE', 'ZONE', 'REGION']
+        indexcandidates = ["REAL", "DATE", "ZONE", "REGION"]
         for index in indexcandidates:
             if index in self.ref.get_df(localpath).columns:
                 indexlist.append(index)
         refdf = self.ref.get_df(localpath).set_index(indexlist)
-        refdf = refdf.select_dtypes(include='number')
+        refdf = refdf.select_dtypes(include="number")
         result = refdf.mul(self.scale)
         if self.add:
             otherdf = self.add.get_df(localpath).set_index(indexlist)
-            otherdf = otherdf.select_dtypes(include='number')
+            otherdf = otherdf.select_dtypes(include="number")
             result = result.add(otherdf)
         if self.sub:
             otherdf = self.sub.get_df(localpath).set_index(indexlist)
-            otherdf = otherdf.select_dtypes(include='number')
+            otherdf = otherdf.select_dtypes(include="number")
             result = result.sub(otherdf)
         # Delete rows where everything is NaN, which will be case when
         # realization (multi-)indices does not match up in both ensembles.
-        result.dropna(axis='index', how='all', inplace=True)
+        result.dropna(axis="index", how="all", inplace=True)
         # Also delete columns where everything is NaN, happens when
         # column data are not similar
-        result.dropna(axis='columns', how='all', inplace=True)
+        result.dropna(axis="columns", how="all", inplace=True)
         return result.reset_index()
 
     def to_virtual(self):
@@ -110,21 +111,21 @@ class EnsembleCombination(object):
             vens.append(key, self.get_df(key))
         return vens
 
-    def get_smry_dates(self, freq='monthly', normalize=True,
-                       start_date=None, end_date=None):
+    def get_smry_dates(
+        self, freq="monthly", normalize=True, start_date=None, end_date=None
+    ):
         """Create a union of dates available in the
         involved ensembles
         """
-        dates = set(self.ref.get_smry_dates(freq, normalize,
-                                            start_date, end_date))
+        dates = set(self.ref.get_smry_dates(freq, normalize, start_date, end_date))
         if self.add:
-            dates = dates.union(set(self.add.get_smry_dates(freq, normalize,
-                                                            start_date,
-                                                            end_date)))
+            dates = dates.union(
+                set(self.add.get_smry_dates(freq, normalize, start_date, end_date))
+            )
         if self.sub:
-            dates = dates.union(set(self.sub.get_smry_dates(freq, normalize,
-                                                            start_date,
-                                                            end_date)))
+            dates = dates.union(
+                set(self.sub.get_smry_dates(freq, normalize, start_date, end_date))
+            )
         dates = list(dates)
         dates.sort()
         return dates
@@ -142,25 +143,24 @@ class EnsembleCombination(object):
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)
-        indexlist = ['REAL', 'DATE']
-        refdf = self.ref.get_smry(time_index=time_index,
-                                  column_keys=column_keys).set_index(indexlist)
+        indexlist = ["REAL", "DATE"]
+        refdf = self.ref.get_smry(
+            time_index=time_index, column_keys=column_keys
+        ).set_index(indexlist)
         result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add\
-                          .get_smry(time_index=time_index,
-                                    column_keys=column_keys)\
-                          .set_index(indexlist)
+            otherdf = self.add.get_smry(
+                time_index=time_index, column_keys=column_keys
+            ).set_index(indexlist)
             result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub\
-                          .get_smry(time_index=time_index,
-                                    column_keys=column_keys)\
-                          .set_index(indexlist)
+            otherdf = self.sub.get_smry(
+                time_index=time_index, column_keys=column_keys
+            ).set_index(indexlist)
             result = result.sub(otherdf)
         return result.reset_index()
 
-    def get_smry_stats(self, column_keys=None, time_index='monthly'):
+    def get_smry_stats(self, column_keys=None, time_index="monthly"):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -187,18 +187,23 @@ class EnsembleCombination(object):
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble.
 
-        dframe = self.get_smry(time_index=time_index,
-                               column_keys=column_keys).drop(columns='REAL')\
-                                                       .groupby('DATE')
+        dframe = (
+            self.get_smry(time_index=time_index, column_keys=column_keys)
+            .drop(columns="REAL")
+            .groupby("DATE")
+        )
         mean = dframe.mean()
         p90 = dframe.quantile(q=0.90)
         p10 = dframe.quantile(q=0.10)
         maximum = dframe.max()
         minimum = dframe.min()
 
-        return pd.concat([mean, p10, p90, maximum, minimum],
-                         keys=['mean', 'p10', 'p90', 'maximum', 'minimum'],
-                         names=['statistic'], sort=False)
+        return pd.concat(
+            [mean, p10, p90, maximum, minimum],
+            keys=["mean", "p10", "p90", "maximum", "minimum"],
+            names=["statistic"],
+            sort=False,
+        )
 
     def __getitem__(self, localpath):
         return self.get_df(localpath)
@@ -207,9 +212,9 @@ class EnsembleCombination(object):
         """Try to give out a linear expression"""
         # NB: Implementation in this method requires scaling not to happen
         # simultaneously as adds or subs.
-        scalestring = ''
-        addstring = ''
-        substring = ''
+        scalestring = ""
+        addstring = ""
+        substring = ""
         if self.scale != 1:
             scalestring = str(self.scale) + " * "
         if self.add:
