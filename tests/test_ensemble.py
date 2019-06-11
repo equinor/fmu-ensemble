@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import numpy
 import pandas as pd
+import shutil
 
 import pytest
 
@@ -84,6 +85,7 @@ def test_reek001(tmp='TMP'):
     assert 'NPV' in reekensemble.load_txt('outputs.txt').columns
     # Check implicit discovery
     assert 'outputs.txt' in reekensemble.files['LOCALPATH'].values
+    assert all([os.path.isabs(x) for x in reekensemble.files['FULLPATH']])
 
     # File discovery:
     csvvolfiles = reekensemble.find_files('share/results/volumes/*csv',
@@ -102,7 +104,6 @@ def test_reek001(tmp='TMP'):
     # Check that rediscovery does not mess things up:
 
     filecount = len(reekensemble.files)
-    print(reekensemble.files)
     newfiles = reekensemble.find_files('share/results/volumes/*csv')
     # Also note that we skipped metadata here in rediscovery:
 
@@ -112,8 +113,10 @@ def test_reek001(tmp='TMP'):
     # The last invocation of find_files() should not return the metadata
     assert len(newfiles.columns) + 1 == len(csvvolfiles.columns)
 
+    # FULLPATH should always contain absolute paths
+    assert all([os.path.isabs(x) for x in reekensemble.files['FULLPATH']])
+
     # The metadata in the rediscovered files should have been removed
-    print(reekensemble.files)
     assert len(reekensemble.files[reekensemble.files['GRID']
                                   == 'simgrid']) == 0
 
@@ -176,6 +179,35 @@ def test_emptyens():
     else:
         testdir = os.path.abspath('.')
 
+    emptydf = ens.get_smry()
+    assert isinstance(emptydf, pd.DataFrame)
+    assert emptydf.empty
+
+    emptydatelist = ens.get_smry_dates()
+    assert isinstance(emptydatelist, list)
+    assert not emptydatelist
+
+    emptykeys = ens.get_smrykeys()
+    assert isinstance(emptykeys, list)
+    assert not emptykeys
+
+    emptyrates = ens.get_volumetric_rates()
+    assert isinstance(emptyrates, pd.DataFrame)
+    assert emptyrates.empty
+
+    emptystats = ens.get_smry_stats()
+    assert isinstance(emptystats, pd.DataFrame)
+    assert emptystats.empty
+
+    emptywells = ens.get_wellnames()
+    assert isinstance(emptywells, list)
+    assert not emptywells
+
+    emptygroups = ens.get_groupnames()
+    assert isinstance(emptygroups, list)
+    assert not emptygroups
+
+    # Add a realization manually:
     ens.add_realizations(testdir + '/data/testensemble-reek001/'
                          + 'realization-0/iter-0')
     assert len(ens) == 1
@@ -404,6 +436,31 @@ def test_ensemble_ecl():
                                               quantiles=[])
     assert len(noquantiles.index.levels[0]) == 3
 
+def test_nonstandard_dirs(tmp='TMP'):
+    ensdir = tmp + '/foo-ens-bar/'
+    
+    if os.path.exists(ensdir):
+        shutil.rmtree(ensdir)
+    os.makedirs(ensdir)
+    os.makedirs(ensdir + "/bar_001/iter_003")
+    os.makedirs(ensdir + "/bar_002/iter_003")
+    os.makedirs(ensdir + "/bar_003/iter_003")
+    enspaths = ensdir + "/bar_*/iter_003"
+
+    ens = ScratchEnsemble('foo', enspaths)
+    # The logger should also print CRITICAL statements here.
+    assert len(ens) == 0
+
+    # But if we specify a realidxregex, it should work
+    ens = ScratchEnsemble('foo', enspaths,
+                          realidxregexp='bar_(\d+)')
+    assert len(ens) == 3
+
+    # Supplying wrong regexpes:
+    ens = ScratchEnsemble('foo', enspaths,
+                          realidxregexp='bar_xx')
+    assert len(ens) == 0
+
 
 def test_volumetric_rates():
     """Test computation of cumulative compatible rates
@@ -555,20 +612,37 @@ def test_filter():
 def test_ertrunpathfile():
     """Initialize an ensemble from an ERT runpath file"""
 
+    cwd = os.getcwd()
+
     if '__file__' in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
     else:
         testdir = os.path.abspath('.')
 
+    # The example runpathfile contains relative paths, which is not realistic
+    # for real runpathfiles coming from ERT. But relative paths are more easily
+    # handled in git and with pytest, so we have to try some magic
+    # to get it to work:
+    if 'tests' not in os.getcwd():
+        if os.path.exists('tests'):
+            os.chdir('tests')
+        else:
+            pytest.skip("Did not find test data")
+    if not os.path.exists('data'):
+        pytest.skip("Did not find test data")
+
+    # The ertrunpathfile used here assumes we are in the 'tests' directory
     ens = ScratchEnsemble('ensfromrunpath', runpathfile=testdir
                           + '/data/ert-runpath-file')
     assert len(ens) == 5
 
+    assert all([os.path.isabs(x) for x in ens.files['FULLPATH']])
     # Check that the UNSMRY files has been discovered, they should always be
     # because ECLBASE is given in the runpathfile
     assert sum(['UNSMRY' in x for x in ens.files['BASENAME'].unique()]) == 5
 
+    os.chdir(cwd)
 
 def test_nonexisting():
     """Test what happens when we try to initialize from a
@@ -635,6 +709,7 @@ def test_eclsumcaching():
     some_dates = ens.get_smry_dates(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
+
 def test_filedescriptors():
     """Test how filedescriptors are used.
 
@@ -692,6 +767,7 @@ def test_read_eclgrid():
 
     assert len(grid_df.columns) == 35
     assert len(grid_df['i']) == 35840
+
 
 def test_apply(tmp='TMP'):
     """

@@ -67,21 +67,27 @@ class ScratchRealization(object):
             from the path. First match is the index.
             Default: realization-(\d+)
             Only needs to match path components.
+            If a string is supplied, it will be attempted
+            compiled into a regular expression.
         index: int, the realization index to be used, will
             override anything else.
     """
     def __init__(self, path, realidxregexp=None, index=None):
-        self._origpath = path
+        self._origpath = os.path.abspath(path)
         self.index = None
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
+        # Try to compile the regexp on behalf of the user.
+        if isinstance(realidxregexp, str):
+            realidxregexp = re.compile(realidxregexp)
         if isinstance(realidxregexp, str):
             raise ValueError("Supplied realidxregexp not valid")
 
         self.files = pd.DataFrame(columns=['FULLPATH', 'FILETYPE',
                                            'LOCALPATH', 'BASENAME'])
         self._eclsum = None  # Placeholder for caching
+        self._eclsum_include_restart = None  # Flag for cached object
 
         # The datastore for internalized data. Dictionary
         # indexed by filenames (local to the realization).
@@ -95,7 +101,7 @@ class ScratchRealization(object):
 
         abspath = os.path.abspath(path)
 
-        if not index:
+        if index is None:
             for path_comp in reversed(os.path.abspath(path)
                                       .split(os.path.sep)):
                 realidxmatch = re.match(realidxregexp, path_comp)
@@ -103,11 +109,12 @@ class ScratchRealization(object):
                     self.index = int(realidxmatch.group(1))
                     break
             else:
-                logger.warn('Could not determine realization index '
-                            + 'for %s, skipping!',
+                logger.warn("Could not determine realization " +
+                            "index for %s, " +
+                            "this cannot be inserted in an Ensemble",
                             abspath)
                 logger.warn("Maybe you need to use index=<someinteger>")
-                return
+                self.index = None
         else:
             self.index = int(index)
 
@@ -204,7 +211,7 @@ class ScratchRealization(object):
         Returns:
             the value read from the file.
         """
-        fullpath = os.path.join(self._origpath, localpath)
+        fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
@@ -276,7 +283,7 @@ class ScratchRealization(object):
                 integers, floats or strings. If convert_numeric
                 is False, all values are strings.
         """
-        fullpath = os.path.join(self._origpath, localpath)
+        fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
@@ -324,7 +331,7 @@ class ScratchRealization(object):
             dataframe: The CSV file loaded. Empty dataframe
                 if file is not present.
         """
-        fullpath = os.path.join(self._origpath, localpath)
+        fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
         else:
@@ -631,13 +638,14 @@ class ScratchRealization(object):
         for searchpath in paths:
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
+                absmatch = os.path.abspath(match)
                 filerow = {'LOCALPATH': os.path.relpath(match, self._origpath),
                            'FILETYPE': match.split('.')[-1],
-                           'FULLPATH': match,
+                           'FULLPATH': absmatch,
                            'BASENAME': os.path.basename(match)}
                 # Delete this row if it already exists, determined by FULLPATH
-                if match in self.files.FULLPATH.values:
-                    self.files = self.files[self.files.FULLPATH != match]
+                if absmatch in self.files['FULLPATH'].values:
+                    self.files = self.files[self.files['FULLPATH'] != absmatch]
                 if metadata:
                     filerow.update(metadata)
                 self.files = self.files.append(filerow, ignore_index=True)
@@ -654,7 +662,7 @@ class ScratchRealization(object):
         """
         return self.data['parameters.txt']
 
-    def get_eclsum(self, cache=True):
+    def get_eclsum(self, cache=True, include_restart=True):
         """
         Fetch the Eclipse Summary file from the realization
         and return as a libecl EclSum object
@@ -670,13 +678,16 @@ class ScratchRealization(object):
             cache: boolean indicating whether we should keep an
                 object reference to the EclSum object. Set to
                 false if you need to conserve memory.
+            include_restart: boolean sent to libecl for whether restarts
+                files should be traversed
 
         Returns:
            EclSum: object representing the summary file. None if
                nothing was found.
         """
-        if self._eclsum:  # Return cached object if available
-            return self._eclsum
+        if cache and self._eclsum:  # Return cached object if available
+            if self._eclsum_include_restart == include_restart:
+                return self._eclsum
 
         unsmry_file_row = self.files[self.files.FILETYPE == 'UNSMRY']
         unsmry_filename = None
@@ -692,7 +703,8 @@ class ScratchRealization(object):
         if not os.path.exists(unsmry_filename):
             return None
         try:
-            eclsum = ecl.summary.EclSum(unsmry_filename, lazy_load=False)
+            eclsum = ecl.summary.EclSum(unsmry_filename, lazy_load=False,
+                                        include_restart=include_restart)
         except IOError:
             # This can happen if there is something wrong with the file
             # or if SMSPEC is missing.
@@ -702,11 +714,12 @@ class ScratchRealization(object):
 
         if cache:
             self._eclsum = eclsum
+            self._eclsum_include_restart = include_restart
 
         return eclsum
 
     def load_smry(self, time_index='raw', column_keys=None, cache_eclsum=True,
-                  start_date=None, end_date=None):
+                  start_date=None, end_date=None, include_restart=True):
         """Produce dataframe from Summary data from the realization
 
         When this function is called, the dataframe will be cached.
@@ -738,6 +751,9 @@ class ScratchRealization(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
                 is 'last'.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
+
         Returns:
             DataFrame with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
@@ -752,7 +768,8 @@ class ScratchRealization(object):
             # Note: This call will recache the smry object.
             time_index_arg = self.get_smry_dates(freq=time_index,
                                                  start_date=start_date,
-                                                 end_date=end_date)
+                                                 end_date=end_date,
+                                                 include_restart=include_restart)
         if isinstance(time_index, list):
             time_index_arg = time_index
             time_index_path = 'custom'
@@ -761,7 +778,8 @@ class ScratchRealization(object):
             column_keys = [column_keys]
 
         # Do the actual work:
-        dframe = self.get_eclsum(cache=cache_eclsum)\
+        dframe = self.get_eclsum(cache=cache_eclsum,
+                                 include_restart=include_restart)\
                      .pandas_frame(time_index_arg, column_keys)
         dframe = dframe.reset_index()
         dframe.rename(columns={'index': 'DATE'}, inplace=True)
@@ -779,7 +797,7 @@ class ScratchRealization(object):
 
     def get_smry(self, time_index=None, column_keys=None,
                  cache_eclsum=True, start_date=None,
-                 end_date=None):
+                 end_date=None, include_restart=True):
         """Wrapper for EclSum.pandas_frame
 
         This gives access to the underlying data on disk without
@@ -788,6 +806,9 @@ class ScratchRealization(object):
         Arguments:
             cache: Boolean for wheter the EclSum object is to be cached.
                 defaults to True.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
+
         Returns empty dataframe if there is no summary file
         """
         if not isinstance(column_keys, list):
@@ -797,12 +818,13 @@ class ScratchRealization(object):
         elif isinstance(time_index, str):
             time_index_arg = self.get_smry_dates(freq=time_index,
                                                  start_date=start_date,
-                                                 end_date=end_date)
+                                                 end_date=end_date,
+                                                 include_restart=include_restart)
         else:
             time_index_arg = time_index
 
-        if self.get_eclsum(cache=cache_eclsum):
-            df = self.get_eclsum(cache=cache_eclsum)\
+        if self.get_eclsum(cache=cache_eclsum, include_restart=include_restart):
+            df = self.get_eclsum(cache=cache_eclsum, include_restart=include_restart)\
                      .pandas_frame(time_index_arg, column_keys)
             if not cache_eclsum:
                 # Ensure EclSum object can be garbage collected
@@ -1006,7 +1028,8 @@ class ScratchRealization(object):
         return pd.DataFrame(data=data, index=dates)
 
     def get_smry_dates(self, freq='monthly', normalize=True,
-                       start_date=None, end_date=None):
+                       start_date=None, end_date=None,
+                       include_restart=True):
         """Return list of datetimes available in the realization
 
         Args:
@@ -1032,7 +1055,7 @@ class ScratchRealization(object):
             list of datetimes. None if no summary data is available.
         """
         from .ensemble import ScratchEnsemble
-        eclsum = self.get_eclsum()
+        eclsum = self.get_eclsum(include_restart=include_restart)
         if not eclsum:
             return None
         return ScratchEnsemble._get_smry_dates([eclsum.dates], freq,

@@ -40,6 +40,9 @@ def test_single_realization():
                            'realization-0/iter-0')
     real = ensemble.ScratchRealization(realdir)
 
+    assert os.path.isabs(real.runpath())
+    assert os.path.exists(real.runpath())
+
     assert len(real.files) == 4
     assert 'parameters.txt' in real.data
     assert isinstance(real.parameters['RMS_SEED'], int)
@@ -105,7 +108,10 @@ def test_single_realization():
     # assert real.contains('emptyfile')
     assert 'emptyscalarfile' in real.data
     assert isinstance(real['emptyscalarfile'], str)
-    assert 'emptyscalarfile' in real.files.LOCALPATH.values
+    assert 'emptyscalarfile' in real.files['LOCALPATH'].values
+
+    # Check that FULLPATH always has absolute paths
+    assert all([os.path.isabs(x) for x in real.files['FULLPATH']])
 
     with pytest.raises(IOError):
         real.load_scalar('notexisting.txt')
@@ -139,11 +145,6 @@ def test_single_realization():
     # at ensemble level it is fine.
     with pytest.raises(IOError):
         real.load_csv('bogus.csv')
-
-    with pytest.raises(ValueError):
-        # Ensure we give error on some erroneous example
-        # code that floated around early
-        ensemble.ScratchRealization("MyEnsemble", "/foo/bar/com")
 
 
 def test_volumetric_rates():
