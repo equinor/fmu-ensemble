@@ -56,18 +56,31 @@ class EnsembleSet(object):
             auto-discovered.
 
         """
-    def __init__(self, name=None, ensembles=None, frompath=None,
-                 runpathfile=None, realidxregexp=None,
-                 iterregexp=None, batchregexp=None,
-                 autodiscovery=True):
+
+    def __init__(
+        self,
+        name=None,
+        ensembles=None,
+        frompath=None,
+        runpathfile=None,
+        realidxregexp=None,
+        iterregexp=None,
+        batchregexp=None,
+        autodiscovery=True,
+    ):
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
 
-        if (ensembles and frompath) or (ensembles and runpathfile) \
-           or (runpathfile and ensembles):
-            logger.error("EnsembleSet only supports one initialization mode,"
-                         + "from list of ensembles\n, list of paths or "
-                         + "an ert runpath file")
+        if (
+            (ensembles and frompath)
+            or (ensembles and runpathfile)
+            or (runpathfile and ensembles)
+        ):
+            logger.error(
+                "EnsembleSet only supports one initialization mode,"
+                + "from list of ensembles\n, list of paths or "
+                + "an ert runpath file"
+            )
             raise ValueError
 
         # Check consistency in arguments.
@@ -94,9 +107,13 @@ class EnsembleSet(object):
                 logger.warning("No ensembles added to EnsembleSet")
 
         if frompath:
-            self.add_ensembles_frompath(frompath, realidxregexp,
-                                        iterregexp, batchregexp,
-                                        autodiscovery=autodiscovery)
+            self.add_ensembles_frompath(
+                frompath,
+                realidxregexp,
+                iterregexp,
+                batchregexp,
+                autodiscovery=autodiscovery,
+            )
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
 
@@ -122,7 +139,8 @@ class EnsembleSet(object):
 
     def __repr__(self):
         return "<EnsembleSet {}, {} ensembles:\n{}>".format(
-            self.name, len(self), self._ensembles)
+            self.name, len(self), self._ensembles
+        )
 
     @property
     def ensemblenames(self):
@@ -143,9 +161,14 @@ class EnsembleSet(object):
             allkeys = allkeys.union(ensemble.keys())
         return allkeys
 
-    def add_ensembles_frompath(self, paths,
-                               realidxregexp=None, iterregexp=None,
-                               batchregexp=None, autodiscovery=True):
+    def add_ensembles_frompath(
+        self,
+        paths,
+        realidxregexp=None,
+        iterregexp=None,
+        batchregexp=None,
+        autodiscovery=True,
+    ):
         """Convenience function for adding multiple ensembles.
 
         Args:
@@ -167,15 +190,20 @@ class EnsembleSet(object):
         """
         # Try to catch the most common use case and make that easy:
         if isinstance(paths, str):
-            if 'realization' not in paths and not realidxregexp\
-               and not iterregexp and not batchregexp:
-                logger.info("Adding realization-*/iter-* "
-                            + "path pattern to case directory")
-                paths = paths + '/realization-*/iter-*'
+            if (
+                "realization" not in paths
+                and not realidxregexp
+                and not iterregexp
+                and not batchregexp
+            ):
+                logger.info(
+                    "Adding realization-*/iter-* " + "path pattern to case directory"
+                )
+                paths = paths + "/realization-*/iter-*"
             paths = [paths]
 
         if not realidxregexp:
-            realidxregexp = re.compile(r'realization-(\d+)')
+            realidxregexp = re.compile(r"realization-(\d+)")
         if isinstance(realidxregexp, str):
             realidxregexp = re.compile(realidxregexp)
         if not iterregexp:
@@ -184,11 +212,11 @@ class EnsembleSet(object):
             # iterregexp = re.compile(r'iter-(\d+)')
             # Default regexp that will add 'iter-' to the
             # ensemble name
-            iterregexp = re.compile(r'(iter-\d+)')
+            iterregexp = re.compile(r"(iter-\d+)")
         if isinstance(iterregexp, str):
             iterregexp = re.compile(iterregexp)
         if not batchregexp:
-            batchregexp = re.compile(r'batch-(\d+)')
+            batchregexp = re.compile(r"batch-(\d+)")
         if isinstance(batchregexp, str):
             batchregexp = re.compile(batchregexp)
 
@@ -204,13 +232,12 @@ class EnsembleSet(object):
             return
 
         globbedpaths = [glob.glob(path) for path in paths]
-        globbedpaths = list(set([item for sublist in globbedpaths
-                                 for item in sublist]))
+        globbedpaths = list(set([item for sublist in globbedpaths for item in sublist]))
 
         # Build a temporary dataframe of globbed paths, and columns with
         # the realization index and the iter we found
         # (extented to a third level called 'batch')
-        paths_df = pd.DataFrame(columns=['path', 'real', 'iter', 'batch'])
+        paths_df = pd.DataFrame(columns=["path", "real", "iter", "batch"])
         for path in globbedpaths:
             real = None
             iterr = None  # 'iter' is a builtin..
@@ -230,31 +257,29 @@ class EnsembleSet(object):
                 if batchmatch:
                     batch = str(itermatch.group(1))
                     break
-            df_row = {'path': path,
-                      'real': real,
-                      'iter': iterr,
-                      'batch': batch}
+            df_row = {"path": path, "real": real, "iter": iterr, "batch": batch}
             paths_df = paths_df.append(df_row, ignore_index=True)
-        paths_df.fillna(value='Unknown', inplace=True)
+        paths_df.fillna(value="Unknown", inplace=True)
         # Initialize ensemble objects for each iter found:
-        iters = sorted(paths_df['iter'].unique())
+        iters = sorted(paths_df["iter"].unique())
         logger.info("Identified %s iterations, %s", len(iters), iters)
         for iterr in iters:
             # The realization indices *must* be unique for these
             # chosen paths, otherwise we are most likely in
             # trouble
-            iterslice = paths_df[paths_df['iter'] == iterr]
-            if len(iterslice['real'].unique()) != len(iterslice):
-                logger.error("Repeated realization indices for iter %s",
-                             iterr)
+            iterslice = paths_df[paths_df["iter"] == iterr]
+            if len(iterslice["real"].unique()) != len(iterslice):
+                logger.error("Repeated realization indices for iter %s", iterr)
                 logger.error("Some realizations will be ignored")
-            pathsforiter = sorted(paths_df[paths_df['iter'] == iterr]
-                                  ['path'].values)
+            pathsforiter = sorted(paths_df[paths_df["iter"] == iterr]["path"].values)
             # iterr might contain the 'iter-' prefix,
             # depending on chosen regexpx
-            ens = ScratchEnsemble(str(iterr),
-                                  pathsforiter, realidxregexp=realidxregexp,
-                                  autodiscovery=autodiscovery)
+            ens = ScratchEnsemble(
+                str(iterr),
+                pathsforiter,
+                realidxregexp=realidxregexp,
+                autodiscovery=autodiscovery,
+            )
             self._ensembles[ens.name] = ens
 
     def add_ensembles_fromrunpath(self, runpathfile):
@@ -264,17 +289,21 @@ class EnsembleSet(object):
         for runpath-files, since the location of the UNSMRY-file is given in
         the runpath file.
         """
-        runpath_df = pd.read_csv(runpathfile, sep=r'\s+', engine='python',
-                                 names=['index', 'runpath', 'eclbase', 'iter'])
+        runpath_df = pd.read_csv(
+            runpathfile,
+            sep=r"\s+",
+            engine="python",
+            names=["index", "runpath", "eclbase", "iter"],
+        )
         # If index and iter columns are all integers (typically zero padded),
         # Pandas has converted them to int64. If not, they will be
         # strings (objects)
-        for iterr in runpath_df['iter'].unique():
+        for iterr in runpath_df["iter"].unique():
             # Make a runpath slice, and initialize from that:
-            ens_runpath = runpath_df[runpath_df['iter'] == iterr]
-            ens = ScratchEnsemble('iter-' + str(iterr),
-                                  runpathfile=ens_runpath,
-                                  autodiscovery=False)
+            ens_runpath = runpath_df[runpath_df["iter"] == iterr]
+            ens = ScratchEnsemble(
+                "iter-" + str(iterr), runpathfile=ens_runpath, autodiscovery=False
+            )
             self._ensembles[ens.name] = ens
 
     def add_ensemble(self, ensembleobject):
@@ -283,18 +312,18 @@ class EnsembleSet(object):
         Name is taken from the ensembleobject.
         """
         if ensembleobject.name in self._ensembles:
-            raise ValueError("The name %s already exists in the EnsembleSet",
-                             ensembleobject.name)
+            raise ValueError(
+                "The name %s already exists in the EnsembleSet", ensembleobject.name
+            )
         self._ensembles[ensembleobject.name] = ensembleobject
 
     @property
     def parameters(self):
         """Getter for ensemble.parameters(convert_numeric=True)
         """
-        return self.get_df('parameters.txt')
+        return self.get_df("parameters.txt")
 
-    def load_scalar(self, localpath, convert_numeric=False,
-                    force_reread=False):
+    def load_scalar(self, localpath, convert_numeric=False, force_reread=False):
         """Parse a single value from a file
 
         The value can be a string or a number. Empty files
@@ -305,44 +334,39 @@ class EnsembleSet(object):
         and realization"""
         for ensname, ensemble in self._ensembles.items():
             try:
-                ensemble.load_scalar(localpath, convert_numeric,
-                                     force_reread)
+                ensemble.load_scalar(localpath, convert_numeric, force_reread)
             except ValueError:
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
-                logger.warn('Ensemble %s did not contain the data %s', ensname,
-                            localpath)
+                logger.warn(
+                    "Ensemble %s did not contain the data %s", ensname, localpath
+                )
 
-    def load_txt(self, localpath, convert_numeric=True,
-                 force_reread=False):
+    def load_txt(self, localpath, convert_numeric=True, force_reread=False):
         """Parse and internalize a txt-file from disk
 
         Parses text files on the form
         <key> <value>
         in each line."""
-        return self.load_file(localpath, 'txt', convert_numeric,
-                              force_reread)
+        return self.load_file(localpath, "txt", convert_numeric, force_reread)
 
-    def load_csv(self, localpath, convert_numeric=True,
-                 force_reread=False):
+    def load_csv(self, localpath, convert_numeric=True, force_reread=False):
         """Parse and internalize a CSV file from disk"""
-        return self.load_file(localpath, 'csv', convert_numeric,
-                              force_reread)
+        return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
-    def load_file(self, localpath, fformat, convert_numeric=True,
-                  force_reread=False):
+    def load_file(self, localpath, fformat, convert_numeric=True, force_reread=False):
         """Internal function for load_*()"""
         for ensname, ensemble in self._ensembles.items():
             try:
-                ensemble.load_file(localpath, fformat, convert_numeric,
-                                   force_reread)
+                ensemble.load_file(localpath, fformat, convert_numeric, force_reread)
             except ValueError:
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
-                logger.warn('Ensemble %s did not contain the data %s', ensname,
-                            localpath)
+                logger.warn(
+                    "Ensemble %s did not contain the data %s", ensname, localpath
+                )
         return self.get_df(localpath)
 
     def get_df(self, localpath):
@@ -361,7 +385,7 @@ class EnsembleSet(object):
         for ensname, ensemble in self._ensembles.items():
             try:
                 ensdf = ensemble.get_df(localpath)
-                ensdf.insert(0, 'ENSEMBLE', ensemble.name)
+                ensdf.insert(0, "ENSEMBLE", ensemble.name)
                 ensdflist.append(ensdf)
             except ValueError:
                 # Happens if an ensemble is missing some data
@@ -402,7 +426,7 @@ class EnsembleSet(object):
             except ValueError:
                 pass  # Allow localpath to be missing in some ensembles.
 
-    def apply(self,  callback, **kwargs):
+    def apply(self, callback, **kwargs):
         """Callback functionalty, apply a function to every realization
 
         The supplied function handle will be handed over to each
@@ -433,7 +457,7 @@ class EnsembleSet(object):
         for ens_name, ensemble in self._ensembles.items():
             if isinstance(ensemble, ScratchEnsemble):
                 result = ensemble.apply(callback, **kwargs)
-                result['ENSEMBLE'] = ens_name
+                result["ENSEMBLE"] = ens_name
                 results.append(result)
         return pd.concat(results, sort=False, ignore_index=True)
 
@@ -458,16 +482,17 @@ class EnsembleSet(object):
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in self.keys()}
             return short2path[shortpath]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.keys()]
+        noexts = ["".join(x.split(".")[:-1]) for x in self.keys()]
         if noexts.count(shortpath) == 1:
-            short2path = {''.join(x.split('.')[:-1]): x
-                          for x in self.keys()}
+            short2path = {"".join(x.split(".")[:-1]): x for x in self.keys()}
             return short2path[shortpath]
-        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.keys()]
+        basenamenoexts = [
+            "".join(os.path.basename(x).split(".")[:-1]) for x in self.keys()
+        ]
         if basenamenoexts.count(shortpath) == 1:
-            short2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                          for x in self.keys()}
+            short2path = {
+                "".join(os.path.basename(x).split(".")[:-1]): x for x in self.keys()
+            }
             return short2path[shortpath]
         # If we get here, we did not find anything that
         # this shorthand could point to. Return as is, and let the
@@ -488,12 +513,18 @@ class EnsembleSet(object):
         dflist = []
         for _, ensemble in self._ensembles.items():
             dframe = ensemble.get_csv(filename)
-            dframe['ENSEMBLE'] = ensemble.name
+            dframe["ENSEMBLE"] = ensemble.name
             dflist.append(dframe)
         return pd.concat(dflist, sort=False)
 
-    def load_smry(self, time_index=None, column_keys=None,
-                  cache_eclsum=True, start_date=None, end_date=None):
+    def load_smry(
+        self,
+        time_index=None,
+        column_keys=None,
+        cache_eclsum=True,
+        start_date=None,
+        end_date=None,
+    ):
         """
         Fetch summary data from all ensembles
 
@@ -531,19 +562,25 @@ class EnsembleSet(object):
         """
         # Future: Multithread this:
         for _, ensemble in self._ensembles.items():
-            ensemble.load_smry(time_index=time_index,
-                               column_keys=column_keys,
-                               cache_eclsum=cache_eclsum,
-                               start_date=start_date,
-                               end_date=end_date)
+            ensemble.load_smry(
+                time_index=time_index,
+                column_keys=column_keys,
+                cache_eclsum=cache_eclsum,
+                start_date=start_date,
+                end_date=end_date,
+            )
         if isinstance(time_index, list):
-            time_index = 'custom'
-        return self.get_df('share/results/tables/unsmry--' +
-                           time_index + '.csv')
+            time_index = "custom"
+        return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
-    def get_smry(self, time_index=None, column_keys=None,
-                 cache_eclsum=False, start_date=None,
-                 end_date=None):
+    def get_smry(
+        self,
+        time_index=None,
+        column_keys=None,
+        cache_eclsum=False,
+        start_date=None,
+        end_date=None,
+    ):
         """Aggregates summary data from all ensembles
 
         Wraps around Ensemble.get_smry(), which wraps around
@@ -575,16 +612,17 @@ class EnsembleSet(object):
         """
         smrylist = []
         for _, ensemble in self._ensembles.items():
-            smry = ensemble.get_smry(time_index, column_keys,
-                                     cache_eclsum, start_date,
-                                     end_date)
-            smry.insert(0, 'ENSEMBLE', ensemble.name)
+            smry = ensemble.get_smry(
+                time_index, column_keys, cache_eclsum, start_date, end_date
+            )
+            smry.insert(0, "ENSEMBLE", ensemble.name)
             smrylist.append(smry)
         if smrylist:
             return pd.concat(smrylist, sort=False)
 
-    def get_smry_dates(self, freq='monthly', cache_eclsum=True,
-                       start_date=None, end_date=None):
+    def get_smry_dates(
+        self, freq="monthly", cache_eclsum=True, start_date=None, end_date=None
+    ):
         """Return list of datetimes from an ensembleset
 
         Datetimes from each realization in each ensemble can
@@ -612,27 +650,29 @@ class EnsembleSet(object):
 
         rawdates = set()
         for _, ensemble in self._ensembles.items():
-            rawdates = rawdates\
-                       .union(ensemble
-                              .get_smry_dates(freq='report',
-                                              cache_eclsum=cache_eclsum,
-                                              start_date=start_date,
-                                              end_date=end_date))
+            rawdates = rawdates.union(
+                ensemble.get_smry_dates(
+                    freq="report",
+                    cache_eclsum=cache_eclsum,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            )
         rawdates = list(rawdates)
         rawdates.sort()
-        if freq == 'report':
+        if freq == "report":
             return rawdates
         else:
             # Later optimization: Wrap eclsum.start_date in the
             # ensemble object.
             start_date = min(rawdates)
             end_date = max(rawdates)
-            pd_freq_mnenomics = {'monthly': 'MS',
-                                 'yearly': 'YS', 'daily': 'D'}
+            pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
             if freq not in pd_freq_mnenomics:
-                raise ValueError('Requested frequency %s not supported' % freq)
-            datetimes = pd.date_range(start_date, end_date,
-                                      freq=pd_freq_mnenomics[freq])
+                raise ValueError("Requested frequency %s not supported" % freq)
+            datetimes = pd.date_range(
+                start_date, end_date, freq=pd_freq_mnenomics[freq]
+            )
             # Convert from Pandas' datetime64 to datetime.date:
             return [x.date() for x in datetimes]
 

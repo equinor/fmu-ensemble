@@ -113,16 +113,15 @@ class Observations(object):
             mismatches = {}
             for ensname, ens in ens_or_real._ensembles.items():
                 for realidx, real in ens._realizations.items():
-                    mismatches[(ensname, realidx)] \
-                        = self._realization_mismatch(real)
-                    mismatches[(ensname, realidx)]['REAL'] = realidx
-                    mismatches[(ensname, realidx)]['ENSEMBLE'] = ensname
+                    mismatches[(ensname, realidx)] = self._realization_mismatch(real)
+                    mismatches[(ensname, realidx)]["REAL"] = realidx
+                    mismatches[(ensname, realidx)]["ENSEMBLE"] = ensname
             return pd.concat(mismatches, axis=0, ignore_index=True)
         elif isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
             mismatches = {}
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
-                mismatches[realidx]['REAL'] = realidx
+                mismatches[realidx]["REAL"] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True)
         elif isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):
             return self._realization_mismatch(ens_or_real)
@@ -132,8 +131,7 @@ class Observations(object):
             raise ValueError("Unsupported object for mismatch calculation")
         return None
 
-    def load_smry(self, realization, smryvector, time_index='yearly',
-                  smryerror=None):
+    def load_smry(self, realization, smryvector, time_index="yearly", smryerror=None):
         """Add an observation unit from a VirtualRealization or
         ScratchRealization, being a specific summaryvector, picking
         values with the specified time resolution.
@@ -163,30 +161,29 @@ class Observations(object):
         # get_smry() API that will interpolate its known data.
         # That means we have to guess which dataset to load for
         # smry data, and we cannot support arbitrary time indices
-        data_name = 'unsmry--' + str(time_index)
+        data_name = "unsmry--" + str(time_index)
 
         # A ValueError will be thrown if the realization does not have
         # the smry data loaded, and a KeyError if incorrect summary vector name
-        dataseries = realization.get_df(data_name)\
-                                .set_index('DATE')[smryvector]
+        dataseries = realization.get_df(data_name).set_index("DATE")[smryvector]
 
         # Modify the observation object (self)
-        if 'smry' not in self.observations.keys():
-            self.observations['smry'] = []  # Empty list
+        if "smry" not in self.observations.keys():
+            self.observations["smry"] = []  # Empty list
 
         # Construct a virtual observation with observation units
         # at every timestep:
         virtobs = {}
-        virtobs['key'] = smryvector
-        virtobs['comment'] = "Virtual observation unit constructed from " \
-                             + str(realization)
-        virtobs['observations'] = []
+        virtobs["key"] = smryvector
+        virtobs["comment"] = "Virtual observation unit constructed from " + str(
+            realization
+        )
+        virtobs["observations"] = []
         for date, value in dataseries.iteritems():
-            virtobs['observations'].append({
-                'value': value,
-                'error': smryerror,
-                'date': date})
-        self.observations['smry'].append(virtobs)
+            virtobs["observations"].append(
+                {"value": value, "error": smryerror, "date": date}
+            )
+        self.observations["smry"].append(virtobs)
 
     def __len__(self):
 
@@ -241,70 +238,87 @@ class Observations(object):
         mismatches = []
         for obstype in self.observations.keys():
             for obsunit in self.observations[obstype]:  # (list)
-                if obstype == 'txt':
-                    sim_value = real.get_df(obsunit[
-                        'localpath'])[obsunit['key']]
-                    mismatch = float(sim_value - obsunit['value'])
+                if obstype == "txt":
+                    sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
+                    mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
-                    mismatches.append(dict(OBSTYPE=obstype,
-                                           OBSKEY=str(obsunit['localpath'])
-                                           + '/' + str(obsunit['key']),
-                                           MISMATCH=mismatch,
-                                           L1=abs(mismatch),
-                                           L2=abs(mismatch)**2,
-                                           SIMVALUE=sim_value,
-                                           OBSVALUE=obsunit['value'],
-                                           MEASERROR=measerror,
-                                           SIGN=sign))
-                if obstype == 'scalar':
-                    sim_value = real.get_df(obsunit['key'])
-                    mismatch = float(sim_value - obsunit['value'])
+                    mismatches.append(
+                        dict(
+                            OBSTYPE=obstype,
+                            OBSKEY=str(obsunit["localpath"])
+                            + "/"
+                            + str(obsunit["key"]),
+                            MISMATCH=mismatch,
+                            L1=abs(mismatch),
+                            L2=abs(mismatch) ** 2,
+                            SIMVALUE=sim_value,
+                            OBSVALUE=obsunit["value"],
+                            MEASERROR=measerror,
+                            SIGN=sign,
+                        )
+                    )
+                if obstype == "scalar":
+                    sim_value = real.get_df(obsunit["key"])
+                    mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
-                    mismatches.append(dict(OBSTYPE=obstype,
-                                           OBSKEY=str(obsunit['key']),
-                                           MISMATCH=mismatch, L1=abs(mismatch),
-                                           SIMVALUE=sim_value,
-                                           OBSVALUE=obsunit['value'],
-                                           MEASERROR=measerror,
-                                           L2=abs(mismatch)**2,
-                                           SIGN=sign))
-                if obstype == 'smryh':
+                    mismatches.append(
+                        dict(
+                            OBSTYPE=obstype,
+                            OBSKEY=str(obsunit["key"]),
+                            MISMATCH=mismatch,
+                            L1=abs(mismatch),
+                            SIMVALUE=sim_value,
+                            OBSVALUE=obsunit["value"],
+                            MEASERROR=measerror,
+                            L2=abs(mismatch) ** 2,
+                            SIGN=sign,
+                        )
+                    )
+                if obstype == "smryh":
                     # Will use raw times when available.
                     # Time index is always identical
-                    sim_hist = real.get_smry(column_keys=[obsunit['key'],
-                                                          obsunit['histvec']])
-                    sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
-                        sim_hist[obsunit['histvec']]
+                    sim_hist = real.get_smry(
+                        column_keys=[obsunit["key"], obsunit["histvec"]]
+                    )
+                    sim_hist["mismatch"] = (
+                        sim_hist[obsunit["key"]] - sim_hist[obsunit["histvec"]]
+                    )
                     measerror = 1
-                    mismatches.append(dict(OBSTYPE='smryh',
-                                           OBSKEY=obsunit['key'],
-                                           MISMATCH=sim_hist.mismatch.sum(),
-                                           MEASERROR=measerror,
-                                           L1=sim_hist.mismatch.abs().sum(),
-                                           L2=math.sqrt(
-                                               (sim_hist
-                                                .mismatch ** 2).sum())))
-                if obstype == 'smry':
+                    mismatches.append(
+                        dict(
+                            OBSTYPE="smryh",
+                            OBSKEY=obsunit["key"],
+                            MISMATCH=sim_hist.mismatch.sum(),
+                            MEASERROR=measerror,
+                            L1=sim_hist.mismatch.abs().sum(),
+                            L2=math.sqrt((sim_hist.mismatch ** 2).sum()),
+                        )
+                    )
+                if obstype == "smry":
                     # For 'smry', there is a list of
                     # observations (indexed by date)
-                    for unit in obsunit['observations']:
-                        sim_value = real.get_smry(time_index=[unit['date']],
-                                                  column_keys=obsunit['key'])[
-                                                  obsunit['key']].values[0]
-                        mismatch = float(sim_value - unit['value'])
+                    for unit in obsunit["observations"]:
+                        sim_value = real.get_smry(
+                            time_index=[unit["date"]], column_keys=obsunit["key"]
+                        )[obsunit["key"]].values[0]
+                        mismatch = float(sim_value - unit["value"])
                         sign = (mismatch > 0) - (mismatch < 0)
-                        mismatches.append(dict(OBSTYPE='smry',
-                                               OBSKEY=obsunit['key'],
-                                               DATE=unit['date'],
-                                               MEASERROR=unit['error'],
-                                               MISMATCH=mismatch,
-                                               OBSVALUE=unit['value'],
-                                               SIMVALUE=sim_value,
-                                               L1=abs(mismatch),
-                                               L2=abs(mismatch)**2,
-                                               SIGN=sign))
+                        mismatches.append(
+                            dict(
+                                OBSTYPE="smry",
+                                OBSKEY=obsunit["key"],
+                                DATE=unit["date"],
+                                MEASERROR=unit["error"],
+                                MISMATCH=mismatch,
+                                OBSVALUE=unit["value"],
+                                SIMVALUE=sim_value,
+                                L1=abs(mismatch),
+                                L2=abs(mismatch) ** 2,
+                                SIGN=sign,
+                            )
+                        )
         return pd.DataFrame(mismatches)
 
     def _realization_misfit(self, real, defaulterrors=False, corr=None):
@@ -324,22 +338,25 @@ class Observations(object):
             float : the misfit value for the observation set and realization
         """  # noqa
         if corr:
-            raise NotImplementedError("correlations in misfit " +
-                                      "calculation is not supported")
+            raise NotImplementedError(
+                "correlations in misfit " + "calculation is not supported"
+            )
         mismatch = self._realization_mismatch(real)
 
-        zeroerrors = mismatch['MEASERROR'] < 1e-7
+        zeroerrors = mismatch["MEASERROR"] < 1e-7
         if defaulterrors:
-            mismatch[zeroerrors]['MEASERROR'] = 1
+            mismatch[zeroerrors]["MEASERROR"] = 1
         else:
             if zeroerrors.any():
                 print(mismatch[zeroerrors])
-                raise ValueError("Zero measurement error in observation set" +
-                                 ". can't be used to calculate misfit")
-        if 'MISFIT' not in mismatch.columns:
-            mismatch['MISFIT'] = mismatch['L2'] / (mismatch['MEASERROR'] ** 2)
+                raise ValueError(
+                    "Zero measurement error in observation set"
+                    + ". can't be used to calculate misfit"
+                )
+        if "MISFIT" not in mismatch.columns:
+            mismatch["MISFIT"] = mismatch["L2"] / (mismatch["MEASERROR"] ** 2)
 
-        return mismatch['MISFIT'].sum()
+        return mismatch["MISFIT"].sum()
 
     def _clean_observations(self):
         """Verify integrity of observations, remove
@@ -351,49 +368,56 @@ class Observations(object):
 
         Ensure that dates are parsed into datetime.date objects.
         """
-        supported_categories = ['smry', 'smryh', 'txt', 'scalar', 'rft']
+        supported_categories = ["smry", "smryh", "txt", "scalar", "rft"]
 
         # Check top level keys in observations dict:
         for key in self.observations.keys():
             if key not in supported_categories:
                 self.observations.pop(key)
-                logger.error('Observation category %s not supported',
-                             key)
+                logger.error("Observation category %s not supported", key)
                 continue
             if not isinstance(self.observations[key], list):
-                logger.error('Observation category %s did not contain a ' +
-                             'list, but %s',
-                             key, type(self.observations[key]))
+                logger.error(
+                    "Observation category %s did not contain a " + "list, but %s",
+                    key,
+                    type(self.observations[key]),
+                )
                 self.observations.pop(key)
 
         # Check smry observations for validity
-        if 'smry' in self.observations.keys():
+        if "smry" in self.observations.keys():
             # We already know that observations['smry'] is a list
             # Each list element must be a dict with
             # the mandatory keys 'key' and 'observation'
-            smryunits = self.observations['smry']
+            smryunits = self.observations["smry"]
             for unit in smryunits:
                 if not isinstance(unit, (dict, OrderedDict)):
-                    logger.warning('Observation units must be dicts, '
-                                   + 'deleting: ' + str(unit))
+                    logger.warning(
+                        "Observation units must be dicts, " + "deleting: " + str(unit)
+                    )
                     del smryunits[smryunits.index(unit)]
                     continue
-                if not ('key' in unit and 'observations' in unit):
-                    logger.warning('Observation unit must '
-                                   + 'contain key and observations, '
-                                   + 'deleting: ' + str(unit))
+                if not ("key" in unit and "observations" in unit):
+                    logger.warning(
+                        "Observation unit must "
+                        + "contain key and observations, "
+                        + "deleting: "
+                        + str(unit)
+                    )
                     del smryunits[smryunits.index(unit)]
                     continue
                 # Check if strings need to be parsed as dates:
-                for observation in unit['observations']:
-                    if isinstance(observation['date'], str):
-                        observation['date'] = dateutil.parser.isoparse(observation['date']).date()
-                    if not isinstance(observation['date'], datetime.date):
-                        logger.error('Date not understood %s', str(observation['date']))
-                        continue 
+                for observation in unit["observations"]:
+                    if isinstance(observation["date"], str):
+                        observation["date"] = dateutil.parser.isoparse(
+                            observation["date"]
+                        ).date()
+                    if not isinstance(observation["date"], datetime.date):
+                        logger.error("Date not understood %s", str(observation["date"]))
+                        continue
             # If everything is deleted from 'smry', delete it
             if not len(smryunits):
-                del self.observations['smry']
+                del self.observations["smry"]
 
     def to_ert2observations(self):
         """Convert the observation set to an observation
@@ -439,5 +463,5 @@ class Observations(object):
         dirname = os.path.dirname(filename)
         if not os.path.exists(dirname) and dirname:
             os.makedirs(dirname)
-        with open(filename, 'w') as fhandle:
+        with open(filename, "w") as fhandle:
             fhandle.write(self.to_yaml())

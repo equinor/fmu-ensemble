@@ -35,6 +35,7 @@ class VirtualEnsemble(object):
         data: dict with data to initialize with. Defaults to empty
         longdescription: string, free form multiline description.
     """
+
     def __init__(self, name=None, data=None, longdescription=None):
         if name:
             self._name = name
@@ -70,8 +71,7 @@ class VirtualEnsemble(object):
         # Check all dataframes:
         idxset = set()
         for key in self.data.keys():
-            idxset = idxset | \
-                set(self.data[key]['REAL'].unique())
+            idxset = idxset | set(self.data[key]["REAL"].unique())
         self.realindices = list(idxset)
 
     def keys(self):
@@ -101,6 +101,7 @@ class VirtualEnsemble(object):
 
         """
         from fmu.ensemble import ScratchEnsemble
+
         return ScratchEnsemble._shortcut2path(self.keys(), shortpath)
 
     def __getitem__(self, localpath):
@@ -124,11 +125,12 @@ class VirtualEnsemble(object):
         Returns:
             VirtualRealization, populated with data.
         """
-        vreal = VirtualRealization(description="Realization %d from %s" %
-                                   (realindex, self._name))
+        vreal = VirtualRealization(
+            description="Realization %d from %s" % (realindex, self._name)
+        )
         for key in self.data.keys():
             data = self.get_df(key)
-            realizationdata = data[data['REAL'] == realindex]
+            realizationdata = data[data["REAL"] == realindex]
             if len(realizationdata) == 1:
                 # Convert scalar values to dictionaries, avoiding
                 # getting length-one-series returned later on access.
@@ -137,7 +139,7 @@ class VirtualEnsemble(object):
                 realizationdata.reset_index(inplace=True, drop=True)
             else:
                 continue
-            del realizationdata['REAL']
+            del realizationdata["REAL"]
             vreal.append(key, realizationdata)
         if vreal.keys():
             return vreal
@@ -162,8 +164,9 @@ class VirtualEnsemble(object):
                 Necessary for VirtualRealization.
         """
         if realidx is None and isinstance(realization, VirtualRealization):
-            raise ValueError("Can't add virtual realizations " +
-                             "without specifying index")
+            raise ValueError(
+                "Can't add virtual realizations " + "without specifying index"
+            )
         if not realidx:
             realidx = realization.index
 
@@ -179,13 +182,11 @@ class VirtualEnsemble(object):
                 df = pd.DataFrame(index=[1], data=df)
             if isinstance(df, (str, int, float)):
                 df = pd.DataFrame(index=[1], columns=[key], data=df)
-            df['REAL'] = realidx
+            df["REAL"] = realidx
             if key not in self.data.keys():
                 self.data[key] = df
             else:
-                self.data[key] = \
-                    self.data[key].append(df, ignore_index=True,
-                                          sort=True)
+                self.data[key] = self.data[key].append(df, ignore_index=True, sort=True)
         self.update_realindices()
 
     def remove_realizations(self, deleteindices):
@@ -204,16 +205,17 @@ class VirtualEnsemble(object):
         indicestodelete = list(set(deleteindices) & set(indicesknown))
         indicesnotknown = list(set(deleteindices) - set(indicestodelete))
         if indicesnotknown:
-            logger.warn("Skipping undefined realization indices %s",
-                        str(indicesnotknown))
+            logger.warn(
+                "Skipping undefined realization indices %s", str(indicesnotknown)
+            )
         # There might be Pandas tricks to avoid this outer loop.
         for realindex in indicestodelete:
             for key in self.data:
-                self.data[key] = self.data[key][self.data[key]['REAL']
-                                                != realindex]
+                self.data[key] = self.data[key][self.data[key]["REAL"] != realindex]
         self.update_realindices()
-        logger.info("Removed %s realization(s) from VirtualEnsemble",
-                    len(indicestodelete))
+        logger.info(
+            "Removed %s realization(s) from VirtualEnsemble", len(indicestodelete)
+        )
 
     def remove_data(self, localpaths):
         """Remove a certain datatype from the internal datastore
@@ -251,12 +253,13 @@ class VirtualEnsemble(object):
 
         WARNING: CODE DUPLICATION from ensemble.py
         """
-        quantilematcher = re.compile(r'p(\d\d)')
-        supported_aggs = ['mean', 'median', 'min', 'max', 'std', 'var']
-        if aggregation not in supported_aggs and \
-           not quantilematcher.match(aggregation):
-            raise ValueError("{arg} is not a".format(arg=aggregation) +
-                             "supported ensemble aggregation")
+        quantilematcher = re.compile(r"p(\d\d)")
+        supported_aggs = ["mean", "median", "min", "max", "std", "var"]
+        if aggregation not in supported_aggs and not quantilematcher.match(aggregation):
+            raise ValueError(
+                "{arg} is not a".format(arg=aggregation)
+                + "supported ensemble aggregation"
+            )
 
         # Generate a new empty object:
         vreal = VirtualRealization(self._name + " " + aggregation)
@@ -275,15 +278,21 @@ class VirtualEnsemble(object):
             # Aggregate over this ensemble:
             # Ensure we operate on fully qualified localpath's
             key = self.shortcut2path(key)
-            data = self.get_df(key).drop(columns='REAL')
+            data = self.get_df(key).drop(columns="REAL")
 
             # Look for data we should group by. This would be beneficial
             # to get from a metadata file, and not by pure guesswork.
-            groupbycolumncandidates = ['DATE', 'FIPNUM', 'ZONE', 'REGION',
-                                       'JOBINDEX', 'Zone', 'Region_index']
+            groupbycolumncandidates = [
+                "DATE",
+                "FIPNUM",
+                "ZONE",
+                "REGION",
+                "JOBINDEX",
+                "Zone",
+                "Region_index",
+            ]
 
-            groupby = [x for x in groupbycolumncandidates
-                       if x in data.columns]
+            groupby = [x for x in groupbycolumncandidates if x in data.columns]
 
             dtypes = data.dtypes.unique()
             if not (int in dtypes or float in dtypes):
@@ -296,7 +305,7 @@ class VirtualEnsemble(object):
 
             if quantilematcher.match(aggregation):
                 quantile = int(quantilematcher.match(aggregation).group(1))
-                aggregated = aggobject.quantile(q=quantile/100.0)
+                aggregated = aggobject.quantile(q=quantile / 100.0)
             else:
                 # Passing through the variable 'aggregation' to
                 # Pandas, thus supporting more than we have listed in
@@ -326,10 +335,10 @@ class VirtualEnsemble(object):
         """
         if not isinstance(dataframe, pd.DataFrame):
             raise ValueError("Can only append dataframes")
-        if 'REAL' not in dataframe.columns:
+        if "REAL" not in dataframe.columns:
             raise ValueError("REAL column not in incoming dataframe")
         if key in self.data.keys() and not overwrite:
-            logger.warning('Ignoring %s data already exists', key)
+            logger.warning("Ignoring %s data already exists", key)
             return
         self.data[key] = dataframe
 
@@ -378,20 +387,22 @@ class VirtualEnsemble(object):
         if basenames.count(localpath) == 1:
             shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
             return self.data[shortcut2path[localpath]]
-        noexts = [''.join(x.split('.')[:-1]) for x in self.data.keys()]
+        noexts = ["".join(x.split(".")[:-1]) for x in self.data.keys()]
         if noexts.count(localpath) == 1:
-            shortcut2path = {''.join(x.split('.')[:-1]): x
-                             for x in self.data.keys()}
+            shortcut2path = {"".join(x.split(".")[:-1]): x for x in self.data.keys()}
             return self.data[shortcut2path[localpath]]
-        basenamenoexts = [''.join(os.path.basename(x).split('.')[:-1])
-                          for x in self.data.keys()]
+        basenamenoexts = [
+            "".join(os.path.basename(x).split(".")[:-1]) for x in self.data.keys()
+        ]
         if basenamenoexts.count(localpath) == 1:
-            shortcut2path = {''.join(os.path.basename(x).split('.')[:-1]): x
-                             for x in self.data.keys()}
+            shortcut2path = {
+                "".join(os.path.basename(x).split(".")[:-1]): x
+                for x in self.data.keys()
+            }
             return self.data[shortcut2path[localpath]]
         raise ValueError(localpath)
 
-    def get_smry(self, column_keys=None, time_index='monthly'):
+    def get_smry(self, column_keys=None, time_index="monthly"):
         """
         Function analoguous to the EclSum direct get'ters in ScratchEnsemble,
         but here we have to resort to what we have internalized.
@@ -404,29 +415,29 @@ class VirtualEnsemble(object):
         """
 
         # Get a list ala ['yearly', 'daily']
-        available_smry = [x.split('/')[-1]
-                          .replace('.csv', '')
-                          .replace('unsmry--', '') for x in self.keys()
-                          if 'unsmry' in x]
+        available_smry = [
+            x.split("/")[-1].replace(".csv", "").replace("unsmry--", "")
+            for x in self.keys()
+            if "unsmry" in x
+        ]
 
-        if (isinstance(time_index, str) and time_index not in available_smry)\
-           or isinstance(time_index, list):
+        if (
+            isinstance(time_index, str) and time_index not in available_smry
+        ) or isinstance(time_index, list):
             # Suboptimal code, we always pick the finest available
             # time resolution:
-            priorities = ['raw', 'daily', 'monthly', 'weekly', 'yearly',
-                          'custom']
+            priorities = ["raw", "daily", "monthly", "weekly", "yearly", "custom"]
             # (could also sort them by number of rows, or we could
             #  even merge them all)
             # (could have priorities as a dict, for example so we
             #  can interpolate from monthly if we ask for yearly)
-            chosen_smry = ''
+            chosen_smry = ""
             for candidate in priorities:
                 if candidate in available_smry:
                     chosen_smry = candidate
                     break
             if not chosen_smry:
-                logger.error("No internalized summary data "
-                             + "to interpolate from")
+                logger.error("No internalized summary data " + "to interpolate from")
                 return pd.DataFrame()
         else:
             chosen_smry = time_index
@@ -439,29 +450,26 @@ class VirtualEnsemble(object):
         # that copies all internalized data, while we only need
         # summary data.
 
-        smry_path = 'unsmry--' + chosen_smry
+        smry_path = "unsmry--" + chosen_smry
         smry = self.get_df(smry_path)
         smry_interpolated = []
-        for realidx in smry['REAL'].unique():
+        for realidx in smry["REAL"].unique():
             vreal = VirtualRealization()
             # Inject the summary data for that specific realization
-            vreal.append(smry_path, smry[smry['REAL'] == realidx])
+            vreal.append(smry_path, smry[smry["REAL"] == realidx])
 
             # Now ask the VirtualRealization to do interpolation
-            interp = vreal.get_smry(column_keys=column_keys,
-                                    time_index=time_index)
+            interp = vreal.get_smry(column_keys=column_keys, time_index=time_index)
             # Assume we get back a dataframe indexed by the dates from vreal
             # We must reset that index, and ensure the index column
             # gets a correct name
-            interp.index = interp.index.set_names(['DATE'])
+            interp.index = interp.index.set_names(["DATE"])
             interp = interp.reset_index()
-            interp['REAL'] = realidx
+            interp["REAL"] = realidx
             smry_interpolated.append(interp)
-        return pd.concat(smry_interpolated, ignore_index=True,
-                         sort=False)
+        return pd.concat(smry_interpolated, ignore_index=True, sort=False)
 
-    def get_smry_stats(self, column_keys=None, time_index='monthly',
-                       quantiles=None):
+    def get_smry_stats(self, column_keys=None, time_index="monthly", quantiles=None):
         """
         Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)
         for a set of simulation summary vectors (column key).
@@ -495,35 +503,37 @@ class VirtualEnsemble(object):
             quantiles = [10, 90]
 
         if column_keys is None:
-            column_keys = '*'
+            column_keys = "*"
 
         # Check validity of quantiles to compute:
         quantiles = list(map(int, quantiles))  # Potentially raise ValueError
         for quantile in quantiles:
             if quantile < 0 or quantile > 100:
-                raise ValueError("Quantiles must be integers "
-                                 + "between 0 and 100")
+                raise ValueError("Quantiles must be integers " + "between 0 and 100")
 
         # Obtain an aggregated dataframe for only the needed columns over
         # the entire ensemble. This will fail if we don't have the
         # time frequency already internalized.
-        dframe = self.get_smry(time_index=time_index,
-                               column_keys=column_keys).drop(columns='REAL')\
-                     .groupby('DATE')
+        dframe = (
+            self.get_smry(time_index=time_index, column_keys=column_keys)
+            .drop(columns="REAL")
+            .groupby("DATE")
+        )
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
-        dframes['mean'] = dframe.mean()
+        dframes["mean"] = dframe.mean()
         for quantile in quantiles:
-            quantile_str = 'p' + str(quantile)
+            quantile_str = "p" + str(quantile)
             dframes[quantile_str] = dframe.quantile(q=1 - quantile / 100.0)
-        dframes['maximum'] = dframe.max()
-        dframes['minimum'] = dframe.min()
+        dframes["maximum"] = dframe.max()
+        dframes["minimum"] = dframe.min()
 
-        return pd.concat(dframes, names=['STATISTIC'], sort=False)
+        return pd.concat(dframes, names=["STATISTIC"], sort=False)
 
-    def get_volumetric_rates(self, column_keys=None, time_index='monthly',
-                             time_unit=None):
+    def get_volumetric_rates(
+        self, column_keys=None, time_index="monthly", time_unit=None
+    ):
         """Compute volumetric rates from internalized cumulative summary
         vectors
 
@@ -562,21 +572,18 @@ class VirtualEnsemble(object):
             # if a lot of non-summary-related data has been
             # internalized:
             vreal = self.get_realization(realidx)
-            vol_rate_df = vreal.get_volumetric_rates(column_keys,
-                                                     time_index,
-                                                     time_unit)
+            vol_rate_df = vreal.get_volumetric_rates(column_keys, time_index, time_unit)
             # Indexed by DATE, ensure index name is correct:
-            vol_rate_df.index = vol_rate_df.index.set_names(['DATE'])
+            vol_rate_df.index = vol_rate_df.index.set_names(["DATE"])
             vol_rate_df.reset_index(inplace=True)
-            vol_rate_df['REAL'] = realidx
+            vol_rate_df["REAL"] = realidx
             vol_rates_dfs.append(vol_rate_df)
-        return pd.concat(vol_rates_dfs, ignore_index=True,
-                         sort=False)
+        return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
 
     @property
     def parameters(self):
         """Quick access to parameters"""
-        return self.data['parameters.txt']
+        return self.data["parameters.txt"]
 
     @property
     def name(self):
