@@ -16,13 +16,13 @@ with access to stable, testing and bleeding versions.
 For developers
 --------------
 
-The sources for fmu-ensemble can be downloaded from the `Equinor Git repo`_.
+The sources for fmu-ensemble can be downloaded from github.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://git.equinor.com/fmu-utilities/fmu-ensemble
+    $ git clone https://github.com/equinor/fmu-ensemble
 
 Once you have a copy of the source, and you have a `virtual environment`_,
 you can install it with:
@@ -32,5 +32,4 @@ you can install it with:
     $ make install
 
 
-.. _Equinor Git repo: https://git.equinor.com/fmu-utilities/fmu-ensemble
 .. _virtual environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/

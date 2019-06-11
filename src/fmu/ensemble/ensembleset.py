@@ -28,18 +28,13 @@ class EnsembleSet(object):
     are not kept in an EnsembleSet, there each ensemble is uniquely
     identified by the ensemble name. To keep the iteration (and batch)
     concept, that must be embedded into the ensemble name.
-    """
 
-    def __init__(self, name=None, ensembles=None, frompath=None,
-                 runpathfile=None, realidxregexp=None,
-                 iterregexp=None, batchregexp=None,
-                 autodiscovery=True):
-        """Initiate an ensemble set, either as empty, or from a list of
-        already initialized ensembles, or directly from the
-        filesystem, or from an ERT runpath file. Only one of these
-        initialization modes can be used.
+    The init method will make an ensemble set, either as empty, or from a
+    list of already initialized ensembles, or directly from the
+    filesystem, or from an ERT runpath file. Only one of these
+    initialization modes can be used.
 
-        Args:
+    Args:
         name: Chosen name for the ensemble set. Can be used if aggregated at a
             higher level.
         ensembles: list of Ensemble objects. Can be omitted.
@@ -56,11 +51,15 @@ class EnsembleSet(object):
             treated as a string.
         batchregexp: similar ot iterregexp, for future support of an extra
             level similar to iterations
-        autodiscovery: boolean, sent to initializing Realization objects, 
+        autodiscovery: boolean, sent to initializing Realization objects,
             instructing them on whether certain files should be
             auto-discovered.
 
         """
+    def __init__(self, name=None, ensembles=None, frompath=None,
+                 runpathfile=None, realidxregexp=None,
+                 iterregexp=None, batchregexp=None,
+                 autodiscovery=True):
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
 
@@ -161,7 +160,7 @@ class EnsembleSet(object):
                 match strings.
             batchregexp: Similar to real_regexp, but is allowed to
                 match strings.
-            autodiscovery: boolean, sent to initializing Realization objects, 
+            autodiscovery: boolean, sent to initializing Realization objects,
                 instructing them on whether certain files should be
                 auto-discovered.
 

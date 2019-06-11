@@ -216,8 +216,16 @@ class ScratchEnsemble(object):
             realization = ScratchRealization(realdir,
                                              realidxregexp=realidxregexp,
                                              autodiscovery=autodiscovery)
-            count += 1
-            self._realizations[realization.index] = realization
+            if realization.index is None:
+                logger.critical("Could not determine realization index "
+                + "for path " + realdir)
+                if not realidxregexp:
+                    logger.critical("Maybe you need to supply a regexp.")
+                else:
+                    logger.critical("Your regular expression is maybe wrong.")
+            else:
+                count += 1
+                self._realizations[realization.index] = realization
         logger.info('add_realizations() found %d realizations',
                     len(self._realizations))
         return count
@@ -536,7 +544,8 @@ class ScratchEnsemble(object):
             raise ValueError("No data found for " + localpath)
 
     def load_smry(self, time_index='raw', column_keys=None, stacked=True,
-                  cache_eclsum=True, start_date=None, end_date=None):
+                  cache_eclsum=True, start_date=None, end_date=None,
+                  include_restart=True):
         """
         Fetch and internalize summary data from all realizations.
 
@@ -588,6 +597,8 @@ class ScratchEnsemble(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
                 is 'last'. If string, use ISO-format, YYYY-MM-DD.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
         Returns:
             A DataFame of summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -605,7 +616,8 @@ class ScratchEnsemble(object):
                                   column_keys=column_keys,
                                   cache_eclsum=cache_eclsum,
                                   start_date=start_date,
-                                  end_date=end_date)
+                                  end_date=end_date,
+                                  include_restart=include_restart)
         if isinstance(time_index, list):
             time_index = 'custom'
         return self.get_df('share/results/tables/unsmry--' +
@@ -765,7 +777,7 @@ class ScratchEnsemble(object):
 
     def get_smry_dates(self, freq='monthly', normalize=True,
                        start_date=None, end_date=None,
-                       cache_eclsum=True):
+                       cache_eclsum=True, include_restart=True):
         """Return list of datetimes for an ensemble according to frequency
 
         Args:
@@ -787,6 +799,8 @@ class ScratchEnsemble(object):
                 end_date will always be included. Overrides
                 normalized dates. Overriden if freq is 'last'.
                 If string, use ISO-format, YYYY-MM-DD.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
 
         Returns:
             list of datetimes. Empty list if no data found.
@@ -795,9 +809,11 @@ class ScratchEnsemble(object):
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self._realizations.items():
-            if realization.get_eclsum(cache=cache_eclsum):
+            if realization.get_eclsum(cache=cache_eclsum,
+                                      include_restart=include_restart):
                 eclsumsdates.append(realization
-                                    .get_eclsum(cache=cache_eclsum).dates)
+                                    .get_eclsum(cache=cache_eclsum,
+                                                include_restart=include_restart).dates)
         return ScratchEnsemble._get_smry_dates(eclsumsdates, freq, normalize,
                                                start_date, end_date)
 
@@ -1178,7 +1194,7 @@ class ScratchEnsemble(object):
 
     def get_smry(self, time_index=None, column_keys=None,
                  cache_eclsum=True, start_date=None,
-                 end_date=None):
+                 end_date=None, include_restart=True):
         """
         Aggregates summary data from all realizations.
 
@@ -1201,6 +1217,9 @@ class ScratchEnsemble(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
                 is 'last'.
+            include_restart: boolean sent to libecl for wheter restarts
+                files should be traversed
+
         Returns:
             A DataFame of summary vectors for the ensemble. The column
             REAL with integers is added to distinguish realizations. If
@@ -1208,12 +1227,14 @@ class ScratchEnsemble(object):
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index, start_date=start_date,
-                                             end_date=end_date)
+                                             end_date=end_date,
+                                             include_restart=include_restart)
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_smry(time_index=time_index,
                                           column_keys=column_keys,
-                                          cache_eclsum=cache_eclsum)
+                                          cache_eclsum=cache_eclsum,
+                                          include_restart=include_restart)
             dframe.insert(0, 'REAL', index)
             dframe.index.name = 'DATE'
             dflist.append(dframe)

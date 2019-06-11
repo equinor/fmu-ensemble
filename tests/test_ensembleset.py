@@ -406,9 +406,11 @@ def test_filestructures(tmp='TMP'):
     assert len(dummy.ensemblenames[0]) == len('X')
     for ens_name in dummy.ensemblenames:
         print(dummy[ens_name])
+    # Also test if we can compile the regexp automatically, and
+    # supply a string instead.
     dummy2 = EnsembleSet('dummytest4',
                          frompath=ensdir + 'iter_*/real_*',
-                         realidxregexp=re.compile(r'real_(\d+)'),
+                         realidxregexp='real_(\d+)',
                          iterregexp=re.compile(r'(iter_\d+)'))
     # Different regexp for iter, so we get different ensemble names:
     assert len(dummy2.ensemblenames[0]) == len('iter-X')
