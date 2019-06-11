@@ -74,6 +74,7 @@ class ScratchRealization(object):
     """
     def __init__(self, path, realidxregexp=None, index=None):
         self._origpath = os.path.abspath(path)
+        self.index = None
 
         if not realidxregexp:
             realidxregexp = re.compile(r'realization-(\d+)')
@@ -112,6 +113,7 @@ class ScratchRealization(object):
                             "index for %s, " +
                             "this cannot be inserted in an Ensemble",
                             abspath)
+                logger.warn("Maybe you need to use index=<someinteger>")
                 self.index = None
         else:
             self.index = int(index)
@@ -1178,7 +1180,11 @@ class ScratchRealization(object):
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]
-        return "<Realization, index={}, path=...{}>".format(self.index,
+        if self.index:
+            indexstr = str(self.index)
+        else:
+            indexstr = 'Error'
+        return "<Realization, index={}, path=...{}>".format(indexstr,
                                                             pathsummary)
 
     def __sub__(self, other):
