@@ -65,10 +65,13 @@ class ScratchEnsemble(object):
         runpathfilter: str. If supplied, the only the runpaths in
             the runpathfile which contains this string will be included
             Use to select only a specific realization f.ex.
+        autodiscovery: boolean. True by default, means that the class
+            can try to autodiscover data in the realization. Turn
+            off to gain more fined tuned control.
     """
 
     def __init__(self, ensemble_name, paths=None, realidxregexp=None,
-                 runpathfile=None, runpathfilter=None):
+                 runpathfile=None, runpathfilter=None, autodiscovery=True):
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
@@ -109,7 +112,8 @@ class ScratchEnsemble(object):
 
             # Search and locate minimal set of files
             # representing the realizations.
-            count = self.add_realizations(paths, realidxregexp)
+            count = self.add_realizations(paths, realidxregexp,
+                                          autodiscovery=autodiscovery)
 
         if isinstance(runpathfile, str) and runpathfile:
             count = self.add_from_runpathfile(runpathfile, runpathfilter)
@@ -180,7 +184,7 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-    def add_realizations(self, paths, realidxregexp=None):
+    def add_realizations(self, paths, realidxregexp=None, autodiscovery=True):
         """Utility function to add realizations to the ensemble.
 
         Realizations are identified by their integer index.
@@ -193,6 +197,8 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
+            autodiscovery: boolean, whether files can be attempted
+                auto-discovered
 
         Returns:
             count (int): Number of realizations successfully added.
@@ -208,7 +214,8 @@ class ScratchEnsemble(object):
         count = 0
         for realdir in globbedpaths:
             realization = ScratchRealization(realdir,
-                                             realidxregexp=realidxregexp)
+                                             realidxregexp=realidxregexp,
+                                             autodiscovery=autodiscovery)
             if realization.index is None:
                 logger.critical("Could not determine realization index "
                 + "for path " + realdir)
@@ -262,7 +269,8 @@ class ScratchEnsemble(object):
                 continue
             logger.info("Adding realization from " + row['runpath'])
             realization = ScratchRealization(row['runpath'],
-                                             index=int(row['index']))
+                                             index=int(row['index']),
+                                             autodiscovery=False)
             # Use the ECLBASE from the runpath file to
             # ensure we recognize the correct UNSMRY file
             realization.find_files(row['eclbase'] + ".DATA")
