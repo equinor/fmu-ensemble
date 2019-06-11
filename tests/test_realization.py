@@ -445,6 +445,55 @@ def test_singlereal_ecl(tmp='TMP'):
         'FOPT' in real['unsmry--yearly']
 
 
+def test_independent_realization(tmp='TMP'):
+    """Test what we are able to load a single Eclipse run
+    that might have nothing to do with FMU"""
+
+    if '__file__' in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath('.')
+
+    datadir = os.path.join(testdir, 'data')
+    tmpdir = os.path.join(datadir, tmp)
+    if os.path.exists(tmpdir):
+        shutil.rmtree(tmpdir)
+    os.mkdir(tmpdir)
+    # Let the directory contain only the UNSMRY and SMSPEC file
+    shutil.copyfile(os.path.join(datadir,
+        "testensemble-reek001/realization-2/iter-0/eclipse/"
+        + "model/2_R001_REEK-2.UNSMRY"), os.path.join(tmpdir,
+        "2_R001_REEK-2.UNSMRY"))
+    shutil.copyfile(os.path.join(datadir,
+        "testensemble-reek001/realization-2/iter-0/eclipse/"
+        + "model/2_R001_REEK-2.SMSPEC"), os.path.join(tmpdir,
+        "2_R001_REEK-2.SMSPEC"))
+
+    # This should not fail, but with a nice constructive warning to the user hinting
+    # about the solution
+    empty = ensemble.ScratchRealization(tmpdir)
+    assert not empty.index  # The index is None in such realizations.
+
+    # This is how it must be done:
+    real = ensemble.ScratchRealization(tmpdir, index='999')
+    assert real.index == 999
+
+    # No auto-discovery here:
+    assert real.get_smry().empty
+
+    # Explicit discovery:
+    real.find_files('*UNSMRY')
+    assert not real.get_smry().empty
+
+    # However, we can do something with an undefined index:
+    noindex = ensemble.ScratchRealization(tmpdir)
+    noindex.find_files('*UNSMRY')
+    assert not real.get_smry().empty
+
+    shutil.rmtree(tmpdir)
+
+
 def test_filesystem_changes():
     """Test loading of sparse realization (random data missing)
 
