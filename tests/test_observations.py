@@ -126,6 +126,36 @@ def test_real_mismatch():
     assert fopt_mis.loc[0, "L1"] > 0
     assert fopt_mis.loc[0, "L1"] != fopt_mis.loc[0, "L2"]
 
+
+    # Test mismatch where some data is missing:
+    obs4 = Observations({'smryh': [{'key': 'FOOBAR',
+                                   'histvec': 'FOOBARH'}]})
+    mis_mis = obs4.mismatch(real)
+    assert mis_mis.empty
+
+    # This test fails, the consistency check is not implemented.
+    # obs_bogus = Observations({'smryh': [{'keddy': 'FOOBAR',
+    #                               'histdddvec': 'FOOBARH'}]})
+    # mis_mis = obs_bogus.mismatch(real)
+    # assert mis_mis.empty
+
+    obs_bogus_scalar = Observations({'scalar': [{'key': 'nonexistingnpv.txt',
+                                     'value': 3400}]})
+    # (a warning should be logged)
+    assert obs_bogus_scalar.mismatch(real).empty
+
+    obs_bogus_param = Observations({'txt': [{'localpath': 'bogusparameters.txt',
+                                             'key': 'RMS_SEED',
+                                             'value': 600000000}]})
+    # (a warning should be logged)
+    assert obs_bogus_param.mismatch(real).empty
+
+    obs_bogus_param = Observations({'txt': [{'localpath': 'parameters.txt',
+                                             'key': 'RMS_SEEEEEEED',
+                                             'value': 600000000}]})
+    # (a warning should be logged)
+    assert obs_bogus_param.mismatch(real).empty
+
     # Test dumping to yaml:
     # Not implemented.
     # yamlobsstr = obs2.to_yaml()
