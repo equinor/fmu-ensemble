@@ -1,0 +1,38 @@
+language: python
+
+os:
+  - linux
+
+env:
+  global:
+    - ECL_VER=master
+
+python:
+  - "2.7"
+  - "3.6"
+
+before_install:
+  - pushd ..
+  - export ROOT="$PWD"
+  - export INSTALL="$ROOT/install"
+  - export PYTHONPATH=$INSTALL/lib/python$TRAVIS_PYTHON_VERSION/dist-packages:$PYTHONPATH
+  - git clone https://github.com/equinor/libecl.git
+  - popd
+
+install:
+  - pushd $ROOT/libecl
+  - git checkout $ECL_VER
+  - pip install -r requirements.txt
+  - mkdir build
+  - pushd build
+  - cmake .. -DENABLE_PYTHON=ON
+             -DBUILD_TESTS=OFF
+             -DCMAKE_INSTALL_PREFIX=$INSTALL
+  - make -j4 install
+  - popd
+  - popd
+  - pip install -r requirements.txt
+  - pip install .
+
+script:
+  - pytest
