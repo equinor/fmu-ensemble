@@ -114,7 +114,7 @@ def test_real_mismatch():
     # Test that we can write the observations to yaml
     # and verify that the exported yaml can be reimported
     # and yield the same result
-    obs2r = Observations(yaml.load(obs2.to_yaml()))
+    obs2r = Observations(yaml.full_load(obs2.to_yaml()))
     realmis2r = obs2r.mismatch(real)
     assert (realmis2["MISMATCH"].values == realmis2r["MISMATCH"].values).all()
 
