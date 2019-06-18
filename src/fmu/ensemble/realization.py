@@ -244,7 +244,7 @@ class ScratchRealization(object):
                 value = pd.read_csv(
                     fullpath,
                     header=None,
-                    sep="",
+                    sep="DONOTSEPARATEANYTHING *%magic%*",
                     engine="python",
                     skip_blank_lines=skip_blank_lines,
                     skipinitialspace=skipinitialspace,

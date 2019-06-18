@@ -14,7 +14,12 @@ import pytest
 
 from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
-from fmu.tools import volumetrics
+
+try:
+    skip_fmu_tools = False
+    from fmu.tools import volumetrics
+except ImportError:
+    skip_fmu_tools = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -239,6 +244,7 @@ def test_reek001_scalars():
     assert isinstance(npv, pd.DataFrame)
     assert "REAL" in npv
     assert "npv.txt" in npv  # filename is the column name
+    print(npv)
     assert len(npv) == 5
     assert npv.dtypes["REAL"] == int
     assert npv.dtypes["npv.txt"] == object
@@ -869,6 +875,8 @@ def test_apply(tmp="TMP"):
     assert "REAL" in int_df
     assert len(int_df) == len(result)
 
+    if skip_fmu_tools:
+        return
     # Test if we can wrap the volumetrics-parser in fmu.tools:
     # It cannot be applied directly, as we need to combine the
     # realization's root directory with the relative path coming in:

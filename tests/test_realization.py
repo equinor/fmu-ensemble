@@ -18,7 +18,11 @@ import numpy as np
 
 from fmu.ensemble import etc
 from fmu import ensemble
-from fmu.tools import volumetrics
+try:
+    skip_fmu_tools = False
+    from fmu.tools import volumetrics
+except ImportError:
+    skip_fmu_tools = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -632,7 +636,7 @@ def test_filesystem_changes():
     # the situation where there is one successful job.
     fhandle = open(realdir + "/STATUS", "w")
     fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
 """
@@ -644,7 +648,7 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     assert len(real.get_df("STATUS")) == 1
     fhandle = open(realdir + "/STATUS", "w")
     fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:55 .... 20:58:57
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
@@ -743,6 +747,9 @@ def test_apply(tmp="TMP"):
     with pytest.raises(ValueError):
         real.apply(real_func, realization="foo")
 
+
+    if skip_fmu_tools:
+        return
     # Test if we can wrap the volumetrics-parser in fmu.tools:
     # It cannot be applied directly, as we need to combine the
     # realization's root directory with the relative path coming in:

@@ -82,7 +82,7 @@ class Observations(object):
 
         if isinstance(observations, str):
             with open(observations) as yamlfile:
-                self.observations = yaml.load(yamlfile)
+                self.observations = yaml.full_load(yamlfile)
         elif isinstance(observations, dict):
             self.observations = observations
         else:

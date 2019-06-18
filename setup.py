@@ -3,6 +3,7 @@
 
 """The setup script."""
 from glob import glob
+import os
 from os.path import basename
 from os.path import splitext
 
@@ -15,8 +16,21 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
-]
+def relpath(*args):
+    """Return path of args relative to this file"""
+    root = os.path.dirname(__file__)
+    if isinstance(args, str):
+        return os.path.join(root, args)
+    return os.path.join(root, *args)
+
+
+def requirements():
+    reqs = []
+    with open(relpath('requirements.txt'), 'r') as f:
+        reqs = [req.strip() for req in f]
+    return reqs
+
+requirements = requirements()
 
 setup_requirements = [
     'pytest-runner',
@@ -75,14 +89,14 @@ def the_version():
     return useversion
 
 setup(
-    name='fmu_ensemble',
+    name='fmu-ensemble',
     version=the_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Library for various config scripts in FMU scope",
+    description="Python API to ensembles produced by ERT",
     long_description=readme + '\n\n' + history,
-    author="Jan C. Rivenaes",
-    author_email='jriv@statoil.com',
-    url='https://git.equinor.com/fmu-utilities/fmu-ensemble',
+    author="Håvard Berland",
+    author_email='havb@equinor.com',
+    url='https://git.equinor.com/equinor/fmu-ensemble',
     license="GPLv3",
     packages=find_packages('src'),
 #    namespace_packages=['fmu'],
