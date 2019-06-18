@@ -138,6 +138,15 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert "DATE" in smry
     assert len(smry) == 40
 
+    # Check get_smry_stats()
+    stats = ensset3.get_smry_stats()
+    assert isinstance(stats, dict)
+    assert "iter-0" in stats
+    assert "iter-1" in stats
+    assert isinstance(stats["iter-0"], pd.DataFrame)
+    assert isinstance(stats["iter-1"], pd.DataFrame)
+    assert not stats["iter-0"].empty
+
     # Eclipse well names list
     assert len(ensset3.get_wellnames("OP*")) == 5
     assert len(ensset3.get_wellnames(None)) == 8

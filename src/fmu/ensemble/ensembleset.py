@@ -620,6 +620,57 @@ class EnsembleSet(object):
         if smrylist:
             return pd.concat(smrylist, sort=False)
 
+    def get_smry_stats(
+        self,
+        column_keys=None,
+        time_index="monthly",
+        quantiles=None,
+        cache_eclsum=True,
+        start_date=None,
+        end_date=None,
+    ):
+        """
+        Calls get_smry_stats() individually on each ensemble.
+
+        Args:
+            column_keys: list of column key wildcards
+            time_index: list of DateTime if interpolation is wanted
+               default is None, which returns the raw Eclipse report times
+               If a string is supplied, that string is attempted used
+               via get_smry_dates() in order to obtain a time index.
+            quantiles: list of ints between 0 and 100 for which quantiles
+               to compute. Quantiles refer to scientific standard, which
+               is opposite to the oil industry convention.
+               Ask for p10 if you need the oil industry p90.
+            cache_eclsum: boolean for whether to keep the loaded EclSum
+                object in memory after data has been loaded.
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included. If string,
+                use ISO-format, YYYY-MM-DD.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'. If string, use ISO-format, YYYY-MM-DD.
+        Returns:
+            A dictionary of Multiindex dataframes, indexed by ensemble names.
+            Outer index is 'minimum', 'maximum',
+            'mean', 'p10', 'p90', inner index are the dates. Column names
+            are the different vectors. Quantiles refer to the scientific
+            standard, opposite to the oil industry convention.
+            If quantiles are explicitly supplied, the 'pXX'
+            strings in the outer index are changed accordingly. If no
+            data is found, return empty DataFrame.
+
+        """
+
+        stats = {}
+        for ensname, ensemble in self._ensembles.items():
+            stats[ensname] = ensemble.get_smry_stats(
+                column_keys, time_index, quantiles, cache_eclsum, start_date, end_date
+            )
+        return stats
+
     def get_smry_dates(
         self, freq="monthly", cache_eclsum=True, start_date=None, end_date=None
     ):
