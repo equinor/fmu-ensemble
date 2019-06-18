@@ -15,7 +15,12 @@ import pytest
 
 from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
-from fmu.tools import volumetrics
+
+try:
+    skip_fmu_tools = False
+    from fmu.tools import volumetrics
+except ImportError:
+    skip_fmu_tools = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -180,28 +185,29 @@ def test_ensembleset_reek001(tmp="TMP"):
         else:
             return pd.DataFrame()
 
-    rmsvols_df = ensset3.apply(
-        rms_vol2df, filename="share/results/volumes/" + "geogrid_vol_oil_1.txt"
-    )
-    assert rmsvols_df["STOIIP_OIL"].sum() > 0
-    assert len(rmsvols_df["REAL"].unique()) == 4
-    assert len(rmsvols_df["ENSEMBLE"].unique()) == 2
+    if not skip_fmu_tools:
+        rmsvols_df = ensset3.apply(
+            rms_vol2df, filename="share/results/volumes/" + "geogrid_vol_oil_1.txt"
+        )
+        assert rmsvols_df["STOIIP_OIL"].sum() > 0
+        assert len(rmsvols_df["REAL"].unique()) == 4
+        assert len(rmsvols_df["ENSEMBLE"].unique()) == 2
 
-    # Test that we can dump to disk as well and load from csv:
-    ensset3.apply(
-        rms_vol2df,
-        filename="share/results/volumes/" + "geogrid_vol_oil_1.txt",
-        localpath="share/results/volumes/geogrid--oil.csv",
-        dumptodisk=True,
-    )
-    geogrid_oil = ensset3.load_csv("share/results/volumes/geogrid--oil.csv")
-    assert len(geogrid_oil["REAL"].unique()) == 4
-    assert len(geogrid_oil["ENSEMBLE"].unique()) == 2
-    # Clean up what we just dumped:
-    for real_dir in glob.glob(ensdir + "/realization-*"):
-        csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
-        if os.path.exists(csvfile):
-            os.remove(csvfile)
+        # Test that we can dump to disk as well and load from csv:
+        ensset3.apply(
+            rms_vol2df,
+            filename="share/results/volumes/" + "geogrid_vol_oil_1.txt",
+            localpath="share/results/volumes/geogrid--oil.csv",
+            dumptodisk=True,
+        )
+        geogrid_oil = ensset3.load_csv("share/results/volumes/geogrid--oil.csv")
+        assert len(geogrid_oil["REAL"].unique()) == 4
+        assert len(geogrid_oil["ENSEMBLE"].unique()) == 2
+        # Clean up what we just dumped:
+        for real_dir in glob.glob(ensdir + "/realization-*"):
+            csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
+            if os.path.exists(csvfile):
+                os.remove(csvfile)
 
     # Initialize differently, using only the root path containing
     # realization-*
@@ -211,10 +217,11 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert isinstance(ensset4["iter-1"], ScratchEnsemble)
 
     # Delete the symlink and leftover from apply-testing when we are done.
-    for real_Dir in glob.glob(ensdir + "/realization-*"):
-        csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
-        if os.path.exists(csvfile):
-            os.remove(csvfile)
+    for real_dir in glob.glob(ensdir + "/realization-*"):
+        if not skip_fmu_tools:
+            csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
+            if os.path.exists(csvfile):
+                os.remove(csvfile)
         if os.path.exists(real_dir + "/iter-1"):
             os.remove(real_dir + "/iter-1")
 
