@@ -31,7 +31,8 @@ install:
   - make -j4 install
   - popd
   - popd
-  - pip install -r requirements.txt
+  - ls
+  - pip install -r requirements_dev.txt
   - pip install .
 
 script:
