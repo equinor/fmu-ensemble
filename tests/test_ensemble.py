@@ -244,6 +244,7 @@ def test_reek001_scalars():
     assert isinstance(npv, pd.DataFrame)
     assert "REAL" in npv
     assert "npv.txt" in npv  # filename is the column name
+    print(npv)
     assert len(npv) == 5
     assert npv.dtypes["REAL"] == int
     assert npv.dtypes["npv.txt"] == object
