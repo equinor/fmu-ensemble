@@ -1,4 +1,4 @@
-pyaml
+pyyaml>=5.1
 oyaml
 wheel>=0.29.0
 watchdog>=0.8.3
