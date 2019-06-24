@@ -371,7 +371,7 @@ class Observations(object):
         supported_categories = ["smry", "smryh", "txt", "scalar", "rft"]
 
         # Check top level keys in observations dict:
-        for key in self.observations.keys():
+        for key in list(self.observations):
             if key not in supported_categories:
                 self.observations.pop(key)
                 logger.error("Observation category %s not supported", key)
