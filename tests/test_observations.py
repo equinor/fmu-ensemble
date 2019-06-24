@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import glob
+import copy
 import datetime
 import yaml
 import pandas as pd
@@ -127,10 +128,8 @@ def test_real_mismatch():
     assert fopt_mis.loc[0, "L1"] > 0
     assert fopt_mis.loc[0, "L1"] != fopt_mis.loc[0, "L2"]
 
-
     # Test mismatch where some data is missing:
-    obs4 = Observations({'smryh': [{'key': 'FOOBAR',
-                                   'histvec': 'FOOBARH'}]})
+    obs4 = Observations({"smryh": [{"key": "FOOBAR", "histvec": "FOOBARH"}]})
     mis_mis = obs4.mismatch(real)
     assert mis_mis.empty
 
@@ -140,20 +139,37 @@ def test_real_mismatch():
     # mis_mis = obs_bogus.mismatch(real)
     # assert mis_mis.empty
 
-    obs_bogus_scalar = Observations({'scalar': [{'key': 'nonexistingnpv.txt',
-                                     'value': 3400}]})
+    obs_bogus_scalar = Observations(
+        {"scalar": [{"key": "nonexistingnpv.txt", "value": 3400}]}
+    )
     # (a warning should be logged)
     assert obs_bogus_scalar.mismatch(real).empty
 
-    obs_bogus_param = Observations({'txt': [{'localpath': 'bogusparameters.txt',
-                                             'key': 'RMS_SEED',
-                                             'value': 600000000}]})
+    obs_bogus_param = Observations(
+        {
+            "txt": [
+                {
+                    "localpath": "bogusparameters.txt",
+                    "key": "RMS_SEED",
+                    "value": 600000000,
+                }
+            ]
+        }
+    )
     # (a warning should be logged)
     assert obs_bogus_param.mismatch(real).empty
 
-    obs_bogus_param = Observations({'txt': [{'localpath': 'parameters.txt',
-                                             'key': 'RMS_SEEEEEEED',
-                                             'value': 600000000}]})
+    obs_bogus_param = Observations(
+        {
+            "txt": [
+                {
+                    "localpath": "parameters.txt",
+                    "key": "RMS_SEEEEEEED",
+                    "value": 600000000,
+                }
+            ]
+        }
+    )
     # (a warning should be logged)
     assert obs_bogus_param.mismatch(real).empty
 
@@ -268,6 +284,50 @@ def test_ens_mismatch():
     fopt_rank = mismatch.sort_values("L2", ascending=True)["REAL"].values
     assert fopt_rank[0] == 2  # closest realization
     assert fopt_rank[-1] == 1  # worst realization
+
+
+def test_ens_failedreals():
+    """Ensure we can calculate mismatch where some realizations
+    do not have UNSMRY data"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    ens = ScratchEnsemble(
+        "test",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/",
+        autodiscovery=False,
+    )
+    obs = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})
+    mismatch = obs.mismatch(ens)
+
+    # There are no UNSMRY found, so the mismatch should be empty:
+    assert mismatch.empty
+
+    ens.find_files("eclipse/model/*UNSMRY")
+    assert not obs.mismatch(ens).empty
+
+    # Reinitialize
+    ens = ScratchEnsemble(
+        "test",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/",
+        autodiscovery=False,
+    )
+
+    # Redirect UNSMRY pointer in realizaion 3 so it isn't found
+    ens.find_files("eclipse/model/*UNSMRY")
+    real3files = ens[3].files
+    real3files.loc[real3files["FILETYPE"] == "UNSMRY", "FULLPATH"] = "FOO"
+
+    # Check that we only have EclSum for 2 and not for 3:
+    assert ens[2].get_eclsum()
+    assert not ens[3].get_eclsum()
+
+    missingsmry = obs.mismatch(ens)
+    # Realization 3 should NOT be present now
+    assert 3 not in list(missingsmry["REAL"])
+    assert not obs.mismatch(ens).empty
 
 
 def test_ensset_mismatch():
