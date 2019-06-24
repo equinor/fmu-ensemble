@@ -478,7 +478,7 @@ class EnsembleSet(object):
 
         CODE DUPLICATION from realization.py
         """
-        basenames = map(os.path.basename, self.keys())
+        basenames = [os.path.basename(key) for key in self.keys()]
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in self.keys()}
             return short2path[shortpath]
