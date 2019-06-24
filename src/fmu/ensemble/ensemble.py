@@ -13,6 +13,7 @@ import six
 
 from datetime import datetime, date, time
 import pandas as pd
+import numpy as np
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
@@ -525,7 +526,7 @@ class ScratchEnsemble(object):
                 data = realization.get_df(localpath)
                 if isinstance(data, dict):
                     data = pd.DataFrame(index=[1], data=data)
-                elif isinstance(data, (str, int, float)):
+                elif isinstance(data, (str, int, float, np.integer, np.floating)):
                     data = pd.DataFrame(index=[1], columns=[localpath], data=data)
                 if isinstance(data, pd.DataFrame):
                     dflist[index] = data
