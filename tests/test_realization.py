@@ -103,7 +103,7 @@ def test_single_realization():
     real.load_scalar("npv.txt")
     assert real.get_df("npv.txt") == 3444
     assert real["npv.txt"] == 3444
-    assert isinstance(real.data["npv.txt"], int)
+    assert isinstance(real.data["npv.txt"], (int, np.integer))
     assert "npv.txt" in real.files.LOCALPATH.values
     assert real.files[real.files.LOCALPATH == "npv.txt"]["FILETYPE"].values[0] == "txt"
 
