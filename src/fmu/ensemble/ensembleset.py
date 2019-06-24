@@ -147,7 +147,7 @@ class EnsembleSet(object):
         """
         Return a list of named ensembles in this set
         """
-        return self._ensembles.keys()
+        return list(self._ensembles.keys())
 
     def keys(self):
         """
