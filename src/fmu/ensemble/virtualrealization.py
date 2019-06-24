@@ -8,6 +8,7 @@ import os
 import fnmatch
 import shutil
 import pandas as pd
+import numpy as np
 
 from .etc import Interaction
 
@@ -242,9 +243,7 @@ class VirtualRealization(object):
             return data
         elif isinstance(data, pd.Series):
             return data.to_dict()
-        elif isinstance(data, dict):
-            return data
-        elif isinstance(data, str) or isinstance(data, int) or isinstance(data, float):
+        elif isinstance(data, (str, dict, int, float, np.integer, np.floating)):
             return data
         else:
             raise ValueError("BUG: Unknown datatype")
