@@ -46,5 +46,6 @@ deploy:
     github_token:
       secure: "LQdleqh9V0bxS87CMOWSyicOmNWhBnJVY7EL8+ESJVX44ovSIEuPotcImIgQsYWfN8nI6zTZhls+USDKv3SuY8B1+6l+YWwScpDXx8ZugopoqDBVJJ+wU5rBMjB7sLBXObTikz/8culMhJ2NND/PB6Nc2BUq3C6pYNaY9EUIvrrt1CtV8BSKPm3NBVgT0BRd3yc1Zuu5nAVtqWkKgrtL/9SskF8fy0E3s+Z/Qld63iwlT2GfHPb1IOr5NDS0emd7NEqkQf5M67zqEkbOwG2PX7XTdjdg0BHfG6XBsfVbjcdLt3q6MnRFJaDmVK5+JBeNB8bLDs7VXbEJog0wk9eIpScNwx+TRMfYKRHj/cmYSwFZ0QtJWWTM3qsT5JT8/EvRUXwktu4zrl5fhnVbs+1Ra1B9uPR0KlLHYaQr32wW9Pw9U76DtjsDqtxQbqpXCtSRmjklEhJvEB0ZuMDk7jiOsKVf1/2MbsS/1PJJdrz65L5ytLzXFYfod4OHMIg8Q48/b4KGPpS+8D0GIb5jFI1s2YftC8QCDO0ATZ9LEs0+M0WQM7BxM13Slcp0eRJfrc8HoAbL+OhILoLQn6ImjtYAAQtB2Fj/lqNUrsMVpEbZmKcIa66VTTmC/QCSWfc98lby6j/m7qxDirr8ti+CJ+h366pl7NKYuZSmMmXvuQX/Sdc="
     keep_history: true
-    #on:
+    on:
+       all_branches: true        
     #  branch: master
