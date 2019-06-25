@@ -340,7 +340,7 @@ class Observations(object):
                             sim_value = real.get_smry(
                                 time_index=[unit["date"]], column_keys=obsunit["key"]
                             )[obsunit["key"]].values[0]
-                        except ValueError:
+                        except KeyError:
                             logger.warning(
                                 "No data found for smry: "
                                 + obsunit["key"]

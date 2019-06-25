@@ -175,6 +175,20 @@ def test_real_mismatch():
     # (a warning should be logged)
     assert obs_bogus_param.mismatch(real).empty
 
+    obs_bogus_smry = Observations(
+        {
+            "smry": [
+                {
+                    "key": "WBP4:OP_XXXXX",
+                    "observations": [
+                        {"date": datetime.date(2001, 1, 1), "error": 4, "value": 251},
+                    ],
+                }
+            ]
+        }
+    )
+    assert obs_bogus_smry.mismatch(real).empty
+
     # Test dumping to yaml:
     # Not implemented.
     # yamlobsstr = obs2.to_yaml()
