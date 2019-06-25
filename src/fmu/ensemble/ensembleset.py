@@ -339,7 +339,7 @@ class EnsembleSet(object):
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
-                logger.warn(
+                logger.warning(
                     "Ensemble %s did not contain the data %s", ensname, localpath
                 )
 
@@ -364,7 +364,7 @@ class EnsembleSet(object):
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
-                logger.warn(
+                logger.warning(
                     "Ensemble %s did not contain the data %s", ensname, localpath
                 )
         return self.get_df(localpath)

@@ -113,13 +113,13 @@ class ScratchRealization(object):
                     self.index = int(realidxmatch.group(1))
                     break
             else:
-                logger.warn(
+                logger.warning(
                     "Could not determine realization "
                     + "index for %s, "
                     + "this cannot be inserted in an Ensemble",
                     abspath,
                 )
-                logger.warn("Maybe you need to use index=<someinteger>")
+                logger.warning("Maybe you need to use index=<someinteger>")
                 self.index = None
         else:
             self.index = int(index)
@@ -135,7 +135,7 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
             self.load_status()
         else:
-            logger.warn("No STATUS file, %s", abspath)
+            logger.warning("No STATUS file, %s", abspath)
 
         if os.path.exists(os.path.join(abspath, "jobs.json")):
             filerow = {
@@ -443,7 +443,7 @@ class ScratchRealization(object):
         status = status[~((status.FORWARD_MODEL == "LSF") & (status.colon == "JOBID:"))]
 
         if len(status) == 0:
-            logger.warn("No parseable data in STATUS")
+            logger.warning("No parseable data in STATUS")
             self.data["STATUS"] = status
             return status
 
@@ -484,7 +484,7 @@ class ScratchRealization(object):
                 # the jobs are still running on the cluster)
                 status = status.merge(jobsinfodf, how="outer", on="JOBINDEX")
             except ValueError:
-                logger.warn("Parsing file %s failed, skipping", jsonfilename)
+                logger.warning("Parsing file %s failed, skipping", jsonfilename)
         status.sort_values(["JOBINDEX"], ascending=True, inplace=True)
         self.data["STATUS"] = status
         return status
