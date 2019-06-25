@@ -129,7 +129,7 @@ docsrun: clean ## generate Sphinx HTML documentation, including API docs
 
 
 docs: docsrun ## generate and display Sphinx HTML documentation...
-	#$(BROWSER) docs/_build/html/index.html
+	$(BROWSER) docs/_build/html/index.html
 
 
 servedocs: docs ## compile the docs watching for changes

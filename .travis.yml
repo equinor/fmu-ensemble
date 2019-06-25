@@ -37,7 +37,7 @@ install:
 
 script:
   - pytest
-  - make docs
+  - make docsrun
 
 deploy:
   - provider: pages
