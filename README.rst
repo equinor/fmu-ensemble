@@ -5,6 +5,9 @@ Introduction to *fmu.ensemble*
 FMU Ensemble is a Python module for handling simulation ensembles
 originating from an FMU (Fast Model Update) workflow.
 
+For documentation, see the 
+`github pages for this repository <https://equinor.github.io/fmu-ensemble/>`_.
+
 Ensembles consist of realizations. Realizations consist of (input and)
 output from their associated *jobs* stored in text or binary files. 
 Selected file formats (text and binary) are supported.
