@@ -161,8 +161,11 @@ class ScratchEnsemble(object):
         within the datastore.
 
         If the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
+
         then you can also access this with these alternatives:
+
          * simulator_volume_fipnum
          * simulator_volume_fipnum.csv
          * share/results/volumes/simulator_volume_fipnum
@@ -371,9 +374,9 @@ class ScratchEnsemble(object):
                 False, repeated calls to this function will
                 returned cached results.
         Returns:
-            pd.DataFrame:, with aggregated data over the ensemble. The column 'REAL'
-                signifies the realization indices, and a column with the same
-                name as the localpath filename contains the data.
+            pd.DataFrame: Aggregated data over the ensemble. The column 'REAL'
+            signifies the realization indices, and a column with the same
+            name as the localpath filename contains the data.
 
         """
         return self.load_file(localpath, "scalar", convert_numeric, force_reread)
@@ -396,7 +399,7 @@ class ScratchEnsemble(object):
 
         The CSV file must be present in at least one realization.
         The parsing is done individually for each realization, and
-        aggregation is on demand (through get_df()) and when
+        aggregation is on demand (through `get_df()`) and when
         this function returns.
 
         Args:
@@ -410,7 +413,7 @@ class ScratchEnsemble(object):
                 returned cached results.
         Returns:
             pd.Dataframe: aggregation of the loaded CSV files. Column 'REAL'
-                distuinguishes each realizations data.
+            distuinguishes each realizations data.
         """
         return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
@@ -432,7 +435,7 @@ class ScratchEnsemble(object):
                 returned cached results.
         Returns:
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
-                distuinguishes each realizations data.
+            distuinguishes each realizations data.
         """
         for index, realization in self._realizations.items():
             try:
@@ -467,7 +470,7 @@ class ScratchEnsemble(object):
                 assigned as column values for the discovered files.
         Returns:
             pd.DataFrame: with the slice of discovered files in each
-                realization, tagged with realization index in the column REAL
+            realization, tagged with realization index in the column REAL
         """
         df_list = {}
         for index, realization in self._realizations.items():
@@ -496,7 +499,7 @@ class ScratchEnsemble(object):
                to obtain. If None, all vectors are returned
         Returns:
             list of str: Matched summary vectors. Empty list if no
-                summary file or no matched summary file vectors
+            summary file or no matched summary file vectors
         """
         if isinstance(vector_match, str):
             vector_match = [vector_match]
@@ -525,8 +528,8 @@ class ScratchEnsemble(object):
             localpath (str): refers to the internalized name.
         Returns:
            pd.dataframe: Merged data from each realization.
-               Realizations with missing data are ignored.
-               Empty dataframe if no data is found
+           Realizations with missing data are ignored.
+           Empty dataframe if no data is found
         """
         dflist = {}
         for index, realization in self._realizations.items():
@@ -663,7 +666,7 @@ class ScratchEnsemble(object):
 
         Returns:
             pd.DataFrame: analoguous to the dataframe returned by get_smry().
-                Empty dataframe if no data found.
+            Empty dataframe if no data found.
         """
         vol_dfs = []
         for realidx, real in self._realizations.items():
@@ -784,7 +787,7 @@ class ScratchEnsemble(object):
 
         Returns:
             pd.DataFrame, aggregated result of the supplied function
-                on each realization.
+            on each realization.
         """
         results = []
         for realidx, realization in self._realizations.items():
@@ -982,10 +985,7 @@ class ScratchEnsemble(object):
             If quantiles are explicitly supplied, the 'pXX'
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
-
-        TODO: add warning message when failed realizations are removed
         """
-
         if quantiles is None:
             quantiles = [10, 90]
 
