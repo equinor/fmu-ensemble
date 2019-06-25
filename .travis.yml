@@ -8,7 +8,7 @@ env:
     - ECL_VER=master
 
 python:
-  - "2.7"
+  #- "2.7"
   - "3.6"
 
 before_install:
