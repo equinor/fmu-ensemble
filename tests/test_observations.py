@@ -118,7 +118,9 @@ def test_real_mismatch():
     # and yield the same result
     obs2r = Observations(yaml.full_load(obs2.to_yaml()))
     realmis2r = obs2r.mismatch(real)
-    assert np.all(realmis2["MISMATCH"].values.sort() == realmis2r["MISMATCH"].values.sort())
+    assert np.all(
+        realmis2["MISMATCH"].values.sort() == realmis2r["MISMATCH"].values.sort()
+    )
 
     # Test use of allocated values:
     obs3 = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})

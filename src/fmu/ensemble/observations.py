@@ -94,8 +94,7 @@ class Observations(object):
 
         logger.info("Initialized observation with obstypes " + str(self.keys()))
         for obskey in self.keys():
-            logger.info(" " + obskey + ": "
-                        + str(len(self.observations[obskey])))
+            logger.info(" " + obskey + ": " + str(len(self.observations[obskey])))
 
     def __getitem__(self, object):
         """Pick objects from the observations dict"""
@@ -119,12 +118,10 @@ class Observations(object):
             for ensname, ens in ens_or_real._ensembles.items():
                 logger.info("Calculating mismatch for ensemble " + ensname)
                 for realidx, real in ens._realizations.items():
-                    logger.info("Calculating mismatch for realization "
-                                + str(realidx))
-                    mismatches[(ensname, realidx)] \
-                        = self._realization_mismatch(real)
-                    mismatches[(ensname, realidx)]['REAL'] = realidx
-                    mismatches[(ensname, realidx)]['ENSEMBLE'] = ensname
+                    logger.info("Calculating mismatch for realization " + str(realidx))
+                    mismatches[(ensname, realidx)] = self._realization_mismatch(real)
+                    mismatches[(ensname, realidx)]["REAL"] = realidx
+                    mismatches[(ensname, realidx)]["ENSEMBLE"] = ensname
             return pd.concat(mismatches, axis=0, ignore_index=True)
         elif isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
             mismatches = {}
@@ -247,40 +244,49 @@ class Observations(object):
         mismatches = []
         for obstype in self.observations.keys():
             for obsunit in self.observations[obstype]:  # (list)
-                if obstype == 'txt':
+                if obstype == "txt":
                     try:
-                        sim_value = real.get_df(obsunit[
-                            'localpath'])[obsunit['key']]
+                        sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
                     except KeyError:
-                        logger.warning(obsunit['key'] + " in " +
-                                       obsunit['localpath'] +
-                                       " not found, ignored")
+                        logger.warning(
+                            obsunit["key"]
+                            + " in "
+                            + obsunit["localpath"]
+                            + " not found, ignored"
+                        )
                         continue
                     except ValueError:
-                        logger.warning(obsunit['localpath']
-                                       + " not found, ignored")
+                        logger.warning(obsunit["localpath"] + " not found, ignored")
                         continue
-                    mismatch = float(sim_value - obsunit['value'])
+                    mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
-                    mismatches.append(dict(OBSTYPE=obstype,
-                                           OBSKEY=str(obsunit['localpath'])
-                                           + '/' + str(obsunit['key']),
-                                           MISMATCH=mismatch,
-                                           L1=abs(mismatch),
-                                           L2=abs(mismatch)**2,
-                                           SIMVALUE=sim_value,
-                                           OBSVALUE=obsunit['value'],
-                                           MEASERROR=measerror,
-                                           SIGN=sign))
-                if obstype == 'scalar':
+                    mismatches.append(
+                        dict(
+                            OBSTYPE=obstype,
+                            OBSKEY=str(obsunit["localpath"])
+                            + "/"
+                            + str(obsunit["key"]),
+                            MISMATCH=mismatch,
+                            L1=abs(mismatch),
+                            L2=abs(mismatch) ** 2,
+                            SIMVALUE=sim_value,
+                            OBSVALUE=obsunit["value"],
+                            MEASERROR=measerror,
+                            SIGN=sign,
+                        )
+                    )
+                if obstype == "scalar":
                     try:
-                        sim_value = real.get_df(obsunit['key'])
+                        sim_value = real.get_df(obsunit["key"])
                     except ValueError:
-                        logger.warning("No data found for scalar: " +
-                                       obsunit['key'] + ",  ignored.")
+                        logger.warning(
+                            "No data found for scalar: "
+                            + obsunit["key"]
+                            + ",  ignored."
+                        )
                         continue
-                    mismatch = float(sim_value - obsunit['value'])
+                    mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(
@@ -299,16 +305,22 @@ class Observations(object):
                 if obstype == "smryh":
                     # Will use raw times when available.
                     # Time index is always identical
-                    sim_hist = real.get_smry(column_keys=[obsunit['key'],
-                                                          obsunit['histvec']])
+                    sim_hist = real.get_smry(
+                        column_keys=[obsunit["key"], obsunit["histvec"]]
+                    )
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
-                        logger.warning("No data found for smryh: " +
-                                       obsunit['key'] + " and " +
-                                       obsunit['histvec'] + ", ignored.")
+                        logger.warning(
+                            "No data found for smryh: "
+                            + obsunit["key"]
+                            + " and "
+                            + obsunit["histvec"]
+                            + ", ignored."
+                        )
                         continue
-                    sim_hist['mismatch'] = sim_hist[obsunit['key']] - \
-                        sim_hist[obsunit['histvec']]
+                    sim_hist["mismatch"] = (
+                        sim_hist[obsunit["key"]] - sim_hist[obsunit["histvec"]]
+                    )
                     measerror = 1
                     mismatches.append(
                         dict(
@@ -323,17 +335,21 @@ class Observations(object):
                 if obstype == "smry":
                     # For 'smry', there is a list of
                     # observations (indexed by date)
-                    for unit in obsunit['observations']:
+                    for unit in obsunit["observations"]:
                         try:
-                            sim_value = real.get_smry(time_index=[unit['date']],
-                                                      column_keys=obsunit['key'])[
-                                                          obsunit['key']].values[0]
+                            sim_value = real.get_smry(
+                                time_index=[unit["date"]], column_keys=obsunit["key"]
+                            )[obsunit["key"]].values[0]
                         except ValueError:
-                            logger.warning("No data found for smry: " +
-                                           obsunit['key'] + " at "
-                                           + str(unit["date"]) + ",  ignored.")
+                            logger.warning(
+                                "No data found for smry: "
+                                + obsunit["key"]
+                                + " at "
+                                + str(unit["date"])
+                                + ",  ignored."
+                            )
                             continue
-                        mismatch = float(sim_value - unit['value'])
+                        mismatch = float(sim_value - unit["value"])
                         sign = (mismatch > 0) - (mismatch < 0)
                         mismatches.append(
                             dict(
@@ -437,11 +453,13 @@ class Observations(object):
                     del smryunits[smryunits.index(unit)]
                     continue
                 # Check if strings need to be parsed as dates:
-                for observation in unit['observations']:
-                    if isinstance(observation['date'], str):
-                        observation['date'] = dateutil.parser.isoparse(observation['date']).date()
-                    if not isinstance(observation['date'], datetime.date):
-                        logger.error('Date not understood %s', str(observation['date']))
+                for observation in unit["observations"]:
+                    if isinstance(observation["date"], str):
+                        observation["date"] = dateutil.parser.isoparse(
+                            observation["date"]
+                        ).date()
+                    if not isinstance(observation["date"], datetime.date):
+                        logger.error("Date not understood %s", str(observation["date"]))
                         continue
             # If everything is deleted from 'smry', delete it
             if not len(smryunits):
