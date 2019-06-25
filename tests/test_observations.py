@@ -175,13 +175,14 @@ def test_real_mismatch():
     # (a warning should be logged)
     assert obs_bogus_param.mismatch(real).empty
 
+    # Non-existing summary key:
     obs_bogus_smry = Observations(
         {
             "smry": [
                 {
                     "key": "WBP4:OP_XXXXX",
                     "observations": [
-                        {"date": datetime.date(2001, 1, 1), "error": 4, "value": 251},
+                        {"date": datetime.date(2001, 1, 1), "error": 4, "value": 251}
                     ],
                 }
             ]
@@ -433,7 +434,7 @@ def test_ensset_mismatch():
             }
         )
 
-    # Erroneous date will raise Exception
+    # Erroneous date will raise Exception (but a valid date will give an extrapolated value)
     with pytest.raises(ValueError):
         obs_pr = Observations(
             {
@@ -447,6 +448,17 @@ def test_ensset_mismatch():
                 ]
             }
         )
+    obs_extrap = Observations(
+        {
+            "smry": [
+                {
+                    "key": "WBP4:OP_1",
+                    "observations": [{"value": 250, "error": 1, "date": "1977-01-01"}],
+                }
+            ]
+        }
+    )
+    assert len(obs_extrap.mismatch(ensset)) == 10  # (5 reals, 2 ensembles)
 
 
 def test_virtual_observations():
