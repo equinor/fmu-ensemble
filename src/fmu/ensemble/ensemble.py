@@ -437,7 +437,7 @@ class ScratchEnsemble(object):
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
-                logger.warn("Could not read %s for realization %d", localpath, index)
+                logger.warning("Could not read %s for realization %d", localpath, index)
         if self.get_df(localpath).empty:
             raise ValueError("No ensemble data found for %s", localpath)
         return self.get_df(localpath)
@@ -502,7 +502,7 @@ class ScratchEnsemble(object):
                     for vector in vector_match:
                         result = result.union(set(eclsum.keys(vector)))
             else:
-                logger.warn("No EclSum available for realization %d", index)
+                logger.warning("No EclSum available for realization %d", index)
         return list(result)
 
     def get_df(self, localpath):
@@ -1484,5 +1484,5 @@ def _convert_numeric_columns(dataframe):
         converted to numerical types (int/float). Some values
         might contain numpy.nan.
     """
-    logger.warn("_convert_numeric_columns() not implemented")
+    logger.warning("_convert_numeric_columns() not implemented")
     return dataframe

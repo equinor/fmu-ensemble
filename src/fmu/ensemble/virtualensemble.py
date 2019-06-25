@@ -205,7 +205,7 @@ class VirtualEnsemble(object):
         indicestodelete = list(set(deleteindices) & set(indicesknown))
         indicesnotknown = list(set(deleteindices) - set(indicestodelete))
         if indicesnotknown:
-            logger.warn(
+            logger.warning(
                 "Skipping undefined realization indices %s", str(indicesnotknown)
             )
         # There might be Pandas tricks to avoid this outer loop.

@@ -162,7 +162,7 @@ class VirtualRealization(object):
                     linecount = len(lines)
                     commafields = len(lines[0].split(","))
                     spacefields = len(lines[0].split())
-          
+
                     print(filename, commafields, spacefields, linecount)
                     if spacefields == 2 and commafields == 1:
                         # key-value txt file!
