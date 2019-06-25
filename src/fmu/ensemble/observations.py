@@ -128,7 +128,7 @@ class Observations(object):
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
                 mismatches[realidx]["REAL"] = realidx
-            return pd.concat(mismatches, axis=0, ignore_index=True)
+            return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
         elif isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):
             return self._realization_mismatch(ens_or_real)
         elif isinstance(ens_or_real, EnsembleSet):
