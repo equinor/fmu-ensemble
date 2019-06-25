@@ -37,3 +37,13 @@ install:
 
 script:
   - pytest
+  - make docs
+
+deploy:
+  - provider: pages
+    skip_cleanup: true
+    local_dir: ./docs/_build/html
+    github_token:
+      secure: SOMETOKEN
+    on:
+      branch: master
