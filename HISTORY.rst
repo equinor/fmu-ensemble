@@ -5,7 +5,7 @@ History
 Commit history
 --------------
 
-See commit log on github.
+See commit log on github, https://github.com/equinor/fmu-ensemble/commits/
 
 First open release (GPLv3) in June 2019.
 
