@@ -1,0 +1,590 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fmu.ensemble.etc &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> fmu-ensemble
+          
+
+          
+            
+            <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.1.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>fmu.ensemble.etc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for fmu.ensemble.etc</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Module for basic interaction with user, including logging for debugging.</span>
+
+<span class="sd">This module is duplicated from another project called &quot;fmu.config&quot;</span>
+
+<span class="sd">Logging is enabled by setting a environment variable::</span>
+
+<span class="sd">  export FMU_LOGGING_LEVEL=INFO   # if bash; will set logging to INFO level</span>
+<span class="sd">  setenv FMU_LOGGING_LEVEL INFO   # if tcsh; will set logging to INFO level</span>
+
+<span class="sd">Other levels are DEBUG and CRITICAL. CRITICAL is default (cf. Pythons logging)</span>
+
+<span class="sd">Usage of logging in scripts::</span>
+
+<span class="sd">  from fmu.ensemble import etc</span>
+<span class="sd">  fmux = etc.Interaction()</span>
+<span class="sd">  logger = fmux.basiclogger(__name__)</span>
+<span class="sd">  logger.info(&#39;This is logging of %s&#39;, something)</span>
+
+<span class="sd">Other than logging, there is also a template for user interaction, which shall</span>
+<span class="sd">be used in client scripts::</span>
+
+<span class="sd">  fmux.echo(&#39;This is a message&#39;)</span>
+<span class="sd">  fmux.warn(&#39;This is a warning&#39;)</span>
+<span class="sd">  fmux.error(&#39;This is an error, will continue&#39;)</span>
+<span class="sd">  fmux.critical(&#39;This is a big error, will exit&#39;)</span>
+
+<span class="sd">Ind finally, there is a template for setting up a header for applications, see</span>
+<span class="sd">the ```print_fmu_header``` method</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">timeit</span>
+
+<span class="kn">import</span> <span class="nn">six</span>
+
+<span class="c1"># pylint: disable=protected-access</span>
+
+
+<span class="k">class</span> <span class="nc">_BColors</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="c1"># local class for ANSI term color commands</span>
+    <span class="c1"># bgcolors:</span>
+    <span class="c1"># 40=black, 41=red, 42=green, 43=yellow, 44=blue, 45=pink, 46 cyan</span>
+
+    <span class="c1"># pylint: disable=too-few-public-methods</span>
+    <span class="n">HEADER</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1;96m&quot;</span>
+    <span class="n">OKBLUE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[94m&quot;</span>
+    <span class="n">OKGREEN</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[92m&quot;</span>
+    <span class="n">WARN</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[93;43m&quot;</span>
+    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[93;41m&quot;</span>
+    <span class="n">CRITICAL</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1;91m&quot;</span>
+    <span class="n">ENDC</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+    <span class="n">BOLD</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1m&quot;</span>
+    <span class="n">UNDERLINE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[4m&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="Interaction"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction">[docs]</a><span class="k">class</span> <span class="nc">Interaction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;System for handling interaction; dialogues and messages in FMU.</span>
+
+<span class="sd">    This module cooperates with the standard Python logging module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callclass</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_caller</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lformat</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lformatlevel</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">=</span> <span class="s2">&quot;CRITICAL&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loggingname</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_syslevel</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_env</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="s2">&quot;TMP&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_testpath</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># a string, for Python logging:</span>
+        <span class="n">logginglevel</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FMU_LOGGING_LEVEL&quot;</span><span class="p">)</span>
+
+        <span class="c1"># a number, for format, 1 is simple, 2 is more info etc</span>
+        <span class="n">loggingformat</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FMU_LOGGING_FORMAT&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">logginglevel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logginglevel</span> <span class="o">=</span> <span class="n">logginglevel</span>
+
+        <span class="k">if</span> <span class="n">loggingformat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lformatlevel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">loggingformat</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">logginglevel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set or return a logging level property, e.g. logging.CRITICAL&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span>
+
+    <span class="nd">@logginglevel</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">logginglevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="c1"># pylint: disable=pointless-statement</span>
+
+        <span class="n">validlevels</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">validlevels</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">=</span> <span class="n">level</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid level given, must be &quot;</span> <span class="s2">&quot;in </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">validlevels</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">numericallogginglevel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a numerical logging level (read only)&quot;&quot;&quot;</span>
+        <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">==</span> <span class="s2">&quot;INFO&quot;</span><span class="p">:</span>
+            <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">==</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">:</span>
+            <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">==</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">:</span>
+            <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+
+        <span class="k">return</span> <span class="n">llo</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">loggingformatlevel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set logging format (for future use)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lformatlevel</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">loggingformat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the format string to be used in logging&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lformatlevel</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lformat</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(levelname)8s</span><span class="s2">: </span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lformat</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> Line: </span><span class="si">%(lineno)4d</span><span class="s2"> </span><span class="si">%(name)44s</span><span class="s2"> &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;[</span><span class="si">%(funcName)40s</span><span class="s2">()]&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="si">%(levelname)8s</span><span class="s2">:&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lformat</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tmpdir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get and set tmpdir for testing&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span>
+
+    <span class="nd">@tmpdir</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tmpdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Interaction.print_fmu_header"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.print_fmu_header">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">print_fmu_header</span><span class="p">(</span><span class="n">appname</span><span class="p">,</span> <span class="n">appversion</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prints a banner for a FMU app to STDOUT.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            appname (str): Name of application.</span>
+<span class="sd">            appversion (str): Version of application on form &#39;3.2.1&#39;</span>
+<span class="sd">            info (str, optional): More info, e.g. if beta release</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            fmux.print_fmu_header(&#39;fmu.ensemble, &#39;0.2.1&#39;, info=&#39;Beta release!&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cur_version</span> <span class="o">=</span> <span class="s2">&quot;Python &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="n">cur_version</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">app</span> <span class="o">=</span> <span class="s2">&quot;This is &quot;</span> <span class="o">+</span> <span class="n">appname</span> <span class="o">+</span> <span class="s2">&quot;, v. &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">appversion</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">info</span><span class="p">:</span>
+            <span class="n">app</span> <span class="o">=</span> <span class="n">app</span> <span class="o">+</span> <span class="s2">&quot; (&quot;</span> <span class="o">+</span> <span class="n">info</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">_BColors</span><span class="o">.</span><span class="n">HEADER</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#&quot;</span> <span class="o">*</span> <span class="mi">79</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#</span><span class="si">{}</span><span class="s2">#&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="mi">77</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#</span><span class="si">{}</span><span class="s2">#&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cur_version</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="mi">77</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#&quot;</span> <span class="o">*</span> <span class="mi">79</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">_BColors</span><span class="o">.</span><span class="n">ENDC</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Interaction.basiclogger"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.basiclogger">[docs]</a>    <span class="k">def</span> <span class="nf">basiclogger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initiate the logger by some default settings.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logginglevel</span> <span class="o">=</span> <span class="n">level</span>
+
+        <span class="n">fmt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loggingformat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loggingname</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="n">fmt</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numericallogginglevel</span><span class="p">)</span>  <span class="c1"># root logger</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Interaction.functionlogger"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.functionlogger">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">functionlogger</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the logger for functions (not top level).&quot;&quot;&quot;</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">logger</span></div>
+
+<div class="viewcode-block" id="Interaction.testsetup"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.testsetup">[docs]</a>    <span class="k">def</span> <span class="nf">testsetup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;TMP&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Basic setup for FMU testing (developer only; relevant for tests)&quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">raise</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_env</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmpdir</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_testpath</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Interaction.timer"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.timer">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">timer</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Without args; return the time, with a time as arg return the</span>
+<span class="sd">        difference.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            time1 = timer()</span>
+<span class="sd">            for i in range(10000):</span>
+<span class="sd">                i = i + 1</span>
+<span class="sd">            time2 = timer(time1)</span>
+<span class="sd">            print(&#39;Execution took {} seconds&#39;.format(time2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time1</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">time1</span> <span class="o">-</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">time1</span></div>
+
+<div class="viewcode-block" id="Interaction.echo"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.echo">[docs]</a>    <span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show info at runtime (for user scripts)&quot;&quot;&quot;</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">3</span>
+
+        <span class="n">caller</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_callerinfo</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Interaction.warn"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.warn">[docs]</a>    <span class="k">def</span> <span class="nf">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show warnings at Runtime (pure user info/warns).&quot;&quot;&quot;</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">6</span>
+
+        <span class="n">caller</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_callerinfo</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span></div>
+
+    <span class="n">warning</span> <span class="o">=</span> <span class="n">warn</span>
+
+<div class="viewcode-block" id="Interaction.error"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.error">[docs]</a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Issue an error, will not exit system by default&quot;&quot;&quot;</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="o">-</span><span class="mi">8</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">8</span>
+
+        <span class="n">caller</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_callerinfo</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Interaction.critical"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.critical">[docs]</a>    <span class="k">def</span> <span class="nf">critical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">sysexit</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Issue a critical error, default is SystemExit.&quot;&quot;&quot;</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">9</span>
+
+        <span class="n">caller</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_callerinfo</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sysexit</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="s2">&quot;STOP!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Interaction.get_callerinfo"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.etc.Interaction.get_callerinfo">[docs]</a>    <span class="k">def</span> <span class="nf">get_callerinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">caller</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get caller info for logging (developer stuff)&quot;&quot;&quot;</span>
+        <span class="n">the_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_class_from_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+
+        <span class="c1"># just keep the last class element</span>
+        <span class="n">xname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">the_class</span><span class="p">)</span>
+        <span class="n">xname</span> <span class="o">=</span> <span class="n">xname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">the_class</span> <span class="o">=</span> <span class="n">xname</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_caller</span> <span class="o">=</span> <span class="n">caller</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callclass</span> <span class="o">=</span> <span class="n">the_class</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_caller</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callclass</span><span class="p">)</span></div>
+
+    <span class="c1"># =========================================================================</span>
+    <span class="c1"># Private routines</span>
+    <span class="c1"># =========================================================================</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_class_from_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">six</span><span class="o">.</span><span class="n">PY2</span><span class="p">:</span>
+            <span class="c1"># pylint: disable=deprecated-method</span>
+            <span class="n">args</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">value_dict</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargvalues</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="c1"># we check the first parameter for the frame function is</span>
+            <span class="c1"># named &#39;self&#39;</span>
+            <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+                <span class="n">instance</span> <span class="o">=</span> <span class="n">value_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;self&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">instance</span><span class="p">:</span>
+                    <span class="c1"># return its class</span>
+                    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="s2">&quot;__class__&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># python3 is incomplete (need more coffee)</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+            <span class="n">outer</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getouterframes</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">outer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># return None otherwise</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+
+        <span class="c1"># pylint: disable=too-many-branches</span>
+
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">endfix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;++&quot;</span>
+        <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;**&quot;</span>
+        <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&gt;&gt;&quot;</span>
+        <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">_BColors</span><span class="o">.</span><span class="n">WARN</span> <span class="o">+</span> <span class="s2">&quot;##&quot;</span>
+            <span class="n">endfix</span> <span class="o">=</span> <span class="n">_BColors</span><span class="o">.</span><span class="n">ENDC</span>
+        <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">_BColors</span><span class="o">.</span><span class="n">ERROR</span> <span class="o">+</span> <span class="s2">&quot;!#&quot;</span>
+            <span class="n">endfix</span> <span class="o">=</span> <span class="n">_BColors</span><span class="o">.</span><span class="n">ENDC</span>
+        <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">_BColors</span><span class="o">.</span><span class="n">CRITICAL</span> <span class="o">+</span> <span class="s2">&quot;!!&quot;</span>
+            <span class="n">endfix</span> <span class="o">=</span> <span class="n">_BColors</span><span class="o">.</span><span class="n">ENDC</span>
+
+        <span class="n">prompt</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syslevel</span><span class="p">:</span>
+            <span class="n">prompt</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">prompt</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syslevel</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">endfix</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ulevel</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="o">-</span><span class="mi">5</span><span class="p">:</span>
+                    <span class="n">ulevel</span> <span class="o">=</span> <span class="s2">&quot;M&quot;</span>
+                <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="o">-</span><span class="mi">8</span><span class="p">:</span>
+                    <span class="n">ulevel</span> <span class="o">=</span> <span class="s2">&quot;E&quot;</span>
+                <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="o">-</span><span class="mi">9</span><span class="p">:</span>
+                    <span class="n">ulevel</span> <span class="o">=</span> <span class="s2">&quot;W&quot;</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> &lt;</span><span class="si">{1}</span><span class="s2">&gt; [</span><span class="si">{2:23s}</span><span class="s2">-&gt;</span><span class="si">{3:&gt;33s}</span><span class="s2">] </span><span class="si">{4}{5}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">prefix</span><span class="p">,</span> <span class="n">ulevel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callclass</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_caller</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">endfix</span>
+                    <span class="p">)</span>
+                <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+  </style>
+
+
+</body>
+</html>

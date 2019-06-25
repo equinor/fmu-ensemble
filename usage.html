@@ -1,0 +1,564 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Concepts in fmu-ensemble" href="concepts.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> fmu-ensemble
+          
+
+          
+            
+            <img src="_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.1.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-interactive-usage">Basic interactive usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading-an-ensemble">Loading an ensemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-multiple-ensembles">Loading multiple ensembles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#obtaining-warning-and-error-messages">Obtaining warning and error messages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reading-eclipse-data">Reading Eclipse data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rate-handling-in-eclipse-summary-vectors">Rate handling in Eclipse summary vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#internalized-data">Internalized data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reading-data-from-text-files">Reading data from text files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scalar-data">Scalar data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reading-tabular-data-from-csv-files">Reading tabular data from CSV files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reading-simulation-grid-data">Reading simulation grid data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filtering-realizations">Filtering realizations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>fmu-ensemble is designed for use in several scenarios:</p>
+<ul class="simple">
+<li><p>Interactive use in the (i)python interpreter or Jupyter</p></li>
+<li><p>Part of an ERT workflow, typically after the ensemble is finished as
+a <em>POST_WORKFLOW_HOOK</em></p></li>
+<li><p>Part of other scripts or utilities, either for analysis or
+preparatory work before f.ex. a webviz instance is generated</p></li>
+</ul>
+<p>As an introduction to the module, we will go through interactive usage
+in the python interpreter. Whether you use ipython or jupyter does not
+matter. It is recommended to choose <cite>ipython</cite> over <cite>python</cite>.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>Basic knowlegde of Python is needed to use the module. For simple use,
+copy-paste from other projects will take you far. For something extra,
+it is strongly recommended to spend time learning the <a class="reference external" href="https://pandas.pydata.org/">Pandas</a>
+library and understand how you can in very short Python code do a lot
+of data processing and handling. Most data is exposed as Pandas
+dataframes.</p>
+</div>
+<div class="section" id="basic-interactive-usage">
+<h2>Basic interactive usage<a class="headerlink" href="#basic-interactive-usage" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading-an-ensemble">
+<h3>Loading an ensemble<a class="headerlink" href="#loading-an-ensemble" title="Permalink to this headline">¶</a></h3>
+<p>An ensemble must be loaded from the filesystem (typically <cite>/scratch</cite>)
+into Python’s memory first.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu</span> <span class="kn">import</span> <span class="n">ensemble</span>
+
+<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;reek_r001_iter0&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/realization-*/iter-3&#39;</span><span class="p">)</span>
+
+<span class="c1"># Type the object name to check what you got</span>
+<span class="n">ens</span>
+<span class="c1"># the output should be something like</span>
+<span class="c1">#   &lt;Ensemble reek_r001_iter0, 50 realizations&gt;</span>
+</pre></div>
+</div>
+<p>You name your ensemble in the first argument. This name is used when you combine
+the ensemble with other ensembles into an <code class="docutils literal notranslate"><span class="pre">EnsembleSet</span></code>. The path is where on
+the filesystem your realizations roots are. The realization root is also called
+RUNPATH in ERT terminology, and is where you have the <code class="docutils literal notranslate"><span class="pre">STATUS</span></code> file among
+others.</p>
+<p>When you initialize single ensembles, ensure you do not mix <code class="docutils literal notranslate"><span class="pre">iter-3</span></code> with
+<code class="docutils literal notranslate"><span class="pre">iter-*</span></code>, where the latter only makes sense when you initialize an
+<em>EnsembleSet</em>, see below.</p>
+<p>When a <cite>ScratchEnsemble</cite> object is intialized, only rudimentary loading of the
+ensemble is performed, like loading <code class="docutils literal notranslate"><span class="pre">STATUS</span></code> and <code class="docutils literal notranslate"><span class="pre">parameters.txt</span></code>. It is the
+intention that this operation should be fast, and any heavy data parsing is not
+done until the user requests it.</p>
+<p>When an ensemble is loaded into memory, you can ask for certain properties,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Obtain a Pandas Dataframe of the parameters</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">parameters</span>
+
+<span class="c1"># Unique realizations indices with parameters.txt</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;REAL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+
+<span class="c1"># List of parameters available:</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">columns</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loading-multiple-ensembles">
+<h3>Loading multiple ensembles<a class="headerlink" href="#loading-multiple-ensembles" title="Permalink to this headline">¶</a></h3>
+<p>If you have multiple ensembles in the typical <code class="docutils literal notranslate"><span class="pre">realization-*/iter-*</span></code>
+directory structure, you can load all these ensembles in one go:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">&#39;hm_attempt01&#39;</span><span class="p">,</span>
+              <span class="n">frompath</span><span class="o">=</span><span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will look for realizations and iterations and group them
+accordingly.  Ensemble names will be inferred from the iteration
+directory level, and will be named <cite>iter-X</cite></p>
+<p>If you have run prediction ensembles, which do not match <cite>iter-X</cite> in
+the directory name, you have to add them manually to the ensemble set:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Augment the existing ens_set object</span>
+<span class="n">ens_set</span><span class="o">.</span><span class="n">add_ensemble</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;pred-dg3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/realization-*/pred-dg3/&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>EnsembleSet object can be treated almost as Ensemble
+objects. Operations on ensemble sets will typically be applied to each
+ensemble member. A difference is that aggregated data structures
+always have an extra column called <code class="docutils literal notranslate"><span class="pre">ENSEMBLE</span></code> that contains the
+ensemble names.</p>
+<p>If you in ERT have exported a “runpath file”, you can initialize an
+EnsembleSet from that file with</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load from an ERT runpath file</span>
+<span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">&#39;hm&#39;</span><span class="p">,</span>
+    <span class="n">runpath</span><span class="o">=</span><span class="s1">&#39;/foo/bar/ert-runpath-file&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The realization and iteration integers are taken directly from the information
+in this file. For runpath files with only one ensemble, it is also possible
+to initialize ScratchEnsembles directly.</p>
+<p>It is possible to load directory structures like <code class="docutils literal notranslate"><span class="pre">iter_*/real_*</span></code>,
+but you will need to look more closely into the API for the
+EnsembleSet object, and provide regular expressions for determining
+the iteration names and realization indices.</p>
+</div>
+<div class="section" id="obtaining-warning-and-error-messages">
+<h3>Obtaining warning and error messages<a class="headerlink" href="#obtaining-warning-and-error-messages" title="Permalink to this headline">¶</a></h3>
+<p>fmu-ensemble will by default be mute to warnings and error messages,
+unless you tell it to be verbose in your client code. The available debug
+levels are <cite>INFO</cite>, <cite>WARNING</cite>, <cite>DEBUG</cite> and <cite>CRITICAL</cite> where the latter is
+the default.</p>
+<p>Script authors can set a different default logging level by inserting
+the lines</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">etc</span>
+<span class="n">fmux</span> <span class="o">=</span> <span class="n">etc</span><span class="o">.</span><span class="n">Interaction</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;WARNING&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>while users can always override this by setting an environment variable:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">export FMU_LOGGING_LEVEL=WARNING  # If bash shell</span>
+<span class="go">setenv FMU_LOGGING_LEVEL WARNING  # Default shell in equinor</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reading-eclipse-data">
+<h3>Reading Eclipse data<a class="headerlink" href="#reading-eclipse-data" title="Permalink to this headline">¶</a></h3>
+<p>The ensemble class has specific support for parsing binary files produced
+by reservoir simulator outputting the Eclipse binary format. This support
+is through <cite>libecl_</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get a dataframe with monthly summary data for all field vectors</span>
+<span class="c1"># and all well vectors</span>
+<span class="n">smry</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F*&#39;</span><span class="p">,</span> <span class="s1">&#39;W*&#39;</span><span class="p">],</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Python object <code class="docutils literal notranslate"><span class="pre">smry</span></code> is now a Pandas DataFrame (a table)
+containing the summary data you requested. Each row is the values for
+a specific realization at a specific time. Pandas DataFrames can be
+written to disk as CSV files quite easily using e.g.
+<code class="docutils literal notranslate"><span class="pre">smry.to_csv('summaryvectors.csv',</span> <span class="pre">index=False)</span></code>. For <cite>time_index</cite> you
+may also try <cite>yearly</cite>, <cite>daily</cite> or <cite>raw</cite>. Check the function
+documentation for further possibilities.</p>
+<p>If you replace <cite>get_smry</cite> with <cite>load_smry</cite> the same dataframe will also be
+internalized, see below.</p>
+<p>By default, Eclipse summary files will be searched for in <cite>eclipse/model</cite>,
+and then files with the suffix <cite>*.UNSMRY</cite>. In case you either have multiple
+<cite>UNSMRY</cite> files in that directory, or if you have them in a different
+directory you need to hint to the exact location beforehand, using the
+<em>file discovery</em> (<cite>find_files()</cite>) feature. If your Eclipse output files is
+at the realization root (the old standard), you only need to issue</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="s2">&quot;*.UNSMRY&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>prior to running <cite>load_smry()</cite>. If your problem is multiple Eclipse
+run in the same directory, you have to explicitly discover the full
+path for the file in the call to <cite>find_files()</cite>. If you have used the
+<cite>runpathfile</cite> feature of ensemble initialization, file discovery of
+the correct <cite>UNSMRY</cite> file is done automatically.</p>
+</div>
+<div class="section" id="rate-handling-in-eclipse-summary-vectors">
+<h3>Rate handling in Eclipse summary vectors<a class="headerlink" href="#rate-handling-in-eclipse-summary-vectors" title="Permalink to this headline">¶</a></h3>
+<p>Eclipse summary vectors with of <em>rate</em> type (oil rate, water rate etc.) are
+to be interpreted carefully. A value of e.g. <cite>FOPR</cite> at a specific date
+means that the value is valid backwards in time, until the prior point in
+time where data is available.  For correct rates, you must use the <cite>raw</cite>
+time index for <cite>get_smry()</cite>, anything else will only give you an
+approximation. Also, you can not assume that summing the rates at every
+point in time corresponds to the associated cumulative summary vectors,
+e.g. <cite>FOPT</cite>, as there are multiple features into play here with efficienty
+factors etc.</p>
+<p>It is however possible to ask an ensemble or realization to compute so
+called “volumetric rates”, which are then computed from cumulative columns.
+Eclipse summary rate data is ignored in this computation, only e.g. <cite>FOPT</cite>.
+You can then ask to get a “volumetric rate” for <cite>FOPT</cite> at various time
+indices, yearly will give you yearly volumes, monthly will give monthly
+volumes etc. The data is returned as <cite>FOPR</cite> but you must be careful not to
+mix its meaning with the original <cite>FOPR</cite>. It is also possible to supply a
+custom time index (with arbitrary time between each index), but where the
+volumetric rates are scaled to correspond to daily/monthly/yearly rates.
+These will sum up to the cumulative given correct integration (with
+time interval length weigthing).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Examples for volumetric rate computations, yearly rates:</span>
+<span class="n">yearly_volumes</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
+                                          <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;yearly&#39;</span><span class="p">)</span>
+<span class="c1"># For each month, compute the average daily rate:</span>
+<span class="n">daily_rates</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
+                                       <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">,</span>
+                                       <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;days&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="internalized-data">
+<h3>Internalized data<a class="headerlink" href="#internalized-data" title="Permalink to this headline">¶</a></h3>
+<p>The ensemble object (which holds a collection of realization
+objects) will internalize the data it reads if and when you call
+<code class="docutils literal notranslate"><span class="pre">load_&lt;something&gt;()</span></code>, meaning that it will keep the dataframes
+produced in memory for later retrieval. You can ask the ensemble
+objects for what data it currently contains by calling <code class="docutils literal notranslate"><span class="pre">ens.keys()</span></code>
+(this is a call that is forwarded to each realization, and you are
+seeing all keys that are in at least one realization). Note that for
+ScratchEnsemble objects, the data is held in each realization object, and
+aggregated upon request.</p>
+<p>The ensemble object is able to aggregate any data that its
+realizations contains, using the general function <code class="docutils literal notranslate"><span class="pre">get_df()</span></code>. When we
+asked for the ensemble parameters above, what actually happened is a
+call to <code class="docutils literal notranslate"><span class="pre">get_df('parameters.txt')</span></code>.</p>
+<p>In the objects, these dataframes are stored with filenames as keys. When
+checking <code class="docutils literal notranslate"><span class="pre">keys()</span></code> after having run <code class="docutils literal notranslate"><span class="pre">load_smry()</span></code>, you will see a
+pathname in front of <code class="docutils literal notranslate"><span class="pre">unsmry--monthly.csv</span></code> which is where the dataframe
+will be written to if you want to dump a realization or realization to
+disk. For convenience in interactive use, you do not need to write the
+entire pathname when calling <code class="docutils literal notranslate"><span class="pre">get_df()</span></code>, but <em>only</em> when there is no
+ambiguity. You may also skip the extension <code class="docutils literal notranslate"><span class="pre">.csv</span></code> or <code class="docutils literal notranslate"><span class="pre">.txt</span></code>.</p>
+</div>
+<div class="section" id="reading-data-from-text-files">
+<h3>Reading data from text files<a class="headerlink" href="#reading-data-from-text-files" title="Permalink to this headline">¶</a></h3>
+<p>Text files in this context is a special case of text files arranged
+similarly to the already mentioned <code class="docutils literal notranslate"><span class="pre">parameters.txt</span></code></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;key1&gt; &lt;value1&gt;
+&lt;key2&gt; &lt;value2&gt;
+etc..
+</pre></div>
+</div>
+<p>Think of the values in such text files as scalar values for
+realizations, but you can put anything into them. You can use as many
+of these kinds of text files as you want, in order to categorize
+inputs and/or outputs. As an example, put any scalar results that you
+produce though any code into a file called <code class="docutils literal notranslate"><span class="pre">outputs.txt</span></code> in every
+realization directory, and call
+<code class="docutils literal notranslate"><span class="pre">myensembleobject.load_txt('outputs.txt')</span></code>.</p>
+</div>
+<div class="section" id="scalar-data">
+<h3>Scalar data<a class="headerlink" href="#scalar-data" title="Permalink to this headline">¶</a></h3>
+<p>There is support for text files containing only one value, either
+string or numeric. There should be nothing else than the value itself
+in the text file, except for comments after a comment character.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">load_scalar</span><span class="p">(</span><span class="s1">&#39;npv.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You are advised to add the option <cite>convert_numeric=True</cite> when the
+values are actually numeric. This ensures that the loaded data is
+interpreted as numbers, and thrown away if not. When strings are
+present in in erroneous realizations, it will break aggregation as all
+the data for all realizations will be treated as strings.</p>
+<p>Scalar data will be aggregated to ensembles and ensemble sets. When
+aggregated, a dataframe with the realization index in the first column
+and the values in the second column. This value column has the same
+name as the filename.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">npv</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s1">&#39;npv.txt&#39;</span><span class="p">)</span>  <span class="c1"># A DataFrame is returned, with the columns &#39;REAL&#39; and &#39;npv.txt&#39;</span>
+<span class="n">npv_values</span> <span class="o">=</span> <span class="n">npv</span><span class="p">[</span><span class="s1">&#39;npv.txt&#39;</span><span class="p">]</span>  <span class="c1"># Need to say &#39;npv.txt&#39; once more to get to the column values.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reading-tabular-data-from-csv-files">
+<h3>Reading tabular data from CSV files<a class="headerlink" href="#reading-tabular-data-from-csv-files" title="Permalink to this headline">¶</a></h3>
+<p>CSV files are handled analogously to txt files, in that you read them
+in by <code class="docutils literal notranslate"><span class="pre">load_csv(filename)</span></code> (where <code class="docutils literal notranslate"><span class="pre">filename</span></code> is the filename local
+to each realization). The data will be stored with the filename as the
+key, and you can get back the aggregated data set using
+<code class="docutils literal notranslate"><span class="pre">get_df(filename)</span></code>.</p>
+<p>In aggregations from ensembles, the first column will always be
+<code class="docutils literal notranslate"><span class="pre">REAL</span></code> which is the realization index. The next columns will be from
+the CSV data you loaded.</p>
+<p>In case you need to clean up imported files, it is possible to delete
+columns and rows from internalized dataframes through the <cite>drop()</cite>
+functionality. For an ensemble object called <cite>ens</cite> you may issue the
+following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;BOGUSDATA&#39;</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FOO1&#39;</span><span class="p">,</span> <span class="s1">&#39;FOO2&#39;</span><span class="p">,</span> <span class="s1">&#39;FOO3&#39;</span><span class="p">])</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;geo_gas_volumes.csv&#39;</span><span class="p">,</span> <span class="n">rowcontains</span><span class="o">=</span><span class="s1">&#39;Totals&#39;</span><span class="p">)</span> <span class="c1"># Deletes all rows with &#39;Totals&#39; anywhere.</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;geo_oil_volumes.csv&#39;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;Giip&#39;</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;unsmry--monthly&#39;</span><span class="p">,</span> <span class="n">rowcontains</span><span class="o">=</span><span class="s1">&#39;2000-01-01&#39;</span><span class="p">)</span> <span class="c1"># Enter dates as strings</span>
+</pre></div>
+</div>
+<p>When called on <cite>ScratchEnsemble</cite> object the drops occur in each linked
+realization object, while on virtual ensembles, it occurs directly in
+its dataframe.</p>
+</div>
+<div class="section" id="reading-simulation-grid-data">
+<h3>Reading simulation grid data<a class="headerlink" href="#reading-simulation-grid-data" title="Permalink to this headline">¶</a></h3>
+<p>Simulation static and dynamic grid data can be read and aggregated from the
+ensemble and returned as a DataFrame. The current implementation can be
+slow for large grid model and/or ensembles with many realizations.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find of the report number corresponding to the date you are interested to extract from</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">get_unrst_report_dates</span><span class="p">()</span>
+<span class="c1"># Extract the mean of following properties at the report step 4</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">get_eclgrid</span><span class="p">(</span><span class="n">props</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;PERMX&#39;</span><span class="p">,</span> <span class="s1">&#39;FLOWATI+&#39;</span><span class="p">,</span> <span class="s1">&#39;FLOWATJ+&#39;</span><span class="p">],</span> <span class="n">report</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">agg</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When called, <cite>get_eclgrid()</cite> reads the grid (geometry) from one
+realization. Then depending if the properties requested are static or
+dynamic, the corresponding <cite>*INIT</cite> or <cite>*UNRST</cite> file will be read for all
+successful realization in the ensemble. The user can specify how the
+results should be aggregated. Currently the options supported are <cite>mean</cite> or
+<cite>std</cite>.</p>
+</div>
+<div class="section" id="filtering-realizations">
+<h3>Filtering realizations<a class="headerlink" href="#filtering-realizations" title="Permalink to this headline">¶</a></h3>
+<p>In an ensemble, realizations can be filtered out based on certain
+properties. Filtering is relevant both for removing realizations that
+have failed somewhere in the process, and it is also relevant for
+extracting subsets with certain properties (by values).</p>
+<p>Generally, fmu.ensemble is very permissive of realizations with close
+to no data. It is the user responsibility to filter those out if
+needed. The filtering function <cite>filter()</cite> can be used both do to
+in-place filtering, but also return VirtualEnsemble objects containing
+those realizations that matched the criterion.</p>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assuming an ensemble where yearly summary data is loaded,</span>
+<span class="c1"># throw away all realizations that did not reach a certain date</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">&#39;unsmry--yearly&#39;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;DATE&#39;</span><span class="p">,</span>
+           <span class="n">columncontains</span><span class="o">=</span><span class="s1">&#39;2030-01-01&#39;</span><span class="p">)</span>
+
+<span class="c1"># Extract the subset for a specific sensitivity.</span>
+<span class="n">vens</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;DRAINAGE_STRATEGY&#39;</span><span class="p">,</span>
+                  <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Depletion&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="c1"># Remove all realizations where a specific output file</span>
+<span class="c1"># (that we have tried to internalize) is missing</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">&#39;geo_oil_1.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Filtering with other comparators than equivalence is not implemented.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="concepts.html" class="btn btn-neutral float-right" title="Concepts in fmu-ensemble" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+  </style>
+
+
+</body>
+</html>

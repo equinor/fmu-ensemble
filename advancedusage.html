@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Advanced usage &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API for fmu.ensemble" href="modules.html" />
+    <link rel="prev" title="Concepts in fmu-ensemble" href="concepts.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> fmu-ensemble
+          
+
+          
+            
+            <img src="_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.1.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#merging-data">Merging data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#statistics-over-ensembles">Statistics over ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comparing-realizations-or-ensembles">Comparing realizations or ensembles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-observations">Working with observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#representative-realizations">Representative realizations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Advanced usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/advancedusage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="advanced-usage">
+<h1>Advanced usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="merging-data">
+<h2>Merging data<a class="headerlink" href="#merging-data" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CSV_EXPORT1</span></code> workflow built into ERT is performing one of the
+specific tasks that can now be accomplished using this module. That
+CSV export is just a merge of the dataframes coming from
+<code class="docutils literal notranslate"><span class="pre">parameters.txt</span></code> and the Eclipse summary data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="n">smry</span> <span class="o">=</span> <span class="n">reekensemble</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">reekensemble</span><span class="o">.</span><span class="n">parameters</span>
+<span class="c1"># Match the two tables where the value of REAL is identical:</span>
+<span class="n">smry_params</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">smry</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">smry_params</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;smry_params.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For finer control, you can specify exactly which summary vectors you
+want to include, the time resolution, and perhaps also a subset of the
+parameters. For example, if you have computed any kind of scalar data
+pr. realization and put that into <code class="docutils literal notranslate"><span class="pre">outputs.txt</span></code>, you can merge with
+<code class="docutils literal notranslate"><span class="pre">load_txt('outputs.txt')</span></code> instead of <code class="docutils literal notranslate"><span class="pre">params</span></code> in the code above.</p>
+</div>
+<div class="section" id="statistics-over-ensembles">
+<h2>Statistics over ensembles<a class="headerlink" href="#statistics-over-ensembles" title="Permalink to this headline">¶</a></h2>
+<p>Statistics over ensembles can be computed by aggregating their data
+and presenting them in realization-like objects. A “<em>mean</em>” of an
+ensemble is possible to compute for all data an ensemble contains, and
+the result is something that we treat like a <em>realization</em>. It is
+important to realize that this result is <strong>not</strong> a realization, only
+something we can treat in this way, for which the <code class="docutils literal notranslate"><span class="pre">VirtualRealization</span></code>
+object is used. This “mean realization” is not a physical realization
+where all numbers make physically sense, it just gives you the mean of
+all the data, over the realizations for scalars, for each point in
+time for time-series.</p>
+<p>As an example, oil, gas, and pressure profiles in a statistical
+realization, will typically not be compatible, in that it can be
+physically impossible in reality to obtain these profiles. Use
+and interpret with care!</p>
+<p>Supported statistical aggregations are <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>,
+<code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">var</span></code> and <code class="docutils literal notranslate"><span class="pre">pXX</span></code> where <code class="docutils literal notranslate"><span class="pre">XX</span></code> is a number between
+<code class="docutils literal notranslate"><span class="pre">00</span></code> and <code class="docutils literal notranslate"><span class="pre">99</span></code> being the percentile you want. You access this
+functionality through the function <code class="docutils literal notranslate"><span class="pre">agg()</span></code> in the ensemble objects.</p>
+<p>Pandas and Numpy is used under the hood for all computations. The quantile
+integers you supply are forwarded directly to Pandas, beware that this
+is opposite to the usual subsurface understanding of e.g. a “high case
+p10 profile”. Translate p10 to p90 if needed in your client code.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ref-ensemble&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;/scratch/foo/r018-ref-case/realization-*/iter-3&#39;</span><span class="p">)</span>
+
+<span class="n">mean</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+
+<span class="c1"># What is the mean value of &quot;FWL&quot; in parameters.txt?</span>
+<span class="k">print</span><span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">][</span><span class="s1">&#39;FWL&#39;</span><span class="p">])</span>
+
+<span class="c1"># What is the mean ultimate FOPT</span>
+<span class="k">print</span><span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="s1">&#39;unsmry--monthly&#39;</span><span class="p">][</span><span class="s1">&#39;FOPT&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1"># (.iloc[-1] is here Pandas functionality for accessing the last</span>
+<span class="c1"># row)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="comparing-realizations-or-ensembles">
+<h2>Comparing realizations or ensembles<a class="headerlink" href="#comparing-realizations-or-ensembles" title="Permalink to this headline">¶</a></h2>
+<p>Any linear combination of ensembles or realizations is possible to
+compute, in a pointwise manner. This includes the data that is shared
+in the linear combination.</p>
+<p>Computing the sum of two realizations is only a matter of adding them
+in your Python interpreter. The end result is a object you can treat
+similar to a realization, asking for its data using <code class="docutils literal notranslate"><span class="pre">get_df()</span></code>, or
+asking for the summary data using <code class="docutils literal notranslate"><span class="pre">get_smry()</span></code>. Eclipse time-series
+will be combined at point-wise in time, but only on shared
+time-steps. It is therefore recommended to interpolate them to
+e.g. monthly time interval prior to combination.</p>
+<p>Ensembles can be linearly combined analogously to realizations, and
+will be matched on realization index <code class="docutils literal notranslate"><span class="pre">REAL</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">refens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ref-ensemble&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;/scratch/foo/r018-ref-case/realization-*/iter-3&#39;</span><span class="p">)</span>
+<span class="n">iorens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ior-ensemble&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;/scratch/foo/r018-ior-case/realization-*/pred&#39;</span><span class="p">)</span>
+
+<span class="c1"># Calculate the delta ensemble</span>
+<span class="n">deltaens</span> <span class="o">=</span> <span class="n">iorens</span> <span class="o">-</span> <span class="n">refens</span>
+
+<span class="c1"># Obtain the field gain:</span>
+<span class="n">fieldgain</span> <span class="o">=</span> <span class="n">deltaens</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FOPT&#39;</span><span class="p">],</span>
+                              <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the ensembles you want to combine cannot be compared realization by
+realization, or does not even contain the same number of realizations,
+you should first aggregate the ensembles (mean or anyone else), and
+then construct delta objects of the statistical realizations.</p>
+<p>Remember that this library does not help you in interpreting these
+results correctly, it only gives you the opportunity to calculate them!</p>
+</div>
+<div class="section" id="working-with-observations">
+<h2>Working with observations<a class="headerlink" href="#working-with-observations" title="Permalink to this headline">¶</a></h2>
+<p>Observations for history matching can be loaded, and computations
+(comparisons) of observed data versus simulated data can be performed.</p>
+<p>The Observation object can be initizalized using YAML files or from
+a Python dictionary.</p>
+<p>If you are opting for simple usage, just being able to compare <code class="docutils literal notranslate"><span class="pre">FOPT</span></code>
+versus <code class="docutils literal notranslate"><span class="pre">FOPTH</span></code> in your ensemble, your observation config could look
+like:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Eclipse summary vectors compared with allocated summary vectors</span>
+<span class="nt">smryh</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="nt">key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">FOPT</span>
+    <span class="nt">histvec</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">FOPTH</span>
+</pre></div>
+</div>
+<p>This file can be loaded in Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume the yaml above has been put in a file:</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">(</span><span class="s1">&#39;fopt-obs.yml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Alternatively, it is possible to initialize this directly without the filesystem:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">({</span><span class="s1">&#39;smryh&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;histvec&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPTH&#39;</span><span class="p">}]})</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an ensemble we want to analyze</span>
+<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;hmcandidate&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;/scratch/foo/something/realization-*/iter-3&#39;</span><span class="p">)</span>
+
+<span class="c1"># Perform calculation of misfit</span>
+<span class="c1"># A dataframe with computed mismatches is returned.</span>
+<span class="c1"># We only have one &quot;observation&quot; for each realization, so</span>
+<span class="c1"># only one row pr. realization is returned.</span>
+<span class="n">misfit</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">mismatch</span><span class="p">(</span><span class="n">ens</span><span class="p">)</span>
+
+<span class="c1"># Sort ascending by L1 (absolute error) and print the realization</span>
+<span class="c1"># indices of the first five:</span>
+<span class="k">print</span><span class="p">(</span><span class="n">misfit</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;L1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()[</span><span class="s1">&#39;REAL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="c1"># Will return f.ex:</span>
+<span class="c1">#   [ 38  26 100  71  57]</span>
+</pre></div>
+</div>
+<p>For comparisons with single measured values (recommended for history
+matching), use the YAML syntax:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">smry</span><span class="p">:</span>
+  <span class="c1"># Mandatory elements per entry: key and observations</span>
+<span class="p p-Indicator">-</span> <span class="nt">key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">WBP4:OP_1</span>
+    <span class="l l-Scalar l-Scalar-Plain"># This is a global comment regarding this set of observations</span>
+    <span class="l l-Scalar l-Scalar-Plain">comment</span><span class="p p-Indicator">:</span> <span class="s">&quot;Shut-in</span><span class="nv"> </span><span class="s">pressures</span><span class="nv"> </span><span class="s">converted</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">well</span><span class="nv"> </span><span class="s">head</span><span class="nv"> </span><span class="s">conditions&quot;</span>
+    <span class="nt">observations</span><span class="p">:</span>
+       <span class="c1"># Mandatory elements per entry in ecl_vector observations: value, error, date</span>
+       <span class="p p-Indicator">-</span> <span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span> <span class="nv">251</span><span class="p p-Indicator">,</span><span class="nt"> error</span><span class="p">:</span> <span class="nv">4</span><span class="p p-Indicator">,</span><span class="nt"> date</span><span class="p">:</span> <span class="nv">2001-01-01</span><span class="p p-Indicator">}</span>
+       <span class="p p-Indicator">-</span> <span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span> <span class="nv">251</span><span class="p p-Indicator">,</span><span class="nt"> error</span><span class="p">:</span> <span class="nv">10</span><span class="p p-Indicator">,</span><span class="nt"> date</span><span class="p">:</span> <span class="nv">2002-01-01</span><span class="p p-Indicator">}</span>
+       <span class="p p-Indicator">-</span> <span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span> <span class="nv">251</span><span class="p p-Indicator">,</span><span class="nt"> error</span><span class="p">:</span> <span class="nv">10</span><span class="p p-Indicator">,</span><span class="nt"> date</span><span class="p">:</span> <span class="nv">2003-01-01</span><span class="p p-Indicator">,</span>
+<span class="nt">          comment</span><span class="p">:</span> <span class="nv">First measurement after sensor drift correction</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="representative-realizations">
+<h2>Representative realizations<a class="headerlink" href="#representative-realizations" title="Permalink to this headline">¶</a></h2>
+<p>It is possible to utilize the observation support for calculating
+similarity between realizations. An example of this is to create a
+“mean” realization by use of the aggregation functionality (or p10,
+p90 etc.) and then rank the ensemble members by how similar they are
+to this aggregated realization. It is possible to pick certain summary
+data from the virtual realization as “observations”, and calculate
+mismatches. For this, a utility function <code class="docutils literal notranslate"><span class="pre">load_smry()</span></code> is provided
+by the Observation object to load “virtual” observations from an
+existing realization. If you then use the Observation object to
+compute mismatches, and then rank realizations by the mismatch, you
+can pick the realization that is closest to your statistics of choice.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an ensemble we want to analyze</span>
+<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;hmensemble&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;/scratch/foo/something/realization-*/iter-3&#39;</span><span class="p">)</span>
+
+<span class="c1"># Calculate a &quot;mean&quot; realization</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+
+<span class="c1"># Create an empty observation object</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">Observations</span><span class="p">({})</span>
+
+<span class="c1"># Load data from the mean realization as virtual observations:</span>
+<span class="n">obs</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="s1">&#39;FOPT&#39;</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;yearly&#39;</span><span class="p">)</span>
+
+<span class="c1"># Calculate the difference between the ensemble members and the</span>
+<span class="c1"># mean realization:</span>
+<span class="n">mis</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">mismatch</span><span class="p">(</span><span class="n">ens</span><span class="p">)</span>
+
+<span class="c1"># Group mismatch data by realization, and pick the realization</span>
+<span class="c1"># index with the smallest sum of squared errors (&#39;L2&#39;)</span>
+<span class="n">closest_to_mean</span> <span class="o">=</span> <span class="n">mis</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;REAL&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()[</span><span class="s1">&#39;L2&#39;</span><span class="p">]</span>\
+                                     <span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>\
+                                     <span class="o">.</span><span class="n">index</span>\
+                                     <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="modules.html" class="btn btn-neutral float-right" title="API for fmu.ensemble" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="concepts.html" class="btn btn-neutral float-left" title="Concepts in fmu-ensemble" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+  </style>
+
+
+</body>
+</html>

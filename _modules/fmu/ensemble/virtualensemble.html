@@ -1,0 +1,805 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> fmu-ensemble
+          
+
+          
+            
+            <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.1.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>fmu.ensemble.virtualensemble</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for fmu.ensemble.virtualensemble</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Module containing a VirtualEnsemble class&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.etc</span> <span class="k">import</span> <span class="n">Interaction</span>
+<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="k">import</span> <span class="n">VirtualRealization</span>
+
+<span class="n">fmux</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="VirtualEnsemble"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble">[docs]</a><span class="k">class</span> <span class="nc">VirtualEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A computed or archived ensemble</span>
+
+<span class="sd">    Computed or archived, there is no link to the original dataset(s)</span>
+<span class="sd">    that once was on a file system.</span>
+
+<span class="sd">    Contrary to a ScratchEnsemble which contains realization objects</span>
+<span class="sd">    with individual data, a VirtualEnsemble stores aggregrated</span>
+<span class="sd">    dataframes for its data. The column REAL will in all dataframes</span>
+<span class="sd">    signify the realization index.</span>
+
+<span class="sd">    Initialization of VirtualEnsembles is typically done by other code, as</span>
+<span class="sd">    to_virtual() in a ScratchEnsemble.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: string, can be chosen freely</span>
+<span class="sd">        data: dict with data to initialize with. Defaults to empty</span>
+<span class="sd">        longdescription: string, free form multiline description.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longdescription</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;VirtualEnsemble&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_longdescription</span> <span class="o">=</span> <span class="n">longdescription</span>
+
+        <span class="c1"># At ensemble level, this dictionary has dataframes only.</span>
+        <span class="c1"># All dataframes have the column REAL.</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of realizations (integer) included in the</span>
+<span class="sd">        ensemble&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.update_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.update_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">update_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the internal list of known realization indices</span>
+
+<span class="sd">        Anything that adds or removes realizations must</span>
+<span class="sd">        take responsibility for having that list consistent.</span>
+
+<span class="sd">        If there is a dataframe missing the REAL column, this</span>
+<span class="sd">        will intentionally error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check all dataframes:</span>
+        <span class="n">idxset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">idxset</span> <span class="o">=</span> <span class="n">idxset</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxset</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return all keys in the internal datastore</span>
+
+<span class="sd">        The keys are also called localpaths, and resemble the the</span>
+<span class="sd">        filenames they would be written to if dumped to disk, and also</span>
+<span class="sd">        resemble the filenames from which they were originally</span>
+<span class="sd">        loaded in a ScratchEnsemble.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.shortcut2path">[docs]</a>    <span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert short pathnames to fully qualified pathnames</span>
+<span class="sd">        within the datastore.</span>
+
+<span class="sd">        If the fully qualified localpath is</span>
+<span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+<span class="sd">        then you can also access this with these alternatives:</span>
+<span class="sd">         * simulator_volume_fipnum</span>
+<span class="sd">         * simulator_volume_fipnum.csv</span>
+<span class="sd">         * share/results/volumes/simulator_volume_fipnum</span>
+
+<span class="sd">        but only as long as there is no ambiguity. In case</span>
+<span class="sd">        of ambiguity, the shortpath will be returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="k">import</span> <span class="n">ScratchEnsemble</span>
+
+        <span class="k">return</span> <span class="n">ScratchEnsemble</span><span class="o">.</span><span class="n">_shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">shortpath</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shorthand for .get_df()</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            localpath: string with the name of the data requested.</span>
+<span class="sd">                shortcuts allowed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_realization"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_realization">[docs]</a>    <span class="k">def</span> <span class="nf">get_realization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realindex</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a virtual realization object, with data</span>
+<span class="sd">        taken from the virtual ensemble. Each dataframe</span>
+<span class="sd">        in the ensemble will by sliced by the REAL column.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            realindex: integer for the realization.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            VirtualRealization, populated with data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Realization </span><span class="si">%d</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">realindex</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">realizationdata</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">realindex</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">realizationdata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># Convert scalar values to dictionaries, avoiding</span>
+                <span class="c1"># getting length-one-series returned later on access.</span>
+                <span class="n">realizationdata</span> <span class="o">=</span> <span class="n">realizationdata</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">realizationdata</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">realizationdata</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">del</span> <span class="n">realizationdata</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span>
+            <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">realizationdata</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vreal</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">vreal</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data for realization </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">realindex</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.add_realization"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.add_realization">[docs]</a>    <span class="k">def</span> <span class="nf">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realization</span><span class="p">,</span> <span class="n">realidx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a realization. A ScratchRealization will be effectively</span>
+<span class="sd">        converted to a virtual realization.</span>
+
+<span class="sd">        A ScratchRealization knows its realization index, and that index</span>
+<span class="sd">        will be used unless realidx is not None. A VirtualRealization does</span>
+<span class="sd">        not always have a index, so then it must be supplied.</span>
+
+<span class="sd">        Unless overwrite is True, a ValueError will be raised</span>
+<span class="sd">        if the realization index already exists.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            overwrite: boolean whether an existing realization with the same</span>
+<span class="sd">                index should be removed prior to adding</span>
+<span class="sd">            realidx: Override the realization index for incoming realization.</span>
+<span class="sd">                Necessary for VirtualRealization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">realidx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">realization</span><span class="p">,</span> <span class="n">VirtualRealization</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Can&#39;t add virtual realizations &quot;</span> <span class="o">+</span> <span class="s2">&quot;without specifying index&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">realidx</span><span class="p">:</span>
+            <span class="n">realidx</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error, realization index already present&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_realizations</span><span class="p">(</span><span class="n">realidx</span><span class="p">)</span>
+
+        <span class="c1"># Add the data from the incoming realization key by key</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">realization</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>  <span class="c1"># dicts to go to one-row dataframes</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">)</span>
+            <span class="n">df</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.remove_realizations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.remove_realizations">[docs]</a>    <span class="k">def</span> <span class="nf">remove_realizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deleteindices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove realizations from internal data</span>
+
+<span class="sd">        This will remove all rows in all internalized data belonging</span>
+<span class="sd">        to the set of supplied indices.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            deleteindices: int or list of ints, realization indices to remove</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deleteindices</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">deleteindices</span> <span class="o">=</span> <span class="p">[</span><span class="n">deleteindices</span><span class="p">]</span>
+
+        <span class="n">indicesknown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span>
+        <span class="n">indicestodelete</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">deleteindices</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">indicesknown</span><span class="p">))</span>
+        <span class="n">indicesnotknown</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">deleteindices</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">indicestodelete</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">indicesnotknown</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Skipping undefined realization indices </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indicesnotknown</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># There might be Pandas tricks to avoid this outer loop.</span>
+        <span class="k">for</span> <span class="n">realindex</span> <span class="ow">in</span> <span class="n">indicestodelete</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">realindex</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Removed </span><span class="si">%s</span><span class="s2"> realization(s) from VirtualEnsemble&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">indicestodelete</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.remove_data"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.remove_data">[docs]</a>    <span class="k">def</span> <span class="nf">remove_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpaths</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove a certain datatype from the internal datastore</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            localpaths: string or list of strings, fully qualified localpath</span>
+<span class="sd">                (no shorthand allowed)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">localpaths</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">localpaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">localpaths</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="n">localpaths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleted </span><span class="si">%s</span><span class="s2"> from ensemble&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ensemble did not contain </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.agg"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.agg">[docs]</a>    <span class="k">def</span> <span class="nf">agg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excludekeys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Aggregate the ensemble data into a VirtualRealization</span>
+
+<span class="sd">        All data will be attempted aggregated. String data will typically</span>
+<span class="sd">        be dropped in the result.</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            aggregation: string, supported modes are</span>
+<span class="sd">                &#39;mean&#39;, &#39;median&#39;, &#39;p10&#39;, &#39;p90&#39;, &#39;min&#39;,</span>
+<span class="sd">                &#39;max&#39;, &#39;std, &#39;var&#39;, &#39;pXX&#39; where X is a number</span>
+<span class="sd">            keylist: list of strings, indicating which keys</span>
+<span class="sd">                in the internal datastore to include. If list is empty</span>
+<span class="sd">                (default), all data will be attempted included.</span>
+<span class="sd">            excludekeys: list of strings that should be excluded if</span>
+<span class="sd">                keylist is empty, otherwise ignored</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            VirtualRealization. Its name will include the aggregation operator</span>
+
+<span class="sd">        WARNING: CODE DUPLICATION from ensemble.py</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">quantilematcher</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;p(\d\d)&quot;</span><span class="p">)</span>
+        <span class="n">supported_aggs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="s2">&quot;var&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">aggregation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_aggs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">quantilematcher</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">aggregation</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{arg}</span><span class="s2"> is not a&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="n">aggregation</span><span class="p">)</span>
+                <span class="o">+</span> <span class="s2">&quot;supported ensemble aggregation&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Generate a new empty object:</span>
+        <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">aggregation</span><span class="p">)</span>
+
+        <span class="c1"># Determine keys to use</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keylist</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">keylist</span> <span class="o">=</span> <span class="p">[</span><span class="n">keylist</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">keylist</span><span class="p">:</span>  <span class="c1"># Empty list means all keys.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">excludekeys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">excludekeys</span> <span class="o">=</span> <span class="p">[</span><span class="n">excludekeys</span><span class="p">]</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">excludekeys</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">keylist</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="c1"># Aggregate over this ensemble:</span>
+            <span class="c1"># Ensure we operate on fully qualified localpath&#39;s</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;REAL&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Look for data we should group by. This would be beneficial</span>
+            <span class="c1"># to get from a metadata file, and not by pure guesswork.</span>
+            <span class="n">groupbycolumncandidates</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;DATE&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;FIPNUM&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ZONE&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;REGION&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;JOBINDEX&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Zone&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Region_index&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+
+            <span class="n">groupby</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">groupbycolumncandidates</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+
+            <span class="n">dtypes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">int</span> <span class="ow">in</span> <span class="n">dtypes</span> <span class="ow">or</span> <span class="nb">float</span> <span class="ow">in</span> <span class="n">dtypes</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No numerical data to aggregate in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">groupby</span><span class="p">:</span>
+                <span class="n">aggobject</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">groupby</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">aggobject</span> <span class="o">=</span> <span class="n">data</span>
+
+            <span class="k">if</span> <span class="n">quantilematcher</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">aggregation</span><span class="p">):</span>
+                <span class="n">quantile</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">quantilematcher</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">aggregation</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggobject</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">quantile</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Passing through the variable &#39;aggregation&#39; to</span>
+                <span class="c1"># Pandas, thus supporting more than we have listed in</span>
+                <span class="c1"># the docstring.</span>
+                <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggobject</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">aggregation</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">groupby</span><span class="p">:</span>
+                <span class="n">aggregated</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">aggregated</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vreal</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.append"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Append a dataframe to the internal datastore</span>
+
+<span class="sd">        Incoming dataframe MUST have a column called &#39;REAL&#39; which</span>
+<span class="sd">        refers to the realization indices already known to the object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key: name (localpath) for the data, this will be</span>
+<span class="sd">                the name under with the dataframe is stored, for</span>
+<span class="sd">                later retrival via get_df().</span>
+<span class="sd">            dataframe: a Pandas DataFrame with a REAL column</span>
+<span class="sd">            overwrite: boolean - set to True if existing data is</span>
+<span class="sd">                to be overwritten. Defaults to false which will</span>
+<span class="sd">                only issue a warning if the dataset exists already.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only append dataframes&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;REAL column not in incoming dataframe&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ignoring </span><span class="si">%s</span><span class="s2"> data already exists&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump all data to disk, in a retrieveable manner.&quot;&quot;&quot;</span>
+        <span class="c1"># Mature analogue function in VirtualRealization before commencing this</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.load_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.load_disk">[docs]</a>    <span class="k">def</span> <span class="nf">load_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load data from disk.</span>
+
+<span class="sd">        Data must be written like to_disk() would have</span>
+<span class="sd">        written it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Mature analogue function in VirtualRealization before commencing this</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Textual representation of the object&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;VirtualEnsemble, </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_df"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_df">[docs]</a>    <span class="k">def</span> <span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the internal datastore which contains dataframes or dicts</span>
+
+<span class="sd">        Shorthand is allowed, if the fully qualified localpath is</span>
+<span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+<span class="sd">        then you can also get this dataframe returned with these alternatives:</span>
+<span class="sd">         * simulator_volume_fipnum</span>
+<span class="sd">         * simulator_volume_fipnum.csv</span>
+<span class="sd">         * share/results/volumes/simulator_volume_fipnum</span>
+
+<span class="sd">        but only as long as there is no ambiguity. In case of ambiguity, a</span>
+<span class="sd">        ValueError will be raised.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            localpath: the idenfier of the data requested</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dataframe or dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+
+        <span class="c1"># Allow shorthand, but check ambiguity</span>
+        <span class="n">basenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">basenames</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">]]</span>
+        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">noexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">]]</span>
+        <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">basenamenoexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">]]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function analoguous to the EclSum direct get&#39;ters in ScratchEnsemble,</span>
+<span class="sd">        but here we have to resort to what we have internalized.</span>
+
+<span class="sd">        This will perform interpolation in each realizations data to</span>
+<span class="sd">        the requested time_index, this is done by creating VirtualRealization</span>
+<span class="sd">        object for all realizations, which can do the interpolation, and</span>
+<span class="sd">        the result is merged and returned. This creates some overhead, so</span>
+<span class="sd">        if you do not need the interpolation, stick with get_df() instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get a list ala [&#39;yearly&#39;, &#39;daily&#39;]</span>
+        <span class="n">available_smry</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;unsmry--&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;unsmry&quot;</span> <span class="ow">in</span> <span class="n">x</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">time_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_smry</span>
+        <span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># Suboptimal code, we always pick the finest available</span>
+            <span class="c1"># time resolution:</span>
+            <span class="n">priorities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;weekly&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">]</span>
+            <span class="c1"># (could also sort them by number of rows, or we could</span>
+            <span class="c1">#  even merge them all)</span>
+            <span class="c1"># (could have priorities as a dict, for example so we</span>
+            <span class="c1">#  can interpolate from monthly if we ask for yearly)</span>
+            <span class="n">chosen_smry</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">priorities</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">available_smry</span><span class="p">:</span>
+                    <span class="n">chosen_smry</span> <span class="o">=</span> <span class="n">candidate</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">chosen_smry</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No internalized summary data &quot;</span> <span class="o">+</span> <span class="s2">&quot;to interpolate from&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chosen_smry</span> <span class="o">=</span> <span class="n">time_index</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using </span><span class="si">%s</span><span class="s2"> for interpolation&quot;</span><span class="p">,</span> <span class="n">chosen_smry</span><span class="p">)</span>
+
+        <span class="c1"># Explicit creation of VirtualRealization allows for later</span>
+        <span class="c1"># multiprocessing of the interpolation.</span>
+        <span class="c1"># We do not use the internal function get_realization() because</span>
+        <span class="c1"># that copies all internalized data, while we only need</span>
+        <span class="c1"># summary data.</span>
+
+        <span class="n">smry_path</span> <span class="o">=</span> <span class="s2">&quot;unsmry--&quot;</span> <span class="o">+</span> <span class="n">chosen_smry</span>
+        <span class="n">smry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">smry_path</span><span class="p">)</span>
+        <span class="n">smry_interpolated</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">smry</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+            <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">()</span>
+            <span class="c1"># Inject the summary data for that specific realization</span>
+            <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">smry_path</span><span class="p">,</span> <span class="n">smry</span><span class="p">[</span><span class="n">smry</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">realidx</span><span class="p">])</span>
+
+            <span class="c1"># Now ask the VirtualRealization to do interpolation</span>
+            <span class="n">interp</span> <span class="o">=</span> <span class="n">vreal</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">)</span>
+            <span class="c1"># Assume we get back a dataframe indexed by the dates from vreal</span>
+            <span class="c1"># We must reset that index, and ensure the index column</span>
+            <span class="c1"># gets a correct name</span>
+            <span class="n">interp</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">set_names</span><span class="p">([</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
+            <span class="n">interp</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+            <span class="n">interp</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
+            <span class="n">smry_interpolated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">smry_interpolated</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_smry_stats"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_stats">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)</span>
+<span class="sd">        for a set of simulation summary vectors (column key).</span>
+
+<span class="sd">        Compared to the agg() function, this function only works on summary</span>
+<span class="sd">        data (time series), and will only operate on actually requested data,</span>
+<span class="sd">        independent of what is internalized. It accesses the summary files</span>
+<span class="sd">        directly and can thus obtain data at any time frequency.</span>
+
+<span class="sd">        In a virtual ensemble, this function can only provide data it has</span>
+<span class="sd">        internalized. There is no resampling functionality yet.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys: list of column key wildcards. Defaults</span>
+<span class="sd">                to match all available columns</span>
+<span class="sd">            time_index: list of DateTime if interpolation is wanted</span>
+<span class="sd">                default is None, which returns the raw Eclipse report times</span>
+<span class="sd">                If a string is supplied, that string is attempted used</span>
+<span class="sd">                via get_smry_dates() in order to obtain a time index.</span>
+<span class="sd">            quantiles: list of ints between 0 and 100 for which quantiles</span>
+<span class="sd">                to compute. Quantiles follow scientific standard, </span>
+<span class="sd">                for the oil industry p10 you should ask for p90.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A MultiIndex dataframe. Outer index is &#39;minimum&#39;, &#39;maximum&#39;,</span>
+<span class="sd">            &#39;mean&#39;, &#39;p10&#39;, &#39;p90&#39;, inner index are the dates. Column names</span>
+<span class="sd">            are the different vectors. The column &#39;p10&#39; represent the</span>
+<span class="sd">            scientific p10, not the oil industry p10 for which you</span>
+<span class="sd">            have to ask for p90.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">quantiles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">quantiles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">90</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">column_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">column_keys</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+
+        <span class="c1"># Check validity of quantiles to compute:</span>
+        <span class="n">quantiles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">quantiles</span><span class="p">))</span>  <span class="c1"># Potentially raise ValueError</span>
+        <span class="k">for</span> <span class="n">quantile</span> <span class="ow">in</span> <span class="n">quantiles</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">quantile</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">quantile</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Quantiles must be integers &quot;</span> <span class="o">+</span> <span class="s2">&quot;between 0 and 100&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Obtain an aggregated dataframe for only the needed columns over</span>
+        <span class="c1"># the entire ensemble. This will fail if we don&#39;t have the</span>
+        <span class="c1"># time frequency already internalized.</span>
+        <span class="n">dframe</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;REAL&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;DATE&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Build a dictionary of dataframes to be concatenated</span>
+        <span class="n">dframes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">dframes</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">quantile</span> <span class="ow">in</span> <span class="n">quantiles</span><span class="p">:</span>
+            <span class="n">quantile_str</span> <span class="o">=</span> <span class="s2">&quot;p&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">quantile</span><span class="p">)</span>
+            <span class="n">dframes</span><span class="p">[</span><span class="n">quantile_str</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">quantile</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span>
+        <span class="n">dframes</span><span class="p">[</span><span class="s2">&quot;maximum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">dframes</span><span class="p">[</span><span class="s2">&quot;minimum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dframes</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATISTIC&quot;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_volumetric_rates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_volumetric_rates">[docs]</a>    <span class="k">def</span> <span class="nf">get_volumetric_rates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute volumetric rates from internalized cumulative summary</span>
+<span class="sd">        vectors</span>
+
+<span class="sd">        Column names that are not referring to cumulative summary</span>
+<span class="sd">        vectors are silently ignored.</span>
+
+<span class="sd">        A Dataframe is returned with volumetric rates, that is rate</span>
+<span class="sd">        values that can be summed up to the cumulative version. The</span>
+<span class="sd">        &#39;T&#39; in the column name is switched with &#39;R&#39;. If you ask for</span>
+<span class="sd">        FOPT, you will get FOPR in the returned dataframe.</span>
+
+<span class="sd">        Rates in the returned dataframe are valid **forwards** in time,</span>
+<span class="sd">        opposed to rates coming directly from the Eclipse simulator which</span>
+<span class="sd">        are valid backwards in time.</span>
+
+<span class="sd">        If time_unit is set, the rates will be scaled to represent</span>
+<span class="sd">        either daily, monthly or yearly rates. These will sum up to the</span>
+<span class="sd">        cumulative as long as you multiply with the correct number</span>
+<span class="sd">        of days, months or year between each consecutive date index.</span>
+<span class="sd">        Month lengths and leap years are correctly handled.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys: str or list of strings, cumulative summary vectors</span>
+<span class="sd">            time_index: str or list of datetimes</span>
+<span class="sd">            time_unit: str or None. If None, the rates returned will</span>
+<span class="sd">                be the difference in cumulative between each included</span>
+<span class="sd">                time step (where the time interval can vary arbitrarily)</span>
+<span class="sd">                If set to &#39;days&#39;, &#39;months&#39; or &#39;years&#39;, the rates will</span>
+<span class="sd">                be scaled to represent a daily, monthly or yearly rate that</span>
+<span class="sd">                is compatible with the date index and the cumulative data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vol_rates_dfs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">:</span>
+            <span class="c1"># Warning: This is potentially a big overhead</span>
+            <span class="c1"># if a lot of non-summary-related data has been</span>
+            <span class="c1"># internalized:</span>
+            <span class="n">vreal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_realization</span><span class="p">(</span><span class="n">realidx</span><span class="p">)</span>
+            <span class="n">vol_rate_df</span> <span class="o">=</span> <span class="n">vreal</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="p">)</span>
+            <span class="c1"># Indexed by DATE, ensure index name is correct:</span>
+            <span class="n">vol_rate_df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">vol_rate_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">set_names</span><span class="p">([</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
+            <span class="n">vol_rate_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">vol_rate_df</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
+            <span class="n">vol_rates_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vol_rate_df</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">vol_rates_dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Quick access to parameters&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The name of the virtual ensemble as set during initialization&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+  </style>
+
+
+</body>
+</html>

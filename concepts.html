@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Concepts in fmu-ensemble &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced usage" href="advancedusage.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> fmu-ensemble
+          
+
+          
+            
+            <img src="_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.1.44
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Concepts in fmu-ensemble</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#realization">Realization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scratchrealization">ScratchRealization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#virtualrealization">VirtualRealization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#realizationcombination">RealizationCombination</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ensemble">Ensemble</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scratchensemble">ScratchEnsemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#virtualensemble">VirtualEnsemble</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ensemblecombination">EnsembleCombination</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Concepts in fmu-ensemble</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/concepts.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="concepts-in-fmu-ensemble">
+<h1>Concepts in fmu-ensemble<a class="headerlink" href="#concepts-in-fmu-ensemble" title="Permalink to this headline">¶</a></h1>
+<p>There are some concepts in fmu-ensemble that one needs to understand
+at some point</p>
+<div class="section" id="realization">
+<h2>Realization<a class="headerlink" href="#realization" title="Permalink to this headline">¶</a></h2>
+<p>A realization is a single model run. It usually includes one Eclipse
+run, but that is not a requirement. As long as you have a done some
+computational job that has left some (supported) files on the
+filesystem, it can be possible to load results from the realization
+using fmu-ensemble.</p>
+<div class="section" id="scratchrealization">
+<h3>ScratchRealization<a class="headerlink" href="#scratchrealization" title="Permalink to this headline">¶</a></h3>
+<p>The class <cite>ScratchRealization</cite> is a Python object that can load
+realization results (and input) from the filesystem from a <em>single</em>
+realization, typically located on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code>. You can ask the object
+to load and thereby <em>internalize</em> data, with the <code class="docutils literal notranslate"><span class="pre">load_*()</span></code>
+functions. The internalization is an important concept. All data that
+you internalize will be stored in the object, it can be easily
+reaccessed, statistics can be computed. The object is tied to the
+filesystem, and will become unstable if files are deleted from
+disk. If you need some persistence of the object, it must be converted
+to a VirtualRealization (see below)</p>
+<p>Additionally, you may find <code class="docutils literal notranslate"><span class="pre">get_*()</span></code> functions that can access certain
+datatypes. Common for these is that they will <em>not</em> modify the object,
+it is a read-once operation. This is particularly relevant for Eclipse
+summary data, where you at different times may ask for different
+subsets and at different sampling frequencies, but do not want to
+internalize all the data into the object.</p>
+</div>
+<div class="section" id="virtualrealization">
+<h3>VirtualRealization<a class="headerlink" href="#virtualrealization" title="Permalink to this headline">¶</a></h3>
+<p>A <cite>VirtualRealization</cite> is typically a <cite>ScratchRealization</cite> where you
+have removed the tie to the location on the original filesystem.  The
+VirtualRealization object only knows of the data that was internalized
+while being a ScratchRealization, and the main access function is
+<code class="docutils literal notranslate"><span class="pre">get_df()</span></code>. When a realization is a ScratchRealization, you can
+always ask for any time-resolution for Eclipse data, or any other CSV
+file that the scratch directory contains. A VirtualRealization will
+have to interpolate if you ask for daily summary data, in case you
+only internalized yearly or monthly before making a
+VirtualRealization.</p>
+<p>Another typical source for a virtual realization is a calculated
+realization, either as a point-wise statistical aggregate of a
+collection of realizations (ensemble), or maybe from a linear
+combination of realizations (then coming from the object
+<code class="docutils literal notranslate"><span class="pre">RealizationCombination</span></code>. The reason for naming this a
+VirtualRealization is due to the possibility to handle computed
+realizations fully analogous to ScratchRealizations.</p>
+<p>Virtual realizations have features to write their internal data to
+disk, the <code class="docutils literal notranslate"><span class="pre">to_disk()</span></code> feature. This can be used to store stripped down
+versions of realizations, or to be able to store computed
+realizations. You may both write to disk into a file structure that
+would resemble the original realization (and you can edit the files if
+you are bold enough). The virtual realization can later be
+instantiated from the dumped disk structure by <code class="docutils literal notranslate"><span class="pre">load_disk()</span></code>. Another
+variant for storage is to use <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> which will dump all data in
+as a <em>json</em> datatype, for which there probably exists use cases.</p>
+</div>
+<div class="section" id="realizationcombination">
+<h3>RealizationCombination<a class="headerlink" href="#realizationcombination" title="Permalink to this headline">¶</a></h3>
+<p>The object <cite>RealizationCombination</cite> is an object that the user will
+not observe directly, but it will work under the hood every time
+arithmetic operations on realizations are done.</p>
+</div>
+</div>
+<div class="section" id="ensemble">
+<h2>Ensemble<a class="headerlink" href="#ensemble" title="Permalink to this headline">¶</a></h2>
+<p>An ensemble is a collection of realizations, where the realizations
+share some common features making it relevant to do statistical
+aggregations over them. This does not necessarily exclude random
+collections of realizations, but if the realizations do not share
+anything, they can always be collected in simple Python lists as well.</p>
+<p>A requirement is that each member of the ensembled are referred to by
+an <em>integer</em>, and will always be present in the column <code class="docutils literal notranslate"><span class="pre">REAL</span></code> in
+aggregated dataframes.</p>
+<div class="section" id="scratchensemble">
+<h3>ScratchEnsemble<a class="headerlink" href="#scratchensemble" title="Permalink to this headline">¶</a></h3>
+<p>A <cite>ScratchEnsemble</cite> is an ensemble that is initialized from a
+directory of realization-runs on the file system, typically on
+<cite>/scratch</cite>. This object can do a full initialization of all
+<cite>ScratchRealization</cite> in a specific directory, and collect them into a
+ensemble object. The ScratchEnsemble object itself is very light, it
+is more or less only a list of ScratchRealization objects, and support
+functions for running operations on all of them. Whenever you ask for
+an aggregated dataset, data aggregation over all realizations is
+performed on the fly.</p>
+</div>
+<div class="section" id="virtualensemble">
+<h3>VirtualEnsemble<a class="headerlink" href="#virtualensemble" title="Permalink to this headline">¶</a></h3>
+<p>Analogous to the relationship between <cite>ScratchRealization</cite> and
+<cite>VirtualRealization</cite>, a <cite>VirtualEnsemble</cite> is an ensemble with no
+strings attached to the original filesystem. All data from its underlying
+realizations is aggregated and full dataframes are stored. The object
+is able to construct new <cite>VirtualRealization</cite> objects from its data, both
+by picking by index, or from statistical aggregations.</p>
+<p>You can ask a VirtualEnsemble for <code class="docutils literal notranslate"><span class="pre">get_smry()</span></code> in which it will try its
+best to locate internalized Eclipse summary data, and then interpolate the
+data to your chosen time index. This is opposed to a ScratchEnsemble which
+in that case would go back to the original binary files and give the correct
+answer.</p>
+<p>Since all data is aggregated, VirtualEnsembles may work faster than
+ScratchEnsemble. The recommended procedure would then be to initialize
+a ScratchEnsemble, internalize all data you need using <code class="docutils literal notranslate"><span class="pre">load_*()</span></code>,
+and then make a VirtualEnsemble object using <code class="docutils literal notranslate"><span class="pre">.to_virtual()</span></code>.  Also,
+if you want to add additional ensemble data, aggregated by your own
+ad-hoc code, you can only do that on VirtualEnsemble, which has an
+<code class="docutils literal notranslate"><span class="pre">.append()</span></code> function. It is also possible to replace existing
+aggregated data in a VirtualEnsemble, for example making new summary
+vectors that are combinations of other data.</p>
+</div>
+<div class="section" id="ensemblecombination">
+<h3>EnsembleCombination<a class="headerlink" href="#ensemblecombination" title="Permalink to this headline">¶</a></h3>
+<p>Whenever you try do add or substract ensembles, the objects you get in
+return are of type <cite>EnsembleCombination</cite>. These objects act as
+ensembles, but its data is always a combination of the data in two or
+more ensembles (or a single ensemble scaled by a scalar).</p>
+<p>Calculating a combination of ensembles can be computationally
+expensive, depending on the amount of data requested and included. The
+actual combination of numbers is <em>not</em> done until you actually ask for
+it. That means that initialization of <cite>EnsembleCombination</cite> is fast,
+but when you ask for its data, it might take time. If you want all
+data to be evaluated in one go, you ask the object for a
+<cite>VirtualEnsemble</cite> using the function <code class="docutils literal notranslate"><span class="pre">.to_virtual()</span></code>, which means that
+all internalized data is evaluated and returned to you for further
+access and/or storage.</p>
+<p>The implementation of the linear algebra over ensembles and
+realizations is accomplished using a <a class="reference external" href="https://en.wikipedia.org/wiki/Binary_expression_tree">Binary Expression Tree</a>, with
+<cite>ScratchEnsemble</cite> or <cite>VirtualEnsemble</cite> at the leaf nodes.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="advancedusage.html" class="btn btn-neutral float-right" title="Advanced usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+  </style>
+
+
+</body>
+</html>
