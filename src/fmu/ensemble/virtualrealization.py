@@ -164,7 +164,6 @@ class VirtualRealization(object):
                     spacefields = len(lines[0].split())
           
                     print(filename, commafields, spacefields, linecount)
-                    
                     if spacefields == 2 and commafields == 1:
                         # key-value txt file!
                         self.append(
