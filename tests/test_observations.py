@@ -10,6 +10,7 @@ import glob
 import datetime
 import yaml
 import pandas as pd
+import numpy as np
 import six
 import pytest
 
@@ -116,7 +117,7 @@ def test_real_mismatch():
     # and yield the same result
     obs2r = Observations(yaml.full_load(obs2.to_yaml()))
     realmis2r = obs2r.mismatch(real)
-    assert (realmis2["MISMATCH"].values == realmis2r["MISMATCH"].values).all()
+    assert np.all(realmis2["MISMATCH"].values.sort() == realmis2r["MISMATCH"].values.sort())
 
     # Test use of allocated values:
     obs3 = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})

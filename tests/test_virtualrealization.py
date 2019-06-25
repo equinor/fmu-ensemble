@@ -174,9 +174,10 @@ def test_get_smry():
         vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=long_time_ago) == 0
     )
     before_and_after = [datetime.date(1900, 1, 1), datetime.date(2100, 1, 1)]
+
     assert all(
-        vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=before_and_after)
-        == real.get_smry(column_keys=["FOPR", "FOPT"], time_index=before_and_after)
+        vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=before_and_after).sort_index(axis=1)
+        == real.get_smry(column_keys=["FOPR", "FOPT"], time_index=before_and_after).sort_index(axis=1)
     )
 
     # If you supply repeating timeindices, you get duplicates out

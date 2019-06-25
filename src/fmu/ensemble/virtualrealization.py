@@ -8,6 +8,7 @@ import os
 import fnmatch
 import shutil
 import pandas as pd
+import numpy as np
 
 from .etc import Interaction
 
@@ -110,11 +111,7 @@ class VirtualRealization(object):
                 with open(filename, "w") as fhandle:
                     for paramkey in data.keys():
                         fhandle.write(paramkey + " " + str(data[paramkey]) + "\n")
-            elif (
-                isinstance(data, str)
-                or isinstance(data, float)
-                or isinstance(data, int)
-            ):
+            elif isinstance(data, (str, float, int, np.integer, np.floating)):
                 with open(filename, "w") as fhandle:
                     fhandle.write(str(data))
             else:
@@ -159,18 +156,13 @@ class VirtualRealization(object):
                 else:
                     # GUESS scalar, key-value txt or CSV from the first
                     # two lines. SHAKY!
-                    commafields = 0
-                    spacefields = 0
-                    linecount = 0
                     with open(os.path.join(root, filename)) as realfile:
-                        line1 = realfile.next()
-                        commafields = len(line1.split(","))
-                        spacefields = len(line1.split())
-                        try:
-                            realfile.next()
-                            linecount = 2
-                        except StopIteration:
-                            linecount = 1
+                        lines = realfile.readlines()
+
+                    linecount = len(lines)
+                    commafields = len(lines[0].split(","))
+                    spacefields = len(lines[0].split())
+          
                     print(filename, commafields, spacefields, linecount)
                     if spacefields == 2 and commafields == 1:
                         # key-value txt file!
@@ -242,9 +234,7 @@ class VirtualRealization(object):
             return data
         elif isinstance(data, pd.Series):
             return data.to_dict()
-        elif isinstance(data, dict):
-            return data
-        elif isinstance(data, str) or isinstance(data, int) or isinstance(data, float):
+        elif isinstance(data, (str, dict, int, float, np.integer, np.floating)):
             return data
         else:
             raise ValueError("BUG: Unknown datatype")
