@@ -287,6 +287,11 @@ def test_ens_mismatch():
     assert fopt_rank[0] == 2  # closest realization
     assert fopt_rank[-1] == 1  # worst realization
 
+    # Try again with reference to non-existing vectors:
+    obs = Observations({"smryh": [{"key": "FOPTFLUFF", "histvec": "FOPTFLUFFH"}]})
+    mismatch = obs.mismatch(ens)
+    assert mismatch.empty
+
 
 def test_ens_failedreals():
     """Ensure we can calculate mismatch where some realizations
