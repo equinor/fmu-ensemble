@@ -241,11 +241,12 @@ class ScratchEnsemble(object):
         coming from ERT.
 
         The runpath file is a space separated table with the columns:
-            index - integer with realization index
-            runpath - string with the full path to the realization
-            eclbase - ECLBASE within the runpath (location of DATA file
-                minus the trailing '.DATA')
-            iter - integer with the iteration number.
+
+          * index - integer with realization index
+          * runpath - string with the full path to the realization
+          * eclbase - ECLBASE within the runpath (location of DATA file
+            minus the trailing '.DATA')
+          * iter - integer with the iteration number.
 
         Args:
             runpath: str with filename, absolute or relative, or
