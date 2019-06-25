@@ -12,7 +12,7 @@ ignore=_version.py
 good-names=logger, fmux, xfmu
 
 [FORMAT]
-max-line-length=79
+max-line-length=88
 max-module-lines=3000
 
 [DESIGN]
