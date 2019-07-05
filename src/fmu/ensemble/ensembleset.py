@@ -85,8 +85,9 @@ class EnsembleSet(object):
 
         # Check consistency in arguments.
         if not name:
-            logger.error("Name of EnsembleSet is required")
-            return
+            logger.warning("EnsembleSet name defaulted to 'ensembleset'")
+            name = "ensembleset"
+            self._name = name
         if name and not isinstance(name, str):
             logger.error("Name of EnsembleSet must be a string")
             return

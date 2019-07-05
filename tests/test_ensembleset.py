@@ -66,8 +66,14 @@ def test_ensembleset_reek001(tmp="TMP"):
         pass
     assert len(ensset) == 2  # Unchanged!
 
+    # Initializing nothing, we get warning about the missing name
+    noname = EnsembleSet()
+    assert noname.name  # not None
+    assert isinstance(noname.name, str)  # And it should be a string
+
     # Initialize starting from empty ensemble
     ensset2 = EnsembleSet("reek001", [])
+    assert ensset2.name == "reek001"
     ensset2.add_ensemble(iter0)
     ensset2.add_ensemble(iter1)
     assert len(ensset2) == 2
@@ -80,6 +86,7 @@ def test_ensembleset_reek001(tmp="TMP"):
 
     # Initialize directly from path with globbing:
     ensset3 = EnsembleSet("reek001direct", [])
+    assert ensset3.name == "reek001direct"
     ensset3.add_ensembles_frompath(ensdir)
     assert len(ensset3) == 2
 
