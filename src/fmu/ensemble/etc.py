@@ -77,13 +77,8 @@ class Interaction(object):
         self._caller = None
         self._lformat = None
         self._lformatlevel = 1
-<<<<<<< HEAD
-        self._logginglevel = "CRITICAL"
-        self._loggingname = ""
-=======
         self._logginglevel = 'WARNING'
         self._loggingname = ''
->>>>>>> Change default log level to WARNING
         self._syslevel = 1
         self._test_env = True
         self._tmpdir = "TMP"
@@ -111,11 +106,7 @@ class Interaction(object):
     def logginglevel(self, level):
         # pylint: disable=pointless-statement
 
-<<<<<<< HEAD
-        validlevels = ("INFO", "WARNING", "DEBUG", "CRITICAL")
-=======
         validlevels = ('INFO', 'WARNING', 'DEBUG', 'ERROR', 'CRITICAL')
->>>>>>> Change default log level to WARNING
         if level in validlevels:
             self._logginglevel = level
         else:
