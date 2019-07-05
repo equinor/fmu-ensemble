@@ -77,8 +77,8 @@ class Interaction(object):
         self._caller = None
         self._lformat = None
         self._lformatlevel = 1
-        self._logginglevel = 'WARNING'
-        self._loggingname = ''
+        self._logginglevel = "WARNING"
+        self._loggingname = ""
         self._syslevel = 1
         self._test_env = True
         self._tmpdir = "TMP"
@@ -106,7 +106,7 @@ class Interaction(object):
     def logginglevel(self, level):
         # pylint: disable=pointless-statement
 
-        validlevels = ('INFO', 'WARNING', 'DEBUG', 'ERROR', 'CRITICAL')
+        validlevels = ("INFO", "WARNING", "DEBUG", "ERROR", "CRITICAL")
         if level in validlevels:
             self._logginglevel = level
         else:
@@ -122,9 +122,9 @@ class Interaction(object):
             llo = logging.INFO
         elif self._logginglevel == "WARNING":
             llo = logging.WARNING
-        elif self._logginglevel == 'ERROR':
+        elif self._logginglevel == "ERROR":
             llo = logging.ERROR
-        elif self._logginglevel == 'DEBUG':
+        elif self._logginglevel == "DEBUG":
             llo = logging.DEBUG
 
         return llo
