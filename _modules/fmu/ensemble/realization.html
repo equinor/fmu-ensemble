@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.54 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.44
+                0.2.1.54
               </div>
             
           
@@ -273,13 +273,13 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">realidxmatch</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
                     <span class="k">break</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Could not determine realization &quot;</span>
                     <span class="o">+</span> <span class="s2">&quot;index for </span><span class="si">%s</span><span class="s2">, &quot;</span>
                     <span class="o">+</span> <span class="s2">&quot;this cannot be inserted in an Ensemble&quot;</span><span class="p">,</span>
                     <span class="n">abspath</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Maybe you need to use index=&lt;someinteger&gt;&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Maybe you need to use index=&lt;someinteger&gt;&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
@@ -295,7 +295,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_status</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No STATUS file, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">abspath</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No STATUS file, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">abspath</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">abspath</span><span class="p">,</span> <span class="s2">&quot;jobs.json&quot;</span><span class="p">)):</span>
             <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
@@ -603,7 +603,7 @@
         <span class="n">status</span> <span class="o">=</span> <span class="n">status</span><span class="p">[</span><span class="o">~</span><span class="p">((</span><span class="n">status</span><span class="o">.</span><span class="n">FORWARD_MODEL</span> <span class="o">==</span> <span class="s2">&quot;LSF&quot;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">colon</span> <span class="o">==</span> <span class="s2">&quot;JOBID:&quot;</span><span class="p">))]</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No parseable data in STATUS&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No parseable data in STATUS&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;STATUS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
             <span class="k">return</span> <span class="n">status</span>
 
@@ -644,7 +644,7 @@
                 <span class="c1"># the jobs are still running on the cluster)</span>
                 <span class="n">status</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">jobsinfodf</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;JOBINDEX&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Parsing file </span><span class="si">%s</span><span class="s2"> failed, skipping&quot;</span><span class="p">,</span> <span class="n">jsonfilename</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Parsing file </span><span class="si">%s</span><span class="s2"> failed, skipping&quot;</span><span class="p">,</span> <span class="n">jsonfilename</span><span class="p">)</span>
         <span class="n">status</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;JOBINDEX&quot;</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;STATUS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
         <span class="k">return</span> <span class="n">status</span></div>

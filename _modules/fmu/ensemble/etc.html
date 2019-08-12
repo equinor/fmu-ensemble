@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.etc &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  <title>fmu.ensemble.etc &mdash; fmu-ensemble 0.2.1.54 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.44
+                0.2.1.54
               </div>
             
           
@@ -168,7 +168,7 @@
 <span class="sd">  export FMU_LOGGING_LEVEL=INFO   # if bash; will set logging to INFO level</span>
 <span class="sd">  setenv FMU_LOGGING_LEVEL INFO   # if tcsh; will set logging to INFO level</span>
 
-<span class="sd">Other levels are DEBUG and CRITICAL. CRITICAL is default (cf. Pythons logging)</span>
+<span class="sd">Other levels are DEBUG, ERROR and CRITICAL. WARNING is default.</span>
 
 <span class="sd">Usage of logging in scripts::</span>
 
@@ -237,7 +237,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_caller</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lformat</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lformatlevel</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">=</span> <span class="s2">&quot;CRITICAL&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">=</span> <span class="s2">&quot;WARNING&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_loggingname</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_syslevel</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_test_env</span> <span class="o">=</span> <span class="kc">True</span>
@@ -266,7 +266,7 @@
     <span class="k">def</span> <span class="nf">logginglevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
         <span class="c1"># pylint: disable=pointless-statement</span>
 
-        <span class="n">validlevels</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">)</span>
+        <span class="n">validlevels</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">validlevels</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">=</span> <span class="n">level</span>
         <span class="k">else</span><span class="p">:</span>
@@ -282,6 +282,8 @@
             <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">==</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">:</span>
             <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">==</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span>
+            <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logginglevel</span> <span class="o">==</span> <span class="s2">&quot;DEBUG&quot;</span><span class="p">:</span>
             <span class="n">llo</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
 

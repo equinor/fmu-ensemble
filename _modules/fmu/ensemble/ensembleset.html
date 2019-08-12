@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 0.2.1.54 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.44
+                0.2.1.54
               </div>
             
           
@@ -245,8 +245,9 @@
 
         <span class="c1"># Check consistency in arguments.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Name of EnsembleSet is required&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;EnsembleSet name defaulted to &#39;ensembleset&#39;&quot;</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ensembleset&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Name of EnsembleSet must be a string&quot;</span><span class="p">)</span>
             <span class="k">return</span>
@@ -499,7 +500,7 @@
                 <span class="c1"># This will occur if an ensemble is missing the file.</span>
                 <span class="c1"># At ensemble level that is an Error, but at EnsembleSet level</span>
                 <span class="c1"># it is only a warning.</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Ensemble </span><span class="si">%s</span><span class="s2"> did not contain the data </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">localpath</span>
                 <span class="p">)</span></div>
 
@@ -524,7 +525,7 @@
                 <span class="c1"># This will occur if an ensemble is missing the file.</span>
                 <span class="c1"># At ensemble level that is an Error, but at EnsembleSet level</span>
                 <span class="c1"># it is only a warning.</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Ensemble </span><span class="si">%s</span><span class="s2"> did not contain the data </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">localpath</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>

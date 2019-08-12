@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  <title>Usage &mdash; fmu-ensemble 0.2.1.54 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.2.1.44
+                0.2.1.54
               </div>
             
           
@@ -182,11 +182,11 @@
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
 <p>fmu-ensemble is designed for use in several scenarios:</p>
 <ul class="simple">
-<li><p>Interactive use in the (i)python interpreter or Jupyter</p></li>
-<li><p>Part of an ERT workflow, typically after the ensemble is finished as
-a <em>POST_WORKFLOW_HOOK</em></p></li>
-<li><p>Part of other scripts or utilities, either for analysis or
-preparatory work before f.ex. a webviz instance is generated</p></li>
+<li>Interactive use in the (i)python interpreter or Jupyter</li>
+<li>Part of an ERT workflow, typically after the ensemble is finished as
+a <em>POST_WORKFLOW_HOOK</em></li>
+<li>Part of other scripts or utilities, either for analysis or
+preparatory work before f.ex. a webviz instance is generated</li>
 </ul>
 <p>As an introduction to the module, we will go through interactive usage
 in the python interpreter. Whether you use ipython or jupyter does not
@@ -283,18 +283,18 @@ the iteration names and realization indices.</p>
 <h3>Obtaining warning and error messages<a class="headerlink" href="#obtaining-warning-and-error-messages" title="Permalink to this headline">¶</a></h3>
 <p>fmu-ensemble will by default be mute to warnings and error messages,
 unless you tell it to be verbose in your client code. The available debug
-levels are <cite>INFO</cite>, <cite>WARNING</cite>, <cite>DEBUG</cite> and <cite>CRITICAL</cite> where the latter is
-the default.</p>
+levels are <cite>DEBUG</cite>, <cite>INFO</cite>, <cite>WARNING</cite>, <cite>ERROR</cite> and <cite>CRITICAL</cite> where <cite>WARNING</cite>
+is the default.</p>
 <p>Script authors can set a different default logging level by inserting
 the lines</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">etc</span>
 <span class="n">fmux</span> <span class="o">=</span> <span class="n">etc</span><span class="o">.</span><span class="n">Interaction</span><span class="p">()</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;WARNING&#39;</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>while users can always override this by setting an environment variable:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">export FMU_LOGGING_LEVEL=WARNING  # If bash shell</span>
-<span class="go">setenv FMU_LOGGING_LEVEL WARNING  # Default shell in equinor</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">export FMU_LOGGING_LEVEL=INFO  # If bash shell</span>
+<span class="go">setenv FMU_LOGGING_LEVEL INFO  # If c-shell (default shell in equinor)</span>
 </pre></div>
 </div>
 </div>

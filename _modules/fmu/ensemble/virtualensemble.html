@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 0.2.1.54 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.44
+                0.2.1.54
               </div>
             
           
@@ -365,7 +365,7 @@
         <span class="n">indicestodelete</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">deleteindices</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">indicesknown</span><span class="p">))</span>
         <span class="n">indicesnotknown</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">deleteindices</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">indicestodelete</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">indicesnotknown</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Skipping undefined realization indices </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indicesnotknown</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="c1"># There might be Pandas tricks to avoid this outer loop.</span>

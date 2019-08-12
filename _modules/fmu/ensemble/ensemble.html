@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.44 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.54 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.44
+                0.2.1.54
               </div>
             
           
@@ -401,11 +401,12 @@
 <span class="sd">        coming from ERT.</span>
 
 <span class="sd">        The runpath file is a space separated table with the columns:</span>
-<span class="sd">            index - integer with realization index</span>
-<span class="sd">            runpath - string with the full path to the realization</span>
-<span class="sd">            eclbase - ECLBASE within the runpath (location of DATA file</span>
-<span class="sd">                minus the trailing &#39;.DATA&#39;)</span>
-<span class="sd">            iter - integer with the iteration number.</span>
+
+<span class="sd">          * index - integer with realization index</span>
+<span class="sd">          * runpath - string with the full path to the realization</span>
+<span class="sd">          * eclbase - ECLBASE within the runpath (location of DATA file</span>
+<span class="sd">            minus the trailing &#39;.DATA&#39;)</span>
+<span class="sd">          * iter - integer with the iteration number.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            runpath: str with filename, absolute or relative, or</span>
@@ -597,7 +598,7 @@
             <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
                 <span class="c1"># At ensemble level, we allow files to be missing in</span>
                 <span class="c1"># some realizations</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not read </span><span class="si">%s</span><span class="s2"> for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not read </span><span class="si">%s</span><span class="s2"> for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No ensemble data found for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
@@ -662,7 +663,7 @@
                     <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vector_match</span><span class="p">:</span>
                         <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">eclsum</span><span class="o">.</span><span class="n">keys</span><span class="p">(</span><span class="n">vector</span><span class="p">)))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No EclSum available for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No EclSum available for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_df"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_df">[docs]</a>    <span class="k">def</span> <span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
@@ -1644,7 +1645,7 @@
 <span class="sd">        converted to numerical types (int/float). Some values</span>
 <span class="sd">        might contain numpy.nan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;_convert_numeric_columns() not implemented&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;_convert_numeric_columns() not implemented&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dataframe</span>
 </pre></div>
 

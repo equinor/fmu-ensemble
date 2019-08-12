@@ -6,12 +6,12 @@ Subpackages
 
 .. toctree::
 
-   fmu.ensemble
+    fmu.ensemble
 
 Module contents
 ---------------
 
 .. automodule:: fmu
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
