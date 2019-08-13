@@ -294,6 +294,12 @@ class VirtualEnsemble(object):
 
             groupby = [x for x in groupbycolumncandidates if x in data.columns]
 
+            # Filter to only numerical columns and groupby columns:
+            numerical_and_groupby_cols = list(
+                set(list(groupby) + list(data.select_dtypes(include="number").columns))
+            )
+            data = data[numerical_and_groupby_cols]
+
             dtypes = data.dtypes.unique()
             if not (int in dtypes or float in dtypes):
                 logger.info("No numerical data to aggregate in %s", key)
@@ -490,7 +496,7 @@ class VirtualEnsemble(object):
                 If a string is supplied, that string is attempted used
                 via get_smry_dates() in order to obtain a time index.
             quantiles: list of ints between 0 and 100 for which quantiles
-                to compute. Quantiles follow scientific standard, 
+                to compute. Quantiles follow scientific standard,
                 for the oil industry p10 you should ask for p90.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
