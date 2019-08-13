@@ -1143,9 +1143,16 @@ class ScratchEnsemble(object):
 
             groupby = [x for x in groupbycolumncandidates if x in data.columns]
 
-            # Add string columns
-            if key != "STATUS":  # STATUS dataframe contains too many strings..
+            # Add remainding string columns to columns to group by unless
+            # we are working with the STATUS dataframe, which has too many strings..
+            if key != "STATUS":
                 groupby = list(set(groupby + stringcolumns))
+
+            # Filter to only numerical columns and groupby columns:
+            numerical_and_groupby_cols = list(
+                set(list(groupby) + list(data.select_dtypes(include="number").columns))
+            )
+            data = data[numerical_and_groupby_cols]
 
             dtypes = data.dtypes.unique()
             if not (int in dtypes or float in dtypes):
