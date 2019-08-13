@@ -485,7 +485,7 @@ def test_nonstandard_dirs(tmp="TMP"):
     assert len(ens) == 0
 
     # But if we specify a realidxregex, it should work
-    ens = ScratchEnsemble("foo", enspaths, realidxregexp="bar_(\d+)")
+    ens = ScratchEnsemble("foo", enspaths, realidxregexp=r"bar_(\d+)")
     assert len(ens) == 3
 
     # Supplying wrong regexpes:
