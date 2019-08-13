@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import os
 import glob
-import copy
 import datetime
 import yaml
 import pandas as pd

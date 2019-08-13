@@ -92,9 +92,9 @@ class Observations(object):
         # Identify and warn about errors in observation syntax (dates etc)
         self._clean_observations()
 
-        logger.info("Initialized observation with obstypes " + str(self.keys()))
+        logger.info("Initialized observation with obstypes %s", str(self.keys()))
         for obskey in self.keys():
-            logger.info(" " + obskey + ": " + str(len(self.observations[obskey])))
+            logger.info(" %s: ", str(len(self.observations[obskey])))
 
     def __getitem__(self, object):
         """Pick objects from the observations dict"""
@@ -116,9 +116,9 @@ class Observations(object):
         if isinstance(ens_or_real, EnsembleSet):
             mismatches = {}
             for ensname, ens in ens_or_real._ensembles.items():
-                logger.info("Calculating mismatch for ensemble " + ensname)
+                logger.info("Calculating mismatch for ensemble %s", ensname)
                 for realidx, real in ens._realizations.items():
-                    logger.info("Calculating mismatch for realization " + str(realidx))
+                    logger.info("Calculating mismatch for realization %s", str(realidx))
                     mismatches[(ensname, realidx)] = self._realization_mismatch(real)
                     mismatches[(ensname, realidx)]["REAL"] = realidx
                     mismatches[(ensname, realidx)]["ENSEMBLE"] = ensname
@@ -249,14 +249,13 @@ class Observations(object):
                         sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
                     except KeyError:
                         logger.warning(
-                            obsunit["key"]
-                            + " in "
-                            + obsunit["localpath"]
-                            + " not found, ignored"
+                            "%s in %s not found, ignored",
+                            obsunit["key"],
+                            obsunit["localpath"],
                         )
                         continue
                     except ValueError:
-                        logger.warning(obsunit["localpath"] + " not found, ignored")
+                        logger.warning("%s not found, ignored", obsunit["localpath"])
                         continue
                     mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
@@ -342,11 +341,9 @@ class Observations(object):
                             )[obsunit["key"]].values[0]
                         except KeyError:
                             logger.warning(
-                                "No data found for smry: "
-                                + obsunit["key"]
-                                + " at "
-                                + str(unit["date"])
-                                + ",  ignored."
+                                "No data found for smry: %s at %s, ignored.",
+                                obsunit["key"],
+                                str(unit["date"]),
                             )
                             continue
                         mismatch = float(sim_value - unit["value"])
