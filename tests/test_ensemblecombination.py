@@ -41,7 +41,7 @@ def test_ensemblecombination_basic():
     foptsum = reekensemble.get_df("unsmry--yearly")["FOPT"].sum()
     half = 0.5 * reekensemble
     assert half["unsmry--yearly"]["FOPT"].sum() == 0.5 * foptsum
-    assert half["npv.txt"]["npv.txt"][0] == 1722
+    assert half["npv.txt"].sort_values("REAL")["npv.txt"][0] == 1722
 
     # This is only true since we only juggle one ensemble here:
     assert len(half.get_smry_dates(freq="monthly")) == len(
