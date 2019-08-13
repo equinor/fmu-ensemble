@@ -55,11 +55,16 @@ def test_reek001(tmp="TMP"):
     statusdf = reekensemble.get_df("STATUS")
     assert len(statusdf) == 250  # 5 realizations, 50 jobs in each
     assert "REAL" in statusdf.columns
+    assert "FORWARD_MODEL" in statusdf.columns
+    statusdf = statusdf.set_index(["REAL", "FORWARD_MODEL"]).sort_index()
     assert "DURATION" in statusdf.columns  # calculated
     assert "argList" in statusdf.columns  # from jobs.json
-    assert int(statusdf.loc[245, "DURATION"]) == 195  # sample check
+
+    # Sample check the duration for RMS in realization 4:
+    assert int(statusdf.loc[4, "RMS_BATCH"]["DURATION"].values[0]) == 195
+
     # STATUS in real4 is modified to simulate that Eclipse never finished:
-    assert numpy.isnan(statusdf.loc[249, "DURATION"])
+    assert numpy.isnan(statusdf.loc[4, "ECLIPSE100_2014.2"]["DURATION"].values[0])
 
     if not os.path.exists(tmp):
         os.mkdir(tmp)
