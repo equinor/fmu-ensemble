@@ -6,9 +6,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import shutil
+
 import numpy
 import pandas as pd
-import shutil
 
 import pytest
 
@@ -16,10 +17,10 @@ from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 try:
-    skip_fmu_tools = False
+    SKIP_FMU_TOOLS = False
     from fmu.tools import volumetrics
 except ImportError:
-    skip_fmu_tools = True
+    SKIP_FMU_TOOLS = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -311,8 +312,8 @@ def test_noautodiscovery():
     # If these are unwanted, we can delete explicitly:
     reekensemble.remove_data("parameters.txt")
     reekensemble.remove_data(["STATUS"])
-    assert not "parameters.txt" in reekensemble.keys()
-    assert not "STATUS" in reekensemble.keys()
+    assert "parameters.txt" not in reekensemble.keys()
+    assert "STATUS" not in reekensemble.keys()
 
 
 def test_ensemble_ecl():
@@ -413,7 +414,7 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_wellnames("OP*")) == 5
     assert len(reekensemble.get_wellnames(None)) == 8
     assert len(reekensemble.get_wellnames()) == 8
-    assert len(reekensemble.get_wellnames("")) == 0
+    assert not reekensemble.get_wellnames("")
     assert len(reekensemble.get_wellnames(["OP*", "WI*"])) == 8
 
     # eclipse well groups list
@@ -475,6 +476,8 @@ def test_ensemble_ecl():
 
 
 def test_nonstandard_dirs(tmp="TMP"):
+    """Test that we can initialize ensembles from some
+    non-standard directories."""
     ensdir = tmp + "/foo-ens-bar/"
 
     if os.path.exists(ensdir):
@@ -487,7 +490,7 @@ def test_nonstandard_dirs(tmp="TMP"):
 
     ens = ScratchEnsemble("foo", enspaths)
     # The logger should also print CRITICAL statements here.
-    assert len(ens) == 0
+    assert not ens
 
     # But if we specify a realidxregex, it should work
     ens = ScratchEnsemble("foo", enspaths, realidxregexp=r"bar_(\d+)")
@@ -495,7 +498,7 @@ def test_nonstandard_dirs(tmp="TMP"):
 
     # Supplying wrong regexpes:
     ens = ScratchEnsemble("foo", enspaths, realidxregexp="bar_xx")
-    assert len(ens) == 0
+    assert not ens
 
 
 def test_volumetric_rates():
@@ -771,26 +774,26 @@ def test_eclsumcaching():
     ens.load_smry(cache_eclsum=None)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    df = ens.get_smry()
+    ens.get_smry()
     assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    df = ens.get_smry(cache_eclsum=False)
+    ens.get_smry(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    df = ens.get_smry_stats()
+    ens.get_smry_stats()
     assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    df = ens.get_smry_stats(cache_eclsum=False)
+    ens.get_smry_stats(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    some_dates = ens.get_smry_dates()
+    ens.get_smry_dates()
     assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
     # Clear the cached objects because the statement above has cached it..
     for _, realization in ens._realizations.items():
         realization._eclsum = None
 
-    some_dates = ens.get_smry_dates(cache_eclsum=False)
+    ens.get_smry_dates(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
 
@@ -850,7 +853,7 @@ def test_read_eclgrid():
     assert len(grid_df["i"]) == 35840
 
 
-def test_apply(tmp="TMP"):
+def test_apply():
     """
     Test the callback functionality
     """
@@ -865,6 +868,7 @@ def test_apply(tmp="TMP"):
     )
 
     def ex_func1():
+        """Example function that will return a constant dataframe"""
         return pd.DataFrame(
             index=["1", "2"], columns=["foo", "bar"], data=[[1, 2], [3, 4]]
         )
@@ -880,18 +884,18 @@ def test_apply(tmp="TMP"):
     assert "REAL" in int_df
     assert len(int_df) == len(result)
 
-    if skip_fmu_tools:
+    if SKIP_FMU_TOOLS:
         return
     # Test if we can wrap the volumetrics-parser in fmu.tools:
     # It cannot be applied directly, as we need to combine the
     # realization's root directory with the relative path coming in:
     def rms_vol2df(kwargs):
+        """Example function for bridging with fmu.tools to parse volumetrics"""
         fullpath = os.path.join(kwargs["realization"].runpath(), kwargs["filename"])
         # The supplied callback should not fail too easy.
         if os.path.exists(fullpath):
             return volumetrics.rmsvolumetrics_txt2df(fullpath)
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame()
 
     rmsvols_df = ens.apply(
         rms_vol2df, filename="share/results/volumes/" + "geogrid_vol_oil_1.txt"
