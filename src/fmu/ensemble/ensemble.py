@@ -702,8 +702,8 @@ class ScratchEnsemble(object):
             key (str): A certain key within a realization dictionary that is
                 required to be present. If a value is also provided, this
                 key must be equal to this value
-            value (str, int or float): The value a certain key must equal. Floating point
-                comparisons are not robust.
+            value (str, int or float): The value a certain key must equal. Floating
+                point comparisons are not robust.
             column (str): Name of a column in tabular data. If columncontains is
                 not specified, this means that this column must be present
             columncontains (str, int or float):
