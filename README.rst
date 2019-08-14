@@ -21,3 +21,8 @@ If run as a post-workflow in Ert, a simple script using this library
 can replace and extend the existing *CSV_EXPORT1* workflow
 
 This software is released under GPL v3.0
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/58c0d639256e4c2da33c32ac0a3e45a9
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/app/berland/fmu-ensemble?utm_source=github.com&utm_medium=referral&utm_content=equinor/fmu-ensemble&utm_campaign=Badge_Grade_Dashboard
