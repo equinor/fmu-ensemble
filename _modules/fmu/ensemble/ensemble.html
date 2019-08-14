@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.54 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.55 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.54
+                0.2.1.55
               </div>
             
           
@@ -1303,9 +1303,16 @@
 
             <span class="n">groupby</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">groupbycolumncandidates</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
 
-            <span class="c1"># Add string columns</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;STATUS&quot;</span><span class="p">:</span>  <span class="c1"># STATUS dataframe contains too many strings..</span>
+            <span class="c1"># Add remainding string columns to columns to group by unless</span>
+            <span class="c1"># we are working with the STATUS dataframe, which has too many strings..</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;STATUS&quot;</span><span class="p">:</span>
                 <span class="n">groupby</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">groupby</span> <span class="o">+</span> <span class="n">stringcolumns</span><span class="p">))</span>
+
+            <span class="c1"># Filter to only numerical columns and groupby columns:</span>
+            <span class="n">numerical_and_groupby_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">groupby</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">numerical_and_groupby_cols</span><span class="p">]</span>
 
             <span class="n">dtypes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">int</span> <span class="ow">in</span> <span class="n">dtypes</span> <span class="ow">or</span> <span class="nb">float</span> <span class="ow">in</span> <span class="n">dtypes</span><span class="p">):</span>
