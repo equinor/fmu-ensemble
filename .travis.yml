@@ -48,3 +48,4 @@ deploy:
     keep_history: true
     on:
       branch: master
+      python: "3.6"
