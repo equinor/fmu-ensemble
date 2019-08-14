@@ -314,7 +314,9 @@ class EnsembleSet(object):
         """
         if ensembleobject.name in self._ensembles:
             raise ValueError(
-                "The name {} already exists in the EnsembleSet".format(ensembleobject.name)
+                "The name {} already exists in the EnsembleSet".format(
+                    ensembleobject.name
+                )
             )
         self._ensembles[ensembleobject.name] = ensembleobject
 
