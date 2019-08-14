@@ -120,7 +120,7 @@ class EnsembleSet(object):
 
         if runpathfile:
             if not os.path.exists(runpathfile):
-                logger.error("Could not open runpath file {}".format(runpathfile))
+                logger.error("Could not open runpath file %s", runpathfile)
                 raise IOError
             self.add_ensembles_fromrunpath(runpathfile)
             if not self._ensembles:
@@ -314,7 +314,7 @@ class EnsembleSet(object):
         """
         if ensembleobject.name in self._ensembles:
             raise ValueError(
-                "The name %s already exists in the EnsembleSet", ensembleobject.name
+                "The name {} already exists in the EnsembleSet".format(ensembleobject.name)
             )
         self._ensembles[ensembleobject.name] = ensembleobject
 
@@ -383,7 +383,7 @@ class EnsembleSet(object):
                 returned cached results.
         """
         ensdflist = []
-        for ensname, ensemble in self._ensembles.items():
+        for _, ensemble in self._ensembles.items():
             try:
                 ensdf = ensemble.get_df(localpath)
                 ensdf.insert(0, "ENSEMBLE", ensemble.name)
@@ -395,7 +395,7 @@ class EnsembleSet(object):
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
         else:
-            raise ValueError("No data found for %s", localpath)
+            raise ValueError("No data found for {}".format(localpath))
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
