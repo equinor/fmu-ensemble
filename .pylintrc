@@ -1,12 +1,12 @@
 # PYLINT: General settings for FMU modules
 
 [GENERAL]
-disable=R0205, F0010
+disable=R0205, F0010, C0330
 output-format=colorized
 
 [MASTER]
 init-hook='import sys; sys.path.append("src/")'
-ignore=_version.py
+ignore=_version.py,__init__.py
 
 [BASIC]
 good-names=logger, fmux, xfmu
