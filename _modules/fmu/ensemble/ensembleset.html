@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 0.2.1.56 documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 0.2.1.57 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.56
+                0.2.1.57
               </div>
             
           
@@ -280,7 +280,7 @@
 
         <span class="k">if</span> <span class="n">runpathfile</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not open runpath file </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">))</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not open runpath file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">IOError</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_ensembles_fromrunpath</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
@@ -474,7 +474,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The name </span><span class="si">%s</span><span class="s2"> already exists in the EnsembleSet&quot;</span><span class="p">,</span> <span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span>
+                <span class="s2">&quot;The name </span><span class="si">{}</span><span class="s2"> already exists in the EnsembleSet&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">)</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensembleobject</span></div>
 
@@ -543,7 +545,7 @@
 <span class="sd">                returned cached results.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ensdflist</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ensdf</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
                 <span class="n">ensdf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;ENSEMBLE&quot;</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -555,7 +557,7 @@
         <span class="k">if</span> <span class="n">ensdflist</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">ensdflist</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data found for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data found for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">localpath</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="EnsembleSet.drop"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Delete elements from internalized data.</span>

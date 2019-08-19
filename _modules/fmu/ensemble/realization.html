@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.56 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.57 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.56
+                0.2.1.57
               </div>
             
           
@@ -177,9 +177,10 @@
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span>
 <span class="kn">import</span> <span class="nn">dateutil</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">import</span> <span class="nn">ecl.summary</span>
@@ -602,7 +603,7 @@
         <span class="c1"># Delete potential unwanted row</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">status</span><span class="p">[</span><span class="o">~</span><span class="p">((</span><span class="n">status</span><span class="o">.</span><span class="n">FORWARD_MODEL</span> <span class="o">==</span> <span class="s2">&quot;LSF&quot;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">colon</span> <span class="o">==</span> <span class="s2">&quot;JOBID:&quot;</span><span class="p">))]</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">status</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No parseable data in STATUS&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;STATUS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
             <span class="k">return</span> <span class="n">status</span>
@@ -703,7 +704,7 @@
                 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">fullpath</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fullpath</span><span class="p">):</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">fullpath</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing result of function call to &quot;</span> <span class="o">+</span> <span class="n">fullpath</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing result of function call to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fullpath</span><span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fullpath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
@@ -1040,13 +1041,13 @@
             <span class="n">time_index_arg</span> <span class="o">=</span> <span class="n">time_index</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">):</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span>
+            <span class="n">dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span>
                 <span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span>
             <span class="p">)</span><span class="o">.</span><span class="n">pandas_frame</span><span class="p">(</span><span class="n">time_index_arg</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">cache_eclsum</span><span class="p">:</span>
                 <span class="c1"># Ensure EclSum object can be garbage collected</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_eclsum</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">return</span> <span class="n">df</span>
+            <span class="k">return</span> <span class="n">dataframe</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
 
@@ -1219,8 +1220,7 @@
         <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">comps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="ScratchRealization.get_smryvalues"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_smryvalues">[docs]</a>    <span class="k">def</span> <span class="nf">get_smryvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">props_wildcard</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1343,18 +1343,16 @@
                         <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;columncontains&quot;</span><span class="p">]))</span>
                         <span class="o">==</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;column&quot;</span><span class="p">]])</span>
                     <span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="p">(</span>
-                        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;columncontains&quot;</span><span class="p">]</span>
-                        <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;column&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
-                    <span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;columncontains&quot;</span><span class="p">]</span>
+                    <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;column&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;key&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s2">&quot;value&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]:</span>
                     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]])</span> <span class="o">==</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">return</span> <span class="kc">False</span>
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># non-string, then don&#39;t convert the internalized data</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span> <span class="o">==</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong arguments to contains()&quot;</span><span class="p">)</span></div>
@@ -1494,6 +1492,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_index</span><span class="p">(</span><span class="n">active_only</span><span class="o">=</span><span class="n">active_only</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_grid_corners"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_grid_corners">[docs]</a>    <span class="k">def</span> <span class="nf">get_grid_corners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dataframe with the the x, y, z for the</span>
+<span class="sd">        8 grid corners of corner point cells&quot;&quot;&quot;</span>
         <span class="n">corners</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_corners</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
         <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">&quot;x1&quot;</span><span class="p">,</span>
@@ -1525,6 +1525,8 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">corners</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_grid_centre"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_grid_centre">[docs]</a>    <span class="k">def</span> <span class="nf">get_grid_centre</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the grid centre of corner-point-cells, x, y and z</span>
+<span class="sd">        in distinct columns&quot;&quot;&quot;</span>
         <span class="n">grid_cell_centre</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_position</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">grid_cell_centre</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cell_x&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_y&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_z&quot;</span><span class="p">]</span>
