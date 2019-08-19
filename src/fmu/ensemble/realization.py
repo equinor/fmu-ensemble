@@ -17,9 +17,10 @@ import re
 import copy
 import glob
 import json
-import numpy
 from datetime import datetime, date, time
 import dateutil
+
+import numpy
 import pandas as pd
 
 import ecl.summary
@@ -442,7 +443,7 @@ class ScratchRealization(object):
         # Delete potential unwanted row
         status = status[~((status.FORWARD_MODEL == "LSF") & (status.colon == "JOBID:"))]
 
-        if len(status) == 0:
+        if status.empty:
             logger.warning("No parseable data in STATUS")
             self.data["STATUS"] = status
             return status
@@ -543,7 +544,7 @@ class ScratchRealization(object):
                 os.makedirs(os.path.dirname(fullpath))
             if os.path.exists(fullpath):
                 os.unlink(fullpath)
-            logger.info("Writing result of function call to " + fullpath)
+            logger.info("Writing result of function call to %s", fullpath)
             result.to_csv(fullpath, index=False)
         return result
 
@@ -880,13 +881,13 @@ class ScratchRealization(object):
             time_index_arg = time_index
 
         if self.get_eclsum(cache=cache_eclsum, include_restart=include_restart):
-            df = self.get_eclsum(
+            dataframe = self.get_eclsum(
                 cache=cache_eclsum, include_restart=include_restart
             ).pandas_frame(time_index_arg, column_keys)
             if not cache_eclsum:
                 # Ensure EclSum object can be garbage collected
                 self._eclsum = None
-            return df
+            return dataframe
         else:
             return pd.DataFrame()
 
@@ -1059,8 +1060,7 @@ class ScratchRealization(object):
         comps[0] = comps[0].replace("T", "R")
         if len(comps) > 1:
             return comps[0] + ":" + comps[1]
-        else:
-            return comps[0]
+        return comps[0]
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -1183,18 +1183,16 @@ class ScratchRealization(object):
                         pd.to_datetime(dateutil.parser.parse(kwargs["columncontains"]))
                         == pd.to_datetime(self.data[localpath][kwargs["column"]])
                     ).any()
-                else:
-                    return (
-                        kwargs["columncontains"]
-                        in self.data[localpath][kwargs["column"]].values
-                    )
+                return (
+                    kwargs["columncontains"]
+                    in self.data[localpath][kwargs["column"]].values
+                )
 
         if "key" in kwargs and "value" in kwargs:
             if isinstance(kwargs["value"], str):
                 if kwargs["key"] in self.data[localpath]:
                     return str(self.data[localpath][kwargs["key"]]) == kwargs["value"]
-                else:
-                    return False
+                return False
             else:  # non-string, then don't convert the internalized data
                 return self.data[localpath][kwargs["key"]] == kwargs["value"]
         raise ValueError("Wrong arguments to contains()")
@@ -1334,6 +1332,8 @@ class ScratchRealization(object):
         return self.get_grid().export_index(active_only=active_only)
 
     def get_grid_corners(self, grid_index):
+        """Return a dataframe with the the x, y, z for the
+        8 grid corners of corner point cells"""
         corners = self.get_grid().export_corners(grid_index)
         columns = [
             "x1",
@@ -1365,6 +1365,8 @@ class ScratchRealization(object):
         return pd.DataFrame(data=corners, columns=columns)
 
     def get_grid_centre(self, grid_index):
+        """Return the grid centre of corner-point-cells, x, y and z
+        in distinct columns"""
         grid_cell_centre = self.get_grid().export_position(grid_index)
         return pd.DataFrame(
             data=grid_cell_centre, columns=["cell_x", "cell_y", "cell_z"]

@@ -19,10 +19,10 @@ import numpy as np
 from fmu.ensemble import etc
 from fmu import ensemble
 try:
-    skip_fmu_tools = False
+    SKIP_FMU_TOOLS = False
     from fmu.tools import volumetrics
 except ImportError:
-    skip_fmu_tools = True
+    SKIP_FMU_TOOLS = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -193,10 +193,10 @@ def test_volumetric_rates():
     assert vol_rate_df["FOPR"].iloc[-1] == 0
 
     # Check that we allow cumulative allocated vectors:
-    c = real.get_volumetric_rates(column_keys=["F*TH", "W*TH*"])
-    assert not c.empty
-    assert "FOPRH" in c
-    assert "WOPRH:OP_1" in c
+    cumvecs = real.get_volumetric_rates(column_keys=["F*TH", "W*TH*"])
+    assert not cumvecs.empty
+    assert "FOPRH" in cumvecs
+    assert "WOPRH:OP_1" in cumvecs
 
     assert real.get_volumetric_rates(column_keys="FOOBAR").empty
     assert real.get_volumetric_rates(column_keys=["FOOBAR"]).empty
@@ -268,10 +268,10 @@ def test_volumetric_rates():
     # (here we could catch an error in case we don't support leap days)
 
     # Monthly rates between the random dates:
-    m = real.get_volumetric_rates(
+    monthlyrates = real.get_volumetric_rates(
         column_keys="FOPT", time_index=subset_dates, time_unit="months"
     )
-    assert all(np.isfinite(m["FOPR"]))
+    assert all(np.isfinite(monthlyrates["FOPR"]))
 
     # Total number of months in production period
     delta = relativedelta(vol_rate_days.index[-1], vol_rate_days.index[0])
@@ -695,7 +695,7 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     shutil.rmtree(datadir + "/" + tmpensname, ignore_errors=True)
 
 
-def test_apply(tmp="TMP"):
+def test_apply():
     """
     Test the callback functionality
     """
@@ -704,6 +704,7 @@ def test_apply(tmp="TMP"):
     real = ensemble.ScratchRealization(realdir)
 
     def ex_func1():
+        """Example constant function"""
         return pd.DataFrame(
             index=["1", "2"], columns=["foo", "bar"], data=[[1, 2], [3, 4]]
         )
@@ -719,6 +720,7 @@ def test_apply(tmp="TMP"):
 
     # Check that the submitted function can utilize data from **kwargs
     def ex_func2(kwargs):
+        """Example function using kwargs"""
         arg = kwargs["foo"]
         return pd.DataFrame(
             index=["1", "2"], columns=["foo", "bar"], data=[[arg, arg], [arg, arg]]
@@ -729,6 +731,7 @@ def test_apply(tmp="TMP"):
 
     # We require applied function to return only DataFrames.
     def scalar_func():
+        """Dummy scalar function"""
         return 1
 
     with pytest.raises(ValueError):
@@ -736,6 +739,7 @@ def test_apply(tmp="TMP"):
 
     # The applied function should have access to the realization object:
     def real_func(kwargs):
+        """Example function that accesses the realization object"""
         return pd.DataFrame(
             index=[0], columns=["path"], data=kwargs["realization"].runpath()
         )
@@ -748,7 +752,7 @@ def test_apply(tmp="TMP"):
         real.apply(real_func, realization="foo")
 
 
-    if skip_fmu_tools:
+    if SKIP_FMU_TOOLS:
         return
     # Test if we can wrap the volumetrics-parser in fmu.tools:
     # It cannot be applied directly, as we need to combine the
