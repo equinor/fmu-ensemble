@@ -433,7 +433,8 @@ def test_ensset_mismatch():
             }
         )
 
-    # Erroneous date will raise Exception (but a valid date will give an extrapolated value)
+    # Erroneous date will raise Exception
+    # (but a valid date will give an extrapolated value)
     with pytest.raises(ValueError):
         obs_pr = Observations(
             {

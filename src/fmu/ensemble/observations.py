@@ -280,9 +280,7 @@ class Observations(object):
                         sim_value = real.get_df(obsunit["key"])
                     except ValueError:
                         logger.warning(
-                            "No data found for scalar: "
-                            + obsunit["key"]
-                            + ",  ignored."
+                            "No data found for scalar: %s, ignored", obsunit["key"]
                         )
                         continue
                     mismatch = float(sim_value - obsunit["value"])
