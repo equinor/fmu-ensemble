@@ -94,6 +94,7 @@ class Observations(object):
 
         logger.info("Initialized observation with obstypes %s", str(self.keys()))
         for obskey in self.keys():
+            # (fixme: this string does not make sense)
             logger.info(" %s: ", str(len(self.observations[obskey])))
 
     def __getitem__(self, object):
@@ -300,11 +301,16 @@ class Observations(object):
                         )
                     )
                 if obstype == "smryh":
-                    # Will use raw times when available.
-                    # Time index is always identical
-                    sim_hist = real.get_smry(
-                        column_keys=[obsunit["key"], obsunit["histvec"]]
-                    )
+                    if "time_index" in obsunit:
+                        sim_hist = real.get_smry(
+                            time_index=obsunit["time_index"],
+                            column_keys=[obsunit["key"], obsunit["histvec"]],
+                        )
+                    else:
+                        sim_hist = real.get_smry(
+                            column_keys=[obsunit["key"], obsunit["histvec"]]
+                            # (let get_smry() determine the possible time_index)
+                        )
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
                         logger.warning(
@@ -321,10 +327,10 @@ class Observations(object):
                         dict(
                             OBSTYPE="smryh",
                             OBSKEY=obsunit["key"],
-                            MISMATCH=sim_hist.mismatch.sum(),
+                            MISMATCH=sim_hist["mismatch"].sum(),
                             MEASERROR=measerror,
-                            L1=sim_hist.mismatch.abs().sum(),
-                            L2=math.sqrt((sim_hist.mismatch ** 2).sum()),
+                            L1=sim_hist["mismatch"].abs().sum(),
+                            L2=math.sqrt((sim_hist["mismatch"] ** 2).sum()),
                         )
                     )
                 if obstype == "smry":

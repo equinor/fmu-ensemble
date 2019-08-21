@@ -274,6 +274,65 @@ def test_errormessages():
     assert wrongobs.empty
 
 
+def test_smryh():
+    """Test that smryh mismatch calculation will respect time index"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    ens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    )
+
+    obs_yearly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "yearly"}]}
+    )
+    obs_raw = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "raw"}]}
+    )
+    obs_monthly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
+    )
+    obs_daily = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "daily"}]}
+    )
+    obs_last = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "last"}]}
+    )
+    obs_error = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "ølasjkdf"}]}
+    )
+    obs_error2 = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": 4.43}]}
+    )
+
+    mismatchyearly = obs_yearly.mismatch(ens)
+    mismatchmonthly = obs_monthly.mismatch(ens)
+    mismatchdaily = obs_daily.mismatch(ens)
+    mismatchlast = obs_last.mismatch(ens)
+    mismatchraw = obs_raw.mismatch(ens)
+
+    # When only one datapoint is included, these should be identical:
+    assert (mismatchlast["L1"] == mismatchlast["L2"]).all()
+    assert (mismatchlast["L1"] == mismatchlast["MISMATCH"].abs()).all()
+
+    # Check that we have indeed calculated things differently between the time indices:
+    assert mismatchyearly["L2"].sum != mismatchmonthly["L2"].sum()
+    assert mismatchdaily["L2"].sum != mismatchraw["L2"].sum()
+
+    with pytest.raises(ValueError):
+        obs_error.mismatch(ens)
+    with pytest.raises(TypeError):
+        # Improve here, this should give ValueError instead
+        obs_error2.mismatch(ens)
+
+    print(mismatchlast)
+    print(mismatchdaily)
+    print(obs_raw.mismatch(ens))
+
+
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""
     if "__file__" in globals():

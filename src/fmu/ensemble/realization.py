@@ -1491,8 +1491,11 @@ def normalize_dates(start_date, end_date, freq):
     elif freq == "daily":
         # This we don't need to normalize, but we should not give any warnings
         pass
+    elif freq == "last":
+        # This we don't need to normalize, but we should not give any warnings
+        pass
     else:
-        logger.warning("Unrecognized frequency for date normalization")
+        logger.warning("Unrecognized frequency %s for date normalization", str(freq))
     return (start_date, end_date)
 
 
