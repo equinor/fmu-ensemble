@@ -308,11 +308,9 @@ class Observations(object):
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
                         logger.warning(
-                            "No data found for smryh: "
-                            + obsunit["key"]
-                            + " and "
-                            + obsunit["histvec"]
-                            + ", ignored."
+                            "No data found for smryh: %s and %s, ignored.",
+                            obsunit["key"],
+                            obsunit["histvec"],
                         )
                         continue
                     sim_hist["mismatch"] = (
@@ -442,8 +440,8 @@ class Observations(object):
                     logger.warning(
                         "Observation unit must "
                         + "contain key and observations, "
-                        + "deleting: "
-                        + str(unit)
+                        + "deleting: %s",
+                        str(unit),
                     )
                     del smryunits[smryunits.index(unit)]
                     continue
