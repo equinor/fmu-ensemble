@@ -76,6 +76,8 @@ class VirtualRealization(object):
             filesystempath : string with a directory, absolute or
                 relative. If it exists already, it must be empty,
                 otherwise we give up.
+            delete: boolean, if True, existing directory at the filesystempath
+                will be deleted before export.
         """
         if os.path.exists(filesystempath):
             if delete:

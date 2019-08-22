@@ -6,11 +6,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import numpy as np
 import pandas as pd
 import pytest
 
 from fmu.ensemble import etc
-from fmu.ensemble import ScratchEnsemble
+from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -148,6 +149,103 @@ def test_virtualensemble():
 
     # Betterdata should be returned as a dictionary
     assert isinstance(vens.agg("min").get_df("betterdata"), dict)
+
+
+def test_todisk():
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+
+    reekensemble.load_smry(time_index="monthly", column_keys="*")
+    reekensemble.load_smry(time_index="daily", column_keys="*")
+    reekensemble.load_smry(time_index="yearly", column_keys="F*")
+    reekensemble.load_scalar("npv.txt")
+    reekensemble.load_txt("outputs.txt")
+    vens = reekensemble.to_virtual()
+
+    vens.to_disk("vens_dumped", delete=True)
+
+    fromdisk = VirtualEnsemble(fromdisk="vens_dumped")
+
+    # Should have all the same keys, nothing more, nothing less,
+    # but change of order is fine
+    assert set(vens.keys()) == set(fromdisk.keys())
+
+    for frame in vens.keys():
+        if frame == "STATUS":
+            continue
+        # Columns that only contains NaN will not have their
+        # type preserved, this is too much to ask for, especially
+        # with CSV files. So we drop columns with NaN
+        virtframe = vens.get_df(frame).dropna("columns")
+        diskframe = fromdisk.get_df(frame).dropna("columns")
+
+        assert (virtframe.columns == diskframe.columns).all()
+
+        # It would be nice to be able to use pd.Dataframe.equals,
+        # but it is too strict, as columns with mixed type number/strings
+        # will easily be wrong.
+
+        for column in virtframe.columns:
+            if virtframe[column].dtype == object or diskframe[column].dtype == object:
+                # Ensure we only compare strings when working with object dtype
+                assert (
+                    virtframe[column].astype(str).equals(diskframe[column].astype(str))
+                )
+            else:
+                assert virtframe[column].equals(diskframe[column])
+
+    fromdisk.to_disk("vens_double_dumped", delete=True)
+    # Here we could check filesystem equivalence if we want.
+
+    vens.to_disk("vens_dumped_csv", delete=True, dumpparquet=False)
+    fromcsvdisk = VirtualEnsemble()
+    fromcsvdisk.load_disk("vens_dumped_csv")
+    assert set(vens.keys()) == set(fromcsvdisk.keys())
+
+    vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
+    fromparquetdisk = VirtualEnsemble()
+    fromparquetdisk.load_disk("vens_dumped_parquet")
+    assert set(vens.keys()) == set(fromparquetdisk.keys())
+
+    fromparquetdisk2 = VirtualEnsemble()
+    fromparquetdisk2.load_disk("vens_dumped_parquet", format="csv")
+    # Here we will miss a lot of CSV files, because we only wrote parquet:
+    assert len(vens.keys()) > len(fromparquetdisk2.keys())
+
+    fromcsvdisk2 = VirtualEnsemble()
+    fromcsvdisk2.load_disk("vens_dumped_csv", format="parquet")
+    # But even if we only try to load parquet files, when CSV
+    # files are found without corresponding parquet, the CSV file
+    # will be read.
+    assert set(vens.keys()) == set(fromcsvdisk2.keys())
+
+    # Test manual intervention:
+    fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["FOO", "BAR", "COM"])
+    fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
+    manualens = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "share/results/tables/randomdata.csv" not in manualens.keys()
+
+    # Now with correct column header,
+    # but floating point data for realizations..
+    fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["REAL", "BAR", "COM"])
+    fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
+    manualens = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "share/results/tables/randomdata.csv" not in manualens.keys()
+
+    # Now with correct column header, and with integer data for REAL..
+    fooframe = pd.DataFrame(
+        data=np.random.randint(low=0, high=100, size=(3, 3)),
+        columns=["REAL", "BAR", "COM"],
+    )
+    fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
+    manualens = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "share/results/tables/randomdata.csv" in manualens.keys()
 
 
 def test_get_smry_interpolation():

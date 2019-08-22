@@ -7,6 +7,8 @@ from __future__ import print_function
 
 import os
 import re
+import shutil
+import numpy as np
 import pandas as pd
 
 from .etc import Interaction
@@ -34,9 +36,11 @@ class VirtualEnsemble(object):
         name: string, can be chosen freely
         data: dict with data to initialize with. Defaults to empty
         longdescription: string, free form multiline description.
+        fromdisk: string with filesystem path, from which we will
+            try to initialize the ensemble from files on disk.
     """
 
-    def __init__(self, name=None, data=None, longdescription=None):
+    def __init__(self, name=None, data=None, longdescription=None, fromdisk=None):
         if name:
             self._name = name
         else:
@@ -44,12 +48,20 @@ class VirtualEnsemble(object):
 
         self._longdescription = longdescription
 
+        if data and fromdisk:
+            raise ValueError(
+                "Can't initialize from both data and " + "disk at the same time"
+            )
+
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
         if data:
             self.data = data
         else:
             self.data = {}
+
+        if fromdisk:
+            self.load_disk(fromdisk)
 
         self.realindices = []
 
@@ -348,19 +360,229 @@ class VirtualEnsemble(object):
             return
         self.data[key] = dataframe
 
-    def to_disk(self, path):
-        """Dump all data to disk, in a retrieveable manner."""
-        # Mature analogue function in VirtualRealization before commencing this
-        raise NotImplementedError
+    def to_disk(self, filesystempath, delete=False, dumpcsv=True, dumpparquet=True):
+        """Dump all data to disk, in a retrieveable manner.
 
-    def load_disk(self, directory):
+        Unless dumpcsv is set to False, all data is dumped to CSV files,
+        except if some CSV files cannot be dumped as parquet.
+
+        Unless dumpparquet is set to False, all data is attempted dumped
+        as Parquet files. If parquet dumping fails for some reason, a CSV
+        file is always left behind.
+
+        dumpcsv and dumpparquet cannot be False at the same time.
+
+        Args:
+            filesystempath: string with a directory, absolute or relative.
+                If it exists already it must be empty, or delete must be True.
+            delete: boolean for whether an existing directory will be cleared
+                before data is dumped.
+            dumpcsv: boolean for whether CSV files should be written.
+            dumpparquet: boolean for whether parquet files should be written
+        """
+        import pyarrow  # Move to top of file eventually
+
+        if not dumpcsv and not dumpparquet:
+            raise ValueError(
+                "dumpcsv and dumpparquet " + "cannot be False at the same time"
+            )
+
+        if os.path.exists(filesystempath):
+            if delete:
+                shutil.rmtree(filesystempath)
+                os.mkdir(filesystempath)
+            else:
+                if os.listdir(filesystempath):
+                    logger.critical(
+                        "Refusing to write virtual ensemble "
+                        + " to non-empty directory"
+                    )
+                    raise IOError("Directory %s not empty" % filesystempath)
+        else:
+            os.mkdir(filesystempath)
+
+        # Write ensemble meta-information to disk:
+        with open(os.path.join(filesystempath, "_name"), "w") as fhandle:
+            fhandle.write(str(self._name))
+        with open(os.path.join(filesystempath, "__repr__"), "w") as fhandle:
+            fhandle.write(self.__repr__())
+
+        # The README dumped here is just for convenience. Do not assume
+        # anything about its content.
+        with open(os.path.join(filesystempath, "README"), "w") as fhandle:
+            fhandle.write(
+                """The data in here has been dumped by
+fmu.ensemble.VirtualEnsemble.to_disk()
+
+Each filename represents a DataFrame with aggregated data
+for an ensemble. The DataFrames exists both in a csv format and
+in a binary format. If you need to do manual edits, choose to
+edit the csv file and delete the parquet file (or vice versa) to
+ensure that when reloaded into a VirtualEnsemble object, the correct
+file is picked up"""
+            )
+        # Write all data we have to disk:
+
+        # We are out on a limb with respect to what the keys
+        # in the internalized dict-storage should be, and what
+        # we should call files on disk.
+        # Loaded txt files keep their txt extension in the internalized
+        # dict, so that the localpath is often 'npv.txt' for a dataframe
+        # This will be written as 'npv.txt.csv' and/or 'npv.txt.parquet' on
+        # disk. This we can handle.
+        #
+        # Internalized csv files are one notch more strange.
+        # When we internalize a csv file, we keep the csv extension in
+        # the dict-key, say unsmry--daily.csv.
+        # The logic from npv.txt implies that we write
+        # to unsmry--daily.csv.csv and unsmry--daily.csv.parquet.
+        # This would be easier to program, but will look to strange on disk
+        # It is an aim that the user should be able to fill the filesystem
+        # with CSV files, and reload ensembles.
+
+        # The chosen strategy is currently like this:
+        # to_disk:
+        # parameters.txt -> parameters.txt.csv and parameters.txt.parquet
+        # unsmry--daily.csv -> unsmry--daily.csv and unsmry--daily.parquet
+
+        # load_disk:
+        # parameters.txt.csv -> parameters.txt because there is a known
+        #     extension after removal of csv.
+        # STATUS.csv -> STATUS, because STATUS is a special file
+        # unsmry--daily.csv -> unsmry--daily.csv
+        # unsmry--daily.parquet -> unsmry--daily.csv
+
+        for key in self.keys():
+            dirname = os.path.join(filesystempath, os.path.dirname(key))
+            if dirname:
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+
+            data = self.get_df(key)
+            filename = os.path.join(dirname, os.path.basename(key))
+
+            # Trim .csv from end of dict-key
+            # .csv will be reinstated by logic in load_disk()
+            if filename[-4:] == ".csv":
+                filebase = filename[:-4]
+            else:
+                # parameters.txt or STATUS ends here:
+                filebase = filename
+
+            if not isinstance(data, pd.DataFrame):
+                raise ValueError("VirtualEnsembles should " + "only store DataFrames")
+            parquetfailed = False
+            if dumpparquet:
+                try:
+                    data.to_parquet(filebase + ".parquet", index=False, engine="auto")
+                except (ValueError, pyarrow.ArrowTypeError):
+                    # Accept that some dataframes cannot be written by parquet,
+                    # The CSV file will be there as backup.
+                    logger.warning("Could not write %s as parquet file", key)
+                    parquetfailed = True
+
+            if dumpcsv or parquetfailed:
+                data.to_csv(filebase + ".csv", index=False)
+
+    def load_disk(self, filesystempath, format="parquet"):
         """Load data from disk.
 
         Data must be written like to_disk() would have
-        written it.
+        written it. As long as you follow that convention,
+        you are able to add data manually to the filesystem
+        and load them into a VirtualEnsemble.
+
+        Any DataFrame not containing a column called 'REAL' with
+        integers will be ignored.
+
+        Args:
+            filesystempath: path to a directory that was written by
+                VirtualEnsemble.to_disk().
+            format: string with the preferred format to load,
+                must be either csv or parquet. If you say 'csv'
+                parquet files will always be ignored. If you
+                say parquet, corresponding 'csv' files will still
+                be parsed. Delete them if you really don't want them
+
         """
-        # Mature analogue function in VirtualRealization before commencing this
-        raise NotImplementedError
+        if format not in ["csv", "parquet"]:
+            raise ValueError("Unknown format for load_disk: %s", format)
+
+        # Clear all data we have..
+        self._data = {}
+        self._name = None
+
+        def isvalidframe(frame, name):
+            if "REAL" not in frame.columns:
+                logger.warning(
+                    "The column 'REAL' was not found" + " in file %s  - ignored",
+                    filename,
+                )
+                return False
+            if frame["REAL"].dtype != np.int64:
+                logger.warning(
+                    "The column 'REAL' must contain only integers"
+                    + " in file %s  - ignored",
+                    filename,
+                )
+                return False
+            if frame["REAL"].min() < 0:
+                logger.warning(
+                    "The column 'REAL' must contain only positive"
+                    + " integers in file %s  - ignored",
+                    filename,
+                )
+                return False
+            return True
+
+        for root, foo, filenames in os.walk(filesystempath):
+            localpath = root.replace(filesystempath, "")
+            if localpath and localpath[0] == os.path.sep:
+                localpath = localpath[1:]
+            for filename in filenames:
+                if filename == "_name":
+                    self._name = "".join(
+                        open(os.path.join(root, filename), "r").readlines()
+                    ).strip()
+
+                # We will loop through the directory structure, and
+                # data will be duplicated as they can be both in csv
+                # and parquet files. We will only load one of them if so.
+                elif filename[-4:] == ".csv":
+                    filebase = filename[:-4]
+                    parquetfile = filebase + ".parquet"
+                    # Treat special cases (!!!) NB: Code duplication below
+                    if (
+                        filebase[-4:] == ".txt"
+                        or filebase[-6:] == "STATUS"
+                        or filebase[-2:] == "OK"
+                    ):
+                        internalizedkey = os.path.join(localpath, filebase)
+                    else:
+                        internalizedkey = os.path.join(localpath, filebase + ".csv")
+                    if format == "csv" or not os.path.exists(
+                        os.path.join(root, parquetfile)
+                    ):
+                        parsedframe = pd.read_csv(os.path.join(root, filename))
+                        if isvalidframe(parsedframe, filename):
+                            self.data[internalizedkey] = parsedframe
+
+                elif filename[-8:] == ".parquet":
+                    filebase = filename[:-8]
+                    if (
+                        filebase[-4:] == ".txt"
+                        or filebase[-6:] == "STATUS"
+                        or filebase[-2:] == "OK"
+                    ):
+                        internalizedkey = os.path.join(localpath, filebase)
+                    else:
+                        internalizedkey = os.path.join(localpath, filebase + ".csv")
+                    if format == "parquet":
+                        parsedframe = pd.read_parquet(os.path.join(root, filename))
+                        if isvalidframe(parsedframe, filename):
+                            self.data[internalizedkey] = parsedframe
+                else:
+                    logger.debug("load_disk: Ignoring file: %s", filename)
 
     def __repr__(self):
         """Textual representation of the object"""

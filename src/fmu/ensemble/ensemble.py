@@ -333,13 +333,29 @@ class ScratchEnsemble(object):
         This means that all imported data in each realization is
         aggregated and stored as dataframes in the returned
         VirtualEnsemble
+
+        Unless specified, the VirtualEnsemble object wil
+        have the same 'name' as the ScratchEnsemble.
         """
+        if not name:
+            name = self._name
         vens = VirtualEnsemble(name=name)
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
         vens.update_realindices()
         return vens
+
+    def to_disk(self, filesystempath, delete=False,
+                dumpcsv=True, dumpparquet=True):
+        """Dump ensemble data to a directory on disk.
+
+        The ScratchEnsemble is first converted to a VirtualEnsemble,
+        which is then dumped to disk. This function is a
+        convenience wrapper for to_disk() in VirtualEnsemble.
+        """
+        self.to_virtual().to_disk(filesystempath, delete,
+                                  dumpcsv, dumpparquet)
 
     @property
     def parameters(self):
