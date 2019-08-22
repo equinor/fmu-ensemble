@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble 0.2.1.57 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble 0.2.1.58 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.2.1.57
+                0.2.1.58
               </div>
             
           
@@ -2139,9 +2139,11 @@ files should be traversed</p></li>
 <dt id="fmu.ensemble.realization.ScratchRealization.load_smry">
 <code class="sig-name descname">load_smry</code><span class="sig-paren">(</span><em class="sig-param">time_index='raw'</em>, <em class="sig-param">column_keys=None</em>, <em class="sig-param">cache_eclsum=True</em>, <em class="sig-param">start_date=None</em>, <em class="sig-param">end_date=None</em>, <em class="sig-param">include_restart=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.load_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.load_smry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produce dataframe from Summary data from the realization</p>
-<p>When this function is called, the dataframe will be cached.
-Caching supports different time_index, but there is no handling
-of multiple sets of column_keys. The cached data will be called</p>
+<p>When this function is called, the dataframe will be
+internalized.  Internalization of summary data in a
+realization object supports different time_index, but there is
+no handling of multiple sets of column_keys. The cached data
+will be called</p>
 <blockquote>
 <div><p>‘share/results/tables/unsmry–&lt;time_index&gt;.csv’</p>
 </div></blockquote>
@@ -2150,6 +2152,7 @@ of multiple sets of column_keys. The cached data will be called</p>
 on the chosen time_index. If a custom time_index (list
 of datetime) was supplied, &lt;time_index&gt; will be called ‘custom’.</p>
 <p>Wraps ecl.summary.EclSum.pandas_frame()</p>
+<p>See also get_smry()</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2158,7 +2161,7 @@ of datetime) was supplied, &lt;time_index&gt; will be called ‘custom’.</p>
 return the simulated report steps (also default).
 If a list of DateTime is supplied, data will be resampled
 to these.</p></li>
-<li><p><strong>column_keys</strong> – list of column key wildcards.</p></li>
+<li><p><strong>column_keys</strong> – list of column key wildcards. None means everything.</p></li>
 <li><p><strong>cache_eclsum</strong> – boolean for whether to keep the loaded EclSum
 object in memory after data has been loaded.</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
@@ -2174,7 +2177,8 @@ files should be traversed</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>DataFrame with summary keys as columns and dates as indices.</dt><dd><p>Empty dataframe if no summary is available.</p>
+<dt>DataFrame with summary keys as columns and dates as indices.</dt><dd><p>Empty dataframe if no summary is available or column
+keys do not exist.</p>
 </dd>
 </dl>
 </p>
@@ -2191,14 +2195,26 @@ touching internalized dataframes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cache</strong> – Boolean for wheter the EclSum object is to be cached.
-defaults to True.</p></li>
-<li><p><strong>include_restart</strong> – boolean sent to libecl for wheter restarts
-files should be traversed</p></li>
+<li><p><strong>time_index</strong> – string indicating a resampling frequency,
+‘yearly’, ‘monthly’, ‘daily’, ‘last’ or ‘raw’, the latter will
+return the simulated report steps (also default).
+If a list of DateTime is supplied, data will be resampled
+to these.</p></li>
+<li><p><strong>column_keys</strong> – list of column key wildcards. None means everything.</p></li>
+<li><p><strong>cache_eclsum</strong> – boolean for whether to keep the loaded EclSum
+object in memory after data has been loaded.</p></li>
+<li><p><strong>start_date</strong> – str or date with first date to include.
+Dates prior to this date will be dropped, supplied
+start_date will always be included.</p></li>
+<li><p><strong>end_date</strong> – str or date with last date to be included.
+Dates past this date will be dropped, supplied
+end_date will always be included. Overriden if time_index
+is ‘last’.</p></li>
 </ul>
 </dd>
 </dl>
-<p>Returns empty dataframe if there is no summary file</p>
+<p>Returns empty dataframe if there is no summary file, or if the
+column_keys are not existing.</p>
 </dd></dl>
 
 <dl class="method">

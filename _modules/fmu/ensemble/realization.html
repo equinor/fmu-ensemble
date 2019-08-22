@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.57 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.58 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.57
+                0.2.1.58
               </div>
             
           
@@ -930,9 +930,11 @@
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Produce dataframe from Summary data from the realization</span>
 
-<span class="sd">        When this function is called, the dataframe will be cached.</span>
-<span class="sd">        Caching supports different time_index, but there is no handling</span>
-<span class="sd">        of multiple sets of column_keys. The cached data will be called</span>
+<span class="sd">        When this function is called, the dataframe will be</span>
+<span class="sd">        internalized.  Internalization of summary data in a</span>
+<span class="sd">        realization object supports different time_index, but there is</span>
+<span class="sd">        no handling of multiple sets of column_keys. The cached data</span>
+<span class="sd">        will be called</span>
 
 <span class="sd">          &#39;share/results/tables/unsmry--&lt;time_index&gt;.csv&#39;</span>
 
@@ -943,13 +945,15 @@
 
 <span class="sd">        Wraps ecl.summary.EclSum.pandas_frame()</span>
 
+<span class="sd">        See also get_smry()</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            time_index: string indicating a resampling frequency,</span>
 <span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;last&#39; or &#39;raw&#39;, the latter will</span>
 <span class="sd">               return the simulated report steps (also default).</span>
 <span class="sd">               If a list of DateTime is supplied, data will be resampled</span>
 <span class="sd">               to these.</span>
-<span class="sd">            column_keys: list of column key wildcards.</span>
+<span class="sd">            column_keys: list of column key wildcards. None means everything.</span>
 <span class="sd">            cache_eclsum: boolean for whether to keep the loaded EclSum</span>
 <span class="sd">                object in memory after data has been loaded.</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
@@ -964,7 +968,9 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame with summary keys as columns and dates as indices.</span>
-<span class="sd">                Empty dataframe if no summary is available.</span>
+<span class="sd">                Empty dataframe if no summary is available or column</span>
+<span class="sd">                keys do not exist.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">):</span>
             <span class="c1"># Return empty, but do not store the empty dataframe in self.data</span>
@@ -1019,12 +1025,24 @@
 <span class="sd">        touching internalized dataframes.</span>
 
 <span class="sd">        Arguments:</span>
-<span class="sd">            cache: Boolean for wheter the EclSum object is to be cached.</span>
-<span class="sd">                defaults to True.</span>
-<span class="sd">            include_restart: boolean sent to libecl for wheter restarts</span>
-<span class="sd">                files should be traversed</span>
+<span class="sd">            time_index: string indicating a resampling frequency,</span>
+<span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;last&#39; or &#39;raw&#39;, the latter will</span>
+<span class="sd">               return the simulated report steps (also default).</span>
+<span class="sd">               If a list of DateTime is supplied, data will be resampled</span>
+<span class="sd">               to these.</span>
+<span class="sd">            column_keys: list of column key wildcards. None means everything.</span>
+<span class="sd">            cache_eclsum: boolean for whether to keep the loaded EclSum</span>
+<span class="sd">                object in memory after data has been loaded.</span>
+<span class="sd">            start_date: str or date with first date to include.</span>
+<span class="sd">                Dates prior to this date will be dropped, supplied</span>
+<span class="sd">                start_date will always be included.</span>
+<span class="sd">            end_date: str or date with last date to be included.</span>
+<span class="sd">                Dates past this date will be dropped, supplied</span>
+<span class="sd">                end_date will always be included. Overriden if time_index</span>
+<span class="sd">                is &#39;last&#39;.</span>
 
-<span class="sd">        Returns empty dataframe if there is no summary file</span>
+<span class="sd">        Returns empty dataframe if there is no summary file, or if the</span>
+<span class="sd">        column_keys are not existing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_keys</span><span class="p">]</span>
@@ -1041,9 +1059,13 @@
             <span class="n">time_index_arg</span> <span class="o">=</span> <span class="n">time_index</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">):</span>
-            <span class="n">dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span>
-                <span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">pandas_frame</span><span class="p">(</span><span class="n">time_index_arg</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span>
+                    <span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">pandas_frame</span><span class="p">(</span><span class="n">time_index_arg</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="c1"># We get here if we have requested non-existing column keys</span>
+                <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">cache_eclsum</span><span class="p">:</span>
                 <span class="c1"># Ensure EclSum object can be garbage collected</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_eclsum</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1629,8 +1651,11 @@
     <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span>
         <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
         <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
+        <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
+        <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unrecognized frequency for date normalization&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unrecognized frequency </span><span class="si">%s</span><span class="s2"> for date normalization&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">freq</span><span class="p">))</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span></div>
 
 

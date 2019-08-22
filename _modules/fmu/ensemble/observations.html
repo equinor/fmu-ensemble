@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble 0.2.1.57 documentation</title>
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble 0.2.1.58 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.57
+                0.2.1.58
               </div>
             
           
@@ -169,11 +169,12 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">dateutil</span>
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
 
 <span class="kn">from</span> <span class="nn">.etc</span> <span class="k">import</span> <span class="n">Interaction</span>
 <span class="kn">from</span> <span class="nn">.realization</span> <span class="k">import</span> <span class="n">ScratchRealization</span>
@@ -252,9 +253,14 @@
         <span class="c1"># Identify and warn about errors in observation syntax (dates etc)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_clean_observations</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initialized observation with obstypes </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">obskey</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># (fixme: this string does not make sense)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">%s</span><span class="s2">: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">obskey</span><span class="p">])))</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">someobject</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Pick objects from the observations dict&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">someobject</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Observations.mismatch"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.mismatch">[docs]</a>    <span class="k">def</span> <span class="nf">mismatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ens_or_real</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the mismatch from the current observation set</span>
@@ -272,17 +278,27 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">EnsembleSet</span><span class="p">):</span>
             <span class="n">mismatches</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">ens</span> <span class="ow">in</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating mismatch for ensemble </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ensname</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">ens</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating mismatch for realization </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">realidx</span><span class="p">))</span>
                     <span class="n">mismatches</span><span class="p">[(</span><span class="n">ensname</span><span class="p">,</span> <span class="n">realidx</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realization_mismatch</span><span class="p">(</span><span class="n">real</span><span class="p">)</span>
                     <span class="n">mismatches</span><span class="p">[(</span><span class="n">ensname</span><span class="p">,</span> <span class="n">realidx</span><span class="p">)][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
                     <span class="n">mismatches</span><span class="p">[(</span><span class="n">ensname</span><span class="p">,</span> <span class="n">realidx</span><span class="p">)][</span><span class="s2">&quot;ENSEMBLE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensname</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">mismatches</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="p">(</span><span class="n">ScratchEnsemble</span><span class="p">,</span> <span class="n">VirtualEnsemble</span><span class="p">)):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">ScratchEnsemble</span><span class="p">):</span>
             <span class="n">mismatches</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">mismatches</span><span class="p">[</span><span class="n">realidx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realization_mismatch</span><span class="p">(</span><span class="n">real</span><span class="p">)</span>
                 <span class="n">mismatches</span><span class="p">[</span><span class="n">realidx</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">mismatches</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">mismatches</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">VirtualEnsemble</span><span class="p">):</span>
+            <span class="n">mismatches</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">realindices</span><span class="p">:</span>
+                <span class="n">mismatches</span><span class="p">[</span><span class="n">realidx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realization_mismatch</span><span class="p">(</span>
+                    <span class="n">ens_or_real</span><span class="o">.</span><span class="n">get_realization</span><span class="p">(</span><span class="n">realidx</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">mismatches</span><span class="p">[</span><span class="n">realidx</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">mismatches</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="p">(</span><span class="n">ScratchRealization</span><span class="p">,</span> <span class="n">VirtualRealization</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realization_mismatch</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">EnsembleSet</span><span class="p">):</span>
@@ -399,7 +415,18 @@
         <span class="k">for</span> <span class="n">obstype</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">obsunit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">obstype</span><span class="p">]:</span>  <span class="c1"># (list)</span>
                 <span class="k">if</span> <span class="n">obstype</span> <span class="o">==</span> <span class="s2">&quot;txt&quot;</span><span class="p">:</span>
-                    <span class="n">sim_value</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;localpath&quot;</span><span class="p">])[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">sim_value</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;localpath&quot;</span><span class="p">])[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> in </span><span class="si">%s</span><span class="s2"> not found, ignored&quot;</span><span class="p">,</span>
+                            <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
+                            <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;localpath&quot;</span><span class="p">],</span>
+                        <span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found, ignored&quot;</span><span class="p">,</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;localpath&quot;</span><span class="p">])</span>
+                        <span class="k">continue</span>
                     <span class="n">mismatch</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sim_value</span> <span class="o">-</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
                     <span class="n">measerror</span> <span class="o">=</span> <span class="mi">1</span>
                     <span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="n">mismatch</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">mismatch</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
@@ -419,7 +446,13 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">obstype</span> <span class="o">==</span> <span class="s2">&quot;scalar&quot;</span><span class="p">:</span>
-                    <span class="n">sim_value</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">])</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">sim_value</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="s2">&quot;No data found for scalar: </span><span class="si">%s</span><span class="s2">, ignored&quot;</span><span class="p">,</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
+                        <span class="k">continue</span>
                     <span class="n">mismatch</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sim_value</span> <span class="o">-</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
                     <span class="n">measerror</span> <span class="o">=</span> <span class="mi">1</span>
                     <span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="n">mismatch</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">mismatch</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
@@ -437,11 +470,24 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">obstype</span> <span class="o">==</span> <span class="s2">&quot;smryh&quot;</span><span class="p">:</span>
-                    <span class="c1"># Will use raw times when available.</span>
-                    <span class="c1"># Time index is always identical</span>
-                    <span class="n">sim_hist</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
-                        <span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;histvec&quot;</span><span class="p">]]</span>
-                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="s2">&quot;time_index&quot;</span> <span class="ow">in</span> <span class="n">obsunit</span><span class="p">:</span>
+                        <span class="n">sim_hist</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+                            <span class="n">time_index</span><span class="o">=</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">],</span>
+                            <span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;histvec&quot;</span><span class="p">]],</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">sim_hist</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+                            <span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;histvec&quot;</span><span class="p">]]</span>
+                            <span class="c1"># (let get_smry() determine the possible time_index)</span>
+                        <span class="p">)</span>
+                    <span class="c1"># If empty df returned, we don&#39;t have the data for this:</span>
+                    <span class="k">if</span> <span class="n">sim_hist</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="s2">&quot;No data found for smryh: </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">, ignored.&quot;</span><span class="p">,</span>
+                            <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
+                            <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;histvec&quot;</span><span class="p">],</span>
+                        <span class="p">)</span>
+                        <span class="k">continue</span>
                     <span class="n">sim_hist</span><span class="p">[</span><span class="s2">&quot;mismatch&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">sim_hist</span><span class="p">[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">sim_hist</span><span class="p">[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;histvec&quot;</span><span class="p">]]</span>
                     <span class="p">)</span>
@@ -450,19 +496,27 @@
                         <span class="nb">dict</span><span class="p">(</span>
                             <span class="n">OBSTYPE</span><span class="o">=</span><span class="s2">&quot;smryh&quot;</span><span class="p">,</span>
                             <span class="n">OBSKEY</span><span class="o">=</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
-                            <span class="n">MISMATCH</span><span class="o">=</span><span class="n">sim_hist</span><span class="o">.</span><span class="n">mismatch</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                            <span class="n">MISMATCH</span><span class="o">=</span><span class="n">sim_hist</span><span class="p">[</span><span class="s2">&quot;mismatch&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
                             <span class="n">MEASERROR</span><span class="o">=</span><span class="n">measerror</span><span class="p">,</span>
-                            <span class="n">L1</span><span class="o">=</span><span class="n">sim_hist</span><span class="o">.</span><span class="n">mismatch</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
-                            <span class="n">L2</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">sim_hist</span><span class="o">.</span><span class="n">mismatch</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+                            <span class="n">L1</span><span class="o">=</span><span class="n">sim_hist</span><span class="p">[</span><span class="s2">&quot;mismatch&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                            <span class="n">L2</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">sim_hist</span><span class="p">[</span><span class="s2">&quot;mismatch&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
                 <span class="k">if</span> <span class="n">obstype</span> <span class="o">==</span> <span class="s2">&quot;smry&quot;</span><span class="p">:</span>
                     <span class="c1"># For &#39;smry&#39;, there is a list of</span>
                     <span class="c1"># observations (indexed by date)</span>
                     <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;observations&quot;</span><span class="p">]:</span>
-                        <span class="n">sim_value</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
-                            <span class="n">time_index</span><span class="o">=</span><span class="p">[</span><span class="n">unit</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]],</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
-                        <span class="p">)[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">sim_value</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+                                <span class="n">time_index</span><span class="o">=</span><span class="p">[</span><span class="n">unit</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]],</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+                            <span class="p">)[</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="s2">&quot;No data found for smry: </span><span class="si">%s</span><span class="s2"> at </span><span class="si">%s</span><span class="s2">, ignored.&quot;</span><span class="p">,</span>
+                                <span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
+                                <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]),</span>
+                            <span class="p">)</span>
+                            <span class="k">continue</span>
                         <span class="n">mismatch</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sim_value</span> <span class="o">-</span> <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
                         <span class="n">sign</span> <span class="o">=</span> <span class="p">(</span><span class="n">mismatch</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">mismatch</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
                         <span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -553,16 +607,17 @@
             <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">smryunits</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="n">OrderedDict</span><span class="p">)):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s2">&quot;Observation units must be dicts, &quot;</span> <span class="o">+</span> <span class="s2">&quot;deleting: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+                        <span class="s2">&quot;Observation units must be dicts, deleting: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="k">del</span> <span class="n">smryunits</span><span class="p">[</span><span class="n">smryunits</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">unit</span><span class="p">)]</span>
                     <span class="k">continue</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s2">&quot;key&quot;</span> <span class="ow">in</span> <span class="n">unit</span> <span class="ow">and</span> <span class="s2">&quot;observations&quot;</span> <span class="ow">in</span> <span class="n">unit</span><span class="p">):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s2">&quot;Observation unit must &quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot;contain key and observations, &quot;</span>
-                        <span class="o">+</span> <span class="s2">&quot;deleting: &quot;</span>
-                        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+                        <span class="p">(</span>
+                            <span class="s2">&quot;Observation unit must contain key and&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;observations, deleting: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="p">),</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">),</span>
                     <span class="p">)</span>
                     <span class="k">del</span> <span class="n">smryunits</span><span class="p">[</span><span class="n">smryunits</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">unit</span><span class="p">)]</span>
                     <span class="k">continue</span>
@@ -576,7 +631,7 @@
                         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Date not understood </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">observation</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]))</span>
                         <span class="k">continue</span>
             <span class="c1"># If everything is deleted from &#39;smry&#39;, delete it</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">smryunits</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">smryunits</span><span class="p">:</span>
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="s2">&quot;smry&quot;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Observations.to_ert2observations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_ert2observations">[docs]</a>    <span class="k">def</span> <span class="nf">to_ert2observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

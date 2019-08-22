@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Advanced usage &mdash; fmu-ensemble 0.2.1.57 documentation</title>
+  <title>Advanced usage &mdash; fmu-ensemble 0.2.1.58 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.2.1.57
+                0.2.1.58
               </div>
             
           
@@ -276,6 +276,7 @@ like:</p>
 <span class="nt">smryh</span><span class="p">:</span>
   <span class="p p-Indicator">-</span> <span class="nt">key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">FOPT</span>
     <span class="nt">histvec</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">FOPTH</span>
+    <span class="nt">time_index</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">monthly</span>  <span class="c1"># or yearly, daily, raw or last</span>
 </pre></div>
 </div>
 <p>This file can be loaded in Python:</p>
@@ -285,7 +286,7 @@ like:</p>
 </div>
 <p>Alternatively, it is possible to initialize this directly without the filesystem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">({</span><span class="s1">&#39;smryh&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;histvec&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPTH&#39;</span><span class="p">}]})</span>
+        <span class="s1">&#39;histvec&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;time_index&#39;</span><span class="p">:</span> <span class="s1">&#39;last&#39;</span><span class="p">}]})</span>
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an ensemble we want to analyze</span>
