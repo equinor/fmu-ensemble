@@ -130,6 +130,7 @@ like:
     smryh:
       - key: FOPT
         histvec: FOPTH
+        time_index: monthly  # or yearly, daily, raw or last
 
 This file can be loaded in Python:
 
@@ -143,7 +144,7 @@ Alternatively, it is possible to initialize this directly without the filesystem
 .. code-block:: python
 
     obs = ensemble.Observations({'smryh': [{'key': 'FOPT',
-            'histvec': 'FOPTH'}]})
+            'histvec': 'FOPTH', 'time_index': 'last'}]})
 
 
 .. code-block:: python

@@ -117,7 +117,9 @@ def test_real_mismatch():
     # and yield the same result
     obs2r = Observations(yaml.full_load(obs2.to_yaml()))
     realmis2r = obs2r.mismatch(real)
-    assert np.all(realmis2["MISMATCH"].values.sort() == realmis2r["MISMATCH"].values.sort())
+    assert np.all(
+        realmis2["MISMATCH"].values.sort() == realmis2r["MISMATCH"].values.sort()
+    )
 
     # Test use of allocated values:
     obs3 = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})
@@ -126,6 +128,66 @@ def test_real_mismatch():
     assert fopt_mis.loc[0, "OBSKEY"] == "FOPT"
     assert fopt_mis.loc[0, "L1"] > 0
     assert fopt_mis.loc[0, "L1"] != fopt_mis.loc[0, "L2"]
+
+    # Test mismatch where some data is missing:
+    obs4 = Observations({"smryh": [{"key": "FOOBAR", "histvec": "FOOBARH"}]})
+    mis_mis = obs4.mismatch(real)
+    assert mis_mis.empty
+
+    # This test fails, the consistency check is not implemented.
+    # obs_bogus = Observations({'smryh': [{'keddy': 'FOOBAR',
+    #                               'histdddvec': 'FOOBARH'}]})
+    # mis_mis = obs_bogus.mismatch(real)
+    # assert mis_mis.empty
+
+    obs_bogus_scalar = Observations(
+        {"scalar": [{"key": "nonexistingnpv.txt", "value": 3400}]}
+    )
+    # (a warning should be logged)
+    assert obs_bogus_scalar.mismatch(real).empty
+
+    obs_bogus_param = Observations(
+        {
+            "txt": [
+                {
+                    "localpath": "bogusparameters.txt",
+                    "key": "RMS_SEED",
+                    "value": 600000000,
+                }
+            ]
+        }
+    )
+    # (a warning should be logged)
+    assert obs_bogus_param.mismatch(real).empty
+
+    obs_bogus_param = Observations(
+        {
+            "txt": [
+                {
+                    "localpath": "parameters.txt",
+                    "key": "RMS_SEEEEEEED",
+                    "value": 600000000,
+                }
+            ]
+        }
+    )
+    # (a warning should be logged)
+    assert obs_bogus_param.mismatch(real).empty
+
+    # Non-existing summary key:
+    obs_bogus_smry = Observations(
+        {
+            "smry": [
+                {
+                    "key": "WBP4:OP_XXXXX",
+                    "observations": [
+                        {"date": datetime.date(2001, 1, 1), "error": 4, "value": 251}
+                    ],
+                }
+            ]
+        }
+    )
+    assert obs_bogus_smry.mismatch(real).empty
 
     # Test dumping to yaml:
     # Not implemented.
@@ -212,6 +274,65 @@ def test_errormessages():
     assert wrongobs.empty
 
 
+def test_smryh():
+    """Test that smryh mismatch calculation will respect time index"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    ens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    )
+
+    obs_yearly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "yearly"}]}
+    )
+    obs_raw = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "raw"}]}
+    )
+    obs_monthly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
+    )
+    obs_daily = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "daily"}]}
+    )
+    obs_last = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "last"}]}
+    )
+    obs_error = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "ølasjkdf"}]}
+    )
+    obs_error2 = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": 4.43}]}
+    )
+
+    mismatchyearly = obs_yearly.mismatch(ens)
+    mismatchmonthly = obs_monthly.mismatch(ens)
+    mismatchdaily = obs_daily.mismatch(ens)
+    mismatchlast = obs_last.mismatch(ens)
+    mismatchraw = obs_raw.mismatch(ens)
+
+    # When only one datapoint is included, these should be identical:
+    assert (mismatchlast["L1"] == mismatchlast["L2"]).all()
+    assert (mismatchlast["L1"] == mismatchlast["MISMATCH"].abs()).all()
+
+    # Check that we have indeed calculated things differently between the time indices:
+    assert mismatchyearly["L2"].sum != mismatchmonthly["L2"].sum()
+    assert mismatchdaily["L2"].sum != mismatchraw["L2"].sum()
+
+    with pytest.raises(ValueError):
+        obs_error.mismatch(ens)
+    with pytest.raises(TypeError):
+        # Improve here, this should give ValueError instead
+        obs_error2.mismatch(ens)
+
+    print(mismatchlast)
+    print(mismatchdaily)
+    print(obs_raw.mismatch(ens))
+
+
 def test_ens_mismatch():
     """Test calculation of mismatch to ensemble data"""
     if "__file__" in globals():
@@ -238,6 +359,121 @@ def test_ens_mismatch():
     fopt_rank = mismatch.sort_values("L2", ascending=True)["REAL"].values
     assert fopt_rank[0] == 2  # closest realization
     assert fopt_rank[-1] == 1  # worst realization
+
+    # Try again with reference to non-existing vectors:
+    obs = Observations({"smryh": [{"key": "FOPTFLUFF", "histvec": "FOPTFLUFFH"}]})
+    mismatch = obs.mismatch(ens)
+    assert mismatch.empty
+
+
+def test_vens_mismatch():
+    """Test calculation of mismatch to virtualized ensemble data"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    ens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    )
+    ens.load_smry(column_keys=["FOPT*"], time_index="monthly")
+
+    vens = ens.to_virtual()
+
+    # We don't need time_index now, because monthly is all we have.
+    obs = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})
+
+    mismatch = obs.mismatch(vens)
+    mismatch_raw = obs.mismatch(ens)
+    assert isinstance(mismatch, pd.DataFrame)
+    assert not mismatch.empty
+    assert "L1" in mismatch.columns
+    assert "L2" in mismatch.columns
+    assert "MISMATCH" in mismatch.columns
+
+    assert mismatch["MISMATCH"].sum() != mismatch_raw["MISMATCH"].sum()
+
+    obs_monthly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
+    )
+    assert (
+        (
+            mismatch.sort_values("REAL").reset_index(drop=True)
+            == obs_monthly.mismatch(ens).sort_values("REAL").reset_index(drop=True)
+        )
+        .all()
+        .all()
+    )
+
+    # We should be able to do yearly smryh comparisons from virtualized
+    # monthly profiles:
+    obs_yearly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "yearly"}]}
+    )
+    mismatch_yearly = obs_yearly.mismatch(vens)
+    assert mismatch_yearly["MISMATCH"].sum() != mismatch["MISMATCH"].sum()
+
+    # When load_smry() is forgotten before virtualization:
+    vens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    ).to_virtual()
+    with pytest.raises(ValueError):
+        obs.mismatch(vens)
+
+    # Removal of one realization in the virtualized ensemble:
+    ens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    )
+    ens.load_smry(column_keys=["FOPT*"], time_index="monthly")
+    vens = ens.to_virtual()
+    vens.remove_realizations(2)
+    mismatch_subset = obs.mismatch(vens)
+    assert 2 not in mismatch_subset["REAL"].unique()
+    assert 0 in mismatch_subset["REAL"].unique()
+
+
+def test_ens_failedreals():
+    """Ensure we can calculate mismatch where some realizations
+    do not have UNSMRY data"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    ens = ScratchEnsemble(
+        "test",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/",
+        autodiscovery=False,
+    )
+    obs = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})
+    mismatch = obs.mismatch(ens)
+
+    # There are no UNSMRY found, so the mismatch should be empty:
+    assert mismatch.empty
+
+    ens.find_files("eclipse/model/*UNSMRY")
+    assert not obs.mismatch(ens).empty
+
+    # Reinitialize
+    ens = ScratchEnsemble(
+        "test",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/",
+        autodiscovery=False,
+    )
+
+    # Redirect UNSMRY pointer in realizaion 3 so it isn't found
+    ens.find_files("eclipse/model/*UNSMRY")
+    real3files = ens[3].files
+    real3files.loc[real3files["FILETYPE"] == "UNSMRY", "FULLPATH"] = "FOO"
+
+    # Check that we only have EclSum for 2 and not for 3:
+    assert ens[2].get_eclsum()
+    assert not ens[3].get_eclsum()
+
+    missingsmry = obs.mismatch(ens)
+    # Realization 3 should NOT be present now
+    assert 3 not in list(missingsmry["REAL"])
+    assert not obs.mismatch(ens).empty
 
 
 def test_ensset_mismatch():
@@ -323,6 +559,7 @@ def test_ensset_mismatch():
         )
 
     # Erroneous date will raise Exception
+    # (but a valid date will give an extrapolated value)
     with pytest.raises(ValueError):
         obs_pr = Observations(
             {
@@ -336,6 +573,17 @@ def test_ensset_mismatch():
                 ]
             }
         )
+    obs_extrap = Observations(
+        {
+            "smry": [
+                {
+                    "key": "WBP4:OP_1",
+                    "observations": [{"value": 250, "error": 1, "date": "1977-01-01"}],
+                }
+            ]
+        }
+    )
+    assert len(obs_extrap.mismatch(ensset)) == 10  # (5 reals, 2 ensembles)
 
 
 def test_virtual_observations():

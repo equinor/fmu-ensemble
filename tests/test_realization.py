@@ -284,6 +284,20 @@ def test_volumetric_rates():
     assert tworows["FOPR"].iloc[0] * months == pytest.approx(cum_df["FOPT"].iloc[-1])
 
 
+    # Check for defaults and error handling:
+    assert not real.get_smry(column_keys=None).empty
+    assert not real.get_smry(column_keys=[None]).empty
+    assert not real.get_smry(column_keys=[None, 'WOPT:BOGUS']).empty
+    assert not real.get_smry(column_keys=['WOPT:BOGUS', None]).empty
+    column_count = len(real.get_smry())
+    # Columns repeatedly asked for should not be added:
+    assert len(real.get_smry(column_keys=[None, 'FOPT'])) == column_count
+    assert len(real.get_smry(column_keys=[None, 'FOPT', 'FOPT'])) \
+        == column_count
+    assert real.get_smry(column_keys=['WOPT:BOGUS']).empty
+
+    assert 'FOPT' in real.get_smry(column_keys=['WOPT:BOGUS', 'FOPT'])
+
 def test_datenormalization():
     """Test normalization of dates, where
     dates can be ensured to be on dategrid boundaries"""
@@ -645,10 +659,9 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     real = ensemble.ScratchRealization(realdir)
     # When issue 37 is resolved, update this to 1 and check the
     # error message is picked up.
-    assert len(real.get_df("STATUS")) == 1
-    fhandle = open(realdir + "/STATUS", "w")
-    fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
+    assert len(real.get_df('STATUS')) == 1
+    fhandle = open(realdir + '/STATUS', 'w')
+    fhandle.write("""Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:55 .... 20:58:57
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
