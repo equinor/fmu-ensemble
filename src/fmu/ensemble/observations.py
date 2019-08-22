@@ -9,11 +9,12 @@ from __future__ import print_function
 
 import os
 import math
+import datetime
+from collections import OrderedDict
+
 import yaml
 import pandas as pd
 import dateutil
-import datetime
-from collections import OrderedDict
 
 from .etc import Interaction
 from .realization import ScratchRealization
@@ -97,9 +98,9 @@ class Observations(object):
             # (fixme: this string does not make sense)
             logger.info(" %s: ", str(len(self.observations[obskey])))
 
-    def __getitem__(self, object):
+    def __getitem__(self, someobject):
         """Pick objects from the observations dict"""
-        return self.observations[object]
+        return self.observations[someobject]
 
     def mismatch(self, ens_or_real):
         """Compute the mismatch from the current observation set
@@ -452,9 +453,10 @@ class Observations(object):
                     continue
                 if not ("key" in unit and "observations" in unit):
                     logger.warning(
-                        "Observation unit must "
-                        + "contain key and observations, "
-                        + "deleting: %s",
+                        (
+                            "Observation unit must contain key and",
+                            "observations, deleting: %s",
+                        ),
                         str(unit),
                     )
                     del smryunits[smryunits.index(unit)]
@@ -469,7 +471,7 @@ class Observations(object):
                         logger.error("Date not understood %s", str(observation["date"]))
                         continue
             # If everything is deleted from 'smry', delete it
-            if not len(smryunits):
+            if not smryunits:
                 del self.observations["smry"]
 
     def to_ert2observations(self):
