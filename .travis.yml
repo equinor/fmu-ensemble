@@ -11,6 +11,11 @@ python:
   - "2.7"
   - "3.6"
 
+addons:
+  apt:
+    packages:
+      - libsnappy-dev
+
 before_install:
   - pushd ..
   - export ROOT="$PWD"
