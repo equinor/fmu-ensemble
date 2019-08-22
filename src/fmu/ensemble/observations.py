@@ -124,10 +124,18 @@ class Observations(object):
                     mismatches[(ensname, realidx)]["REAL"] = realidx
                     mismatches[(ensname, realidx)]["ENSEMBLE"] = ensname
             return pd.concat(mismatches, axis=0, ignore_index=True)
-        elif isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
+        elif isinstance(ens_or_real, ScratchEnsemble):
             mismatches = {}
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
+                mismatches[realidx]["REAL"] = realidx
+            return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
+        elif isinstance(ens_or_real, VirtualEnsemble):
+            mismatches = {}
+            for realidx in ens_or_real.realindices:
+                mismatches[realidx] = self._realization_mismatch(
+                    ens_or_real.get_realization(realidx)
+                )
                 mismatches[realidx]["REAL"] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
         elif isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):

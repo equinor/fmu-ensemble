@@ -366,6 +366,62 @@ def test_ens_mismatch():
     assert mismatch.empty
 
 
+def test_vens_mismatch():
+    """Test calculation of mismatch to virtualized ensemble data"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    ens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    )
+    ens.load_smry(column_keys=["FOPT*"], time_index="monthly")
+
+    vens = ens.to_virtual()
+
+    # We don't need time_index now, because monthly is all we have.
+    obs = Observations({"smryh": [{"key": "FOPT", "histvec": "FOPTH"}]})
+
+    mismatch = obs.mismatch(vens)
+    mismatch_raw = obs.mismatch(ens)
+    assert isinstance(mismatch, pd.DataFrame)
+    assert not mismatch.empty
+    assert "L1" in mismatch.columns
+    assert "L2" in mismatch.columns
+    assert "MISMATCH" in mismatch.columns
+
+    obs_monthly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
+    )
+    assert (mismatch == obs_monthly.mismatch(ens)).all().all()
+
+    # We should be able to do yearly smryh comparisons from virtualized monthly profiles:
+    obs_yearly = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "yearly"}]}
+    )
+    mismatch_yearly = obs_yearly.mismatch(vens)
+    assert mismatch_yearly["MISMATCH"].sum() != mismatch["MISMATCH"].sum()
+
+    # When load_smry() is forgotten before virtualization:
+    vens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    ).to_virtual()
+    with pytest.raises(ValueError):
+        obs.mismatch(vens)
+
+    # Removal of one realization in the virtualized ensemble:
+    ens = ScratchEnsemble(
+        "test", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0/"
+    )
+    ens.load_smry(column_keys=["FOPT*"], time_index="monthly")
+    vens = ens.to_virtual()
+    vens.remove_realizations(2)
+    mismatch_subset = obs.mismatch(vens)
+    assert 2 not in mismatch_subset["REAL"].unique()
+    assert 0 in mismatch_subset["REAL"].unique()
+
+
 def test_ens_failedreals():
     """Ensure we can calculate mismatch where some realizations
     do not have UNSMRY data"""
