@@ -396,7 +396,11 @@ def test_vens_mismatch():
     obs_monthly = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
     )
-    assert (mismatch == obs_monthly.mismatch(ens)).all().all()
+    assert (
+        (mismatch.sort_values("REAL") == obs_monthly.mismatch(ens).sort_values("REAL"))
+        .all()
+        .all()
+    )
 
     # We should be able to do yearly smryh comparisons from virtualized
     # monthly profiles:
