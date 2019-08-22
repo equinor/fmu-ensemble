@@ -391,12 +391,15 @@ def test_vens_mismatch():
     assert "L2" in mismatch.columns
     assert "MISMATCH" in mismatch.columns
 
+    assert mismatch["MISMATCH"].sum() != mismatch_raw["MISMATCH"].sum()
+
     obs_monthly = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
     )
     assert (mismatch == obs_monthly.mismatch(ens)).all().all()
 
-    # We should be able to do yearly smryh comparisons from virtualized monthly profiles:
+    # We should be able to do yearly smryh comparisons from virtualized
+    # monthly profiles:
     obs_yearly = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "yearly"}]}
     )

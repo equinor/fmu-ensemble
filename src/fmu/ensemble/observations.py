@@ -446,7 +446,7 @@ class Observations(object):
             for unit in smryunits:
                 if not isinstance(unit, (dict, OrderedDict)):
                     logger.warning(
-                        "Observation units must be dicts, " + "deleting: " + str(unit)
+                        "Observation units must be dicts, deleting: %s", str(unit)
                     )
                     del smryunits[smryunits.index(unit)]
                     continue
