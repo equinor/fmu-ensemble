@@ -397,7 +397,10 @@ def test_vens_mismatch():
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "monthly"}]}
     )
     assert (
-        (mismatch.sort_values("REAL") == obs_monthly.mismatch(ens).sort_values("REAL"))
+        (
+            mismatch.sort_values("REAL").reset_index(drop=True)
+            == obs_monthly.mismatch(ens).sort_values("REAL").reset_index(drop=True)
+        )
         .all()
         .all()
     )
