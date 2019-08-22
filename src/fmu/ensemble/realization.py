@@ -18,8 +18,10 @@ import copy
 import glob
 import json
 from datetime import datetime, date, time
+import collections
 import dateutil
 
+import yaml
 import numpy
 import pandas as pd
 
@@ -63,16 +65,16 @@ class ScratchRealization(object):
     Args:
         path (str): absolute or relative path to a directory
             containing a realizations files.
-        realidxregexp: a compiled regular expression which
+        realidxregexp (re/str): a compiled regular expression which
             is used to determine the realization index (integer)
             from the path. First match is the index.
             Default: realization-(\d+)
             Only needs to match path components.
             If a string is supplied, it will be attempted
             compiled into a regular expression.
-        index: int, the realization index to be used, will
+        index (int): the realization index to be used, will
             override anything else.
-        autodiscovery: boolean, whether the realization should try to
+        autodiscovery (boolean): whether the realization should try to
             auto-discover certain data (UNSMRY files in standard location)
     """
 
@@ -115,9 +117,11 @@ class ScratchRealization(object):
                     break
             else:
                 logger.warning(
-                    "Could not determine realization "
-                    + "index for %s, "
-                    + "this cannot be inserted in an Ensemble",
+                    (
+                        "Could not determine realization "
+                        "index for %s, "
+                        "this cannot be inserted in an Ensemble"
+                    ),
                     abspath,
                 )
                 logger.warning("Maybe you need to use index=<someinteger>")
@@ -159,7 +163,7 @@ class ScratchRealization(object):
         """Return the runpath ("root") of the realization
 
         Returns:
-            str with a filesystem path which at least existeda
+            str: the filesystem path which at least existed
                 at time of object initialization.
         """
         return self._origpath
@@ -169,8 +173,8 @@ class ScratchRealization(object):
         to a VirtualRealization
 
         Args:
-            description: string, used as label
-            deepcopy: boolean. Set to true if you want to continue
+            description (str): used as label
+            deepcopy (boolean): Set to true if you want to continue
                to manipulate the ScratchRealization object
                afterwards without affecting the virtual realization.
                Defaults to True. False will give faster execution.
@@ -186,9 +190,9 @@ class ScratchRealization(object):
         Parse and internalize files from disk.
 
         Several file formats are supported:
-        * txt (one key-value pair pr. line)
-        * csv
-        * scalar (one number or one string in the first line)
+        - txt (one key-value pair pr. line)
+        - csv
+        - scalar (one number or one string in the first line)
         """
         if fformat == "txt":
             self.load_txt(localpath, convert_numeric, force_reread)
@@ -224,7 +228,7 @@ class ScratchRealization(object):
             convert_numeric: If True, non-numerical content will be thrown away
             force_reread: Reread the data from disk.
         Returns:
-            the value read from the file.
+            str/number: the value read from the file.
         """
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
@@ -299,7 +303,7 @@ class ScratchRealization(object):
                 returned cached results.
 
         Returns:
-            dict with the parsed values. Values will be returned as
+            dict: Dictionary with the parsed values. Values will be returned as
                 integers, floats or strings. If convert_numeric
                 is False, all values are strings.
         """
@@ -507,9 +511,9 @@ class ScratchRealization(object):
         to disk using the supplied 'localpath'.
 
         Args:
-            **kwargs: dict which is supplied to the callbacked function,
-            in which the key 'localpath' also points the the name
-            used for data internalization.
+            **kwargs (dict): which is supplied to the callbacked function,
+                in which the key 'localpath' also points the the name
+                used for data internalization.
         """
 
         if not kwargs:
@@ -577,17 +581,19 @@ class ScratchRealization(object):
         or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
+
+          'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case of ambiguity, a
         ValueError will be raised.
 
         Args:
-            localpath: the idenfier of the data requested
+            localpath (str): the idenfier of the data requested
 
         Returns:
             dataframe or dictionary
@@ -609,11 +615,13 @@ class ScratchRealization(object):
         within the datastore.
 
         If the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
+
+          'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
@@ -639,14 +647,21 @@ class ScratchRealization(object):
         # calling function handle further errors.
         return shortpath
 
-    def find_files(self, paths, metadata=None):
+    def find_files(self, paths, metadata=None, metayaml=False):
         """Discover realization files. The files dataframe
         will be updated.
 
         Certain functionality requires up-front file discovery,
         e.g. ensemble archiving and ensemble arithmetic.
 
-        CSV files for single use does not have to be discovered.
+        CSV files for single use do not have to be discovered.
+
+        Files containing double-dashes '--' indicate that the double
+        dashes separate different component with meaning in the
+        filename.  The components are extracted and put into
+        additional columns "COMP1", "COMP2", etc..
+        Filetype extension (after the last dot) will be removed
+        from the last component.
 
         Args:
             paths: str or list of str with filenames (will be globbed)
@@ -655,6 +670,14 @@ class ScratchRealization(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
                 During rediscovery of files, old metadata will be removed.
+            metayaml: Additional possibility of adding metadata from
+                associated yaml files. Yaml files to be associated to
+                a specific discovered file can have an optional dot in
+                front, and must end in .yml, added to the discovered filename.
+                The yaml file will be loaded as a dict, and have its keys
+                flattened using the separator '--'. Flattened keys are
+                then used as column headers in the returned dataframe.
+
         Returns:
             A slice of the internalized dataframe corresponding
             to the discovered files (will be included even if it has
@@ -669,12 +692,47 @@ class ScratchRealization(object):
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
                 absmatch = os.path.abspath(match)
+                dirname = os.path.dirname(absmatch)
+                basename = os.path.basename(match)
+                filetype = match.split(".")[-1]
                 filerow = {
                     "LOCALPATH": os.path.relpath(match, self._origpath),
-                    "FILETYPE": match.split(".")[-1],
+                    "FILETYPE": filetype,
                     "FULLPATH": absmatch,
-                    "BASENAME": os.path.basename(match),
+                    "BASENAME": basename,
                 }
+                # Look for and split basename based on double-dash '--'
+                basename_noext = basename.replace("." + filetype, "")
+                if "--" in basename_noext:
+                    for compidx, comp in enumerate(basename_noext.split("--")):
+                        filerow["COMP" + str(compidx + 1)] = comp
+
+                if metayaml:
+                    metadict = {}
+                    yaml_candidates = [
+                        "." + basename + ".yml",
+                        basename + ".yml",
+                        "." + basename + ".yaml",
+                        basename + ".yaml",
+                    ]
+                    # We will only parse the first one found! You
+                    # might be out of luck if you have multiple..
+                    for cand in yaml_candidates:
+                        if os.path.exists(os.path.join(dirname, cand)):
+                            metadict = yaml.full_load(open(os.path.join(dirname, cand)))
+                        continue
+
+                    # Flatten metadict:
+                    metadict = flatten(metadict, sep="--")
+                    for key, value in metadict.items():
+                        if key not in filerow:
+                            filerow[key] = value
+                        else:
+                            logger.warning(
+                                "Cannot add key %s from yaml, key is in use. Skipping.",
+                                key,
+                            )
+
                 # Delete this row if it already exists, determined by FULLPATH
                 if absmatch in self.files["FULLPATH"].values:
                     self.files = self.files[self.files["FULLPATH"] != absmatch]
@@ -714,8 +772,8 @@ class ScratchRealization(object):
                 files should be traversed
 
         Returns:
-           EclSum: object representing the summary file. None if
-               nothing was found.
+            EclSum: object representing the summary file. None if
+                nothing was found.
         """
         if cache and self._eclsum:  # Return cached object if available
             if self._eclsum_include_restart == include_restart:
@@ -810,7 +868,8 @@ class ScratchRealization(object):
             DataFrame with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available or column
                 keys do not exist.
-
+            DataFrame: with summary keys as columns and dates as indices.
+                Empty dataframe if no summary is available.
         """
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
@@ -964,10 +1023,12 @@ class ScratchRealization(object):
                 is compatible with the date index and the cumulative data.
 
         """
-        return self._get_volumetric_rates(self, column_keys, time_index, time_unit)
+        return self.static_get_volumetric_rates(
+            self, column_keys, time_index, time_unit
+        )
 
     @staticmethod
-    def _get_volumetric_rates(realization, column_keys, time_index, time_unit):
+    def static_get_volumetric_rates(realization, column_keys, time_index, time_unit):
         """Static method for volumetric rates
 
         This method is to be used by both ScratchRealization
@@ -1497,6 +1558,21 @@ def normalize_dates(start_date, end_date, freq):
     else:
         logger.warning("Unrecognized frequency %s for date normalization", str(freq))
     return (start_date, end_date)
+
+
+def flatten(dictionary, parent_key="", sep="_"):
+    """Flatten dictionary keys
+
+    Code from stackoverflow.
+    """
+    items = []
+    for key, value in dictionary.items():
+        new_key = parent_key + sep + key if parent_key else key
+        if isinstance(value, collections.MutableMapping):
+            items.extend(flatten(value, new_key, sep=sep).items())
+        else:
+            items.append((new_key, value))
+    return dict(items)
 
 
 def parse_number(value):

@@ -17,10 +17,10 @@ from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
 
 try:
-    skip_fmu_tools = False
+    SKIP_FMU_TOOLS = False
     from fmu.tools import volumetrics
 except ImportError:
-    skip_fmu_tools = True
+    SKIP_FMU_TOOLS = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -120,7 +120,7 @@ def test_ensembleset_reek001(tmp="TMP"):
     # Eclipse well names
     assert len(ensset3.get_wellnames("OP*")) == 5
     assert len(ensset3.get_wellnames("WI*")) == 3
-    assert len(ensset3.get_wellnames("")) == 0
+    assert not ensset3.get_wellnames("")
     assert len(ensset3.get_wellnames()) == 8
 
     # Check that we can retrieve cached versions
@@ -154,7 +154,7 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert len(ensset3.get_wellnames("OP*")) == 5
     assert len(ensset3.get_wellnames(None)) == 8
     assert len(ensset3.get_wellnames()) == 8
-    assert len(ensset3.get_wellnames("")) == 0
+    assert not ensset3.get_wellnames("")
     assert len(ensset3.get_wellnames(["OP*", "WI*"])) == 8
 
     # Test aggregation of csv files:
@@ -192,7 +192,7 @@ def test_ensembleset_reek001(tmp="TMP"):
         else:
             return pd.DataFrame()
 
-    if not skip_fmu_tools:
+    if not SKIP_FMU_TOOLS:
         rmsvols_df = ensset3.apply(
             rms_vol2df, filename="share/results/volumes/" + "geogrid_vol_oil_1.txt"
         )
@@ -225,7 +225,7 @@ def test_ensembleset_reek001(tmp="TMP"):
 
     # Delete the symlink and leftover from apply-testing when we are done.
     for real_dir in glob.glob(ensdir + "/realization-*"):
-        if not skip_fmu_tools:
+        if not SKIP_FMU_TOOLS:
             csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
             if os.path.exists(csvfile):
                 os.remove(csvfile)

@@ -40,6 +40,10 @@ def test_virtualensemble():
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
     assert len(vens["parameters.txt"]) == 5
 
+    # This is the dataframe of discovered files in the ScratchRealization
+    assert isinstance(vens["__files"], pd.DataFrame)
+    assert not vens["__files"].empty
+
     assert "REAL" in vens["STATUS"].columns
 
     # Check shorthand functionality:
@@ -152,6 +156,8 @@ def test_virtualensemble():
 
 
 def test_todisk():
+    """Test that we can write VirtualEnsembles to the filesystem in a
+    retrievable manner"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -172,7 +178,7 @@ def test_todisk():
 
     fromdisk = VirtualEnsemble(fromdisk="vens_dumped")
 
-    # Should have all the same keys, nothing more, nothing less,
+    # Should have all the same keys,
     # but change of order is fine
     assert set(vens.keys()) == set(fromdisk.keys())
 
@@ -205,21 +211,21 @@ def test_todisk():
 
     vens.to_disk("vens_dumped_csv", delete=True, dumpparquet=False)
     fromcsvdisk = VirtualEnsemble()
-    fromcsvdisk.load_disk("vens_dumped_csv")
+    fromcsvdisk.from_disk("vens_dumped_csv")
     assert set(vens.keys()) == set(fromcsvdisk.keys())
 
     vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
     fromparquetdisk = VirtualEnsemble()
-    fromparquetdisk.load_disk("vens_dumped_parquet")
+    fromparquetdisk.from_disk("vens_dumped_parquet")
     assert set(vens.keys()) == set(fromparquetdisk.keys())
 
     fromparquetdisk2 = VirtualEnsemble()
-    fromparquetdisk2.load_disk("vens_dumped_parquet", format="csv")
+    fromparquetdisk2.from_disk("vens_dumped_parquet", fmt="csv")
     # Here we will miss a lot of CSV files, because we only wrote parquet:
     assert len(vens.keys()) > len(fromparquetdisk2.keys())
 
     fromcsvdisk2 = VirtualEnsemble()
-    fromcsvdisk2.load_disk("vens_dumped_csv", format="parquet")
+    fromcsvdisk2.from_disk("vens_dumped_csv", fmt="parquet")
     # But even if we only try to load parquet files, when CSV
     # files are found without corresponding parquet, the CSV file
     # will be read.
@@ -248,6 +254,36 @@ def test_todisk():
     assert "share/results/tables/randomdata.csv" in manualens.keys()
 
 
+def test_todisk_includefile():
+    """Test that we can write VirtualEnsembles to the filesystem in a
+    retrievable manner with discovered files included"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+
+    reekensemble.load_smry(time_index="monthly", column_keys="*")
+    reekensemble.load_smry(time_index="daily", column_keys="*")
+    reekensemble.load_smry(time_index="yearly", column_keys="F*")
+    reekensemble.load_scalar("npv.txt")
+    reekensemble.load_txt("outputs.txt")
+    vens = reekensemble.to_virtual()
+
+    vens.to_disk("vens_dumped_files", delete=True, includefiles=True, symlinks=True)
+    for real in [0, 1, 2, 4, 4]:
+        runpath = os.path.join(
+            "vens_dumped_files", "__discoveredfiles", "realization-" + str(real)
+        )
+        assert os.path.exists(runpath)
+        assert os.path.exists(
+            os.path.join(runpath, "eclipse/model/2_R001_REEK-" + str(real) + ".UNSMRY")
+        )
+
+
 def test_get_smry_interpolation():
     """Test the summary resampling code for virtual ensembles"""
 
@@ -267,7 +303,7 @@ def test_get_smry_interpolation():
     # Create a vens that contains both monthly and yearly:
     vens_monthly = reekensemble.to_virtual()
     reekensemble.load_smry(time_index="daily", column_keys=["F*"])
-    vens_daily = reekensemble.to_virtual()  # monthly, yearly *and* daily
+    _ = reekensemble.to_virtual()  # monthly, yearly *and* daily
 
     # Resample yearly to monthly:
     monthly = vens_yearly.get_smry(column_keys="FOPT", time_index="monthly")

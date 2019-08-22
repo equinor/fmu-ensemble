@@ -61,7 +61,7 @@ class VirtualEnsemble(object):
             self.data = {}
 
         if fromdisk:
-            self.load_disk(fromdisk)
+            self.from_disk(fromdisk)
 
         self.realindices = []
 
@@ -102,11 +102,12 @@ class VirtualEnsemble(object):
         within the datastore.
 
         If the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
@@ -189,16 +190,18 @@ class VirtualEnsemble(object):
 
         # Add the data from the incoming realization key by key
         for key in realization.keys():
-            df = realization.get_df(key)
-            if isinstance(df, dict):  # dicts to go to one-row dataframes
-                df = pd.DataFrame(index=[1], data=df)
-            if isinstance(df, (str, int, float)):
-                df = pd.DataFrame(index=[1], columns=[key], data=df)
-            df["REAL"] = realidx
+            dframe = realization.get_df(key)
+            if isinstance(dframe, dict):  # dicts to go to one-row dataframes
+                dframe = pd.DataFrame(index=[1], data=dframe)
+            if isinstance(dframe, (str, int, float)):
+                dframe = pd.DataFrame(index=[1], columns=[key], data=dframe)
+            dframe["REAL"] = realidx
             if key not in self.data.keys():
-                self.data[key] = df
+                self.data[key] = dframe
             else:
-                self.data[key] = self.data[key].append(df, ignore_index=True, sort=True)
+                self.data[key] = self.data[key].append(
+                    dframe, ignore_index=True, sort=True
+                )
         self.update_realindices()
 
     def remove_realizations(self, deleteindices):
@@ -360,7 +363,15 @@ class VirtualEnsemble(object):
             return
         self.data[key] = dataframe
 
-    def to_disk(self, filesystempath, delete=False, dumpcsv=True, dumpparquet=True):
+    def to_disk(
+        self,
+        filesystempath,
+        delete=False,
+        dumpcsv=True,
+        dumpparquet=True,
+        includefiles=False,
+        symlinks=False,
+    ):
         """Dump all data to disk, in a retrieveable manner.
 
         Unless dumpcsv is set to False, all data is dumped to CSV files,
@@ -379,6 +390,10 @@ class VirtualEnsemble(object):
                 before data is dumped.
             dumpcsv: boolean for whether CSV files should be written.
             dumpparquet: boolean for whether parquet files should be written
+            includefiles (boolean): If set to True, files in the files
+                dataframe will be included in the disk-dump.
+            symlinks (boolean): If includefiles is True, setting this to True
+                means that only symlinking will take place, not full copy.
         """
         import pyarrow  # Move to top of file eventually
 
@@ -387,19 +402,45 @@ class VirtualEnsemble(object):
                 "dumpcsv and dumpparquet " + "cannot be False at the same time"
             )
 
-        if os.path.exists(filesystempath):
-            if delete:
-                shutil.rmtree(filesystempath)
-                os.mkdir(filesystempath)
+        def prepare_vens_directory(filesystempath, delete=False):
+            """Prepare a directory for dumping a virtual ensemble.
+
+            The end result is either an error, or a clean empty directory
+            at the requested path"""
+            if os.path.exists(filesystempath):
+                if delete:
+                    shutil.rmtree(filesystempath)
+                    os.mkdir(filesystempath)
+                else:
+                    if os.listdir(filesystempath):
+                        logger.critical(
+                            "Refusing to write virtual ensemble "
+                            + " to non-empty directory"
+                        )
+                        raise IOError("Directory %s not empty" % filesystempath)
             else:
-                if os.listdir(filesystempath):
-                    logger.critical(
-                        "Refusing to write virtual ensemble "
-                        + " to non-empty directory"
-                    )
-                    raise IOError("Directory %s not empty" % filesystempath)
-        else:
-            os.mkdir(filesystempath)
+                os.mkdir(filesystempath)
+
+        prepare_vens_directory(filesystempath, delete)
+
+        includefilesdir = "__discoveredfiles"
+        if includefiles:
+            os.mkdir(os.path.join(filesystempath, includefilesdir))
+        for _, filerow in self.files.iterrows():
+            src_fpath = filerow["FULLPATH"]
+            dest_fpath = os.path.join(
+                filesystempath,
+                includefilesdir,
+                "realization-" + str(filerow["REAL"]),
+                filerow["LOCALPATH"],
+            )
+            directory = os.path.dirname(dest_fpath)
+            if not os.path.exists(directory):
+                os.makedirs(os.path.dirname(dest_fpath))
+            if symlinks:
+                os.symlink(src_fpath, dest_fpath)
+            else:
+                shutil.copy(src_fpath, dest_fpath)
 
         # Write ensemble meta-information to disk:
         with open(os.path.join(filesystempath, "_name"), "w") as fhandle:
@@ -445,7 +486,7 @@ file is picked up"""
         # parameters.txt -> parameters.txt.csv and parameters.txt.parquet
         # unsmry--daily.csv -> unsmry--daily.csv and unsmry--daily.parquet
 
-        # load_disk:
+        # from_disk:
         # parameters.txt.csv -> parameters.txt because there is a known
         #     extension after removal of csv.
         # STATUS.csv -> STATUS, because STATUS is a special file
@@ -462,7 +503,7 @@ file is picked up"""
             filename = os.path.join(dirname, os.path.basename(key))
 
             # Trim .csv from end of dict-key
-            # .csv will be reinstated by logic in load_disk()
+            # .csv will be reinstated by logic in from_disk()
             if filename[-4:] == ".csv":
                 filebase = filename[:-4]
             else:
@@ -484,7 +525,7 @@ file is picked up"""
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
 
-    def load_disk(self, filesystempath, format="parquet"):
+    def from_disk(self, filesystempath, fmt="parquet"):
         """Load data from disk.
 
         Data must be written like to_disk() would have
@@ -496,50 +537,58 @@ file is picked up"""
         integers will be ignored.
 
         Args:
-            filesystempath: path to a directory that was written by
+            filesystempath (string): path to a directory that was written by
                 VirtualEnsemble.to_disk().
-            format: string with the preferred format to load,
+            fmt (string): the preferred format to load,
                 must be either csv or parquet. If you say 'csv'
                 parquet files will always be ignored. If you
                 say parquet, corresponding 'csv' files will still
                 be parsed. Delete them if you really don't want them
 
         """
-        if format not in ["csv", "parquet"]:
-            raise ValueError("Unknown format for load_disk: %s", format)
+        if fmt not in ["csv", "parquet"]:
+            raise ValueError("Unknown format for from_disk: %s" % fmt)
 
-        # Clear all data we have..
+        # Clear all data we have, we don't dare to merge VirtualEnsembles
+        # with data coming from disk.
         self._data = {}
         self._name = None
 
-        def isvalidframe(frame, name):
+        def isvalidframe(frame, filename):
+            """Validate that a DataFrame we read from disk is acceptable
+            as ensemble data. It must for example contain a column called
+            REAL with numerical data"""
             if "REAL" not in frame.columns:
                 logger.warning(
-                    "The column 'REAL' was not found" + " in file %s  - ignored",
-                    filename,
+                    "The column 'REAL' was not found in file %s - ignored", filename
                 )
                 return False
             if frame["REAL"].dtype != np.int64:
                 logger.warning(
-                    "The column 'REAL' must contain only integers"
-                    + " in file %s  - ignored",
+                    (
+                        "The column 'REAL' must contain "
+                        "only integers in file %s  - ignored"
+                    ),
                     filename,
                 )
                 return False
             if frame["REAL"].min() < 0:
                 logger.warning(
-                    "The column 'REAL' must contain only positive"
-                    + " integers in file %s  - ignored",
+                    (
+                        "The column 'REAL' must contain only "
+                        "positive integers in file %s  - ignored"
+                    ),
                     filename,
                 )
                 return False
             return True
 
-        for root, foo, filenames in os.walk(filesystempath):
+        for root, _, filenames in os.walk(filesystempath):
             localpath = root.replace(filesystempath, "")
             if localpath and localpath[0] == os.path.sep:
                 localpath = localpath[1:]
             for filename in filenames:
+                # Special treatment of the filename "_name"
                 if filename == "_name":
                     self._name = "".join(
                         open(os.path.join(root, filename), "r").readlines()
@@ -556,11 +605,12 @@ file is picked up"""
                         filebase[-4:] == ".txt"
                         or filebase[-6:] == "STATUS"
                         or filebase[-2:] == "OK"
+                        or filebase[0:2] == "__"
                     ):
                         internalizedkey = os.path.join(localpath, filebase)
                     else:
                         internalizedkey = os.path.join(localpath, filebase + ".csv")
-                    if format == "csv" or not os.path.exists(
+                    if fmt == "csv" or not os.path.exists(
                         os.path.join(root, parquetfile)
                     ):
                         parsedframe = pd.read_csv(os.path.join(root, filename))
@@ -573,16 +623,17 @@ file is picked up"""
                         filebase[-4:] == ".txt"
                         or filebase[-6:] == "STATUS"
                         or filebase[-2:] == "OK"
+                        or filebase[0:2] == "__"
                     ):
                         internalizedkey = os.path.join(localpath, filebase)
                     else:
                         internalizedkey = os.path.join(localpath, filebase + ".csv")
-                    if format == "parquet":
+                    if fmt == "parquet":
                         parsedframe = pd.read_parquet(os.path.join(root, filename))
                         if isvalidframe(parsedframe, filename):
                             self.data[internalizedkey] = parsedframe
                 else:
-                    logger.debug("load_disk: Ignoring file: %s", filename)
+                    logger.debug("from_disk: Ignoring file: %s", filename)
 
     def __repr__(self):
         """Textual representation of the object"""
@@ -592,11 +643,13 @@ file is picked up"""
         """Access the internal datastore which contains dataframes or dicts
 
         Shorthand is allowed, if the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case of ambiguity, a
         ValueError will be raised.
@@ -807,6 +860,17 @@ file is picked up"""
             vol_rate_df["REAL"] = realidx
             vol_rates_dfs.append(vol_rate_df)
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
+
+    @property
+    def files(self):
+        """Access the list of internalized files as they came from
+        a ScratchEnsemble. Might be empty
+
+        Return:
+            pd.Dataframe. Empty if no files are meaningful"""
+        if "__files" in self.data:
+            return self.data["__files"]
+        return pd.DataFrame()
 
     @property
     def parameters(self):
