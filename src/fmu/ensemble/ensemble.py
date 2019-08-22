@@ -344,6 +344,10 @@ class ScratchEnsemble(object):
         for key in self.keys():
             vens.append(key, self.get_df(key))
         vens.update_realindices()
+
+        # __files is the magic name for the dataframe of
+        # loaded files.
+        vens.append("__files", self.files)
         return vens
 
     def to_disk(self, filesystempath, delete=False,

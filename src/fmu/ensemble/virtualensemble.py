@@ -556,6 +556,7 @@ file is picked up"""
                         filebase[-4:] == ".txt"
                         or filebase[-6:] == "STATUS"
                         or filebase[-2:] == "OK"
+                        or filebase[0:2] == "__"
                     ):
                         internalizedkey = os.path.join(localpath, filebase)
                     else:
@@ -573,6 +574,7 @@ file is picked up"""
                         filebase[-4:] == ".txt"
                         or filebase[-6:] == "STATUS"
                         or filebase[-2:] == "OK"
+                        or filebase[0:2] == "__"
                     ):
                         internalizedkey = os.path.join(localpath, filebase)
                     else:
@@ -807,6 +809,18 @@ file is picked up"""
             vol_rate_df["REAL"] = realidx
             vol_rates_dfs.append(vol_rate_df)
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
+
+    @property
+    def files(self):
+        """Access the list of internalized files as they came from
+        a ScratchEnsemble. Might be empty
+
+        Return:
+            pd.Dataframe. Empty if no files are meaningful"""
+        if "__files" in self.data:
+            return self.data["__files"]
+        else:
+            return pd.DataFrame()
 
     @property
     def parameters(self):

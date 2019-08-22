@@ -40,6 +40,10 @@ def test_virtualensemble():
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
     assert len(vens["parameters.txt"]) == 5
 
+    # This is the dataframe of discovered files in the ScratchRealization
+    assert isinstance(vens["__files"], pd.DataFrame)
+    assert not vens["__files"].empty
+
     assert "REAL" in vens["STATUS"].columns
 
     # Check shorthand functionality:
@@ -172,7 +176,7 @@ def test_todisk():
 
     fromdisk = VirtualEnsemble(fromdisk="vens_dumped")
 
-    # Should have all the same keys, nothing more, nothing less,
+    # Should have all the same keys,
     # but change of order is fine
     assert set(vens.keys()) == set(fromdisk.keys())
 
