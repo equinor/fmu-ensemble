@@ -484,7 +484,7 @@ file is picked up"""
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
 
-    def load_disk(self, filesystempath, format="parquet"):
+    def load_disk(self, filesystempath, fmt="parquet"):
         """Load data from disk.
 
         Data must be written like to_disk() would have
@@ -496,46 +496,52 @@ file is picked up"""
         integers will be ignored.
 
         Args:
-            filesystempath: path to a directory that was written by
+            filesystempath (string): path to a directory that was written by
                 VirtualEnsemble.to_disk().
-            format: string with the preferred format to load,
+            fmt (string): the preferred format to load,
                 must be either csv or parquet. If you say 'csv'
                 parquet files will always be ignored. If you
                 say parquet, corresponding 'csv' files will still
                 be parsed. Delete them if you really don't want them
 
         """
-        if format not in ["csv", "parquet"]:
-            raise ValueError("Unknown format for load_disk: %s", format)
+        if fmt not in ["csv", "parquet"]:
+            raise ValueError("Unknown format for load_disk: %s", fmt)
 
         # Clear all data we have..
         self._data = {}
         self._name = None
 
-        def isvalidframe(frame, name):
+        def isvalidframe(frame, filename):
+            """Validate that a DataFrame we read from disk is acceptable
+            as ensemble data. It must for example contain a column called
+            REAL with numerical data"""
             if "REAL" not in frame.columns:
                 logger.warning(
-                    "The column 'REAL' was not found" + " in file %s  - ignored",
-                    filename,
+                    "The column 'REAL' was not found in file %s - ignored", filename
                 )
                 return False
             if frame["REAL"].dtype != np.int64:
                 logger.warning(
-                    "The column 'REAL' must contain only integers"
-                    + " in file %s  - ignored",
+                    (
+                        "The column 'REAL' must contain "
+                        "only integers in file %s  - ignored"
+                    ),
                     filename,
                 )
                 return False
             if frame["REAL"].min() < 0:
                 logger.warning(
-                    "The column 'REAL' must contain only positive"
-                    + " integers in file %s  - ignored",
+                    (
+                        "The column 'REAL' must contain only "
+                        "positive integers in file %s  - ignored"
+                    ),
                     filename,
                 )
                 return False
             return True
 
-        for root, foo, filenames in os.walk(filesystempath):
+        for root, _, filenames in os.walk(filesystempath):
             localpath = root.replace(filesystempath, "")
             if localpath and localpath[0] == os.path.sep:
                 localpath = localpath[1:]
@@ -561,7 +567,7 @@ file is picked up"""
                         internalizedkey = os.path.join(localpath, filebase)
                     else:
                         internalizedkey = os.path.join(localpath, filebase + ".csv")
-                    if format == "csv" or not os.path.exists(
+                    if fmt == "csv" or not os.path.exists(
                         os.path.join(root, parquetfile)
                     ):
                         parsedframe = pd.read_csv(os.path.join(root, filename))
@@ -579,7 +585,7 @@ file is picked up"""
                         internalizedkey = os.path.join(localpath, filebase)
                     else:
                         internalizedkey = os.path.join(localpath, filebase + ".csv")
-                    if format == "parquet":
+                    if fmt == "parquet":
                         parsedframe = pd.read_parquet(os.path.join(root, filename))
                         if isvalidframe(parsedframe, filename):
                             self.data[internalizedkey] = parsedframe
@@ -819,8 +825,7 @@ file is picked up"""
             pd.Dataframe. Empty if no files are meaningful"""
         if "__files" in self.data:
             return self.data["__files"]
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame()
 
     @property
     def parameters(self):

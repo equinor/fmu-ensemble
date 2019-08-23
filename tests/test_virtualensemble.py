@@ -156,6 +156,8 @@ def test_virtualensemble():
 
 
 def test_todisk():
+    """Test that we can write VirtualEnsembles to the filesystem in a
+    retrievable manner"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -218,12 +220,12 @@ def test_todisk():
     assert set(vens.keys()) == set(fromparquetdisk.keys())
 
     fromparquetdisk2 = VirtualEnsemble()
-    fromparquetdisk2.load_disk("vens_dumped_parquet", format="csv")
+    fromparquetdisk2.load_disk("vens_dumped_parquet", fmt="csv")
     # Here we will miss a lot of CSV files, because we only wrote parquet:
     assert len(vens.keys()) > len(fromparquetdisk2.keys())
 
     fromcsvdisk2 = VirtualEnsemble()
-    fromcsvdisk2.load_disk("vens_dumped_csv", format="parquet")
+    fromcsvdisk2.load_disk("vens_dumped_csv", fmt="parquet")
     # But even if we only try to load parquet files, when CSV
     # files are found without corresponding parquet, the CSV file
     # will be read.
