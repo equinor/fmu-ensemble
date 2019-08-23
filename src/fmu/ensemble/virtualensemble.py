@@ -189,16 +189,18 @@ class VirtualEnsemble(object):
 
         # Add the data from the incoming realization key by key
         for key in realization.keys():
-            df = realization.get_df(key)
-            if isinstance(df, dict):  # dicts to go to one-row dataframes
-                df = pd.DataFrame(index=[1], data=df)
-            if isinstance(df, (str, int, float)):
-                df = pd.DataFrame(index=[1], columns=[key], data=df)
-            df["REAL"] = realidx
+            dframe = realization.get_df(key)
+            if isinstance(dframe, dict):  # dicts to go to one-row dataframes
+                dframe = pd.DataFrame(index=[1], data=dframe)
+            if isinstance(dframe, (str, int, float)):
+                dframe = pd.DataFrame(index=[1], columns=[key], data=dframe)
+            dframe["REAL"] = realidx
             if key not in self.data.keys():
-                self.data[key] = df
+                self.data[key] = dframe
             else:
-                self.data[key] = self.data[key].append(df, ignore_index=True, sort=True)
+                self.data[key] = self.data[key].append(
+                    dframe, ignore_index=True, sort=True
+                )
         self.update_realindices()
 
     def remove_realizations(self, deleteindices):
@@ -387,19 +389,26 @@ class VirtualEnsemble(object):
                 "dumpcsv and dumpparquet " + "cannot be False at the same time"
             )
 
-        if os.path.exists(filesystempath):
-            if delete:
-                shutil.rmtree(filesystempath)
-                os.mkdir(filesystempath)
+        def prepare_vens_directory(filesystempath, delete=False):
+            """Prepare a directory for dumping a virtual ensemble.
+
+            The end result is either an error, or a clean empty directory
+            at the requested path"""
+            if os.path.exists(filesystempath):
+                if delete:
+                    shutil.rmtree(filesystempath)
+                    os.mkdir(filesystempath)
+                else:
+                    if os.listdir(filesystempath):
+                        logger.critical(
+                            "Refusing to write virtual ensemble "
+                            + " to non-empty directory"
+                        )
+                        raise IOError("Directory %s not empty" % filesystempath)
             else:
-                if os.listdir(filesystempath):
-                    logger.critical(
-                        "Refusing to write virtual ensemble "
-                        + " to non-empty directory"
-                    )
-                    raise IOError("Directory %s not empty" % filesystempath)
-        else:
-            os.mkdir(filesystempath)
+                os.mkdir(filesystempath)
+
+        prepare_vens_directory(filesystempath, delete)
 
         # Write ensemble meta-information to disk:
         with open(os.path.join(filesystempath, "_name"), "w") as fhandle:
@@ -506,9 +515,10 @@ file is picked up"""
 
         """
         if fmt not in ["csv", "parquet"]:
-            raise ValueError("Unknown format for from_disk: %s", fmt)
+            raise ValueError("Unknown format for from_disk: %s" % fmt)
 
-        # Clear all data we have..
+        # Clear all data we have, we don't dare to merge VirtualEnsembles
+        # with data coming from disk.
         self._data = {}
         self._name = None
 
@@ -546,6 +556,7 @@ file is picked up"""
             if localpath and localpath[0] == os.path.sep:
                 localpath = localpath[1:]
             for filename in filenames:
+                # Special treatment of the filename "_name"
                 if filename == "_name":
                     self._name = "".join(
                         open(os.path.join(root, filename), "r").readlines()
