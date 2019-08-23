@@ -61,7 +61,7 @@ class VirtualEnsemble(object):
             self.data = {}
 
         if fromdisk:
-            self.load_disk(fromdisk)
+            self.from_disk(fromdisk)
 
         self.realindices = []
 
@@ -445,7 +445,7 @@ file is picked up"""
         # parameters.txt -> parameters.txt.csv and parameters.txt.parquet
         # unsmry--daily.csv -> unsmry--daily.csv and unsmry--daily.parquet
 
-        # load_disk:
+        # from_disk:
         # parameters.txt.csv -> parameters.txt because there is a known
         #     extension after removal of csv.
         # STATUS.csv -> STATUS, because STATUS is a special file
@@ -462,7 +462,7 @@ file is picked up"""
             filename = os.path.join(dirname, os.path.basename(key))
 
             # Trim .csv from end of dict-key
-            # .csv will be reinstated by logic in load_disk()
+            # .csv will be reinstated by logic in from_disk()
             if filename[-4:] == ".csv":
                 filebase = filename[:-4]
             else:
@@ -484,7 +484,7 @@ file is picked up"""
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
 
-    def load_disk(self, filesystempath, fmt="parquet"):
+    def from_disk(self, filesystempath, fmt="parquet"):
         """Load data from disk.
 
         Data must be written like to_disk() would have
@@ -506,7 +506,7 @@ file is picked up"""
 
         """
         if fmt not in ["csv", "parquet"]:
-            raise ValueError("Unknown format for load_disk: %s", fmt)
+            raise ValueError("Unknown format for from_disk: %s", fmt)
 
         # Clear all data we have..
         self._data = {}
@@ -590,7 +590,7 @@ file is picked up"""
                         if isvalidframe(parsedframe, filename):
                             self.data[internalizedkey] = parsedframe
                 else:
-                    logger.debug("load_disk: Ignoring file: %s", filename)
+                    logger.debug("from_disk: Ignoring file: %s", filename)
 
     def __repr__(self):
         """Textual representation of the object"""

@@ -211,21 +211,21 @@ def test_todisk():
 
     vens.to_disk("vens_dumped_csv", delete=True, dumpparquet=False)
     fromcsvdisk = VirtualEnsemble()
-    fromcsvdisk.load_disk("vens_dumped_csv")
+    fromcsvdisk.from_disk("vens_dumped_csv")
     assert set(vens.keys()) == set(fromcsvdisk.keys())
 
     vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
     fromparquetdisk = VirtualEnsemble()
-    fromparquetdisk.load_disk("vens_dumped_parquet")
+    fromparquetdisk.from_disk("vens_dumped_parquet")
     assert set(vens.keys()) == set(fromparquetdisk.keys())
 
     fromparquetdisk2 = VirtualEnsemble()
-    fromparquetdisk2.load_disk("vens_dumped_parquet", fmt="csv")
+    fromparquetdisk2.from_disk("vens_dumped_parquet", fmt="csv")
     # Here we will miss a lot of CSV files, because we only wrote parquet:
     assert len(vens.keys()) > len(fromparquetdisk2.keys())
 
     fromcsvdisk2 = VirtualEnsemble()
-    fromcsvdisk2.load_disk("vens_dumped_csv", fmt="parquet")
+    fromcsvdisk2.from_disk("vens_dumped_csv", fmt="parquet")
     # But even if we only try to load parquet files, when CSV
     # files are found without corresponding parquet, the CSV file
     # will be read.
