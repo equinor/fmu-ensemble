@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.com/equinor/fmu-ensemble.svg?branch=master)](https://travis-ci.com/equinor/fmu-ensemble) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/daee1e2b88094884acdd62e005f5e39e)](https://www.codacy.com/app/berland/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade)
+.. image:: https://travis-ci.com/equinor/fmu-ensemble.svg?branch=master
+    :target: https://travis-ci.com/equinor/fmu-ensemble
+.. image:: https://api.codacy.com/project/badge/Grade/daee1e2b88094884acdd62e005f5e39e    :target: https://www.codacy.com/app/berland/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade
 
 ==============================
 Introduction to *fmu.ensemble*
