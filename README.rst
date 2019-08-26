@@ -1,7 +1,8 @@
 .. image:: https://travis-ci.com/equinor/fmu-ensemble.svg?branch=master
     :target: https://travis-ci.com/equinor/fmu-ensemble
 
-.. image:: https://api.codacy.com/project/badge/Grade/33b0d3049b634ff2b4dfc6cc791d7da7    :target: https://www.codacy.com/app/anders-kiaer/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade
+.. image:: https://api.codacy.com/project/badge/Grade/33b0d3049b634ff2b4dfc6cc791d7da7
+    :target: https://www.codacy.com/app/anders-kiaer/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade
 
 ==============================
 Introduction to *fmu.ensemble*
