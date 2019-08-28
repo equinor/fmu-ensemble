@@ -617,7 +617,7 @@ class ScratchRealization(object):
 
           * simulator_volume_fipnum
           * simulator_volume_fipnum.csv
-          *   share/results/volumes/simulator_volume_fipnum
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
