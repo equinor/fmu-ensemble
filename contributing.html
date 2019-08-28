@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributing &mdash; fmu-ensemble 0.2.1.58 documentation</title>
+  <title>Contributing &mdash; fmu-ensemble 0.2.1.59 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.2.1.58
+                0.2.1.59
               </div>
             
           
@@ -95,11 +95,11 @@
 <li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">API for fmu.ensemble</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#types-of-contributions">Types of Contributions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#report-bugs">Report Bugs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#fix-bugs">Fix Bugs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#implement-features">Implement Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#write-documentation">Write Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#types-of-contributions">Types of contributions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#report-bugs">Report bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fix-bugs">Fix bugs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#implement-features">Implement features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#write-documentation">Write documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#submit-feedback">Submit Feedback</a></li>
 </ul>
 </li>
@@ -179,13 +179,13 @@
             
   <div class="section" id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
-<p>Contributions are welcome, and they are greatly appreciated! Every
+<p>Contributions are welcome, and they are greatly appreciated. Every
 little bit helps, and credit will always be given.</p>
 <p>You can contribute in many ways:</p>
 <div class="section" id="types-of-contributions">
-<h2>Types of Contributions<a class="headerlink" href="#types-of-contributions" title="Permalink to this headline">¶</a></h2>
+<h2>Types of contributions<a class="headerlink" href="#types-of-contributions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="report-bugs">
-<h3>Report Bugs<a class="headerlink" href="#report-bugs" title="Permalink to this headline">¶</a></h3>
+<h3>Report bugs<a class="headerlink" href="#report-bugs" title="Permalink to this headline">¶</a></h3>
 <p>Report bugs at <a class="reference external" href="https://github.com/equinor/fmu-ensemble/issues">https://github.com/equinor/fmu-ensemble/issues</a>.</p>
 <p>If you are reporting a bug, please include:</p>
 <ul class="simple">
@@ -195,17 +195,17 @@ little bit helps, and credit will always be given.</p>
 </ul>
 </div>
 <div class="section" id="fix-bugs">
-<h3>Fix Bugs<a class="headerlink" href="#fix-bugs" title="Permalink to this headline">¶</a></h3>
+<h3>Fix bugs<a class="headerlink" href="#fix-bugs" title="Permalink to this headline">¶</a></h3>
 <p>Look through the Git issues for bugs. Anything tagged with “bug”
 and “help wanted” is open to whoever wants to implement it.</p>
 </div>
 <div class="section" id="implement-features">
-<h3>Implement Features<a class="headerlink" href="#implement-features" title="Permalink to this headline">¶</a></h3>
+<h3>Implement features<a class="headerlink" href="#implement-features" title="Permalink to this headline">¶</a></h3>
 <p>Look through the Git issues for features. Anything tagged with “enhancement”
 and “help wanted” is open to whoever wants to implement it.</p>
 </div>
 <div class="section" id="write-documentation">
-<h3>Write Documentation<a class="headerlink" href="#write-documentation" title="Permalink to this headline">¶</a></h3>
+<h3>Write documentation<a class="headerlink" href="#write-documentation" title="Permalink to this headline">¶</a></h3>
 <p>fmu-ensemble could always use more documentation, whether as part of the
 official fmu-ensemble docs, in docstrings, or even on the web in blog posts,
 articles, and such.</p>
@@ -218,8 +218,6 @@ at <a class="reference external" href="https://github.com/equinor/fmu-ensemble/i
 <ul class="simple">
 <li><p>Explain in detail how it would work.</p></li>
 <li><p>Keep the scope as narrow as possible, to make it easier to implement.</p></li>
-<li><p>Remember that this is a volunteer-driven project, and that contributions
-are welcome :)</p></li>
 </ul>
 </div>
 </div>
@@ -229,44 +227,41 @@ are welcome :)</p></li>
 <div class="section" id="pep8-and-pep20">
 <h3>PEP8 and PEP20<a class="headerlink" href="#pep8-and-pep20" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Use PEP8 standard (<a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">https://www.python.org/dev/peps/pep-0008/</a>) and PEP20 philosophy.
-This implies:</p>
-<ul>
-<li><p>Line width max 79</p></li>
-<li><p>Naming: files_as_this, ClassesAsThis, ExceptionsAsThis, CONSTANTS,
-function_as_this, method_as_this</p></li>
+<li><p>Use PEP8 standard (<a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">https://www.python.org/dev/peps/pep-0008/</a>) and PEP20 philosophy, with line length set 88.</p></li>
+<li><p>Use the source code formatter black (<a class="reference external" href="https://github.com/python/black">https://github.com/python/black</a>)</p></li>
+<li><p>Naming: <cite>files_as_this</cite>, <cite>ClassesAsThis</cite>, <cite>ExceptionsAsThis</cite>, <cite>CONSTANTS</cite>,
+<cite>function_as_this</cite>, <cite>method_as_this</cite></p></li>
 <li><p>Use a single underscore to protect instance variables, other private
 variables and and private classes</p></li>
 <li><p>4 space indents (spaces, no tabs)</p></li>
-<li><p>Single quotes to delimit strings, triple double quotes in docstrings.</p></li>
-<li><p>One space before and after =, =, +, * etc</p></li>
-<li><p>No space around  = in keword lists, e.g. my_function(value=27, default=None)</p></li>
-<li><p>Avoid one or two letter variables, even for counters. And meaningful names, but don’t
-overdo it.</p></li>
-</ul>
-</li>
+<li><p>One space before and after <cite>=</cite>, <cite>+</cite>, <cite>*</cite> etc</p></li>
+<li><p>No space around <cite>=</cite> in keyword lists, e.g. <cite>my_function(value=27, default=None)</cite></p></li>
+<li><p>Avoid one or two letter variables, even for counters. And meaningful
+names, but don’t overdo it.</p></li>
 </ul>
 </div>
 <div class="section" id="in-addition">
 <h3>In addition:<a class="headerlink" href="#in-addition" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Start with documentation and tests. Think and communicate first!</p></li>
-<li><p>Docstrings shall start and end with “”” and use Google style.</p></li>
+<li><p>Docstrings shall start and end with <cite>“””</cite>.</p></li>
 <li><p>Use pytest as testing engine</p></li>
 <li><p>Code shall be be Python 2.7.13 + and python 3.4 + compliant</p></li>
 </ul>
 </div>
 <div class="section" id="use-flake8-and-or-pylint-to-check">
 <h3>Use flake8 and/or pylint to check<a class="headerlink" href="#use-flake8-and-or-pylint-to-check" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><p>python -m flake8 mycode.py</p>
-<p>make flake   # for all</p>
-</div></blockquote>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m flake8 mycode.py</span>
+
+<span class="go">make flake   # for all</span>
+</pre></div>
+</div>
 <p>The pylint is rather strict and sometimes exceptions are needed… , but anyway quite useful!</p>
-<blockquote>
-<div><p>python -m pylint mycode.py</p>
-<p>make lint   # for all</p>
-</div></blockquote>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pylint mycode.py</span>
+
+<span class="go">make lint   # for all</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>

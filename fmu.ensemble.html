@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble 0.2.1.58 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble 0.2.1.59 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.2.1.58
+                0.2.1.59
               </div>
             
           
@@ -193,14 +193,12 @@ filesystem locations containing realizations.</p>
 <p>Ensemble objects can be grouped into EnsembleSet.</p>
 <p>Realizations in an ensembles are uniquely determined
 by their realization index (integer).</p>
-<dl>
-<dt>Example for initialization:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fmu</span> <span class="k">import</span> <span class="n">ensemble</span>
+<p>Example for initialization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fmu</span> <span class="k">import</span> <span class="n">ensemble</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ensemblename&#39;</span><span class="p">,</span>
 <span class="go">            &#39;/scratch/fmu/foobert/r089/casename/realization-*/iter-0&#39;)</span>
 </pre></div>
 </div>
-</dd>
-</dl>
 <p>Upon initialization, only a subset of the files on
 disk will be discovered. More files must be expliclitly
 discovered and/or loaded.</p>
@@ -213,18 +211,18 @@ Optional to have it consistent with f.ex. iter-0 in the path.</p></li>
 to file system. Absolute or relative paths.
 If omitted, ensemble will be empty unless runpathfile
 is used.</p></li>
-<li><p><strong>realidxregexp</strong> – str or regexp - used to deduce the realization index
+<li><p><strong>realidxregexp</strong> (<em>str</em><em> or </em><em>regexp</em>) – used to deduce the realization index
 from the file path. Default tailored for realization-X</p></li>
-<li><p><strong>runpathfile</strong> – str. Filename (absolute or relative) of an ERT
+<li><p><strong>runpathfile</strong> (<em>str</em>) – Filename (absolute or relative) of an ERT
 runpath file, consisting of four space separated text fields,
 first column is realization index, second column is absolute
 or relative path to a realization RUNPATH, third column is
 the basename of the Eclipse simulation, relative to RUNPATH.
 Fourth column is not used.</p></li>
-<li><p><strong>runpathfilter</strong> – str. If supplied, the only the runpaths in
+<li><p><strong>runpathfilter</strong> (<em>str</em>) – If supplied, the only the runpaths in
 the runpathfile which contains this string will be included
 Use to select only a specific realization f.ex.</p></li>
-<li><p><strong>autodiscovery</strong> – boolean. True by default, means that the class
+<li><p><strong>autodiscovery</strong> (<em>boolean</em>) – True by default, means that the class
 can try to autodiscover data in the realization. Turn
 off to gain more fined tuned control.</p></li>
 </ul>
@@ -234,7 +232,8 @@ off to gain more fined tuned control.</p></li>
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.keys">
 <code class="sig-name descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the union of all keys available in realizations.</p>
-<p>Keys refer to the realization datastore, a dictionary
+<p>Keys refer to the realization datastore of internalized
+data. The datastore is a dictionary
 of dataframes or dicts. Examples would be <cite>parameters.txt</cite>,
 <cite>STATUS</cite>, <cite>share/results/tables/unsmry–monthly.csv</cite></p>
 </dd></dl>
@@ -244,16 +243,18 @@ of dataframes or dicts. Examples would be <cite>parameters.txt</cite>,
 <code class="sig-name descname">shortcut2path</code><span class="sig-paren">(</span><em class="sig-param">shortpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.shortcut2path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.shortcut2path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert short pathnames to fully qualified pathnames
 within the datastore.</p>
-<dl class="simple">
-<dt>If the fully qualified localpath is</dt><dd><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</dd>
-<dt>then you can also access this with these alternatives:</dt><dd><ul class="simple">
+<p>If the fully qualified localpath is</p>
+<blockquote>
+<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
+</div></blockquote>
+<p>then you can also access this with these alternatives:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>simulator_volume_fipnum</p></li>
 <li><p>simulator_volume_fipnum.csv</p></li>
 <li><p>share/results/volumes/simulator_volume_fipnum</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <p>but only as long as there is no ambiguity. In case
 of ambiguity, the shortpath will be returned.</p>
 </dd></dl>
@@ -272,7 +273,7 @@ and stores a reference to those generated objects.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>paths</strong> (<em>list/str</em>) – String or list of strings with wildcards
 to file system. Absolute or relative paths.</p></li>
-<li><p><strong>autodiscovery</strong> – boolean, whether files can be attempted
+<li><p><strong>autodiscovery</strong> (<em>boolean</em>) – whether files can be attempted
 auto-discovered</p></li>
 </ul>
 </dd>
@@ -303,14 +304,16 @@ minus the trailing ‘.DATA’)</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>runpath</strong> – str with filename, absolute or relative, or
+<li><p><strong>runpath</strong> (<em>str</em>) – Filename, absolute or relative, or
 a Pandas DataFrame parsed from a runpath file</p></li>
-<li><p><strong>runpathfilter</strong> – str which each filepath has to match
-in order to be included. Default None which means not filter</p></li>
+<li><p><strong>runpathfilter</strong> (<em>str</em>) – in order to be included. Default None which means not filter</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>int - Number of successfully added realizations.</p>
+<dd class="field-even"><p>Number of successfully added realizations.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
@@ -327,7 +330,7 @@ objects, and is equivalent to</p>
 <p>on each realization in the ensemble.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>localpath</strong> – string with full localpath to
+<dd class="field-odd"><p><strong>localpath</strong> (<em>string</em>) – Full localpath to
 the data, or list of strings.</p>
 </dd>
 </dl>
@@ -339,7 +342,7 @@ the data, or list of strings.</p>
 <dd><p>Remove specific realizations from the ensemble</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>realindices</strong> – int or list of ints for the realization
+<dd class="field-odd"><p><strong>realindices</strong> (<em>int</em><em> or </em><em>list of ints</em>) – The realization
 indices to be removed</p>
 </dd>
 </dl>
@@ -352,6 +355,11 @@ indices to be removed</p>
 <p>This means that all imported data in each realization is
 aggregated and stored as dataframes in the returned
 VirtualEnsemble</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the ensemble as virtualized.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -371,22 +379,22 @@ the value, different from non-existing files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>localpath</strong> – path to the text file, relative to each realization</p></li>
-<li><p><strong>convert_numeric</strong> – If set to True, assume that
+<li><p><strong>localpath</strong> (<em>str</em>) – path to the text file, relative to each realization</p></li>
+<li><p><strong>convert_numeric</strong> (<em>boolean</em>) – If set to True, assume that
 the value is numerical, and treat strings as
 errors.</p></li>
-<li><p><strong>force_reread</strong> – Force reread from file system. If
+<li><p><strong>force_reread</strong> (<em>boolean</em>) – Force reread from file system. If
 False, repeated calls to this function will
 returned cached results.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>DataFrame, with aggregated data over the ensemble. The column ‘REAL’</dt><dd><p>signifies the realization indices, and a column with the same
+<dd class="field-even"><p>Aggregated data over the ensemble. The column ‘REAL’
+signifies the realization indices, and a column with the same
 name as the localpath filename contains the data.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -395,9 +403,11 @@ name as the localpath filename contains the data.</p>
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.load_txt">
 <code class="sig-name descname">load_txt</code><span class="sig-paren">(</span><em class="sig-param">localpath</em>, <em class="sig-param">convert_numeric=True</em>, <em class="sig-param">force_reread=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.load_txt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.load_txt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a key-value text file from disk and internalize data</p>
-<p>Parses text files on the form
-&lt;key&gt; &lt;value&gt;
-in each line.</p>
+<p>Parses text files on the form</p>
+<blockquote>
+<div><p>&lt;key&gt; &lt;value&gt;</p>
+</div></blockquote>
+<p>in each line.</p>
 <p>Parsing is performed individually in each realization</p>
 </dd></dl>
 
@@ -407,27 +417,27 @@ in each line.</p>
 <dd><p>For each realization, load a CSV.</p>
 <p>The CSV file must be present in at least one realization.
 The parsing is done individually for each realization, and
-aggregation is on demand (through get_df()) and when
+aggregation is on demand (through <cite>get_df()</cite>) and when
 this function returns.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>localpath</strong> – path to the text file, relative to each realization</p></li>
-<li><p><strong>convert_numeric</strong> – If set to True, numerical columns
+<li><p><strong>localpath</strong> (<em>str</em>) – path to the text file, relative to each realization</p></li>
+<li><p><strong>convert_numeric</strong> (<em>boolean</em>) – If set to True, numerical columns
 will be searched for and have their dtype set
 to integers or floats. If scalars, only numerical
 data will be loaded.</p></li>
-<li><p><strong>force_reread</strong> – Force reread from file system. If
+<li><p><strong>force_reread</strong> (<em>boolean</em>) – Force reread from file system. If
 False, repeated calls to this function will
 returned cached results.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Dataframe, aggregation of the loaded CSV files. Column ‘REAL’</dt><dd><p>distuinguishes each realizations data.</p>
+<dd class="field-even"><p>aggregation of the loaded CSV files. Column ‘REAL’
+distuinguishes each realizations data.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.Dataframe</p>
 </dd>
 </dl>
 </dd></dl>
@@ -440,24 +450,24 @@ returned cached results.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>localpath</strong> – path to the text file, relative to each realization</p></li>
-<li><p><strong>fformat</strong> – string identifying the file format. Supports ‘txt’
+<li><p><strong>localpath</strong> (<em>str</em>) – path to the text file, relative to each realization</p></li>
+<li><p><strong>fformat</strong> (<em>str</em>) – string identifying the file format. Supports ‘txt’
 and ‘csv’.</p></li>
-<li><p><strong>convert_numeric</strong> – If set to True, numerical columns
+<li><p><strong>convert_numeric</strong> (<em>boolean</em>) – If set to True, numerical columns
 will be searched for and have their dtype set
 to integers or floats. If scalars, only numerical
 data will be loaded.</p></li>
-<li><p><strong>force_reread</strong> – Force reread from file system. If
+<li><p><strong>force_reread</strong> (<em>boolean</em>) – Force reread from file system. If
 False, repeated calls to this function will
 returned cached results.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Dataframe with loaded data aggregated. Column ‘REAL’</dt><dd><p>distuinguishes each realizations data.</p>
+<dd class="field-even"><p>with loaded data aggregated. Column ‘REAL’
+distuinguishes each realizations data.</p>
 </dd>
-</dl>
-</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.Dataframe</p>
 </dd>
 </dl>
 </dd></dl>
@@ -473,16 +483,19 @@ e.g. ensemble archiving and ensemble arithmetic.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>paths</strong> – str or list of str with filenames (will be globbed)
+<li><p><strong>paths</strong> (<em>str</em><em> or </em><em>list of str</em>) – Filenames (will be globbed)
 that are relative to the realization directory.</p></li>
-<li><p><strong>metadata</strong> – dict with metadata to assign for the discovered
+<li><p><strong>metadata</strong> (<em>dict</em>) – metadata to assign for the discovered
 files. The keys will be columns, and its values will be
 assigned as column values for the discovered files.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>DataFrame with the slice of discovered files in each
+<dd class="field-even"><p>with the slice of discovered files in each
 realization, tagged with realization index in the column REAL</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -494,12 +507,15 @@ realization, tagged with realization index in the column REAL</p>
 in all realizations (union).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>vector_match</strong> – <cite>Optional</cite>. String (or list of strings)
-with wildcard filter. If None, all vectors are returned</p>
+<dd class="field-odd"><p><strong>vector_match</strong> (<em>str</em><em> or </em><em>list of str</em>) – Wildcards for vectors
+to obtain. If None, all vectors are returned</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of strings with summary vectors. Empty list if no
+<dd class="field-even"><p>Matched summary vectors. Empty list if no
 summary file or no matched summary file vectors</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -513,18 +529,15 @@ a load_*() function.</p>
 <p>Each row is tagged by the realization index in the column ‘REAL’</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>localpath</strong> – string, refers to the internalized name.</p>
+<dd class="field-odd"><p><strong>localpath</strong> (<em>str</em>) – refers to the internalized name.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Merged data from each realization.</dt><dd><p>Realizations with missing data are ignored.
+<dd class="field-even"><p>Merged data from each realization.
+Realizations with missing data are ignored.
 Empty dataframe if no data is found</p>
 </dd>
-</dl>
-</p>
-</dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
+<dd class="field-odd"><p>pd.dataframe</p>
 </dd>
 </dl>
 </dd></dl>
@@ -552,38 +565,40 @@ differing from realizations which use raw dates by default.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>time_index</strong> – list of DateTime if interpolation is wanted.
-If defaulted, the raw Eclipse report times will be used.
+<li><p><strong>time_index</strong> (<em>str</em><em> or </em><em>list of DateTime</em>) – If defaulted, the raw Eclipse report times will be used.
 If a string is supplied, that string is attempted used
 via get_smry_dates() in order to obtain a time index,
 typically ‘monthly’, ‘daily’ or ‘yearly’.</p></li>
-<li><p><strong>column_keys</strong> – str or list of column key wildcards. Default is ‘*’
+<li><p><strong>column_keys</strong> (<em>str</em><em> or </em><em>list of str</em>) – column key wildcards. Default is ‘*’
 which will match all vectors in the Eclipse output.</p></li>
-<li><p><strong>stacked</strong> – boolean determining the dataframe layout. If
+<li><p><strong>stacked</strong> (<em>boolean</em>) – determining the dataframe layout. If
 true, the realization index is a column, and dates are repeated
 for each realization in the DATES column.
 If false, a dictionary of dataframes is returned, indexed
 by vector name, and with realization index as columns.
 This only works when time_index is the same for all
 realizations. Not implemented yet!</p></li>
-<li><p><strong>cache_eclsum</strong> – Boolean for whether we should cache the EclSum
+<li><p><strong>cache_eclsum</strong> (<em>boolean</em>) – Boolean for whether we should cache the EclSum
 objects. Set to False if you cannot keep all EclSum files in
 memory simultaneously</p></li>
-<li><p><strong>start_date</strong> – str or date with first date to include.
+<li><p><strong>start_date</strong> (<em>str</em><em> or </em><em>date</em>) – First date to include.
 Dates prior to this date will be dropped, supplied
 start_date will always be included. If string, use
 ISO-format, YYYY-MM-DD.</p></li>
-<li><p><strong>end_date</strong> – str or date with last date to be included.
+<li><p><strong>end_date</strong> (<em>str</em><em> or </em><em>date</em>) – Last date to be included.
 Dates past this date will be dropped, supplied
 end_date will always be included. Overriden if time_index
 is ‘last’. If string, use ISO-format, YYYY-MM-DD.</p></li>
-<li><p><strong>include_restart</strong> – boolean sent to libecl for wheter restarts
+<li><p><strong>include_restart</strong> (<em>boolean</em>) – boolean sent to libecl for wheter restarts
 files should be traversed</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A DataFame of summary vectors for the ensemble, or
+<dd class="field-even"><p>Summary vectors for the ensemble, or
 a dict of dataframes if stacked=False.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -604,13 +619,16 @@ are valid backwards in time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>column_keys</strong> – str or list of strings, cumulative summary vectors</p></li>
-<li><p><strong>time_index</strong> – str or list of datetimes</p></li>
+<li><p><strong>column_keys</strong> (<em>str</em><em> or </em><em>list of str</em>) – cumulative summary vectors</p></li>
+<li><p><strong>time_index</strong> (<em>str</em><em> or </em><em>list of datetimes</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>DataFrame analoguous to the dataframe returned by get_smry().
+<dd class="field-even"><p>analoguous to the dataframe returned by get_smry().
 Empty dataframe if no data found.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -628,27 +646,20 @@ value, for example filtering on a specific sensitivity case.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>localpath</strong> – string pointing to the data for which the filtering
+<li><p><strong>localpath</strong> (<em>string</em>) – pointing to the data for which the filtering
 applies. If no other arguments, only realizations containing
 this data key is kept.</p></li>
-<li><p><strong>key</strong> – A certain key within a realization dictionary that is
+<li><p><strong>key</strong> (<em>str</em>) – A certain key within a realization dictionary that is
 required to be present. If a value is also provided, this
 key must be equal to this value</p></li>
-<li><p><strong>value</strong> – The value a certain key must equal. Floating point
-comparisons are not robust.</p></li>
-<li><p><strong>column</strong> – Name of a column in tabular data. If columncontains is
+<li><p><strong>value</strong> (<em>str</em><em>, </em><em>int</em><em> or </em><em>float</em>) – The value a certain key must equal. Floating
+point comparisons are not robust.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of a column in tabular data. If columncontains is
 not specified, this means that this column must be present</p></li>
-<li><p><strong>columncontains</strong> – A value that the specific column must include.</p></li>
-<li><p><strong>inplace</strong> – <dl class="simple">
-<dt>Boolean indicating if the current object should have its</dt><dd><p>realizations stripped, or if a copy should be returned.
-Default true.</p>
-</dd>
-<dt>Return:</dt><dd><p>If inplace=True, then nothing will be returned.
-If inplace=False, a VirtualEnsemble fulfilling the filter
-will be returned.</p>
-</dd>
-</dl>
-</p></li>
+<li><p><strong>columncontains</strong> (<em>str</em><em>, </em><em>int</em><em> or </em><em>float</em>) – A value that the specific column must include.</p></li>
+<li><p><strong>inplace</strong> – Indicating if the current object should have its
+realizations stripped, or if a copy should be returned.
+Default true.</p></li>
 </ul>
 </dd>
 </dl>
@@ -702,11 +713,8 @@ in each realization object.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>pd.DataFrame, aggregated result of the supplied function</dt><dd><p>on each realization.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>pd.DataFrame, aggregated result of the supplied function
+on each realization.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -790,7 +798,6 @@ strings in the outer index are changed accordingly. If no
 data is found, return empty DataFrame.</p>
 </dd>
 </dl>
-<p>TODO: add warning message when failed realizations are removed</p>
 </dd></dl>
 
 <dl class="method">
@@ -1809,16 +1816,16 @@ the columns
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> (<em>str</em>) – absolute or relative path to a directory
 containing a realizations files.</p></li>
-<li><p><strong>realidxregexp</strong> – a compiled regular expression which
+<li><p><strong>realidxregexp</strong> (<em>re/str</em>) – a compiled regular expression which
 is used to determine the realization index (integer)
 from the path. First match is the index.
 Default: realization-(d+)
 Only needs to match path components.
 If a string is supplied, it will be attempted
 compiled into a regular expression.</p></li>
-<li><p><strong>index</strong> – int, the realization index to be used, will
+<li><p><strong>index</strong> (<em>int</em>) – the realization index to be used, will
 override anything else.</p></li>
-<li><p><strong>autodiscovery</strong> – boolean, whether the realization should try to
+<li><p><strong>autodiscovery</strong> (<em>boolean</em>) – whether the realization should try to
 auto-discover certain data (UNSMRY files in standard location)</p></li>
 </ul>
 </dd>
@@ -1830,10 +1837,13 @@ auto-discover certain data (UNSMRY files in standard location)</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><dl class="simple">
-<dt>str with a filesystem path which at least existeda</dt><dd><p>at time of object initialization.</p>
+<dt>the filesystem path which at least existed</dt><dd><p>at time of object initialization.</p>
 </dd>
 </dl>
 </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1846,8 +1856,8 @@ to a VirtualRealization</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>description</strong> – string, used as label</p></li>
-<li><p><strong>deepcopy</strong> – boolean. Set to true if you want to continue
+<li><p><strong>description</strong> (<em>str</em>) – used as label</p></li>
+<li><p><strong>deepcopy</strong> (<em>boolean</em>) – Set to true if you want to continue
 to manipulate the ScratchRealization object
 afterwards without affecting the virtual realization.
 Defaults to True. False will give faster execution.</p></li>
@@ -1861,9 +1871,9 @@ Defaults to True. False will give faster execution.</p></li>
 <code class="sig-name descname">load_file</code><span class="sig-paren">(</span><em class="sig-param">localpath</em>, <em class="sig-param">fformat</em>, <em class="sig-param">convert_numeric=True</em>, <em class="sig-param">force_reread=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.load_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.load_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse and internalize files from disk.</p>
 <p>Several file formats are supported:
-* txt (one key-value pair pr. line)
-* csv
-* scalar (one number or one string in the first line)</p>
+- txt (one key-value pair pr. line)
+- csv
+- scalar (one number or one string in the first line)</p>
 </dd></dl>
 
 <dl class="method">
@@ -1886,6 +1896,9 @@ to that function.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the value read from the file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str/number</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1923,11 +1936,14 @@ returned cached results.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>dict with the parsed values. Values will be returned as</dt><dd><p>integers, floats or strings. If convert_numeric
+<dt>Dictionary with the parsed values. Values will be returned as</dt><dd><p>integers, floats or strings. If convert_numeric
 is False, all values are strings.</p>
 </dd>
 </dl>
 </p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1999,11 +2015,9 @@ the resulting dataframe is also attempted written
 to disk using the supplied ‘localpath’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>**kwargs</strong> – dict which is supplied to the callbacked function,</p></li>
-<li><p><strong>which the key 'localpath' also points the the name</strong> (<em>in</em>) – </p></li>
-<li><p><strong>for data internalization.</strong> (<em>used</em>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>**kwargs</strong> (<em>dict</em>) – which is supplied to the callbacked function,
+in which the key ‘localpath’ also points the the name
+used for data internalization.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2019,21 +2033,23 @@ to disk using the supplied ‘localpath’.</p>
 <code class="sig-name descname">get_df</code><span class="sig-paren">(</span><em class="sig-param">localpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.get_df"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.get_df" title="Permalink to this definition">¶</a></dt>
 <dd><p>Access the internal datastore which contains dataframes or dicts
 or scalars.</p>
-<dl class="simple">
-<dt>Shorthand is allowed, if the fully qualified localpath is</dt><dd><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</dd>
-<dt>then you can also get this dataframe returned with these alternatives:</dt><dd><ul class="simple">
+<p>Shorthand is allowed, if the fully qualified localpath is</p>
+<blockquote>
+<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
+</div></blockquote>
+<p>then you can also get this dataframe returned with these alternatives:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>simulator_volume_fipnum</p></li>
 <li><p>simulator_volume_fipnum.csv</p></li>
 <li><p>share/results/volumes/simulator_volume_fipnum</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <p>but only as long as there is no ambiguity. In case of ambiguity, a
 ValueError will be raised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>localpath</strong> – the idenfier of the data requested</p>
+<dd class="field-odd"><p><strong>localpath</strong> (<em>str</em>) – the idenfier of the data requested</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>dataframe or dictionary</p>
@@ -2049,16 +2065,18 @@ ValueError will be raised.</p>
 <code class="sig-name descname">shortcut2path</code><span class="sig-paren">(</span><em class="sig-param">shortpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.shortcut2path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.shortcut2path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert short pathnames to fully qualified pathnames
 within the datastore.</p>
-<dl class="simple">
-<dt>If the fully qualified localpath is</dt><dd><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</dd>
-<dt>then you can also access this with these alternatives:</dt><dd><ul class="simple">
+<p>If the fully qualified localpath is</p>
+<blockquote>
+<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
+</div></blockquote>
+<p>then you can also access this with these alternatives:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>simulator_volume_fipnum</p></li>
 <li><p>simulator_volume_fipnum.csv</p></li>
 <li><p>share/results/volumes/simulator_volume_fipnum</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <p>but only as long as there is no ambiguity. In case
 of ambiguity, the shortpath will be returned.</p>
 </dd></dl>
@@ -2179,6 +2197,8 @@ files should be traversed</p></li>
 <dd class="field-even"><p><dl class="simple">
 <dt>DataFrame with summary keys as columns and dates as indices.</dt><dd><p>Empty dataframe if no summary is available or column
 keys do not exist.</p>
+</dd>
+<dt>DataFrame: with summary keys as columns and dates as indices.</dt><dd><p>Empty dataframe if no summary is available.</p>
 </dd>
 </dl>
 </p>
@@ -2619,9 +2639,11 @@ loaded in a ScratchEnsemble.</p>
 <code class="sig-name descname">shortcut2path</code><span class="sig-paren">(</span><em class="sig-param">shortpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.shortcut2path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.shortcut2path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert short pathnames to fully qualified pathnames
 within the datastore.</p>
+<p>If the fully qualified localpath is</p>
+<blockquote>
+<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
+</div></blockquote>
 <dl class="simple">
-<dt>If the fully qualified localpath is</dt><dd><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</dd>
 <dt>then you can also access this with these alternatives:</dt><dd><ul class="simple">
 <li><p>simulator_volume_fipnum</p></li>
 <li><p>simulator_volume_fipnum.csv</p></li>
@@ -2761,16 +2783,18 @@ written it.</p>
 <dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.get_df">
 <code class="sig-name descname">get_df</code><span class="sig-paren">(</span><em class="sig-param">localpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.get_df"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.get_df" title="Permalink to this definition">¶</a></dt>
 <dd><p>Access the internal datastore which contains dataframes or dicts</p>
-<dl class="simple">
-<dt>Shorthand is allowed, if the fully qualified localpath is</dt><dd><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</dd>
-<dt>then you can also get this dataframe returned with these alternatives:</dt><dd><ul class="simple">
+<p>Shorthand is allowed, if the fully qualified localpath is</p>
+<blockquote>
+<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
+</div></blockquote>
+<p>then you can also get this dataframe returned with these alternatives:</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>simulator_volume_fipnum</p></li>
 <li><p>simulator_volume_fipnum.csv</p></li>
 <li><p>share/results/volumes/simulator_volume_fipnum</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <p>but only as long as there is no ambiguity. In case of ambiguity, a
 ValueError will be raised.</p>
 <dl class="field-list simple">

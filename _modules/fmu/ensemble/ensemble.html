@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.58 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.59 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.58
+                0.2.1.59
               </div>
             
           
@@ -200,6 +200,7 @@
 <span class="sd">    by their realization index (integer).</span>
 
 <span class="sd">    Example for initialization:</span>
+
 <span class="sd">        &gt;&gt;&gt; from fmu import ensemble</span>
 <span class="sd">        &gt;&gt;&gt; ens = ensemble.ScratchEnsemble(&#39;ensemblename&#39;,</span>
 <span class="sd">                    &#39;/scratch/fmu/foobert/r089/casename/realization-*/iter-0&#39;)</span>
@@ -215,18 +216,18 @@
 <span class="sd">            to file system. Absolute or relative paths.</span>
 <span class="sd">            If omitted, ensemble will be empty unless runpathfile</span>
 <span class="sd">            is used.</span>
-<span class="sd">        realidxregexp: str or regexp - used to deduce the realization index</span>
+<span class="sd">        realidxregexp (str or regexp): used to deduce the realization index</span>
 <span class="sd">            from the file path. Default tailored for realization-X</span>
-<span class="sd">        runpathfile: str. Filename (absolute or relative) of an ERT</span>
+<span class="sd">        runpathfile (str): Filename (absolute or relative) of an ERT</span>
 <span class="sd">            runpath file, consisting of four space separated text fields,</span>
 <span class="sd">            first column is realization index, second column is absolute</span>
 <span class="sd">            or relative path to a realization RUNPATH, third column is</span>
 <span class="sd">            the basename of the Eclipse simulation, relative to RUNPATH.</span>
 <span class="sd">            Fourth column is not used.</span>
-<span class="sd">        runpathfilter: str. If supplied, the only the runpaths in</span>
+<span class="sd">        runpathfilter (str): If supplied, the only the runpaths in</span>
 <span class="sd">            the runpathfile which contains this string will be included</span>
 <span class="sd">            Use to select only a specific realization f.ex.</span>
-<span class="sd">        autodiscovery: boolean. True by default, means that the class</span>
+<span class="sd">        autodiscovery (boolean): True by default, means that the class</span>
 <span class="sd">            can try to autodiscover data in the realization. Turn</span>
 <span class="sd">            off to gain more fined tuned control.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -304,7 +305,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the union of all keys available in realizations.</span>
 
-<span class="sd">        Keys refer to the realization datastore, a dictionary</span>
+<span class="sd">        Keys refer to the realization datastore of internalized</span>
+<span class="sd">        data. The datastore is a dictionary</span>
 <span class="sd">        of dataframes or dicts. Examples would be `parameters.txt`,</span>
 <span class="sd">        `STATUS`, `share/results/tables/unsmry--monthly.csv`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -319,8 +321,11 @@
 <span class="sd">        within the datastore.</span>
 
 <span class="sd">        If the fully qualified localpath is</span>
+
 <span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+
 <span class="sd">        then you can also access this with these alternatives:</span>
+
 <span class="sd">         * simulator_volume_fipnum</span>
 <span class="sd">         * simulator_volume_fipnum.csv</span>
 <span class="sd">         * share/results/volumes/simulator_volume_fipnum</span>
@@ -362,7 +367,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            paths (list/str): String or list of strings with wildcards</span>
 <span class="sd">                to file system. Absolute or relative paths.</span>
-<span class="sd">            autodiscovery: boolean, whether files can be attempted</span>
+<span class="sd">            autodiscovery (boolean): whether files can be attempted</span>
 <span class="sd">                auto-discovered</span>
 
 <span class="sd">        Returns:</span>
@@ -409,13 +414,13 @@
 <span class="sd">          * iter - integer with the iteration number.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            runpath: str with filename, absolute or relative, or</span>
+<span class="sd">            runpath (str): Filename, absolute or relative, or</span>
 <span class="sd">                a Pandas DataFrame parsed from a runpath file</span>
-<span class="sd">            runpathfilter: str which each filepath has to match</span>
+<span class="sd">            runpathfilter (str). A filter which each filepath has to match</span>
 <span class="sd">                in order to be included. Default None which means not filter</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            int - Number of successfully added realizations.</span>
+<span class="sd">            int: Number of successfully added realizations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">prelength</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runpath</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -458,12 +463,12 @@
 <span class="sd">        datastores. This modifies the underlying realization</span>
 <span class="sd">        objects, and is equivalent to</span>
 
-<span class="sd">        &gt;&gt;&gt; del realization[localpath]</span>
+<span class="sd">            &gt;&gt;&gt; del realization[localpath]</span>
 
 <span class="sd">        on each realization in the ensemble.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: string with full localpath to</span>
+<span class="sd">            localpath (string): Full localpath to</span>
 <span class="sd">                the data, or list of strings.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">localpaths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -476,7 +481,7 @@
         <span class="sd">&quot;&quot;&quot;Remove specific realizations from the ensemble</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            realindices: int or list of ints for the realization</span>
+<span class="sd">            realindices (int or list of ints): The realization</span>
 <span class="sd">                indices to be removed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">realindices</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -493,6 +498,9 @@
 <span class="sd">        This means that all imported data in each realization is</span>
 <span class="sd">        aggregated and stored as dataframes in the returned</span>
 <span class="sd">        VirtualEnsemble</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): Name of the ensemble as virtualized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">vens</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
@@ -518,17 +526,17 @@
 <span class="sd">        Parsing is performed individually in each realization</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: path to the text file, relative to each realization</span>
-<span class="sd">            convert_numeric: If set to True, assume that</span>
+<span class="sd">            localpath (str): path to the text file, relative to each realization</span>
+<span class="sd">            convert_numeric (boolean): If set to True, assume that</span>
 <span class="sd">                the value is numerical, and treat strings as</span>
 <span class="sd">                errors.</span>
-<span class="sd">            force_reread: Force reread from file system. If</span>
+<span class="sd">            force_reread (boolean): Force reread from file system. If</span>
 <span class="sd">                False, repeated calls to this function will</span>
 <span class="sd">                returned cached results.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            DataFrame, with aggregated data over the ensemble. The column &#39;REAL&#39;</span>
-<span class="sd">                signifies the realization indices, and a column with the same</span>
-<span class="sd">                name as the localpath filename contains the data.</span>
+<span class="sd">            pd.DataFrame: Aggregated data over the ensemble. The column &#39;REAL&#39;</span>
+<span class="sd">            signifies the realization indices, and a column with the same</span>
+<span class="sd">            name as the localpath filename contains the data.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s2">&quot;scalar&quot;</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span></div>
@@ -537,7 +545,9 @@
         <span class="sd">&quot;&quot;&quot;Parse a key-value text file from disk and internalize data</span>
 
 <span class="sd">        Parses text files on the form</span>
-<span class="sd">        &lt;key&gt; &lt;value&gt;</span>
+
+<span class="sd">            &lt;key&gt; &lt;value&gt;</span>
+
 <span class="sd">        in each line.</span>
 
 <span class="sd">        Parsing is performed individually in each realization</span>
@@ -549,21 +559,21 @@
 
 <span class="sd">        The CSV file must be present in at least one realization.</span>
 <span class="sd">        The parsing is done individually for each realization, and</span>
-<span class="sd">        aggregation is on demand (through get_df()) and when</span>
+<span class="sd">        aggregation is on demand (through `get_df()`) and when</span>
 <span class="sd">        this function returns.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: path to the text file, relative to each realization</span>
-<span class="sd">            convert_numeric: If set to True, numerical columns</span>
+<span class="sd">            localpath (str): path to the text file, relative to each realization</span>
+<span class="sd">            convert_numeric (boolean): If set to True, numerical columns</span>
 <span class="sd">                will be searched for and have their dtype set</span>
 <span class="sd">                to integers or floats. If scalars, only numerical</span>
 <span class="sd">                data will be loaded.</span>
-<span class="sd">            force_reread: Force reread from file system. If</span>
+<span class="sd">            force_reread (boolean): Force reread from file system. If</span>
 <span class="sd">                False, repeated calls to this function will</span>
 <span class="sd">                returned cached results.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            Dataframe, aggregation of the loaded CSV files. Column &#39;REAL&#39;</span>
-<span class="sd">                distuinguishes each realizations data.</span>
+<span class="sd">            pd.Dataframe: aggregation of the loaded CSV files. Column &#39;REAL&#39;</span>
+<span class="sd">            distuinguishes each realizations data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span></div>
 
@@ -573,19 +583,19 @@
 <span class="sd">        This function may utilize multithreading.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: path to the text file, relative to each realization</span>
-<span class="sd">            fformat: string identifying the file format. Supports &#39;txt&#39;</span>
+<span class="sd">            localpath (str): path to the text file, relative to each realization</span>
+<span class="sd">            fformat (str): string identifying the file format. Supports &#39;txt&#39;</span>
 <span class="sd">                and &#39;csv&#39;.</span>
-<span class="sd">            convert_numeric: If set to True, numerical columns</span>
+<span class="sd">            convert_numeric (boolean): If set to True, numerical columns</span>
 <span class="sd">                will be searched for and have their dtype set</span>
 <span class="sd">                to integers or floats. If scalars, only numerical</span>
 <span class="sd">                data will be loaded.</span>
-<span class="sd">            force_reread: Force reread from file system. If</span>
+<span class="sd">            force_reread (boolean): Force reread from file system. If</span>
 <span class="sd">                False, repeated calls to this function will</span>
 <span class="sd">                returned cached results.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            Dataframe with loaded data aggregated. Column &#39;REAL&#39;</span>
-<span class="sd">                distuinguishes each realizations data.</span>
+<span class="sd">            pd.Dataframe: with loaded data aggregated. Column &#39;REAL&#39;</span>
+<span class="sd">            distuinguishes each realizations data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
@@ -613,13 +623,13 @@
 <span class="sd">        CSV files for single use does not have to be discovered.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            paths: str or list of str with filenames (will be globbed)</span>
+<span class="sd">            paths (str or list of str): Filenames (will be globbed)</span>
 <span class="sd">                that are relative to the realization directory.</span>
-<span class="sd">            metadata: dict with metadata to assign for the discovered</span>
+<span class="sd">            metadata (dict): metadata to assign for the discovered</span>
 <span class="sd">                files. The keys will be columns, and its values will be</span>
 <span class="sd">                assigned as column values for the discovered files.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            DataFrame with the slice of discovered files in each</span>
+<span class="sd">            pd.DataFrame: with the slice of discovered files in each</span>
 <span class="sd">            realization, tagged with realization index in the column REAL</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df_list</span> <span class="o">=</span> <span class="p">{}</span>
@@ -645,10 +655,10 @@
 <span class="sd">        in all realizations (union).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            vector_match: `Optional`. String (or list of strings)</span>
-<span class="sd">               with wildcard filter. If None, all vectors are returned</span>
+<span class="sd">            vector_match (str or list of str): Wildcards for vectors</span>
+<span class="sd">               to obtain. If None, all vectors are returned</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            list of strings with summary vectors. Empty list if no</span>
+<span class="sd">            list of str: Matched summary vectors. Empty list if no</span>
 <span class="sd">            summary file or no matched summary file vectors</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vector_match</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -675,11 +685,11 @@
 <span class="sd">        Each row is tagged by the realization index in the column &#39;REAL&#39;</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: string, refers to the internalized name.</span>
+<span class="sd">            localpath (str): refers to the internalized name.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">           dataframe: Merged data from each realization.</span>
-<span class="sd">               Realizations with missing data are ignored.</span>
-<span class="sd">               Empty dataframe if no data is found</span>
+<span class="sd">           pd.dataframe: Merged data from each realization.</span>
+<span class="sd">           Realizations with missing data are ignored.</span>
+<span class="sd">           Empty dataframe if no data is found</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dflist</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -743,35 +753,35 @@
 <span class="sd">        differing from realizations which use raw dates by default.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            time_index: list of DateTime if interpolation is wanted.</span>
+<span class="sd">            time_index (str or list of DateTime):</span>
 <span class="sd">                If defaulted, the raw Eclipse report times will be used.</span>
 <span class="sd">                If a string is supplied, that string is attempted used</span>
 <span class="sd">                via get_smry_dates() in order to obtain a time index,</span>
 <span class="sd">                typically &#39;monthly&#39;, &#39;daily&#39; or &#39;yearly&#39;.</span>
-<span class="sd">            column_keys: str or list of column key wildcards. Default is &#39;*&#39;</span>
+<span class="sd">            column_keys (str or list of str): column key wildcards. Default is &#39;*&#39;</span>
 <span class="sd">                which will match all vectors in the Eclipse output.</span>
-<span class="sd">            stacked: boolean determining the dataframe layout. If</span>
+<span class="sd">            stacked (boolean): determining the dataframe layout. If</span>
 <span class="sd">                true, the realization index is a column, and dates are repeated</span>
 <span class="sd">                for each realization in the DATES column.</span>
 <span class="sd">                If false, a dictionary of dataframes is returned, indexed</span>
 <span class="sd">                by vector name, and with realization index as columns.</span>
 <span class="sd">                This only works when time_index is the same for all</span>
 <span class="sd">                realizations. Not implemented yet!</span>
-<span class="sd">            cache_eclsum: Boolean for whether we should cache the EclSum</span>
+<span class="sd">            cache_eclsum (boolean): Boolean for whether we should cache the EclSum</span>
 <span class="sd">                objects. Set to False if you cannot keep all EclSum files in</span>
 <span class="sd">                memory simultaneously</span>
-<span class="sd">            start_date: str or date with first date to include.</span>
+<span class="sd">            start_date (str or date): First date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
 <span class="sd">                start_date will always be included. If string, use</span>
 <span class="sd">                ISO-format, YYYY-MM-DD.</span>
-<span class="sd">            end_date: str or date with last date to be included.</span>
+<span class="sd">            end_date (str or date): Last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
 <span class="sd">                end_date will always be included. Overriden if time_index</span>
 <span class="sd">                is &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
-<span class="sd">            include_restart: boolean sent to libecl for wheter restarts</span>
+<span class="sd">            include_restart (boolean): boolean sent to libecl for wheter restarts</span>
 <span class="sd">                files should be traversed</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            A DataFame of summary vectors for the ensemble, or</span>
+<span class="sd">            pd.DataFame: Summary vectors for the ensemble, or</span>
 <span class="sd">            a dict of dataframes if stacked=False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stacked</span><span class="p">:</span>
@@ -811,11 +821,11 @@
 <span class="sd">        are valid backwards in time.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            column_keys: str or list of strings, cumulative summary vectors</span>
-<span class="sd">            time_index: str or list of datetimes</span>
+<span class="sd">            column_keys (str or list of str): cumulative summary vectors</span>
+<span class="sd">            time_index (str or list of datetimes):</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            DataFrame analoguous to the dataframe returned by get_smry().</span>
+<span class="sd">            pd.DataFrame: analoguous to the dataframe returned by get_smry().</span>
 <span class="sd">            Empty dataframe if no data found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">vol_dfs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -846,19 +856,19 @@
 <span class="sd">        value, for example filtering on a specific sensitivity case.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: string pointing to the data for which the filtering</span>
+<span class="sd">            localpath (string): pointing to the data for which the filtering</span>
 <span class="sd">                applies. If no other arguments, only realizations containing</span>
 <span class="sd">                this data key is kept.</span>
-<span class="sd">            key: A certain key within a realization dictionary that is</span>
+<span class="sd">            key (str): A certain key within a realization dictionary that is</span>
 <span class="sd">                required to be present. If a value is also provided, this</span>
 <span class="sd">                key must be equal to this value</span>
-<span class="sd">            value: The value a certain key must equal. Floating point</span>
-<span class="sd">                comparisons are not robust.</span>
-<span class="sd">            column: Name of a column in tabular data. If columncontains is</span>
+<span class="sd">            value (str, int or float): The value a certain key must equal. Floating</span>
+<span class="sd">                point comparisons are not robust.</span>
+<span class="sd">            column (str): Name of a column in tabular data. If columncontains is</span>
 <span class="sd">                not specified, this means that this column must be present</span>
-<span class="sd">            columncontains:</span>
+<span class="sd">            columncontains (str, int or float):</span>
 <span class="sd">                A value that the specific column must include.</span>
-<span class="sd">            inplace: Boolean indicating if the current object should have its</span>
+<span class="sd">            inplace (boolean): Indicating if the current object should have its</span>
 <span class="sd">                realizations stripped, or if a copy should be returned.</span>
 <span class="sd">                Default true.</span>
 
@@ -937,7 +947,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFrame, aggregated result of the supplied function</span>
-<span class="sd">                on each realization.</span>
+<span class="sd">            on each realization.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1135,10 +1145,7 @@
 <span class="sd">            If quantiles are explicitly supplied, the &#39;pXX&#39;</span>
 <span class="sd">            strings in the outer index are changed accordingly. If no</span>
 <span class="sd">            data is found, return empty DataFrame.</span>
-
-<span class="sd">        TODO: add warning message when failed realizations are removed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">quantiles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">quantiles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">90</span><span class="p">]</span>
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.58 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.2.1.59 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.58
+                0.2.1.59
               </div>
             
           
@@ -223,16 +223,16 @@
 <span class="sd">    Args:</span>
 <span class="sd">        path (str): absolute or relative path to a directory</span>
 <span class="sd">            containing a realizations files.</span>
-<span class="sd">        realidxregexp: a compiled regular expression which</span>
+<span class="sd">        realidxregexp (re/str): a compiled regular expression which</span>
 <span class="sd">            is used to determine the realization index (integer)</span>
 <span class="sd">            from the path. First match is the index.</span>
 <span class="sd">            Default: realization-(\d+)</span>
 <span class="sd">            Only needs to match path components.</span>
 <span class="sd">            If a string is supplied, it will be attempted</span>
 <span class="sd">            compiled into a regular expression.</span>
-<span class="sd">        index: int, the realization index to be used, will</span>
+<span class="sd">        index (int): the realization index to be used, will</span>
 <span class="sd">            override anything else.</span>
-<span class="sd">        autodiscovery: boolean, whether the realization should try to</span>
+<span class="sd">        autodiscovery (boolean): whether the realization should try to</span>
 <span class="sd">            auto-discover certain data (UNSMRY files in standard location)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -319,7 +319,7 @@
         <span class="sd">&quot;&quot;&quot;Return the runpath (&quot;root&quot;) of the realization</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            str with a filesystem path which at least existeda</span>
+<span class="sd">            str: the filesystem path which at least existed</span>
 <span class="sd">                at time of object initialization.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span></div>
@@ -329,8 +329,8 @@
 <span class="sd">        to a VirtualRealization</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            description: string, used as label</span>
-<span class="sd">            deepcopy: boolean. Set to true if you want to continue</span>
+<span class="sd">            description (str): used as label</span>
+<span class="sd">            deepcopy (boolean): Set to true if you want to continue</span>
 <span class="sd">               to manipulate the ScratchRealization object</span>
 <span class="sd">               afterwards without affecting the virtual realization.</span>
 <span class="sd">               Defaults to True. False will give faster execution.</span>
@@ -346,9 +346,9 @@
 <span class="sd">        Parse and internalize files from disk.</span>
 
 <span class="sd">        Several file formats are supported:</span>
-<span class="sd">        * txt (one key-value pair pr. line)</span>
-<span class="sd">        * csv</span>
-<span class="sd">        * scalar (one number or one string in the first line)</span>
+<span class="sd">        - txt (one key-value pair pr. line)</span>
+<span class="sd">        - csv</span>
+<span class="sd">        - scalar (one number or one string in the first line)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">fformat</span> <span class="o">==</span> <span class="s2">&quot;txt&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_txt</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span>
@@ -384,7 +384,7 @@
 <span class="sd">            convert_numeric: If True, non-numerical content will be thrown away</span>
 <span class="sd">            force_reread: Reread the data from disk.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            the value read from the file.</span>
+<span class="sd">            str/number: the value read from the file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fullpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">,</span> <span class="n">localpath</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fullpath</span><span class="p">):</span>
@@ -459,7 +459,7 @@
 <span class="sd">                returned cached results.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            dict with the parsed values. Values will be returned as</span>
+<span class="sd">            dict: Dictionary with the parsed values. Values will be returned as</span>
 <span class="sd">                integers, floats or strings. If convert_numeric</span>
 <span class="sd">                is False, all values are strings.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -667,9 +667,9 @@
 <span class="sd">        to disk using the supplied &#39;localpath&#39;.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            **kwargs: dict which is supplied to the callbacked function,</span>
-<span class="sd">            in which the key &#39;localpath&#39; also points the the name</span>
-<span class="sd">            used for data internalization.</span>
+<span class="sd">            **kwargs (dict): which is supplied to the callbacked function,</span>
+<span class="sd">                in which the key &#39;localpath&#39; also points the the name</span>
+<span class="sd">                used for data internalization.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -737,17 +737,19 @@
 <span class="sd">        or scalars.</span>
 
 <span class="sd">        Shorthand is allowed, if the fully qualified localpath is</span>
-<span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+
+<span class="sd">          &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
 <span class="sd">        then you can also get this dataframe returned with these alternatives:</span>
-<span class="sd">         * simulator_volume_fipnum</span>
-<span class="sd">         * simulator_volume_fipnum.csv</span>
-<span class="sd">         * share/results/volumes/simulator_volume_fipnum</span>
+
+<span class="sd">          * simulator_volume_fipnum</span>
+<span class="sd">          * simulator_volume_fipnum.csv</span>
+<span class="sd">          * share/results/volumes/simulator_volume_fipnum</span>
 
 <span class="sd">        but only as long as there is no ambiguity. In case of ambiguity, a</span>
 <span class="sd">        ValueError will be raised.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            localpath: the idenfier of the data requested</span>
+<span class="sd">            localpath (str): the idenfier of the data requested</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            dataframe or dictionary</span>
@@ -769,11 +771,13 @@
 <span class="sd">        within the datastore.</span>
 
 <span class="sd">        If the fully qualified localpath is</span>
-<span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+
+<span class="sd">          &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
 <span class="sd">        then you can also access this with these alternatives:</span>
-<span class="sd">         * simulator_volume_fipnum</span>
-<span class="sd">         * simulator_volume_fipnum.csv</span>
-<span class="sd">         * share/results/volumes/simulator_volume_fipnum</span>
+
+<span class="sd">          * simulator_volume_fipnum</span>
+<span class="sd">          * simulator_volume_fipnum.csv</span>
+<span class="sd">          * share/results/volumes/simulator_volume_fipnum</span>
 
 <span class="sd">        but only as long as there is no ambiguity. In case</span>
 <span class="sd">        of ambiguity, the shortpath will be returned.</span>
@@ -874,8 +878,8 @@
 <span class="sd">                files should be traversed</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">           EclSum: object representing the summary file. None if</span>
-<span class="sd">               nothing was found.</span>
+<span class="sd">            EclSum: object representing the summary file. None if</span>
+<span class="sd">                nothing was found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eclsum</span><span class="p">:</span>  <span class="c1"># Return cached object if available</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eclsum_include_restart</span> <span class="o">==</span> <span class="n">include_restart</span><span class="p">:</span>
@@ -970,7 +974,8 @@
 <span class="sd">            DataFrame with summary keys as columns and dates as indices.</span>
 <span class="sd">                Empty dataframe if no summary is available or column</span>
 <span class="sd">                keys do not exist.</span>
-
+<span class="sd">            DataFrame: with summary keys as columns and dates as indices.</span>
+<span class="sd">                Empty dataframe if no summary is available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">):</span>
             <span class="c1"># Return empty, but do not store the empty dataframe in self.data</span>
