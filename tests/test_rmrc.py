@@ -16,7 +16,7 @@ from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
+logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -30,18 +30,26 @@ def test_rmrc():
     iteration_name = "pred"
     local_paths = ["share/maps/depth", "share/maps/isochores"]
 
+    if not os.path.exists(ens_path):
+        pytest.skip("Test data not available")
+
+    logger.info("Constructing ensemble object from disk")
     ens = ScratchEnsemble(
-        "ens1", os.path.join(ens_path, "realization-?/{}".format(iteration_name))
+        "ens1", os.path.join(ens_path, "realization-*/{}".format(iteration_name))
     )
-    ens.load_smry(time_index="yearly")
+    logger.info("Loading smry")
+    ens.load_smry(time_index="monthly")
+    logger.info("Finding *gri files")
     ens.find_files("share/maps/depth/*.gri", metadata={"surfacetype": "depthsurface"})
     ens.find_files("share/maps/isochores/*.gri", metadata={"surfacetype": "isochores"})
+    logger.info("Dumping to disk (js_vens_dump)")
     ens.to_virtual().to_disk(
-        "js_vens_dump", delete=True, includefiles=True, symlinks=True
+        "js_vens_dump", delete=True, dumpcsv=False, includefiles=True, symlinks=True,
     )
-
+    logger.info("Loading back from disk")
     vens = VirtualEnsemble(fromdisk="js_vens_dump")
 
+    logger.info("Doing asserts")
     assert not vens.files.empty
 
     assert "surfacetype" in vens.files
