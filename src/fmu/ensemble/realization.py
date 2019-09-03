@@ -117,9 +117,11 @@ class ScratchRealization(object):
                     break
             else:
                 logger.warning(
-                    ("Could not determine realization "
-                     "index for %s, "
-                     "this cannot be inserted in an Ensemble"),
+                    (
+                        "Could not determine realization "
+                        "index for %s, "
+                        "this cannot be inserted in an Ensemble"
+                    ),
                     abspath,
                 )
                 logger.warning("Maybe you need to use index=<someinteger>")
@@ -707,16 +709,19 @@ class ScratchRealization(object):
 
                 if metayaml:
                     metadict = {}
-                    # With dot, f.ex. "base.gri" and ".base.gri.yml"
-                    if os.path.exists(os.path.join(dirname, "." + basename + ".yml")):
-                        metadict = yaml.full_load(
-                            open(os.path.join(dirname, "." + basename + ".yml"))
-                        )
-                    # Without dot, "base.gri" and "base.gri.yml"
-                    if os.path.exists(os.path.join(dirname, basename + ".yml")):
-                        metadict = yaml.full_load(
-                            open(os.path.join(dirname, basename + ".yml"))
-                        )
+                    yaml_candidates = [
+                        "." + basename + ".yml",
+                        basename + ".yml",
+                        "." + basename + ".yaml",
+                        basename + ".yaml",
+                    ]
+                    # We will only parse the first one found! You
+                    # might be out of luck if you have multiple..
+                    for cand in yaml_candidates:
+                        if os.path.exists(os.path.join(dirname, cand)):
+                            metadict = yaml.full_load(open(os.path.join(dirname, cand)))
+                        continue
+
                     # Flatten metadict:
                     metadict = flatten(metadict, sep="--")
                     for key, value in metadict.items():
