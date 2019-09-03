@@ -1,3 +1,9 @@
+.. image:: https://travis-ci.com/equinor/fmu-ensemble.svg?branch=master
+    :target: https://travis-ci.com/equinor/fmu-ensemble
+
+.. image:: https://api.codacy.com/project/badge/Grade/33b0d3049b634ff2b4dfc6cc791d7da7
+    :target: https://www.codacy.com/app/anders-kiaer/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade
+
 ==============================
 Introduction to *fmu.ensemble*
 ==============================
@@ -5,11 +11,11 @@ Introduction to *fmu.ensemble*
 FMU Ensemble is a Python module for handling simulation ensembles
 originating from an FMU (Fast Model Update) workflow.
 
-For documentation, see the 
+For documentation, see the
 `github pages for this repository <https://equinor.github.io/fmu-ensemble/>`_.
 
 Ensembles consist of realizations. Realizations consist of (input and)
-output from their associated *jobs* stored in text or binary files. 
+output from their associated *jobs* stored in text or binary files.
 Selected file formats (text and binary) are supported.
 
 This module will help you handle ensembles and realizations (and their
