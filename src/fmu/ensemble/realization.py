@@ -709,6 +709,7 @@ class ScratchRealization(object):
                     metadict = {}
                     # With dot, f.ex. "base.gri" and ".base.gri.yml"
                     if os.path.exists(os.path.join(dirname, "." + basename + ".yml")):
+
                         metadict = yaml.full_load(
                             open(os.path.join(dirname, "." + basename + ".yml"))
                         )

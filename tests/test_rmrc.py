@@ -35,16 +35,24 @@ def test_rmrc():
 
     logger.info("Constructing ensemble object from disk")
     ens = ScratchEnsemble(
-        "ens1", os.path.join(ens_path, "realization-*/{}".format(iteration_name))
+        "ens1", os.path.join(ens_path, "realization-?/{}".format(iteration_name))
     )
     logger.info("Loading smry")
-    ens.load_smry(time_index="monthly")
+    # ens.load_smry(time_index="monthly")
     logger.info("Finding *gri files")
-    ens.find_files("share/maps/depth/*.gri", metadata={"surfacetype": "depthsurface"})
-    ens.find_files("share/maps/isochores/*.gri", metadata={"surfacetype": "isochores"})
+    ens.find_files(
+        "share/maps/depth/*.gri",
+        metadata={"surfacetype": "depthsurface"},
+        metayaml=True,
+    )
+    ens.find_files(
+        "share/maps/isochores/*.gri",
+        metadata={"surfacetype": "isochores"},
+        metayaml=True,
+    )
     logger.info("Dumping to disk (js_vens_dump)")
     ens.to_virtual().to_disk(
-        "js_vens_dump", delete=True, dumpcsv=False, includefiles=True, symlinks=True,
+        "js_vens_dump", delete=True, dumpcsv=True, includefiles=True, symlinks=True
     )
     logger.info("Loading back from disk")
     vens = VirtualEnsemble(fromdisk="js_vens_dump")
@@ -53,7 +61,9 @@ def test_rmrc():
     assert not vens.files.empty
 
     assert "surfacetype" in vens.files
-    assert set(vens.files["surfacetype"].dropna().unique()) == set(["depthsurface", "isochores"])
+    assert set(vens.files["surfacetype"].dropna().unique()) == set(
+        ["depthsurface", "isochores"]
+    )
 
     for _, surfacefilerow in vens.files[vens.files["FILETYPE"] == "gri"].iterrows():
         assert os.path.exists(
