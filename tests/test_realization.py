@@ -9,6 +9,7 @@ import os
 import datetime
 import shutil
 import pandas as pd
+import yaml
 from dateutil.relativedelta import relativedelta
 
 import pytest
@@ -817,8 +818,11 @@ def test_drop():
     assert "parameters.txt" not in real.keys()
 
 
-def test_find_files():
-    """Test the more exotic features of find_files"""
+def test_find_files_comps():
+    """Test the more exotic features of find_files
+
+    Components extracted from filenames.
+    """
 
     testdir = os.path.dirname(os.path.abspath(__file__))
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
@@ -860,3 +864,40 @@ def test_find_files():
     for filename in findable_files:
         if os.path.exists(os.path.join(realdir, filename)):
             os.unlink(os.path.join(realdir, filename))
+
+
+def test_find_files_yml():
+    """Test the more exotic features of find_files
+
+    Meta-data in yaml files.
+    """
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+
+    # Setup example files with some yaml data:
+    findable_files = ["grid1.gri", "grid2.gri"]
+    for filename in findable_files:
+        with open(os.path.join(realdir, filename), "w") as fileh:
+            fileh.write("baah")
+        yamlfile = "." + filename + ".yml"
+        with open(os.path.join(realdir, yamlfile), "w") as fileh:
+            fileh.write(yaml.dump(dict(a=dict(x=1, y=2), b="bar")))
+
+    # Now find the gri files, and add metadata:
+    files_df = real.find_files("*.gri", metayaml=True)
+
+    assert "a--x" in files_df
+    assert "a--y" in files_df
+    assert "b" in files_df
+    assert files_df["b"].unique()[0] == "bar"
+    assert files_df["a--x"].astype(int).unique()[0] == 1
+    assert files_df["a--y"].astype(int).unique()[0] == 2
+
+    # Cleanup
+    for filename in findable_files:
+        if os.path.exists(os.path.join(realdir, filename)):
+            os.unlink(os.path.join(realdir, filename))
+        yamlfile = "." + filename + ".yml"
+        if os.path.exists(os.path.join(realdir, yamlfile)):
+            os.unlink(os.path.join(realdir, yamlfile))
