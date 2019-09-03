@@ -102,11 +102,12 @@ class VirtualEnsemble(object):
         within the datastore.
 
         If the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
@@ -611,11 +612,13 @@ file is picked up"""
         """Access the internal datastore which contains dataframes or dicts
 
         Shorthand is allowed, if the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case of ambiguity, a
         ValueError will be raised.

@@ -63,16 +63,16 @@ class ScratchRealization(object):
     Args:
         path (str): absolute or relative path to a directory
             containing a realizations files.
-        realidxregexp: a compiled regular expression which
+        realidxregexp (re/str): a compiled regular expression which
             is used to determine the realization index (integer)
             from the path. First match is the index.
             Default: realization-(\d+)
             Only needs to match path components.
             If a string is supplied, it will be attempted
             compiled into a regular expression.
-        index: int, the realization index to be used, will
+        index (int): the realization index to be used, will
             override anything else.
-        autodiscovery: boolean, whether the realization should try to
+        autodiscovery (boolean): whether the realization should try to
             auto-discover certain data (UNSMRY files in standard location)
     """
 
@@ -159,7 +159,7 @@ class ScratchRealization(object):
         """Return the runpath ("root") of the realization
 
         Returns:
-            str with a filesystem path which at least existeda
+            str: the filesystem path which at least existed
                 at time of object initialization.
         """
         return self._origpath
@@ -169,8 +169,8 @@ class ScratchRealization(object):
         to a VirtualRealization
 
         Args:
-            description: string, used as label
-            deepcopy: boolean. Set to true if you want to continue
+            description (str): used as label
+            deepcopy (boolean): Set to true if you want to continue
                to manipulate the ScratchRealization object
                afterwards without affecting the virtual realization.
                Defaults to True. False will give faster execution.
@@ -186,9 +186,9 @@ class ScratchRealization(object):
         Parse and internalize files from disk.
 
         Several file formats are supported:
-        * txt (one key-value pair pr. line)
-        * csv
-        * scalar (one number or one string in the first line)
+        - txt (one key-value pair pr. line)
+        - csv
+        - scalar (one number or one string in the first line)
         """
         if fformat == "txt":
             self.load_txt(localpath, convert_numeric, force_reread)
@@ -224,7 +224,7 @@ class ScratchRealization(object):
             convert_numeric: If True, non-numerical content will be thrown away
             force_reread: Reread the data from disk.
         Returns:
-            the value read from the file.
+            str/number: the value read from the file.
         """
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
@@ -299,7 +299,7 @@ class ScratchRealization(object):
                 returned cached results.
 
         Returns:
-            dict with the parsed values. Values will be returned as
+            dict: Dictionary with the parsed values. Values will be returned as
                 integers, floats or strings. If convert_numeric
                 is False, all values are strings.
         """
@@ -507,9 +507,9 @@ class ScratchRealization(object):
         to disk using the supplied 'localpath'.
 
         Args:
-            **kwargs: dict which is supplied to the callbacked function,
-            in which the key 'localpath' also points the the name
-            used for data internalization.
+            **kwargs (dict): which is supplied to the callbacked function,
+                in which the key 'localpath' also points the the name
+                used for data internalization.
         """
 
         if not kwargs:
@@ -577,17 +577,19 @@ class ScratchRealization(object):
         or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
+
+          'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case of ambiguity, a
         ValueError will be raised.
 
         Args:
-            localpath: the idenfier of the data requested
+            localpath (str): the idenfier of the data requested
 
         Returns:
             dataframe or dictionary
@@ -609,11 +611,13 @@ class ScratchRealization(object):
         within the datastore.
 
         If the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
+
+          'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
@@ -714,8 +718,8 @@ class ScratchRealization(object):
                 files should be traversed
 
         Returns:
-           EclSum: object representing the summary file. None if
-               nothing was found.
+            EclSum: object representing the summary file. None if
+                nothing was found.
         """
         if cache and self._eclsum:  # Return cached object if available
             if self._eclsum_include_restart == include_restart:
@@ -810,7 +814,8 @@ class ScratchRealization(object):
             DataFrame with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available or column
                 keys do not exist.
-
+            DataFrame: with summary keys as columns and dates as indices.
+                Empty dataframe if no summary is available.
         """
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data

@@ -40,6 +40,7 @@ class ScratchEnsemble(object):
     by their realization index (integer).
 
     Example for initialization:
+
         >>> from fmu import ensemble
         >>> ens = ensemble.ScratchEnsemble('ensemblename',
                     '/scratch/fmu/foobert/r089/casename/realization-*/iter-0')
@@ -55,18 +56,18 @@ class ScratchEnsemble(object):
             to file system. Absolute or relative paths.
             If omitted, ensemble will be empty unless runpathfile
             is used.
-        realidxregexp: str or regexp - used to deduce the realization index
+        realidxregexp (str or regexp): used to deduce the realization index
             from the file path. Default tailored for realization-X
-        runpathfile: str. Filename (absolute or relative) of an ERT
+        runpathfile (str): Filename (absolute or relative) of an ERT
             runpath file, consisting of four space separated text fields,
             first column is realization index, second column is absolute
             or relative path to a realization RUNPATH, third column is
             the basename of the Eclipse simulation, relative to RUNPATH.
             Fourth column is not used.
-        runpathfilter: str. If supplied, the only the runpaths in
+        runpathfilter (str): If supplied, the only the runpaths in
             the runpathfile which contains this string will be included
             Use to select only a specific realization f.ex.
-        autodiscovery: boolean. True by default, means that the class
+        autodiscovery (boolean): True by default, means that the class
             can try to autodiscover data in the realization. Turn
             off to gain more fined tuned control.
     """
@@ -144,7 +145,8 @@ class ScratchEnsemble(object):
         """
         Return the union of all keys available in realizations.
 
-        Keys refer to the realization datastore, a dictionary
+        Keys refer to the realization datastore of internalized
+        data. The datastore is a dictionary
         of dataframes or dicts. Examples would be `parameters.txt`,
         `STATUS`, `share/results/tables/unsmry--monthly.csv`
         """
@@ -159,8 +161,11 @@ class ScratchEnsemble(object):
         within the datastore.
 
         If the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
+
         then you can also access this with these alternatives:
+
          * simulator_volume_fipnum
          * simulator_volume_fipnum.csv
          * share/results/volumes/simulator_volume_fipnum
@@ -202,7 +207,7 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
-            autodiscovery: boolean, whether files can be attempted
+            autodiscovery (boolean): whether files can be attempted
                 auto-discovered
 
         Returns:
@@ -249,13 +254,13 @@ class ScratchEnsemble(object):
           * iter - integer with the iteration number.
 
         Args:
-            runpath: str with filename, absolute or relative, or
+            runpath (str): Filename, absolute or relative, or
                 a Pandas DataFrame parsed from a runpath file
-            runpathfilter: str which each filepath has to match
+            runpathfilter (str). A filter which each filepath has to match
                 in order to be included. Default None which means not filter
 
         Returns:
-            int - Number of successfully added realizations.
+            int: Number of successfully added realizations.
         """
         prelength = len(self)
         if isinstance(runpath, str):
@@ -298,12 +303,12 @@ class ScratchEnsemble(object):
         datastores. This modifies the underlying realization
         objects, and is equivalent to
 
-        >>> del realization[localpath]
+            >>> del realization[localpath]
 
         on each realization in the ensemble.
 
         Args:
-            localpath: string with full localpath to
+            localpath (string): Full localpath to
                 the data, or list of strings.
         """
         if isinstance(localpaths, str):
@@ -316,7 +321,7 @@ class ScratchEnsemble(object):
         """Remove specific realizations from the ensemble
 
         Args:
-            realindices: int or list of ints for the realization
+            realindices (int or list of ints): The realization
                 indices to be removed
         """
         if isinstance(realindices, int):
@@ -336,6 +341,9 @@ class ScratchEnsemble(object):
 
         Unless specified, the VirtualEnsemble object wil
         have the same 'name' as the ScratchEnsemble.
+
+        Args:
+            name (str): Name of the ensemble as virtualized.
         """
         if not name:
             name = self._name
@@ -378,17 +386,17 @@ class ScratchEnsemble(object):
         Parsing is performed individually in each realization
 
         Args:
-            localpath: path to the text file, relative to each realization
-            convert_numeric: If set to True, assume that
+            localpath (str): path to the text file, relative to each realization
+            convert_numeric (boolean): If set to True, assume that
                 the value is numerical, and treat strings as
                 errors.
-            force_reread: Force reread from file system. If
+            force_reread (boolean): Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
         Returns:
-            DataFrame, with aggregated data over the ensemble. The column 'REAL'
-                signifies the realization indices, and a column with the same
-                name as the localpath filename contains the data.
+            pd.DataFrame: Aggregated data over the ensemble. The column 'REAL'
+            signifies the realization indices, and a column with the same
+            name as the localpath filename contains the data.
 
         """
         return self.load_file(localpath, "scalar", convert_numeric, force_reread)
@@ -397,7 +405,9 @@ class ScratchEnsemble(object):
         """Parse a key-value text file from disk and internalize data
 
         Parses text files on the form
-        <key> <value>
+
+            <key> <value>
+
         in each line.
 
         Parsing is performed individually in each realization
@@ -409,21 +419,21 @@ class ScratchEnsemble(object):
 
         The CSV file must be present in at least one realization.
         The parsing is done individually for each realization, and
-        aggregation is on demand (through get_df()) and when
+        aggregation is on demand (through `get_df()`) and when
         this function returns.
 
         Args:
-            localpath: path to the text file, relative to each realization
-            convert_numeric: If set to True, numerical columns
+            localpath (str): path to the text file, relative to each realization
+            convert_numeric (boolean): If set to True, numerical columns
                 will be searched for and have their dtype set
                 to integers or floats. If scalars, only numerical
                 data will be loaded.
-            force_reread: Force reread from file system. If
+            force_reread (boolean): Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
         Returns:
-            Dataframe, aggregation of the loaded CSV files. Column 'REAL'
-                distuinguishes each realizations data.
+            pd.Dataframe: aggregation of the loaded CSV files. Column 'REAL'
+            distuinguishes each realizations data.
         """
         return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
@@ -433,19 +443,19 @@ class ScratchEnsemble(object):
         This function may utilize multithreading.
 
         Args:
-            localpath: path to the text file, relative to each realization
-            fformat: string identifying the file format. Supports 'txt'
+            localpath (str): path to the text file, relative to each realization
+            fformat (str): string identifying the file format. Supports 'txt'
                 and 'csv'.
-            convert_numeric: If set to True, numerical columns
+            convert_numeric (boolean): If set to True, numerical columns
                 will be searched for and have their dtype set
                 to integers or floats. If scalars, only numerical
                 data will be loaded.
-            force_reread: Force reread from file system. If
+            force_reread (boolean): Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
         Returns:
-            Dataframe with loaded data aggregated. Column 'REAL'
-                distuinguishes each realizations data.
+            pd.Dataframe: with loaded data aggregated. Column 'REAL'
+            distuinguishes each realizations data.
         """
         for index, realization in self._realizations.items():
             try:
@@ -473,13 +483,13 @@ class ScratchEnsemble(object):
         CSV files for single use does not have to be discovered.
 
         Args:
-            paths: str or list of str with filenames (will be globbed)
+            paths (str or list of str): Filenames (will be globbed)
                 that are relative to the realization directory.
-            metadata: dict with metadata to assign for the discovered
+            metadata (dict): metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
         Returns:
-            DataFrame with the slice of discovered files in each
+            pd.DataFrame: with the slice of discovered files in each
             realization, tagged with realization index in the column REAL
         """
         df_list = {}
@@ -505,10 +515,10 @@ class ScratchEnsemble(object):
         in all realizations (union).
 
         Args:
-            vector_match: `Optional`. String (or list of strings)
-               with wildcard filter. If None, all vectors are returned
+            vector_match (str or list of str): Wildcards for vectors
+               to obtain. If None, all vectors are returned
         Returns:
-            list of strings with summary vectors. Empty list if no
+            list of str: Matched summary vectors. Empty list if no
             summary file or no matched summary file vectors
         """
         if isinstance(vector_match, str):
@@ -535,11 +545,11 @@ class ScratchEnsemble(object):
         Each row is tagged by the realization index in the column 'REAL'
 
         Args:
-            localpath: string, refers to the internalized name.
+            localpath (str): refers to the internalized name.
         Returns:
-           dataframe: Merged data from each realization.
-               Realizations with missing data are ignored.
-               Empty dataframe if no data is found
+           pd.dataframe: Merged data from each realization.
+           Realizations with missing data are ignored.
+           Empty dataframe if no data is found
         """
         dflist = {}
         for index, realization in self._realizations.items():
@@ -603,35 +613,35 @@ class ScratchEnsemble(object):
         differing from realizations which use raw dates by default.
 
         Args:
-            time_index: list of DateTime if interpolation is wanted.
+            time_index (str or list of DateTime):
                 If defaulted, the raw Eclipse report times will be used.
                 If a string is supplied, that string is attempted used
                 via get_smry_dates() in order to obtain a time index,
                 typically 'monthly', 'daily' or 'yearly'.
-            column_keys: str or list of column key wildcards. Default is '*'
+            column_keys (str or list of str): column key wildcards. Default is '*'
                 which will match all vectors in the Eclipse output.
-            stacked: boolean determining the dataframe layout. If
+            stacked (boolean): determining the dataframe layout. If
                 true, the realization index is a column, and dates are repeated
                 for each realization in the DATES column.
                 If false, a dictionary of dataframes is returned, indexed
                 by vector name, and with realization index as columns.
                 This only works when time_index is the same for all
                 realizations. Not implemented yet!
-            cache_eclsum: Boolean for whether we should cache the EclSum
+            cache_eclsum (boolean): Boolean for whether we should cache the EclSum
                 objects. Set to False if you cannot keep all EclSum files in
                 memory simultaneously
-            start_date: str or date with first date to include.
+            start_date (str or date): First date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. If string, use
                 ISO-format, YYYY-MM-DD.
-            end_date: str or date with last date to be included.
+            end_date (str or date): Last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overriden if time_index
                 is 'last'. If string, use ISO-format, YYYY-MM-DD.
-            include_restart: boolean sent to libecl for wheter restarts
+            include_restart (boolean): boolean sent to libecl for wheter restarts
                 files should be traversed
         Returns:
-            A DataFame of summary vectors for the ensemble, or
+            pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
         if not stacked:
@@ -671,11 +681,11 @@ class ScratchEnsemble(object):
         are valid backwards in time.
 
         Args:
-            column_keys: str or list of strings, cumulative summary vectors
-            time_index: str or list of datetimes
+            column_keys (str or list of str): cumulative summary vectors
+            time_index (str or list of datetimes):
 
         Returns:
-            DataFrame analoguous to the dataframe returned by get_smry().
+            pd.DataFrame: analoguous to the dataframe returned by get_smry().
             Empty dataframe if no data found.
         """
         vol_dfs = []
@@ -706,19 +716,19 @@ class ScratchEnsemble(object):
         value, for example filtering on a specific sensitivity case.
 
         Args:
-            localpath: string pointing to the data for which the filtering
+            localpath (string): pointing to the data for which the filtering
                 applies. If no other arguments, only realizations containing
                 this data key is kept.
-            key: A certain key within a realization dictionary that is
+            key (str): A certain key within a realization dictionary that is
                 required to be present. If a value is also provided, this
                 key must be equal to this value
-            value: The value a certain key must equal. Floating point
-                comparisons are not robust.
-            column: Name of a column in tabular data. If columncontains is
+            value (str, int or float): The value a certain key must equal. Floating
+                point comparisons are not robust.
+            column (str): Name of a column in tabular data. If columncontains is
                 not specified, this means that this column must be present
-            columncontains:
+            columncontains (str, int or float):
                 A value that the specific column must include.
-            inplace: Boolean indicating if the current object should have its
+            inplace (boolean): Indicating if the current object should have its
                 realizations stripped, or if a copy should be returned.
                 Default true.
 
@@ -797,7 +807,7 @@ class ScratchEnsemble(object):
 
         Returns:
             pd.DataFrame, aggregated result of the supplied function
-                on each realization.
+            on each realization.
         """
         results = []
         for realidx, realization in self._realizations.items():
@@ -995,10 +1005,7 @@ class ScratchEnsemble(object):
             If quantiles are explicitly supplied, the 'pXX'
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
-
-        TODO: add warning message when failed realizations are removed
         """
-
         if quantiles is None:
             quantiles = [10, 90]
 
