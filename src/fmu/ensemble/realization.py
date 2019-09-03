@@ -650,7 +650,14 @@ class ScratchRealization(object):
         Certain functionality requires up-front file discovery,
         e.g. ensemble archiving and ensemble arithmetic.
 
-        CSV files for single use does not have to be discovered.
+        CSV files for single use do not have to be discovered.
+
+        Files containing double-dashes '--' indicate that the double
+        dashes separate different component with meaning in the
+        filename.  The components are extracted and put into
+        additional columns "COMP1", "COMP2", etc..
+        Filetype extension (after the last dot) will be removed
+        from the last component.
 
         Args:
             paths: str or list of str with filenames (will be globbed)
@@ -659,6 +666,7 @@ class ScratchRealization(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
                 During rediscovery of files, old metadata will be removed.
+
         Returns:
             A slice of the internalized dataframe corresponding
             to the discovered files (will be included even if it has
@@ -673,12 +681,20 @@ class ScratchRealization(object):
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
                 absmatch = os.path.abspath(match)
+                basename = os.path.basename(match)
+                filetype = match.split(".")[-1]
                 filerow = {
                     "LOCALPATH": os.path.relpath(match, self._origpath),
-                    "FILETYPE": match.split(".")[-1],
+                    "FILETYPE": filetype,
                     "FULLPATH": absmatch,
-                    "BASENAME": os.path.basename(match),
+                    "BASENAME": basename,
                 }
+                # Look for and split basename based on double-dash '--'
+                basename_noext = basename.replace("." + filetype, "")
+                if "--" in basename_noext:
+                    for compidx, comp in enumerate(basename_noext.split("--")):
+                        filerow["COMP" + str(compidx + 1)] = comp
+
                 # Delete this row if it already exists, determined by FULLPATH
                 if absmatch in self.files["FULLPATH"].values:
                     self.files = self.files[self.files["FULLPATH"] != absmatch]
