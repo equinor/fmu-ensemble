@@ -433,14 +433,13 @@ class VirtualEnsemble(object):
                 "realization-" + str(filerow["REAL"]),
                 filerow["LOCALPATH"],
             )
-            try:
-                shutil.copy(src_fpath, dest_fpath)
-            except IOError as io_err:
+            directory = os.path.dirname(dest_fpath)
+            if not os.path.exists(directory):
                 os.makedirs(os.path.dirname(dest_fpath))
-                if symlinks:
-                    os.symlink(src_fpath, dest_fpath)
-                else:
-                    shutil.copy(src_fpath, dest_fpath)
+            if symlinks:
+                os.symlink(src_fpath, dest_fpath)
+            else:
+                shutil.copy(src_fpath, dest_fpath)
 
         # Write ensemble meta-information to disk:
         with open(os.path.join(filesystempath, "_name"), "w") as fhandle:
