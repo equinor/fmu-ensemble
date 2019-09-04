@@ -9,11 +9,12 @@ from __future__ import print_function
 
 import os
 import math
+import datetime
+from collections import OrderedDict
+
 import yaml
 import pandas as pd
 import dateutil
-import datetime
-from collections import OrderedDict
 
 from .etc import Interaction
 from .realization import ScratchRealization
@@ -82,7 +83,7 @@ class Observations(object):
 
         if isinstance(observations, str):
             with open(observations) as yamlfile:
-                self.observations = yaml.load(yamlfile)
+                self.observations = yaml.full_load(yamlfile)
         elif isinstance(observations, dict):
             self.observations = observations
         else:
@@ -92,9 +93,14 @@ class Observations(object):
         # Identify and warn about errors in observation syntax (dates etc)
         self._clean_observations()
 
-    def __getitem__(self, object):
+        logger.info("Initialized observation with obstypes %s", str(self.keys()))
+        for obskey in self.keys():
+            # (fixme: this string does not make sense)
+            logger.info(" %s: ", str(len(self.observations[obskey])))
+
+    def __getitem__(self, someobject):
         """Pick objects from the observations dict"""
-        return self.observations[object]
+        return self.observations[someobject]
 
     def mismatch(self, ens_or_real):
         """Compute the mismatch from the current observation set
@@ -112,17 +118,27 @@ class Observations(object):
         if isinstance(ens_or_real, EnsembleSet):
             mismatches = {}
             for ensname, ens in ens_or_real._ensembles.items():
+                logger.info("Calculating mismatch for ensemble %s", ensname)
                 for realidx, real in ens._realizations.items():
+                    logger.info("Calculating mismatch for realization %s", str(realidx))
                     mismatches[(ensname, realidx)] = self._realization_mismatch(real)
                     mismatches[(ensname, realidx)]["REAL"] = realidx
                     mismatches[(ensname, realidx)]["ENSEMBLE"] = ensname
             return pd.concat(mismatches, axis=0, ignore_index=True)
-        elif isinstance(ens_or_real, (ScratchEnsemble, VirtualEnsemble)):
+        elif isinstance(ens_or_real, ScratchEnsemble):
             mismatches = {}
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
                 mismatches[realidx]["REAL"] = realidx
-            return pd.concat(mismatches, axis=0, ignore_index=True)
+            return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
+        elif isinstance(ens_or_real, VirtualEnsemble):
+            mismatches = {}
+            for realidx in ens_or_real.realindices:
+                mismatches[realidx] = self._realization_mismatch(
+                    ens_or_real.get_realization(realidx)
+                )
+                mismatches[realidx]["REAL"] = realidx
+            return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
         elif isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):
             return self._realization_mismatch(ens_or_real)
         elif isinstance(ens_or_real, EnsembleSet):
@@ -239,7 +255,18 @@ class Observations(object):
         for obstype in self.observations.keys():
             for obsunit in self.observations[obstype]:  # (list)
                 if obstype == "txt":
-                    sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
+                    try:
+                        sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
+                    except KeyError:
+                        logger.warning(
+                            "%s in %s not found, ignored",
+                            obsunit["key"],
+                            obsunit["localpath"],
+                        )
+                        continue
+                    except ValueError:
+                        logger.warning("%s not found, ignored", obsunit["localpath"])
+                        continue
                     mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
@@ -259,7 +286,13 @@ class Observations(object):
                         )
                     )
                 if obstype == "scalar":
-                    sim_value = real.get_df(obsunit["key"])
+                    try:
+                        sim_value = real.get_df(obsunit["key"])
+                    except ValueError:
+                        logger.warning(
+                            "No data found for scalar: %s, ignored", obsunit["key"]
+                        )
+                        continue
                     mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
@@ -277,11 +310,24 @@ class Observations(object):
                         )
                     )
                 if obstype == "smryh":
-                    # Will use raw times when available.
-                    # Time index is always identical
-                    sim_hist = real.get_smry(
-                        column_keys=[obsunit["key"], obsunit["histvec"]]
-                    )
+                    if "time_index" in obsunit:
+                        sim_hist = real.get_smry(
+                            time_index=obsunit["time_index"],
+                            column_keys=[obsunit["key"], obsunit["histvec"]],
+                        )
+                    else:
+                        sim_hist = real.get_smry(
+                            column_keys=[obsunit["key"], obsunit["histvec"]]
+                            # (let get_smry() determine the possible time_index)
+                        )
+                    # If empty df returned, we don't have the data for this:
+                    if sim_hist.empty:
+                        logger.warning(
+                            "No data found for smryh: %s and %s, ignored.",
+                            obsunit["key"],
+                            obsunit["histvec"],
+                        )
+                        continue
                     sim_hist["mismatch"] = (
                         sim_hist[obsunit["key"]] - sim_hist[obsunit["histvec"]]
                     )
@@ -290,19 +336,27 @@ class Observations(object):
                         dict(
                             OBSTYPE="smryh",
                             OBSKEY=obsunit["key"],
-                            MISMATCH=sim_hist.mismatch.sum(),
+                            MISMATCH=sim_hist["mismatch"].sum(),
                             MEASERROR=measerror,
-                            L1=sim_hist.mismatch.abs().sum(),
-                            L2=math.sqrt((sim_hist.mismatch ** 2).sum()),
+                            L1=sim_hist["mismatch"].abs().sum(),
+                            L2=math.sqrt((sim_hist["mismatch"] ** 2).sum()),
                         )
                     )
                 if obstype == "smry":
                     # For 'smry', there is a list of
                     # observations (indexed by date)
                     for unit in obsunit["observations"]:
-                        sim_value = real.get_smry(
-                            time_index=[unit["date"]], column_keys=obsunit["key"]
-                        )[obsunit["key"]].values[0]
+                        try:
+                            sim_value = real.get_smry(
+                                time_index=[unit["date"]], column_keys=obsunit["key"]
+                            )[obsunit["key"]].values[0]
+                        except KeyError:
+                            logger.warning(
+                                "No data found for smry: %s at %s, ignored.",
+                                obsunit["key"],
+                                str(unit["date"]),
+                            )
+                            continue
                         mismatch = float(sim_value - unit["value"])
                         sign = (mismatch > 0) - (mismatch < 0)
                         mismatches.append(
@@ -371,7 +425,7 @@ class Observations(object):
         supported_categories = ["smry", "smryh", "txt", "scalar", "rft"]
 
         # Check top level keys in observations dict:
-        for key in self.observations.keys():
+        for key in list(self.observations):
             if key not in supported_categories:
                 self.observations.pop(key)
                 logger.error("Observation category %s not supported", key)
@@ -393,16 +447,17 @@ class Observations(object):
             for unit in smryunits:
                 if not isinstance(unit, (dict, OrderedDict)):
                     logger.warning(
-                        "Observation units must be dicts, " + "deleting: " + str(unit)
+                        "Observation units must be dicts, deleting: %s", str(unit)
                     )
                     del smryunits[smryunits.index(unit)]
                     continue
                 if not ("key" in unit and "observations" in unit):
                     logger.warning(
-                        "Observation unit must "
-                        + "contain key and observations, "
-                        + "deleting: "
-                        + str(unit)
+                        (
+                            "Observation unit must contain key and",
+                            "observations, deleting: %s",
+                        ),
+                        str(unit),
                     )
                     del smryunits[smryunits.index(unit)]
                     continue
@@ -416,7 +471,7 @@ class Observations(object):
                         logger.error("Date not understood %s", str(observation["date"]))
                         continue
             # If everything is deleted from 'smry', delete it
-            if not len(smryunits):
+            if not smryunits:
                 del self.observations["smry"]
 
     def to_ert2observations(self):

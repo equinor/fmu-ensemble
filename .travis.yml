@@ -1,0 +1,51 @@
+language: python
+
+os:
+  - linux
+
+env:
+  global:
+    - ECL_VER=master
+
+python:
+  - "2.7"
+  - "3.6"
+
+before_install:
+  - pushd ..
+  - export ROOT="$PWD"
+  - export INSTALL="$ROOT/install"
+  - export PYTHONPATH=$INSTALL/lib/python$TRAVIS_PYTHON_VERSION/dist-packages:$PYTHONPATH
+  - git clone https://github.com/equinor/libecl.git
+  - popd
+
+install:
+  - pushd $ROOT/libecl
+  - git checkout $ECL_VER
+  - pip install -r requirements.txt
+  - mkdir build
+  - pushd build
+  - cmake .. -DENABLE_PYTHON=ON
+             -DBUILD_TESTS=OFF
+             -DCMAKE_INSTALL_PREFIX=$INSTALL
+  - make -j4 install
+  - popd
+  - popd
+  - ls
+  - pip install -r requirements_dev.txt
+  - pip install .
+
+script:
+  - pytest
+  - make docsrun
+
+deploy:
+  - provider: pages
+    skip_cleanup: true
+    local_dir: ./docs/_build/html
+    github_token:
+      secure: "YIyL0mZJxF7s4tbQj3u1CwRA7PJJfKFL17uIN1zSXPijrL890bX8Uc48IbYT23/41oAkd5a36iJBH20lYj0Q4PHcewZDtxIzZ3u3ul8CshcQ35yLNN0GU8KMX2sMTo4dLkiyvlW+Rj774ZWsAe2vy0brs4vIyRWOgc13HldE3P3n4AF7YmptB14TqXYt1CWyB/mdjMYqY/PW1kVdLJYycj/kPPqoLjqPSC7yoaPLW+Y/LDZIetqssP3cDnj+OuYLooo5fixRGbROb4EVnDuzcW5+6Bt83pRsjtxVEQ15UVj2t3PVIJQnjmxQtTXwR7iLHIV+zKX+gHdGrAg5eBrbTx9xMuO12QYDEhuclooEXQwTS4sB9yryearau3uk+oXEfcKfS4GjXIubG2nTiDitKO5Ri9sFrvUp83+IvADpycSN4xvP6v1LabQ6d3reDeftwm63AGJAjnOPgp7ok0WmTYZ145WMpThhOqqdFGj00UdxoG18P/TZnm5JX6rSAgAIvoFYI8hlBfh8427w5n42zpGvc6ITJusVlfIw3Bi0brnRg5pvRY0mSFsHWjvHsIHpGV0bt2FLu/k7vK7xkVm3WEp516RtW2+SVUPGCn+yrUNcYmlal93+rijBh4/JCe/iPy0gRSrm0TS+LsGpPd3TcqDR9MriJL7Cr5L1jwNZQl0="
+    keep_history: true
+    on:
+      branch: master
+      python: "3.6"

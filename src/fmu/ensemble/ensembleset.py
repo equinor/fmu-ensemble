@@ -85,8 +85,9 @@ class EnsembleSet(object):
 
         # Check consistency in arguments.
         if not name:
-            logger.error("Name of EnsembleSet is required")
-            return
+            logger.warning("EnsembleSet name defaulted to 'ensembleset'")
+            name = "ensembleset"
+            self._name = name
         if name and not isinstance(name, str):
             logger.error("Name of EnsembleSet must be a string")
             return
@@ -119,7 +120,7 @@ class EnsembleSet(object):
 
         if runpathfile:
             if not os.path.exists(runpathfile):
-                logger.error("Could not open runpath file {}".format(runpathfile))
+                logger.error("Could not open runpath file %s", runpathfile)
                 raise IOError
             self.add_ensembles_fromrunpath(runpathfile)
             if not self._ensembles:
@@ -147,7 +148,7 @@ class EnsembleSet(object):
         """
         Return a list of named ensembles in this set
         """
-        return self._ensembles.keys()
+        return list(self._ensembles.keys())
 
     def keys(self):
         """
@@ -313,7 +314,9 @@ class EnsembleSet(object):
         """
         if ensembleobject.name in self._ensembles:
             raise ValueError(
-                "The name %s already exists in the EnsembleSet", ensembleobject.name
+                "The name {} already exists in the EnsembleSet".format(
+                    ensembleobject.name
+                )
             )
         self._ensembles[ensembleobject.name] = ensembleobject
 
@@ -339,7 +342,7 @@ class EnsembleSet(object):
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
-                logger.warn(
+                logger.warning(
                     "Ensemble %s did not contain the data %s", ensname, localpath
                 )
 
@@ -364,7 +367,7 @@ class EnsembleSet(object):
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
-                logger.warn(
+                logger.warning(
                     "Ensemble %s did not contain the data %s", ensname, localpath
                 )
         return self.get_df(localpath)
@@ -382,7 +385,7 @@ class EnsembleSet(object):
                 returned cached results.
         """
         ensdflist = []
-        for ensname, ensemble in self._ensembles.items():
+        for _, ensemble in self._ensembles.items():
             try:
                 ensdf = ensemble.get_df(localpath)
                 ensdf.insert(0, "ENSEMBLE", ensemble.name)
@@ -394,7 +397,7 @@ class EnsembleSet(object):
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
         else:
-            raise ValueError("No data found for %s", localpath)
+            raise ValueError("No data found for {}".format(localpath))
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
@@ -478,7 +481,7 @@ class EnsembleSet(object):
 
         CODE DUPLICATION from realization.py
         """
-        basenames = map(os.path.basename, self.keys())
+        basenames = [os.path.basename(key) for key in self.keys()]
         if basenames.count(shortpath) == 1:
             short2path = {os.path.basename(x): x for x in self.keys()}
             return short2path[shortpath]

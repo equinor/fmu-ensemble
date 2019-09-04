@@ -9,6 +9,7 @@ import os
 import datetime
 import shutil
 import pandas as pd
+import yaml
 from dateutil.relativedelta import relativedelta
 
 import pytest
@@ -18,7 +19,12 @@ import numpy as np
 
 from fmu.ensemble import etc
 from fmu import ensemble
-from fmu.tools import volumetrics
+
+try:
+    SKIP_FMU_TOOLS = False
+    from fmu.tools import volumetrics
+except ImportError:
+    SKIP_FMU_TOOLS = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -99,7 +105,7 @@ def test_single_realization():
     real.load_scalar("npv.txt")
     assert real.get_df("npv.txt") == 3444
     assert real["npv.txt"] == 3444
-    assert isinstance(real.data["npv.txt"], int)
+    assert isinstance(real.data["npv.txt"], (int, np.integer))
     assert "npv.txt" in real.files.LOCALPATH.values
     assert real.files[real.files.LOCALPATH == "npv.txt"]["FILETYPE"].values[0] == "txt"
 
@@ -189,10 +195,10 @@ def test_volumetric_rates():
     assert vol_rate_df["FOPR"].iloc[-1] == 0
 
     # Check that we allow cumulative allocated vectors:
-    c = real.get_volumetric_rates(column_keys=["F*TH", "W*TH*"])
-    assert not c.empty
-    assert "FOPRH" in c
-    assert "WOPRH:OP_1" in c
+    cumvecs = real.get_volumetric_rates(column_keys=["F*TH", "W*TH*"])
+    assert not cumvecs.empty
+    assert "FOPRH" in cumvecs
+    assert "WOPRH:OP_1" in cumvecs
 
     assert real.get_volumetric_rates(column_keys="FOOBAR").empty
     assert real.get_volumetric_rates(column_keys=["FOOBAR"]).empty
@@ -264,10 +270,10 @@ def test_volumetric_rates():
     # (here we could catch an error in case we don't support leap days)
 
     # Monthly rates between the random dates:
-    m = real.get_volumetric_rates(
+    monthlyrates = real.get_volumetric_rates(
         column_keys="FOPT", time_index=subset_dates, time_unit="months"
     )
-    assert all(np.isfinite(m["FOPR"]))
+    assert all(np.isfinite(monthlyrates["FOPR"]))
 
     # Total number of months in production period
     delta = relativedelta(vol_rate_days.index[-1], vol_rate_days.index[0])
@@ -278,6 +284,19 @@ def test_volumetric_rates():
         time_unit="months",
     )
     assert tworows["FOPR"].iloc[0] * months == pytest.approx(cum_df["FOPT"].iloc[-1])
+
+    # Check for defaults and error handling:
+    assert not real.get_smry(column_keys=None).empty
+    assert not real.get_smry(column_keys=[None]).empty
+    assert not real.get_smry(column_keys=[None, "WOPT:BOGUS"]).empty
+    assert not real.get_smry(column_keys=["WOPT:BOGUS", None]).empty
+    column_count = len(real.get_smry())
+    # Columns repeatedly asked for should not be added:
+    assert len(real.get_smry(column_keys=[None, "FOPT"])) == column_count
+    assert len(real.get_smry(column_keys=[None, "FOPT", "FOPT"])) == column_count
+    assert real.get_smry(column_keys=["WOPT:BOGUS"]).empty
+
+    assert "FOPT" in real.get_smry(column_keys=["WOPT:BOGUS", "FOPT"])
 
 
 def test_datenormalization():
@@ -632,7 +651,7 @@ def test_filesystem_changes():
     # the situation where there is one successful job.
     fhandle = open(realdir + "/STATUS", "w")
     fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
 """
@@ -644,7 +663,7 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     assert len(real.get_df("STATUS")) == 1
     fhandle = open(realdir + "/STATUS", "w")
     fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238 
+        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
 LSF JOBID: not running LSF
 COPY_FILE                       : 20:58:55 .... 20:58:57
 COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
@@ -691,7 +710,7 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     shutil.rmtree(datadir + "/" + tmpensname, ignore_errors=True)
 
 
-def test_apply(tmp="TMP"):
+def test_apply():
     """
     Test the callback functionality
     """
@@ -700,6 +719,7 @@ def test_apply(tmp="TMP"):
     real = ensemble.ScratchRealization(realdir)
 
     def ex_func1():
+        """Example constant function"""
         return pd.DataFrame(
             index=["1", "2"], columns=["foo", "bar"], data=[[1, 2], [3, 4]]
         )
@@ -715,6 +735,7 @@ def test_apply(tmp="TMP"):
 
     # Check that the submitted function can utilize data from **kwargs
     def ex_func2(kwargs):
+        """Example function using kwargs"""
         arg = kwargs["foo"]
         return pd.DataFrame(
             index=["1", "2"], columns=["foo", "bar"], data=[[arg, arg], [arg, arg]]
@@ -725,6 +746,7 @@ def test_apply(tmp="TMP"):
 
     # We require applied function to return only DataFrames.
     def scalar_func():
+        """Dummy scalar function"""
         return 1
 
     with pytest.raises(ValueError):
@@ -732,6 +754,7 @@ def test_apply(tmp="TMP"):
 
     # The applied function should have access to the realization object:
     def real_func(kwargs):
+        """Example function that accesses the realization object"""
         return pd.DataFrame(
             index=[0], columns=["path"], data=kwargs["realization"].runpath()
         )
@@ -743,6 +766,8 @@ def test_apply(tmp="TMP"):
     with pytest.raises(ValueError):
         real.apply(real_func, realization="foo")
 
+    if SKIP_FMU_TOOLS:
+        return
     # Test if we can wrap the volumetrics-parser in fmu.tools:
     # It cannot be applied directly, as we need to combine the
     # realization's root directory with the relative path coming in:
@@ -791,3 +816,88 @@ def test_drop():
 
     real.drop("parameters")
     assert "parameters.txt" not in real.keys()
+
+
+def test_find_files_comps():
+    """Test the more exotic features of find_files
+
+    Components extracted from filenames.
+    """
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+
+    # Make some filenames we can later "find", including some problematic ones.
+    findable_files = [
+        "foo--bar--com.gri",
+        "foo-bar--com.gri",
+        "foo---bar--com.gri",
+        "--bar--.gri",
+    ]
+    for filename in findable_files:
+        with open(os.path.join(realdir, filename), "w") as fileh:
+            fileh.write("baah")
+
+    real.find_files("*.gri")
+
+    files_df = real.files.set_index("BASENAME")
+    assert "COMP0" not in real.files  # We are 1-based, not zero.
+    assert "COMP1" in real.files
+    assert "COMP2" in real.files
+    assert "COMP3" in real.files
+    assert "COMP4" not in real.files
+
+    assert files_df.loc["foo--bar--com.gri"]["COMP1"] == "foo"
+    assert files_df.loc["foo--bar--com.gri"]["COMP2"] == "bar"
+    assert files_df.loc["foo--bar--com.gri"]["COMP3"] == "com"
+    assert files_df.loc["foo-bar--com.gri"]["COMP1"] == "foo-bar"
+    assert files_df.loc["foo-bar--com.gri"]["COMP2"] == "com"
+    assert files_df.loc["foo---bar--com.gri"]["COMP1"] == "foo"
+    assert files_df.loc["foo---bar--com.gri"]["COMP2"] == "-bar"
+    assert files_df.loc["foo---bar--com.gri"]["COMP3"] == "com"
+    assert files_df.loc["--bar--.gri"]["COMP1"] == ""
+    assert files_df.loc["--bar--.gri"]["COMP2"] == "bar"
+    assert files_df.loc["--bar--.gri"]["COMP3"] == ""
+
+    # Cleanup
+    for filename in findable_files:
+        if os.path.exists(os.path.join(realdir, filename)):
+            os.unlink(os.path.join(realdir, filename))
+
+
+def test_find_files_yml():
+    """Test the more exotic features of find_files
+
+    Meta-data in yaml files.
+    """
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+
+    # Setup example files with some yaml data:
+    findable_files = ["grid1.gri", "grid2.gri"]
+    for filename in findable_files:
+        with open(os.path.join(realdir, filename), "w") as fileh:
+            fileh.write("baah")
+        yamlfile = "." + filename + ".yml"
+        with open(os.path.join(realdir, yamlfile), "w") as fileh:
+            fileh.write(yaml.dump(dict(a=dict(x=1, y=2), b="bar")))
+
+    # Now find the gri files, and add metadata:
+    files_df = real.find_files("*.gri", metayaml=True)
+
+    assert "a--x" in files_df
+    assert "a--y" in files_df
+    assert "b" in files_df
+    assert files_df["b"].unique()[0] == "bar"
+    assert files_df["a--x"].astype(int).unique()[0] == 1
+    assert files_df["a--y"].astype(int).unique()[0] == 2
+
+    # Cleanup
+    for filename in findable_files:
+        if os.path.exists(os.path.join(realdir, filename)):
+            os.unlink(os.path.join(realdir, filename))
+        yamlfile = "." + filename + ".yml"
+        if os.path.exists(os.path.join(realdir, yamlfile)):
+            os.unlink(os.path.join(realdir, yamlfile))

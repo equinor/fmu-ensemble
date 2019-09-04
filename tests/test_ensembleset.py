@@ -15,7 +15,12 @@ import pytest
 
 from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
-from fmu.tools import volumetrics
+
+try:
+    skip_fmu_tools = False
+    from fmu.tools import volumetrics
+except ImportError:
+    skip_fmu_tools = True
 
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="WARNING")
@@ -61,8 +66,14 @@ def test_ensembleset_reek001(tmp="TMP"):
         pass
     assert len(ensset) == 2  # Unchanged!
 
+    # Initializing nothing, we get warning about the missing name
+    noname = EnsembleSet()
+    assert noname.name  # not None
+    assert isinstance(noname.name, str)  # And it should be a string
+
     # Initialize starting from empty ensemble
     ensset2 = EnsembleSet("reek001", [])
+    assert ensset2.name == "reek001"
     ensset2.add_ensemble(iter0)
     ensset2.add_ensemble(iter1)
     assert len(ensset2) == 2
@@ -75,6 +86,7 @@ def test_ensembleset_reek001(tmp="TMP"):
 
     # Initialize directly from path with globbing:
     ensset3 = EnsembleSet("reek001direct", [])
+    assert ensset3.name == "reek001direct"
     ensset3.add_ensembles_frompath(ensdir)
     assert len(ensset3) == 2
 
@@ -189,28 +201,29 @@ def test_ensembleset_reek001(tmp="TMP"):
         else:
             return pd.DataFrame()
 
-    rmsvols_df = ensset3.apply(
-        rms_vol2df, filename="share/results/volumes/" + "geogrid_vol_oil_1.txt"
-    )
-    assert rmsvols_df["STOIIP_OIL"].sum() > 0
-    assert len(rmsvols_df["REAL"].unique()) == 4
-    assert len(rmsvols_df["ENSEMBLE"].unique()) == 2
+    if not skip_fmu_tools:
+        rmsvols_df = ensset3.apply(
+            rms_vol2df, filename="share/results/volumes/" + "geogrid_vol_oil_1.txt"
+        )
+        assert rmsvols_df["STOIIP_OIL"].sum() > 0
+        assert len(rmsvols_df["REAL"].unique()) == 4
+        assert len(rmsvols_df["ENSEMBLE"].unique()) == 2
 
-    # Test that we can dump to disk as well and load from csv:
-    ensset3.apply(
-        rms_vol2df,
-        filename="share/results/volumes/" + "geogrid_vol_oil_1.txt",
-        localpath="share/results/volumes/geogrid--oil.csv",
-        dumptodisk=True,
-    )
-    geogrid_oil = ensset3.load_csv("share/results/volumes/geogrid--oil.csv")
-    assert len(geogrid_oil["REAL"].unique()) == 4
-    assert len(geogrid_oil["ENSEMBLE"].unique()) == 2
-    # Clean up what we just dumped:
-    for real_dir in glob.glob(ensdir + "/realization-*"):
-        csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
-        if os.path.exists(csvfile):
-            os.remove(csvfile)
+        # Test that we can dump to disk as well and load from csv:
+        ensset3.apply(
+            rms_vol2df,
+            filename="share/results/volumes/" + "geogrid_vol_oil_1.txt",
+            localpath="share/results/volumes/geogrid--oil.csv",
+            dumptodisk=True,
+        )
+        geogrid_oil = ensset3.load_csv("share/results/volumes/geogrid--oil.csv")
+        assert len(geogrid_oil["REAL"].unique()) == 4
+        assert len(geogrid_oil["ENSEMBLE"].unique()) == 2
+        # Clean up what we just dumped:
+        for real_dir in glob.glob(ensdir + "/realization-*"):
+            csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
+            if os.path.exists(csvfile):
+                os.remove(csvfile)
 
     # Initialize differently, using only the root path containing
     # realization-*
@@ -220,10 +233,11 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert isinstance(ensset4["iter-1"], ScratchEnsemble)
 
     # Delete the symlink and leftover from apply-testing when we are done.
-    for real_Dir in glob.glob(ensdir + "/realization-*"):
-        csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
-        if os.path.exists(csvfile):
-            os.remove(csvfile)
+    for real_dir in glob.glob(ensdir + "/realization-*"):
+        if not skip_fmu_tools:
+            csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
+            if os.path.exists(csvfile):
+                os.remove(csvfile)
         if os.path.exists(real_dir + "/iter-1"):
             os.remove(real_dir + "/iter-1")
 

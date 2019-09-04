@@ -17,9 +17,12 @@ import re
 import copy
 import glob
 import json
-import numpy
+import yaml
 from datetime import datetime, date, time
+import collections
 import dateutil
+
+import numpy
 import pandas as pd
 
 import ecl.summary
@@ -62,16 +65,16 @@ class ScratchRealization(object):
     Args:
         path (str): absolute or relative path to a directory
             containing a realizations files.
-        realidxregexp: a compiled regular expression which
+        realidxregexp (re/str): a compiled regular expression which
             is used to determine the realization index (integer)
             from the path. First match is the index.
             Default: realization-(\d+)
             Only needs to match path components.
             If a string is supplied, it will be attempted
             compiled into a regular expression.
-        index: int, the realization index to be used, will
+        index (int): the realization index to be used, will
             override anything else.
-        autodiscovery: boolean, whether the realization should try to
+        autodiscovery (boolean): whether the realization should try to
             auto-discover certain data (UNSMRY files in standard location)
     """
 
@@ -113,13 +116,15 @@ class ScratchRealization(object):
                     self.index = int(realidxmatch.group(1))
                     break
             else:
-                logger.warn(
-                    "Could not determine realization "
-                    + "index for %s, "
-                    + "this cannot be inserted in an Ensemble",
+                logger.warning(
+                    (
+                        "Could not determine realization "
+                        "index for %s, "
+                        "this cannot be inserted in an Ensemble"
+                    ),
                     abspath,
                 )
-                logger.warn("Maybe you need to use index=<someinteger>")
+                logger.warning("Maybe you need to use index=<someinteger>")
                 self.index = None
         else:
             self.index = int(index)
@@ -135,7 +140,7 @@ class ScratchRealization(object):
             self.files = self.files.append(filerow, ignore_index=True)
             self.load_status()
         else:
-            logger.warn("No STATUS file, %s", abspath)
+            logger.warning("No STATUS file, %s", abspath)
 
         if os.path.exists(os.path.join(abspath, "jobs.json")):
             filerow = {
@@ -158,7 +163,7 @@ class ScratchRealization(object):
         """Return the runpath ("root") of the realization
 
         Returns:
-            str with a filesystem path which at least existeda
+            str: the filesystem path which at least existed
                 at time of object initialization.
         """
         return self._origpath
@@ -168,8 +173,8 @@ class ScratchRealization(object):
         to a VirtualRealization
 
         Args:
-            description: string, used as label
-            deepcopy: boolean. Set to true if you want to continue
+            description (str): used as label
+            deepcopy (boolean): Set to true if you want to continue
                to manipulate the ScratchRealization object
                afterwards without affecting the virtual realization.
                Defaults to True. False will give faster execution.
@@ -185,9 +190,9 @@ class ScratchRealization(object):
         Parse and internalize files from disk.
 
         Several file formats are supported:
-        * txt (one key-value pair pr. line)
-        * csv
-        * scalar (one number or one string in the first line)
+        - txt (one key-value pair pr. line)
+        - csv
+        - scalar (one number or one string in the first line)
         """
         if fformat == "txt":
             self.load_txt(localpath, convert_numeric, force_reread)
@@ -223,7 +228,7 @@ class ScratchRealization(object):
             convert_numeric: If True, non-numerical content will be thrown away
             force_reread: Reread the data from disk.
         Returns:
-            the value read from the file.
+            str/number: the value read from the file.
         """
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
@@ -244,7 +249,7 @@ class ScratchRealization(object):
                 value = pd.read_csv(
                     fullpath,
                     header=None,
-                    sep="",
+                    sep="DONOTSEPARATEANYTHING *%magic%*",
                     engine="python",
                     skip_blank_lines=skip_blank_lines,
                     skipinitialspace=skipinitialspace,
@@ -298,7 +303,7 @@ class ScratchRealization(object):
                 returned cached results.
 
         Returns:
-            dict with the parsed values. Values will be returned as
+            dict: Dictionary with the parsed values. Values will be returned as
                 integers, floats or strings. If convert_numeric
                 is False, all values are strings.
         """
@@ -442,8 +447,8 @@ class ScratchRealization(object):
         # Delete potential unwanted row
         status = status[~((status.FORWARD_MODEL == "LSF") & (status.colon == "JOBID:"))]
 
-        if len(status) == 0:
-            logger.warn("No parseable data in STATUS")
+        if status.empty:
+            logger.warning("No parseable data in STATUS")
             self.data["STATUS"] = status
             return status
 
@@ -484,7 +489,7 @@ class ScratchRealization(object):
                 # the jobs are still running on the cluster)
                 status = status.merge(jobsinfodf, how="outer", on="JOBINDEX")
             except ValueError:
-                logger.warn("Parsing file %s failed, skipping", jsonfilename)
+                logger.warning("Parsing file %s failed, skipping", jsonfilename)
         status.sort_values(["JOBINDEX"], ascending=True, inplace=True)
         self.data["STATUS"] = status
         return status
@@ -506,9 +511,9 @@ class ScratchRealization(object):
         to disk using the supplied 'localpath'.
 
         Args:
-            **kwargs: dict which is supplied to the callbacked function,
-            in which the key 'localpath' also points the the name
-            used for data internalization.
+            **kwargs (dict): which is supplied to the callbacked function,
+                in which the key 'localpath' also points the the name
+                used for data internalization.
         """
 
         if not kwargs:
@@ -543,7 +548,7 @@ class ScratchRealization(object):
                 os.makedirs(os.path.dirname(fullpath))
             if os.path.exists(fullpath):
                 os.unlink(fullpath)
-            logger.info("Writing result of function call to " + fullpath)
+            logger.info("Writing result of function call to %s", fullpath)
             result.to_csv(fullpath, index=False)
         return result
 
@@ -576,17 +581,19 @@ class ScratchRealization(object):
         or scalars.
 
         Shorthand is allowed, if the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
+
+          'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case of ambiguity, a
         ValueError will be raised.
 
         Args:
-            localpath: the idenfier of the data requested
+            localpath (str): the idenfier of the data requested
 
         Returns:
             dataframe or dictionary
@@ -608,11 +615,13 @@ class ScratchRealization(object):
         within the datastore.
 
         If the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
+
+          'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
@@ -638,14 +647,21 @@ class ScratchRealization(object):
         # calling function handle further errors.
         return shortpath
 
-    def find_files(self, paths, metadata=None):
+    def find_files(self, paths, metadata=None, metayaml=False):
         """Discover realization files. The files dataframe
         will be updated.
 
         Certain functionality requires up-front file discovery,
         e.g. ensemble archiving and ensemble arithmetic.
 
-        CSV files for single use does not have to be discovered.
+        CSV files for single use do not have to be discovered.
+
+        Files containing double-dashes '--' indicate that the double
+        dashes separate different component with meaning in the
+        filename.  The components are extracted and put into
+        additional columns "COMP1", "COMP2", etc..
+        Filetype extension (after the last dot) will be removed
+        from the last component.
 
         Args:
             paths: str or list of str with filenames (will be globbed)
@@ -654,6 +670,14 @@ class ScratchRealization(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
                 During rediscovery of files, old metadata will be removed.
+            metayaml: Additional possibility of adding metadata from
+                associated yaml files. Yaml files to be associated to
+                a specific discovered file can have an optional dot in
+                front, and must end in .yml, added to the discovered filename.
+                The yaml file will be loaded as a dict, and have its keys
+                flattened using the separator '--'. Flattened keys are
+                then used as column headers in the returned dataframe.
+
         Returns:
             A slice of the internalized dataframe corresponding
             to the discovered files (will be included even if it has
@@ -668,12 +692,47 @@ class ScratchRealization(object):
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
                 absmatch = os.path.abspath(match)
+                dirname = os.path.dirname(absmatch)
+                basename = os.path.basename(match)
+                filetype = match.split(".")[-1]
                 filerow = {
                     "LOCALPATH": os.path.relpath(match, self._origpath),
-                    "FILETYPE": match.split(".")[-1],
+                    "FILETYPE": filetype,
                     "FULLPATH": absmatch,
-                    "BASENAME": os.path.basename(match),
+                    "BASENAME": basename,
                 }
+                # Look for and split basename based on double-dash '--'
+                basename_noext = basename.replace("." + filetype, "")
+                if "--" in basename_noext:
+                    for compidx, comp in enumerate(basename_noext.split("--")):
+                        filerow["COMP" + str(compidx + 1)] = comp
+
+                if metayaml:
+                    metadict = {}
+                    yaml_candidates = [
+                        "." + basename + ".yml",
+                        basename + ".yml",
+                        "." + basename + ".yaml",
+                        basename + ".yaml",
+                    ]
+                    # We will only parse the first one found! You
+                    # might be out of luck if you have multiple..
+                    for cand in yaml_candidates:
+                        if os.path.exists(os.path.join(dirname, cand)):
+                            metadict = yaml.full_load(open(os.path.join(dirname, cand)))
+                        continue
+
+                    # Flatten metadict:
+                    metadict = flatten(metadict, sep="--")
+                    for key, value in metadict.items():
+                        if key not in filerow:
+                            filerow[key] = value
+                        else:
+                            logger.warning(
+                                "Cannot add key %s from yaml, key is in use. Skipping.",
+                                key,
+                            )
+
                 # Delete this row if it already exists, determined by FULLPATH
                 if absmatch in self.files["FULLPATH"].values:
                     self.files = self.files[self.files["FULLPATH"] != absmatch]
@@ -713,8 +772,8 @@ class ScratchRealization(object):
                 files should be traversed
 
         Returns:
-           EclSum: object representing the summary file. None if
-               nothing was found.
+            EclSum: object representing the summary file. None if
+                nothing was found.
         """
         if cache and self._eclsum:  # Return cached object if available
             if self._eclsum_include_restart == include_restart:
@@ -769,9 +828,11 @@ class ScratchRealization(object):
     ):
         """Produce dataframe from Summary data from the realization
 
-        When this function is called, the dataframe will be cached.
-        Caching supports different time_index, but there is no handling
-        of multiple sets of column_keys. The cached data will be called
+        When this function is called, the dataframe will be
+        internalized.  Internalization of summary data in a
+        realization object supports different time_index, but there is
+        no handling of multiple sets of column_keys. The cached data
+        will be called
 
           'share/results/tables/unsmry--<time_index>.csv'
 
@@ -782,13 +843,15 @@ class ScratchRealization(object):
 
         Wraps ecl.summary.EclSum.pandas_frame()
 
+        See also get_smry()
+
         Args:
             time_index: string indicating a resampling frequency,
                'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
                return the simulated report steps (also default).
                If a list of DateTime is supplied, data will be resampled
                to these.
-            column_keys: list of column key wildcards.
+            column_keys: list of column key wildcards. None means everything.
             cache_eclsum: boolean for whether to keep the loaded EclSum
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
@@ -803,6 +866,9 @@ class ScratchRealization(object):
 
         Returns:
             DataFrame with summary keys as columns and dates as indices.
+                Empty dataframe if no summary is available or column
+                keys do not exist.
+            DataFrame: with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
         if not self.get_eclsum(cache=cache_eclsum):
@@ -858,12 +924,24 @@ class ScratchRealization(object):
         touching internalized dataframes.
 
         Arguments:
-            cache: Boolean for wheter the EclSum object is to be cached.
-                defaults to True.
-            include_restart: boolean sent to libecl for wheter restarts
-                files should be traversed
+            time_index: string indicating a resampling frequency,
+               'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
+               return the simulated report steps (also default).
+               If a list of DateTime is supplied, data will be resampled
+               to these.
+            column_keys: list of column key wildcards. None means everything.
+            cache_eclsum: boolean for whether to keep the loaded EclSum
+                object in memory after data has been loaded.
+            start_date: str or date with first date to include.
+                Dates prior to this date will be dropped, supplied
+                start_date will always be included.
+            end_date: str or date with last date to be included.
+                Dates past this date will be dropped, supplied
+                end_date will always be included. Overriden if time_index
+                is 'last'.
 
-        Returns empty dataframe if there is no summary file
+        Returns empty dataframe if there is no summary file, or if the
+        column_keys are not existing.
         """
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
@@ -880,13 +958,17 @@ class ScratchRealization(object):
             time_index_arg = time_index
 
         if self.get_eclsum(cache=cache_eclsum, include_restart=include_restart):
-            df = self.get_eclsum(
-                cache=cache_eclsum, include_restart=include_restart
-            ).pandas_frame(time_index_arg, column_keys)
+            try:
+                dataframe = self.get_eclsum(
+                    cache=cache_eclsum, include_restart=include_restart
+                ).pandas_frame(time_index_arg, column_keys)
+            except ValueError:
+                # We get here if we have requested non-existing column keys
+                return pd.DataFrame()
             if not cache_eclsum:
                 # Ensure EclSum object can be garbage collected
                 self._eclsum = None
-            return df
+            return dataframe
         else:
             return pd.DataFrame()
 
@@ -1059,8 +1141,7 @@ class ScratchRealization(object):
         comps[0] = comps[0].replace("T", "R")
         if len(comps) > 1:
             return comps[0] + ":" + comps[1]
-        else:
-            return comps[0]
+        return comps[0]
 
     def get_smryvalues(self, props_wildcard=None):
         """
@@ -1183,18 +1264,16 @@ class ScratchRealization(object):
                         pd.to_datetime(dateutil.parser.parse(kwargs["columncontains"]))
                         == pd.to_datetime(self.data[localpath][kwargs["column"]])
                     ).any()
-                else:
-                    return (
-                        kwargs["columncontains"]
-                        in self.data[localpath][kwargs["column"]].values
-                    )
+                return (
+                    kwargs["columncontains"]
+                    in self.data[localpath][kwargs["column"]].values
+                )
 
         if "key" in kwargs and "value" in kwargs:
             if isinstance(kwargs["value"], str):
                 if kwargs["key"] in self.data[localpath]:
                     return str(self.data[localpath][kwargs["key"]]) == kwargs["value"]
-                else:
-                    return False
+                return False
             else:  # non-string, then don't convert the internalized data
                 return self.data[localpath][kwargs["key"]] == kwargs["value"]
         raise ValueError("Wrong arguments to contains()")
@@ -1334,6 +1413,8 @@ class ScratchRealization(object):
         return self.get_grid().export_index(active_only=active_only)
 
     def get_grid_corners(self, grid_index):
+        """Return a dataframe with the the x, y, z for the
+        8 grid corners of corner point cells"""
         corners = self.get_grid().export_corners(grid_index)
         columns = [
             "x1",
@@ -1365,6 +1446,8 @@ class ScratchRealization(object):
         return pd.DataFrame(data=corners, columns=columns)
 
     def get_grid_centre(self, grid_index):
+        """Return the grid centre of corner-point-cells, x, y and z
+        in distinct columns"""
         grid_cell_centre = self.get_grid().export_position(grid_index)
         return pd.DataFrame(
             data=grid_cell_centre, columns=["cell_x", "cell_y", "cell_z"]
@@ -1467,9 +1550,27 @@ def normalize_dates(start_date, end_date, freq):
     elif freq == "daily":
         # This we don't need to normalize, but we should not give any warnings
         pass
+    elif freq == "last":
+        # This we don't need to normalize, but we should not give any warnings
+        pass
     else:
-        logger.warning("Unrecognized frequency for date normalization")
+        logger.warning("Unrecognized frequency %s for date normalization", str(freq))
     return (start_date, end_date)
+
+
+def flatten(d, parent_key="", sep="_"):
+    """Flatten dictionary keys
+
+    Code from stackoverflow.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
 def parse_number(value):

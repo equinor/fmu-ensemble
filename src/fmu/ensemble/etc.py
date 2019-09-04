@@ -8,7 +8,7 @@ Logging is enabled by setting a environment variable::
   export FMU_LOGGING_LEVEL=INFO   # if bash; will set logging to INFO level
   setenv FMU_LOGGING_LEVEL INFO   # if tcsh; will set logging to INFO level
 
-Other levels are DEBUG and CRITICAL. CRITICAL is default (cf. Pythons logging)
+Other levels are DEBUG, ERROR and CRITICAL. WARNING is default.
 
 Usage of logging in scripts::
 
@@ -77,7 +77,7 @@ class Interaction(object):
         self._caller = None
         self._lformat = None
         self._lformatlevel = 1
-        self._logginglevel = "CRITICAL"
+        self._logginglevel = "WARNING"
         self._loggingname = ""
         self._syslevel = 1
         self._test_env = True
@@ -106,7 +106,7 @@ class Interaction(object):
     def logginglevel(self, level):
         # pylint: disable=pointless-statement
 
-        validlevels = ("INFO", "WARNING", "DEBUG", "CRITICAL")
+        validlevels = ("INFO", "WARNING", "DEBUG", "ERROR", "CRITICAL")
         if level in validlevels:
             self._logginglevel = level
         else:
@@ -122,6 +122,8 @@ class Interaction(object):
             llo = logging.INFO
         elif self._logginglevel == "WARNING":
             llo = logging.WARNING
+        elif self._logginglevel == "ERROR":
+            llo = logging.ERROR
         elif self._logginglevel == "DEBUG":
             llo = logging.DEBUG
 

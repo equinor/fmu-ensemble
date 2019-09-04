@@ -6,10 +6,13 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import pytest
+import datetime
+
 import numpy as np
 import pandas as pd
-import datetime
+
+import pytest
+
 from fmu.ensemble import etc
 from fmu import ensemble
 
@@ -67,6 +70,7 @@ def test_virtual_realization():
 
 
 def test_virtual_todisk(tmp="TMP"):
+    """Test writing a virtual realization to disk (as a directory with files)"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -134,6 +138,7 @@ def test_virtual_fromdisk(tmp="TMP"):
 
 
 def test_get_smry():
+    """Check that we can to get_smry() on virtual realizations"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -174,9 +179,14 @@ def test_get_smry():
         vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=long_time_ago) == 0
     )
     before_and_after = [datetime.date(1900, 1, 1), datetime.date(2100, 1, 1)]
+
     assert all(
-        vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=before_and_after)
-        == real.get_smry(column_keys=["FOPR", "FOPT"], time_index=before_and_after)
+        vreal.get_smry(
+            column_keys=["FOPR", "FOPT"], time_index=before_and_after
+        ).sort_index(axis=1)
+        == real.get_smry(
+            column_keys=["FOPR", "FOPT"], time_index=before_and_after
+        ).sort_index(axis=1)
     )
 
     # If you supply repeating timeindices, you get duplicates out

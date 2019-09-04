@@ -90,11 +90,12 @@ class VirtualEnsemble(object):
         within the datastore.
 
         If the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
         of ambiguity, the shortpath will be returned.
@@ -205,7 +206,7 @@ class VirtualEnsemble(object):
         indicestodelete = list(set(deleteindices) & set(indicesknown))
         indicesnotknown = list(set(deleteindices) - set(indicestodelete))
         if indicesnotknown:
-            logger.warn(
+            logger.warning(
                 "Skipping undefined realization indices %s", str(indicesnotknown)
             )
         # There might be Pandas tricks to avoid this outer loop.
@@ -294,6 +295,12 @@ class VirtualEnsemble(object):
 
             groupby = [x for x in groupbycolumncandidates if x in data.columns]
 
+            # Filter to only numerical columns and groupby columns:
+            numerical_and_groupby_cols = list(
+                set(list(groupby) + list(data.select_dtypes(include="number").columns))
+            )
+            data = data[numerical_and_groupby_cols]
+
             dtypes = data.dtypes.unique()
             if not (int in dtypes or float in dtypes):
                 logger.info("No numerical data to aggregate in %s", key)
@@ -364,11 +371,13 @@ class VirtualEnsemble(object):
         """Access the internal datastore which contains dataframes or dicts
 
         Shorthand is allowed, if the fully qualified localpath is
+
             'share/results/volumes/simulator_volume_fipnum.csv'
         then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
+
+          * simulator_volume_fipnum
+          * simulator_volume_fipnum.csv
+          * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case of ambiguity, a
         ValueError will be raised.
@@ -490,7 +499,7 @@ class VirtualEnsemble(object):
                 If a string is supplied, that string is attempted used
                 via get_smry_dates() in order to obtain a time index.
             quantiles: list of ints between 0 and 100 for which quantiles
-                to compute. Quantiles follow scientific standard, 
+                to compute. Quantiles follow scientific standard,
                 for the oil industry p10 you should ask for p90.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
