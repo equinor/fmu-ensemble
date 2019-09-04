@@ -453,14 +453,21 @@ class ScratchEnsemble(object):
             raise ValueError("No ensemble data found for %s", localpath)
         return self.get_df(localpath)
 
-    def find_files(self, paths, metadata=None):
+    def find_files(self, paths, metadata=None, metayaml=False):
         """Discover realization files. The files dataframes
         for each realization will be updated.
 
         Certain functionality requires up-front file discovery,
         e.g. ensemble archiving and ensemble arithmetic.
 
-        CSV files for single use does not have to be discovered.
+        CSV files for single use do not have to be discovered.
+
+        Files containing double-dashes '--' indicate that the double
+        dashes separate different component with meaning in the
+        filename.  The components are extracted and put into
+        additional columns "COMP1", "COMP2", etc..
+        Filetype extension (after the last dot) will be removed
+        from the last component.
 
         Args:
             paths (str or list of str): Filenames (will be globbed)
@@ -468,13 +475,23 @@ class ScratchEnsemble(object):
             metadata (dict): metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
+            metayaml: Additional possibility of adding metadata from
+                associated yaml files. Yaml files to be associated to
+                a specific discovered file can have an optional dot in
+                front, and must end in .yml, added to the discovered filename.
+                The yaml file will be loaded as a dict, and have its keys
+                flattened using the separator '--'. Flattened keys are
+                then used as column headers in the returned dataframe.
+
         Returns:
             pd.DataFrame: with the slice of discovered files in each
             realization, tagged with realization index in the column REAL
         """
         df_list = {}
         for index, realization in self._realizations.items():
-            df_list[index] = realization.find_files(paths, metadata)
+            df_list[index] = realization.find_files(
+                paths, metadata=metadata, metayaml=metayaml
+            )
         if df_list:
             return (
                 pd.concat(df_list, sort=False)

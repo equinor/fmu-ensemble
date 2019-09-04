@@ -17,7 +17,9 @@ import re
 import copy
 import glob
 import json
+import yaml
 from datetime import datetime, date, time
+import collections
 import dateutil
 
 import numpy
@@ -115,9 +117,11 @@ class ScratchRealization(object):
                     break
             else:
                 logger.warning(
-                    "Could not determine realization "
-                    + "index for %s, "
-                    + "this cannot be inserted in an Ensemble",
+                    (
+                        "Could not determine realization "
+                        "index for %s, "
+                        "this cannot be inserted in an Ensemble"
+                    ),
                     abspath,
                 )
                 logger.warning("Maybe you need to use index=<someinteger>")
@@ -643,14 +647,21 @@ class ScratchRealization(object):
         # calling function handle further errors.
         return shortpath
 
-    def find_files(self, paths, metadata=None):
+    def find_files(self, paths, metadata=None, metayaml=False):
         """Discover realization files. The files dataframe
         will be updated.
 
         Certain functionality requires up-front file discovery,
         e.g. ensemble archiving and ensemble arithmetic.
 
-        CSV files for single use does not have to be discovered.
+        CSV files for single use do not have to be discovered.
+
+        Files containing double-dashes '--' indicate that the double
+        dashes separate different component with meaning in the
+        filename.  The components are extracted and put into
+        additional columns "COMP1", "COMP2", etc..
+        Filetype extension (after the last dot) will be removed
+        from the last component.
 
         Args:
             paths: str or list of str with filenames (will be globbed)
@@ -659,6 +670,14 @@ class ScratchRealization(object):
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
                 During rediscovery of files, old metadata will be removed.
+            metayaml: Additional possibility of adding metadata from
+                associated yaml files. Yaml files to be associated to
+                a specific discovered file can have an optional dot in
+                front, and must end in .yml, added to the discovered filename.
+                The yaml file will be loaded as a dict, and have its keys
+                flattened using the separator '--'. Flattened keys are
+                then used as column headers in the returned dataframe.
+
         Returns:
             A slice of the internalized dataframe corresponding
             to the discovered files (will be included even if it has
@@ -673,12 +692,47 @@ class ScratchRealization(object):
             globs = glob.glob(os.path.join(self._origpath, searchpath))
             for match in globs:
                 absmatch = os.path.abspath(match)
+                dirname = os.path.dirname(absmatch)
+                basename = os.path.basename(match)
+                filetype = match.split(".")[-1]
                 filerow = {
                     "LOCALPATH": os.path.relpath(match, self._origpath),
-                    "FILETYPE": match.split(".")[-1],
+                    "FILETYPE": filetype,
                     "FULLPATH": absmatch,
-                    "BASENAME": os.path.basename(match),
+                    "BASENAME": basename,
                 }
+                # Look for and split basename based on double-dash '--'
+                basename_noext = basename.replace("." + filetype, "")
+                if "--" in basename_noext:
+                    for compidx, comp in enumerate(basename_noext.split("--")):
+                        filerow["COMP" + str(compidx + 1)] = comp
+
+                if metayaml:
+                    metadict = {}
+                    yaml_candidates = [
+                        "." + basename + ".yml",
+                        basename + ".yml",
+                        "." + basename + ".yaml",
+                        basename + ".yaml",
+                    ]
+                    # We will only parse the first one found! You
+                    # might be out of luck if you have multiple..
+                    for cand in yaml_candidates:
+                        if os.path.exists(os.path.join(dirname, cand)):
+                            metadict = yaml.full_load(open(os.path.join(dirname, cand)))
+                        continue
+
+                    # Flatten metadict:
+                    metadict = flatten(metadict, sep="--")
+                    for key, value in metadict.items():
+                        if key not in filerow:
+                            filerow[key] = value
+                        else:
+                            logger.warning(
+                                "Cannot add key %s from yaml, key is in use. Skipping.",
+                                key,
+                            )
+
                 # Delete this row if it already exists, determined by FULLPATH
                 if absmatch in self.files["FULLPATH"].values:
                     self.files = self.files[self.files["FULLPATH"] != absmatch]
@@ -1502,6 +1556,21 @@ def normalize_dates(start_date, end_date, freq):
     else:
         logger.warning("Unrecognized frequency %s for date normalization", str(freq))
     return (start_date, end_date)
+
+
+def flatten(d, parent_key="", sep="_"):
+    """Flatten dictionary keys
+
+    Code from stackoverflow.
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
 def parse_number(value):
