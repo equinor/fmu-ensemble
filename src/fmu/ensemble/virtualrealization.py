@@ -429,7 +429,7 @@ class VirtualRealization(object):
         but start and end date is taken from internalized
         smry dataframes.
 
-                Args:
+        Args:
             freq: string denoting requested frequency for
                 the list of datetimes.
                 'daily', 'monthly' and 'yearly'.
@@ -441,7 +441,13 @@ class VirtualRealization(object):
         Returns:
             list of datetimes. Empty if no summary data is available.
         """
-        available_smry = [x for x in self.keys() if "unsmry" in x]
+        # Look for available smry, if we have one
+        # at the requested frequency, use it directly:
+        if self.shortcut2path("unsmry--" + freq) in self.keys():
+            available_smry = [self.shortcut2path("unsmry--" + freq)]
+        else:
+            # Use all of them.
+            available_smry = [x for x in self.keys() if "unsmry" in x]
         if not available_smry:
             raise ValueError("No summary to get start and end date from")
 
