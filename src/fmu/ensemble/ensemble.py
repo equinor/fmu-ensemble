@@ -9,7 +9,7 @@ from __future__ import print_function
 import re
 import os
 import glob
-from datetime import datetime, date
+from datetime import datetime
 
 import six
 import pandas as pd
