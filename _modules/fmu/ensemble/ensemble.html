@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.2.1.59 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.0.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.1.59
+                v1.1.0.1
               </div>
             
           
@@ -613,14 +613,21 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No ensemble data found for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ScratchEnsemble.find_files"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.find_files">[docs]</a>    <span class="k">def</span> <span class="nf">find_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ScratchEnsemble.find_files"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.find_files">[docs]</a>    <span class="k">def</span> <span class="nf">find_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metayaml</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Discover realization files. The files dataframes</span>
 <span class="sd">        for each realization will be updated.</span>
 
 <span class="sd">        Certain functionality requires up-front file discovery,</span>
 <span class="sd">        e.g. ensemble archiving and ensemble arithmetic.</span>
 
-<span class="sd">        CSV files for single use does not have to be discovered.</span>
+<span class="sd">        CSV files for single use do not have to be discovered.</span>
+
+<span class="sd">        Files containing double-dashes &#39;--&#39; indicate that the double</span>
+<span class="sd">        dashes separate different component with meaning in the</span>
+<span class="sd">        filename.  The components are extracted and put into</span>
+<span class="sd">        additional columns &quot;COMP1&quot;, &quot;COMP2&quot;, etc..</span>
+<span class="sd">        Filetype extension (after the last dot) will be removed</span>
+<span class="sd">        from the last component.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            paths (str or list of str): Filenames (will be globbed)</span>
@@ -628,13 +635,23 @@
 <span class="sd">            metadata (dict): metadata to assign for the discovered</span>
 <span class="sd">                files. The keys will be columns, and its values will be</span>
 <span class="sd">                assigned as column values for the discovered files.</span>
+<span class="sd">            metayaml: Additional possibility of adding metadata from</span>
+<span class="sd">                associated yaml files. Yaml files to be associated to</span>
+<span class="sd">                a specific discovered file can have an optional dot in</span>
+<span class="sd">                front, and must end in .yml, added to the discovered filename.</span>
+<span class="sd">                The yaml file will be loaded as a dict, and have its keys</span>
+<span class="sd">                flattened using the separator &#39;--&#39;. Flattened keys are</span>
+<span class="sd">                then used as column headers in the returned dataframe.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFrame: with the slice of discovered files in each</span>
 <span class="sd">            realization, tagged with realization index in the column REAL</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df_list</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">df_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+            <span class="n">df_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span>
+                <span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">metayaml</span><span class="o">=</span><span class="n">metayaml</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">df_list</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>
                 <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">df_list</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

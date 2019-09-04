@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble 0.2.1.59 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.0.1 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.2.1.59
+                v1.1.0.1
               </div>
             
           
@@ -474,12 +474,18 @@ distuinguishes each realizations data.</p>
 
 <dl class="method">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.find_files">
-<code class="sig-name descname">find_files</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">metadata=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.find_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.find_files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find_files</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">metadata=None</em>, <em class="sig-param">metayaml=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.find_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.find_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Discover realization files. The files dataframes
 for each realization will be updated.</p>
 <p>Certain functionality requires up-front file discovery,
 e.g. ensemble archiving and ensemble arithmetic.</p>
-<p>CSV files for single use does not have to be discovered.</p>
+<p>CSV files for single use do not have to be discovered.</p>
+<p>Files containing double-dashes ‘–’ indicate that the double
+dashes separate different component with meaning in the
+filename.  The components are extracted and put into
+additional columns “COMP1”, “COMP2”, etc..
+Filetype extension (after the last dot) will be removed
+from the last component.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -488,6 +494,13 @@ that are relative to the realization directory.</p></li>
 <li><p><strong>metadata</strong> (<em>dict</em>) – metadata to assign for the discovered
 files. The keys will be columns, and its values will be
 assigned as column values for the discovered files.</p></li>
+<li><p><strong>metayaml</strong> – Additional possibility of adding metadata from
+associated yaml files. Yaml files to be associated to
+a specific discovered file can have an optional dot in
+front, and must end in .yml, added to the discovered filename.
+The yaml file will be loaded as a dict, and have its keys
+flattened using the separator ‘–’. Flattened keys are
+then used as column headers in the returned dataframe.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2083,12 +2096,18 @@ of ambiguity, the shortpath will be returned.</p>
 
 <dl class="method">
 <dt id="fmu.ensemble.realization.ScratchRealization.find_files">
-<code class="sig-name descname">find_files</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">metadata=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.find_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.find_files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">find_files</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">metadata=None</em>, <em class="sig-param">metayaml=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.find_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.find_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Discover realization files. The files dataframe
 will be updated.</p>
 <p>Certain functionality requires up-front file discovery,
 e.g. ensemble archiving and ensemble arithmetic.</p>
-<p>CSV files for single use does not have to be discovered.</p>
+<p>CSV files for single use do not have to be discovered.</p>
+<p>Files containing double-dashes ‘–’ indicate that the double
+dashes separate different component with meaning in the
+filename.  The components are extracted and put into
+additional columns “COMP1”, “COMP2”, etc..
+Filetype extension (after the last dot) will be removed
+from the last component.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2098,6 +2117,13 @@ that are relative to the realization directory.</p></li>
 files. The keys will be columns, and its values will be
 assigned as column values for the discovered files.
 During rediscovery of files, old metadata will be removed.</p></li>
+<li><p><strong>metayaml</strong> – Additional possibility of adding metadata from
+associated yaml files. Yaml files to be associated to
+a specific discovered file can have an optional dot in
+front, and must end in .yml, added to the discovered filename.
+The yaml file will be loaded as a dict, and have its keys
+flattened using the separator ‘–’. Flattened keys are
+then used as column headers in the returned dataframe.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2517,6 +2543,13 @@ Anything else will return the input as is</p></li>
 <dd class="field-even"><p>Tuple of normalized (start_date, end_date)</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="fmu.ensemble.realization.flatten">
+<code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">parent_key=''</em>, <em class="sig-param">sep='_'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten dictionary keys</p>
+<p>Code from stackoverflow.</p>
 </dd></dl>
 
 <dl class="function">
