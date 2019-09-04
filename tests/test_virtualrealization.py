@@ -217,12 +217,12 @@ def test_get_smry2():
 
     assert len(
         vreal.get_smry(column_keys="FOPR", time_index="daily")["FOPR"].unique()
-        == len(daily)
-    )
+    ) == len(daily)
+
     assert len(
         vreal.get_smry(column_keys="FOPT", time_index="daily")["FOPT"].unique()
-        == len(daily)
-    )
+    ) == len(daily)
+
     daily_dt = vreal._get_smry_dates("daily")
     # If we now ask for daily, we probably pick from 'raw' as it is
     # internalized.

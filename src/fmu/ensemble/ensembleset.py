@@ -77,9 +77,11 @@ class EnsembleSet(object):
             or (runpathfile and ensembles)
         ):
             logger.error(
-                "EnsembleSet only supports one initialization mode,"
-                + "from list of ensembles\n, list of paths or "
-                + "an ert runpath file"
+                (
+                    "EnsembleSet only supports one initialization mode,"
+                    "from list of ensembles\n, list of paths or "
+                    "an ert runpath file"
+                )
             )
             raise ValueError
 

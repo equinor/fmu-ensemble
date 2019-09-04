@@ -17,11 +17,11 @@ import re
 import copy
 import glob
 import json
-import yaml
 from datetime import datetime, date, time
 import collections
 import dateutil
 
+import yaml
 import numpy
 import pandas as pd
 
@@ -1558,18 +1558,18 @@ def normalize_dates(start_date, end_date, freq):
     return (start_date, end_date)
 
 
-def flatten(d, parent_key="", sep="_"):
+def flatten(dictionary, parent_key="", sep="_"):
     """Flatten dictionary keys
 
     Code from stackoverflow.
     """
     items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
+    for key, value in dictionary.items():
+        new_key = parent_key + sep + key if parent_key else key
+        if isinstance(value, collections.MutableMapping):
+            items.extend(flatten(value, new_key, sep=sep).items())
         else:
-            items.append((new_key, v))
+            items.append((new_key, value))
     return dict(items)
 
 
