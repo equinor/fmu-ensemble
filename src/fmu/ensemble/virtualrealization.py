@@ -275,7 +275,7 @@ class VirtualRealization(object):
         """
         from fmu.ensemble import ScratchRealization
 
-        return ScratchRealization._get_volumetric_rates(
+        return ScratchRealization.static_get_volumetric_rates(
             self, column_keys, time_index, time_unit
         )
 

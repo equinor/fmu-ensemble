@@ -1023,10 +1023,12 @@ class ScratchRealization(object):
                 is compatible with the date index and the cumulative data.
 
         """
-        return self._get_volumetric_rates(self, column_keys, time_index, time_unit)
+        return self.static_get_volumetric_rates(
+            self, column_keys, time_index, time_unit
+        )
 
     @staticmethod
-    def _get_volumetric_rates(realization, column_keys, time_index, time_unit):
+    def static_get_volumetric_rates(realization, column_keys, time_index, time_unit):
         """Static method for volumetric rates
 
         This method is to be used by both ScratchRealization
