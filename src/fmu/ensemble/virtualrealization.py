@@ -349,7 +349,7 @@ class VirtualRealization(object):
             time_index = "monthly"
 
         if isinstance(time_index, str):
-            time_index_dt = self._get_smry_dates(time_index)
+            time_index_dt = self.get_smry_dates(time_index)
         elif isinstance(time_index, list):
             time_index_dt = time_index
         else:
@@ -422,7 +422,7 @@ class VirtualRealization(object):
         smry.index = smry.index.set_names(["DATE"])
         return smry.loc[pd.to_datetime(time_index_dt)]
 
-    def _get_smry_dates(self, freq="monthly", normalize=False):
+    def get_smry_dates(self, freq="monthly", normalize=False):
         """Return list of datetimes available in the realization
 
         Similar to the function in ScratchRealization,

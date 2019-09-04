@@ -226,7 +226,7 @@ def test_get_smry2():
         daily
     )
 
-    daily_dt = vreal._get_smry_dates("daily")
+    daily_dt = vreal.get_smry_dates("daily")
     # If we now ask for daily, we probably pick from 'raw' as it is
     # internalized.
     daily2 = vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=daily_dt)
@@ -268,7 +268,7 @@ def test_get_smry_dates():
     # First test with no data:
     empty_vreal = ensemble.VirtualRealization()
     with pytest.raises(ValueError):
-        empty_vreal._get_smry_dates()
+        empty_vreal.get_smry_dates()
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -281,12 +281,12 @@ def test_get_smry_dates():
     real.load_smry(time_index="yearly", column_keys=["F*", "W*"])
     vreal = real.to_virtual()
 
-    assert len(vreal._get_smry_dates(freq="monthly")) == 49
-    assert len(vreal._get_smry_dates(freq="daily")) == 1462
-    assert len(vreal._get_smry_dates(freq="yearly")) == 5
+    assert len(vreal.get_smry_dates(freq="monthly")) == 49
+    assert len(vreal.get_smry_dates(freq="daily")) == 1462
+    assert len(vreal.get_smry_dates(freq="yearly")) == 5
 
     with pytest.raises(ValueError):
-        assert vreal._get_smry_dates(freq="foobar")
+        assert vreal.get_smry_dates(freq="foobar")
 
 
 def test_volumetric_rates():
