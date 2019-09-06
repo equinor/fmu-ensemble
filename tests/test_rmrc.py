@@ -35,7 +35,7 @@ def test_rmrc():
 
     logger.info("Constructing ensemble object from disk")
     ens = ScratchEnsemble(
-        "ens1", os.path.join(ens_path, "realization-?/{}".format(iteration_name))
+        "ens1", os.path.join(ens_path, "realization-*/{}".format(iteration_name))
     )
     logger.info("Loading smry")
     # ens.load_smry(time_index="monthly")
