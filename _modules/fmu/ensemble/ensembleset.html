@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble v1.1.0.1 documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble v1.1.0.2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.0.1
+                v1.1.0.2
               </div>
             
           
@@ -237,9 +237,11 @@
             <span class="ow">or</span> <span class="p">(</span><span class="n">runpathfile</span> <span class="ow">and</span> <span class="n">ensembles</span><span class="p">)</span>
         <span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;EnsembleSet only supports one initialization mode,&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;from list of ensembles</span><span class="se">\n</span><span class="s2">, list of paths or &quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;an ert runpath file&quot;</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;EnsembleSet only supports one initialization mode,&quot;</span>
+                    <span class="s2">&quot;from list of ensembles</span><span class="se">\n</span><span class="s2">, list of paths or &quot;</span>
+                    <span class="s2">&quot;an ert runpath file&quot;</span>
+                <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 

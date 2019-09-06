@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.0.1 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.0.2 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.0.1
+                v1.1.0.2
               </div>
             
           
@@ -494,7 +494,7 @@ that are relative to the realization directory.</p></li>
 <li><p><strong>metadata</strong> (<em>dict</em>) – metadata to assign for the discovered
 files. The keys will be columns, and its values will be
 assigned as column values for the discovered files.</p></li>
-<li><p><strong>metayaml</strong> – Additional possibility of adding metadata from
+<li><p><strong>metayaml</strong> (<em>boolean</em>) – Additional possibility of adding metadata from
 associated yaml files. Yaml files to be associated to
 a specific discovered file can have an optional dot in
 front, and must end in .yml, added to the discovered filename.
@@ -504,8 +504,12 @@ then used as column headers in the returned dataframe.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>with the slice of discovered files in each
-realization, tagged with realization index in the column REAL</p>
+<dd class="field-even"><p><dl class="simple">
+<dt>with the slice of discovered files in each</dt><dd><p>realization, tagged with realization index in the column REAL.
+Empty dataframe if no files found.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>pd.DataFrame</p>
@@ -2299,6 +2303,14 @@ is compatible with the date index and the cumulative data.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="fmu.ensemble.realization.ScratchRealization.static_get_volumetric_rates">
+<em class="property">static </em><code class="sig-name descname">static_get_volumetric_rates</code><span class="sig-paren">(</span><em class="sig-param">realization</em>, <em class="sig-param">column_keys</em>, <em class="sig-param">time_index</em>, <em class="sig-param">time_unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.static_get_volumetric_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.static_get_volumetric_rates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Static method for volumetric rates</p>
+<p>This method is to be used by both ScratchRealization
+and VirtualRealization, and is documented there.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="fmu.ensemble.realization.ScratchRealization.get_smryvalues">
 <code class="sig-name descname">get_smryvalues</code><span class="sig-paren">(</span><em class="sig-param">props_wildcard=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.get_smryvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.get_smryvalues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch selected vectors from Eclipse Summary data.</p>
@@ -2547,7 +2559,7 @@ Anything else will return the input as is</p></li>
 
 <dl class="function">
 <dt id="fmu.ensemble.realization.flatten">
-<code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">parent_key=''</em>, <em class="sig-param">sep='_'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.flatten" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">dictionary</em>, <em class="sig-param">parent_key=''</em>, <em class="sig-param">sep='_'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.flatten" title="Permalink to this definition">¶</a></dt>
 <dd><p>Flatten dictionary keys</p>
 <p>Code from stackoverflow.</p>
 </dd></dl>
@@ -3112,6 +3124,32 @@ to match every key that is known (contrary to
 behaviour in a ScratchRealization)</p></li>
 <li><p><strong>time_index</strong> – str or list of datetimes</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.virtualrealization.VirtualRealization.get_smry_dates">
+<code class="sig-name descname">get_smry_dates</code><span class="sig-paren">(</span><em class="sig-param">freq='monthly'</em>, <em class="sig-param">normalize=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualrealization.html#VirtualRealization.get_smry_dates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of datetimes available in the realization</p>
+<p>Similar to the function in ScratchRealization,
+but start and end date is taken from internalized
+smry dataframes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> – string denoting requested frequency for
+the list of datetimes.
+‘daily’, ‘monthly’ and ‘yearly’.
+‘last’ will give out the last date (maximum),
+as a list with one element.</p></li>
+<li><p><strong>normalize</strong> – Whether to normalize backwards at the start
+and forwards at the end to ensure the entire
+date range is covered.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of datetimes. Empty if no summary data is available.</p>
 </dd>
 </dl>
 </dd></dl>

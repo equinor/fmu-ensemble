@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble v1.1.0.1 documentation</title>
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble v1.1.0.2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.0.1
+                v1.1.0.2
               </div>
             
           
@@ -435,7 +435,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="k">import</span> <span class="n">ScratchRealization</span>
 
-        <span class="k">return</span> <span class="n">ScratchRealization</span><span class="o">.</span><span class="n">_get_volumetric_rates</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">ScratchRealization</span><span class="o">.</span><span class="n">static_get_volumetric_rates</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span>
         <span class="p">)</span></div>
 
@@ -509,7 +509,7 @@
             <span class="n">time_index</span> <span class="o">=</span> <span class="s2">&quot;monthly&quot;</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">time_index_dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+            <span class="n">time_index_dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">time_index_dt</span> <span class="o">=</span> <span class="n">time_index</span>
         <span class="k">else</span><span class="p">:</span>
@@ -582,14 +582,14 @@
         <span class="n">smry</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">smry</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">set_names</span><span class="p">([</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">smry</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">time_index_dt</span><span class="p">)]</span></div>
 
-    <span class="k">def</span> <span class="nf">_get_smry_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualRealization.get_smry_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_dates">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return list of datetimes available in the realization</span>
 
 <span class="sd">        Similar to the function in ScratchRealization,</span>
 <span class="sd">        but start and end date is taken from internalized</span>
 <span class="sd">        smry dataframes.</span>
 
-<span class="sd">                Args:</span>
+<span class="sd">        Args:</span>
 <span class="sd">            freq: string denoting requested frequency for</span>
 <span class="sd">                the list of datetimes.</span>
 <span class="sd">                &#39;daily&#39;, &#39;monthly&#39; and &#39;yearly&#39;.</span>
@@ -601,7 +601,13 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetimes. Empty if no summary data is available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">available_smry</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;unsmry&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+        <span class="c1"># Look for available smry, if we have one</span>
+        <span class="c1"># at the requested frequency, use it directly:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="s2">&quot;unsmry--&quot;</span> <span class="o">+</span> <span class="n">freq</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">available_smry</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="s2">&quot;unsmry--&quot;</span> <span class="o">+</span> <span class="n">freq</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use all of them.</span>
+            <span class="n">available_smry</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;unsmry&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">available_smry</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No summary to get start and end date from&quot;</span><span class="p">)</span>
 
@@ -623,7 +629,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Requested frequency </span><span class="si">%s</span><span class="s2"> not supported&quot;</span> <span class="o">%</span> <span class="n">freq</span><span class="p">)</span>
         <span class="n">datetimes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">pd_freq_mnenomics</span><span class="p">[</span><span class="n">freq</span><span class="p">])</span>
         <span class="c1"># Convert from Pandas&#39; datetime64 to datetime.date:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="nf">_glob_smry_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Glob a list of column keys</span>

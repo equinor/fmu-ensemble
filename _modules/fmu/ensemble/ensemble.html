@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.0.1 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.0.2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.0.1
+                v1.1.0.2
               </div>
             
           
@@ -169,9 +169,9 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span>
+<span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">ecl</span> <span class="k">import</span> <span class="n">EclDataType</span>
@@ -443,10 +443,10 @@
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;runpath dataframe not correct&quot;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">runpath_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">runpath_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">runpathfilter</span> <span class="ow">and</span> <span class="n">runpathfilter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">]:</span>
                 <span class="k">continue</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding realization from &quot;</span> <span class="o">+</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">])</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding realization from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">])</span>
             <span class="n">realization</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="p">(</span>
                 <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]),</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
@@ -635,7 +635,7 @@
 <span class="sd">            metadata (dict): metadata to assign for the discovered</span>
 <span class="sd">                files. The keys will be columns, and its values will be</span>
 <span class="sd">                assigned as column values for the discovered files.</span>
-<span class="sd">            metayaml: Additional possibility of adding metadata from</span>
+<span class="sd">            metayaml (boolean): Additional possibility of adding metadata from</span>
 <span class="sd">                associated yaml files. Yaml files to be associated to</span>
 <span class="sd">                a specific discovered file can have an optional dot in</span>
 <span class="sd">                front, and must end in .yml, added to the discovered filename.</span>
@@ -645,7 +645,8 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFrame: with the slice of discovered files in each</span>
-<span class="sd">            realization, tagged with realization index in the column REAL</span>
+<span class="sd">                realization, tagged with realization index in the column REAL.</span>
+<span class="sd">                Empty dataframe if no files found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df_list</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -658,7 +659,8 @@
                 <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
                 <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;level_0&quot;</span><span class="p">:</span> <span class="s2">&quot;REAL&quot;</span><span class="p">})</span>
                 <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;level_1&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">)</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;ScratchEnsemble </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> realizations&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
@@ -1342,7 +1344,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">int</span> <span class="ow">in</span> <span class="n">dtypes</span> <span class="ow">or</span> <span class="nb">float</span> <span class="ow">in</span> <span class="n">dtypes</span><span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No numerical data to aggregate in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
                 <span class="k">continue</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groupby</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">groupby</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Grouping </span><span class="si">%s</span><span class="s2"> by </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">groupby</span><span class="p">)</span>
                 <span class="n">aggobject</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">groupby</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1596,7 +1598,8 @@
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">numpy_copy</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">agg</span> <span class="o">==</span> <span class="s2">&quot;std&quot;</span><span class="p">:</span>
             <span class="n">std_dev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyword_std_dev</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_active</span><span class="p">,</span> <span class="n">mean</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">std_dev</span><span class="o">.</span><span class="n">numpy_copy</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">std_dev</span><span class="o">.</span><span class="n">numpy_copy</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_unrst"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_unrst">[docs]</a>    <span class="k">def</span> <span class="nf">get_unrst</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">,</span> <span class="n">agg</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1614,7 +1617,8 @@
             <span class="n">std_dev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_keyword_std_dev</span><span class="p">(</span>
                 <span class="n">prop</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_active</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="n">report</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">std_dev</span><span class="o">.</span><span class="n">numpy_copy</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">std_dev</span><span class="o">.</span><span class="n">numpy_copy</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">prop</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_keyword_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">global_active</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1648,7 +1652,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">report</span><span class="p">:</span>
             <span class="n">std_dev</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">real</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
                 <span class="n">real_prop</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_unrst_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
                 <span class="n">std_dev</span><span class="o">.</span><span class="n">add_squared</span><span class="p">(</span><span class="n">real_prop</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
             <span class="n">std_dev</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
