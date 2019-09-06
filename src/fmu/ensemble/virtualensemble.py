@@ -178,16 +178,18 @@ class VirtualEnsemble(object):
 
         # Add the data from the incoming realization key by key
         for key in realization.keys():
-            df = realization.get_df(key)
-            if isinstance(df, dict):  # dicts to go to one-row dataframes
-                df = pd.DataFrame(index=[1], data=df)
-            if isinstance(df, (str, int, float)):
-                df = pd.DataFrame(index=[1], columns=[key], data=df)
-            df["REAL"] = realidx
+            dframe = realization.get_df(key)
+            if isinstance(dframe, dict):  # dicts to go to one-row dataframes
+                dframe = pd.DataFrame(index=[1], data=dframe)
+            if isinstance(dframe, (str, int, float)):
+                dframe = pd.DataFrame(index=[1], columns=[key], data=dframe)
+            dframe["REAL"] = realidx
             if key not in self.data.keys():
-                self.data[key] = df
+                self.data[key] = dframe
             else:
-                self.data[key] = self.data[key].append(df, ignore_index=True, sort=True)
+                self.data[key] = self.data[key].append(
+                    dframe, ignore_index=True, sort=True
+                )
         self.update_realindices()
 
     def remove_realizations(self, deleteindices):

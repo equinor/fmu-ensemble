@@ -114,11 +114,11 @@ def test_ensemblecombination_sparse():
     assert 3 not in (ior - ref)["unsmry--yearly"].REAL.unique()
 
     # Delete a specific date in the ior ensemble
-    df = ior[4].data["share/results/tables/unsmry--yearly.csv"]
-    print(df.DATE.dtype)
-    df.drop(2, inplace=True)  # index 2 is for date 2002-01-1
+    dframe = ior[4].data["share/results/tables/unsmry--yearly.csv"]
+    print(dframe.DATE.dtype)
+    dframe.drop(2, inplace=True)  # index 2 is for date 2002-01-1
     # Inject into ensemble again:
-    ior[4].data["share/results/tables/unsmry--yearly.csv"] = df
+    ior[4].data["share/results/tables/unsmry--yearly.csv"] = dframe
     assert "2002-01-01" not in list((ior - ref)["unsmry--yearly.csv"].DATE.unique())
 
     # Convert ref case to virtual:

@@ -275,7 +275,7 @@ class VirtualRealization(object):
         """
         from fmu.ensemble import ScratchRealization
 
-        return ScratchRealization._get_volumetric_rates(
+        return ScratchRealization.static_get_volumetric_rates(
             self, column_keys, time_index, time_unit
         )
 
@@ -349,7 +349,7 @@ class VirtualRealization(object):
             time_index = "monthly"
 
         if isinstance(time_index, str):
-            time_index_dt = self._get_smry_dates(time_index)
+            time_index_dt = self.get_smry_dates(time_index)
         elif isinstance(time_index, list):
             time_index_dt = time_index
         else:
@@ -422,14 +422,14 @@ class VirtualRealization(object):
         smry.index = smry.index.set_names(["DATE"])
         return smry.loc[pd.to_datetime(time_index_dt)]
 
-    def _get_smry_dates(self, freq="monthly", normalize=False):
+    def get_smry_dates(self, freq="monthly", normalize=False):
         """Return list of datetimes available in the realization
 
         Similar to the function in ScratchRealization,
         but start and end date is taken from internalized
         smry dataframes.
 
-                Args:
+        Args:
             freq: string denoting requested frequency for
                 the list of datetimes.
                 'daily', 'monthly' and 'yearly'.
@@ -441,7 +441,13 @@ class VirtualRealization(object):
         Returns:
             list of datetimes. Empty if no summary data is available.
         """
-        available_smry = [x for x in self.keys() if "unsmry" in x]
+        # Look for available smry, if we have one
+        # at the requested frequency, use it directly:
+        if self.shortcut2path("unsmry--" + freq) in self.keys():
+            available_smry = [self.shortcut2path("unsmry--" + freq)]
+        else:
+            # Use all of them.
+            available_smry = [x for x in self.keys() if "unsmry" in x]
         if not available_smry:
             raise ValueError("No summary to get start and end date from")
 
