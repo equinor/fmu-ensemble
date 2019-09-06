@@ -273,7 +273,7 @@ def test_get_smry_interpolation():
     # Create a vens that contains both monthly and yearly:
     vens_monthly = reekensemble.to_virtual()
     reekensemble.load_smry(time_index="daily", column_keys=["F*"])
-    vens_daily = reekensemble.to_virtual()  # monthly, yearly *and* daily
+    _ = reekensemble.to_virtual()  # monthly, yearly *and* daily
 
     # Resample yearly to monthly:
     monthly = vens_yearly.get_smry(column_keys="FOPT", time_index="monthly")

@@ -8,8 +8,8 @@ from __future__ import print_function
 
 import pandas as pd
 
-from .etc import Interaction
 from fmu.ensemble.virtualensemble import VirtualEnsemble
+from .etc import Interaction
 
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)

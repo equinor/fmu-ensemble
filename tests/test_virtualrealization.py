@@ -168,6 +168,9 @@ def test_get_smry():
     assert all(dvfopt.diff() >= 0)
     # Linear interpolation should give many unique values:
     assert len(dvfopt["FOPT"].unique()) == 1462
+    # Length is here 1462 while daily smry for the scratchrealization
+    # would give 1098 (one year less) - this is correct here
+    # since we only have yearly dates to interpolate from.
 
     dvfopr = vreal.get_smry(column_keys="FOPR", time_index="daily")
     # FOPR is bfill'ed and should not have many unique values:
@@ -215,15 +218,15 @@ def test_get_smry2():
     real.load_smry(time_index="raw", column_keys=["F*"])
     vreal = real.to_virtual()
 
-    assert len(
-        vreal.get_smry(column_keys="FOPR", time_index="daily")["FOPR"].unique()
-        == len(daily)
+    assert len(vreal.get_smry(column_keys="FOPR", time_index="daily")["FOPR"]) == len(
+        daily
     )
-    assert len(
-        vreal.get_smry(column_keys="FOPT", time_index="daily")["FOPT"].unique()
-        == len(daily)
+
+    assert len(vreal.get_smry(column_keys="FOPT", time_index="daily")["FOPT"]) == len(
+        daily
     )
-    daily_dt = vreal._get_smry_dates("daily")
+
+    daily_dt = vreal.get_smry_dates("daily")
     # If we now ask for daily, we probably pick from 'raw' as it is
     # internalized.
     daily2 = vreal.get_smry(column_keys=["FOPR", "FOPT"], time_index=daily_dt)
@@ -265,7 +268,7 @@ def test_get_smry_dates():
     # First test with no data:
     empty_vreal = ensemble.VirtualRealization()
     with pytest.raises(ValueError):
-        empty_vreal._get_smry_dates()
+        empty_vreal.get_smry_dates()
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -278,12 +281,12 @@ def test_get_smry_dates():
     real.load_smry(time_index="yearly", column_keys=["F*", "W*"])
     vreal = real.to_virtual()
 
-    assert len(vreal._get_smry_dates(freq="monthly")) == 49
-    assert len(vreal._get_smry_dates(freq="daily")) == 1462
-    assert len(vreal._get_smry_dates(freq="yearly")) == 5
+    assert len(vreal.get_smry_dates(freq="monthly")) == 49
+    assert len(vreal.get_smry_dates(freq="daily")) == 1462
+    assert len(vreal.get_smry_dates(freq="yearly")) == 5
 
     with pytest.raises(ValueError):
-        assert vreal._get_smry_dates(freq="foobar")
+        assert vreal.get_smry_dates(freq="foobar")
 
 
 def test_volumetric_rates():

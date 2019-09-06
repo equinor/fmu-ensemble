@@ -37,8 +37,9 @@ def test_realizationcombination_basic():
     real1 = ensemble.ScratchRealization(real1dir)
     real1.load_smry(time_index="yearly", column_keys=["F*"])
 
-    assert "FWPR" in ((real0 - real1)["unsmry--yearly"]).columns
-    assert "FWL" in ((real0 - real1)["parameters"])
+    realdiff = real0 - real1
+    assert "FWPR" in realdiff["unsmry--yearly"]
+    assert "FWL" in realdiff["parameters"]
 
 
 def test_manual_aggregation():
