@@ -22,6 +22,7 @@ from datetime import datetime, date, time
 import collections
 import dateutil
 
+import yaml
 import numpy
 import pandas as pd
 
@@ -1023,10 +1024,12 @@ class ScratchRealization(object):
                 is compatible with the date index and the cumulative data.
 
         """
-        return self._get_volumetric_rates(self, column_keys, time_index, time_unit)
+        return self.static_get_volumetric_rates(
+            self, column_keys, time_index, time_unit
+        )
 
     @staticmethod
-    def _get_volumetric_rates(realization, column_keys, time_index, time_unit):
+    def static_get_volumetric_rates(realization, column_keys, time_index, time_unit):
         """Static method for volumetric rates
 
         This method is to be used by both ScratchRealization
@@ -1558,18 +1561,18 @@ def normalize_dates(start_date, end_date, freq):
     return (start_date, end_date)
 
 
-def flatten(d, parent_key="", sep="_"):
+def flatten(dictionary, parent_key="", sep="_"):
     """Flatten dictionary keys
 
     Code from stackoverflow.
     """
     items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
+    for key, value in dictionary.items():
+        new_key = parent_key + sep + key if parent_key else key
+        if isinstance(value, collections.MutableMapping):
+            items.extend(flatten(value, new_key, sep=sep).items())
         else:
-            items.append((new_key, v))
+            items.append((new_key, value))
     return dict(items)
 
 
