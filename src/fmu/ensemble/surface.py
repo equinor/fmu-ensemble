@@ -7,7 +7,7 @@ from __future__ import print_function
 import os
 import pandas as pd
 import numpy as np
-#import xtgeo
+import xtgeo
 import yaml
 import collections
 
@@ -285,9 +285,6 @@ class Surface:
 
         """
 
-        incoming_aggregations = aggregations
-        incoming_realizations = realizations
-
         self.file_format = file_format  # setting it globally now, but could also be given per filepath (but not derived from the filename!)
         self.metadata = metadata
         self.largest_zvalue = largest_zvalue
@@ -304,26 +301,31 @@ class Surface:
         internal_datastore['data'] = data = {}
 
         # if realization filepaths was provided, put those into the internal data store
-        if incoming_realizations is not None:
-            if not isinstance(incoming_realizations, dict):
-                raise ValueError('incoming_realizations must be a dictionary. Type {} was given.'.format(type(incoming_realizations)))
-            if 'realizations' not in data:
-                data['realizations'] = realizations = {}
-                for key in incoming_realizations:
-                    if not isinstance(key, int):
-                        raise ValueError('Realizations must be indexed by integer numbers as keys. Found this that I did not like: {} (type is {})'.format(key, type(key)))
-                    realizations.update({key : {'filepath' : incoming_realizations.get(key)}})
+        if realizations is None:
+            realizations = {}
+            logger.warning('Surface initialized without any realizations.')
+        else:
+            if not isinstance(realizations, dict):
+                raise ValueError('realizations must be a dictionary. Type {} was given.'.format(type(realizations)))
+        
+        data['realizations'] = realizations
+        for key in realizations:
+            if not isinstance(key, int):
+                raise ValueError('Realizations must be indexed by integer numbers as keys. Found this that I did not like: {} (type is {})'.format(key, type(key)))
+            realizations.update({key : {'filepath' : realizations.get(key)}})
 
         # if aggregation filepaths were given, put those into the internal data store
-        if incoming_aggregations is not None:
-            if not isinstance(incoming_aggregations, dict):
-                raise ValueError('incoming_aggregations must be a dictionary. Type {} was given.'.format(type(incoming_aggregations)))
-            if 'aggregations' not in data:
-                data['aggregations'] = aggregations = {}
-                for key in incoming_aggregations:
-                    if not isinstance(key, str):
-                        raise ValueError('Aggregations must be indexed by a stringed key. Found this that I did not like: {} (type is {})'.format(key, type(key)))
-                    aggregations.update({key : {'filepath' : incoming_aggregations.get(key)}})
+        if aggregations is None:
+            aggregations = {}
+        else:
+            if not isinstance(aggregations, dict):
+                raise ValueError('aggregations must be a dictionary. Type {} was given.'.format(type(aggregations)))
+        
+        data['aggregations'] = aggregations
+        for key in aggregations:
+            if not isinstance(key, str):
+                raise ValueError('Aggregations must be indexed by a stringed key. Found this that I did not like: {} (type is {})'.format(key, type(key)))
+            aggregations.update({key : {'filepath' : aggregations.get(key)}})
 
 
         self.data = self.validate_data(internal_datastore)
@@ -545,10 +547,10 @@ class Surface:
 
             return aggregation
 
-        stored_zvalues = stored_aggregation.get('zvalues', None)
+        stored_surf_obj = stored_aggregation.get('regular_surface', None)
         stored_filepath = stored_aggregation.get('filepath', None)
 
-        if stored_zvalues is None and stored_filepath is not None:
+        if stored_surf_obj is None and stored_filepath is not None:
             # the aggregation is there, but only has a reference to the file, no zvalues
             file_format = stored_aggregation.get('file_format', None)
             aggregation = self.parse_file(stored_filepath, file_format)
@@ -562,7 +564,7 @@ class Surface:
             return aggregation
 
 
-        if 'zvalues' in stored_aggregation:
+        if stored_surf_obj is not None:
             # stored aggregation has values, so we can return it as is
 
             return stored_aggregation
@@ -627,6 +629,7 @@ class Surface:
             file_format = stored_realization.get('file_format', None)
             realization = self.parse_file(stored_filepath, file_format)
             realization['representation'] = 'realization'
+            realization['type'] = 'realization'
             realization['realization_id'] = r
 
             #update self.data
@@ -660,6 +663,20 @@ class Surface:
         raise NotImplementedError('Return of multiple realizations is not implemented')
 
 
+    def get_surface_specs(self, s):
+        """Given a surface object, return it's specifications, corresponding to what
+        is necessary to initiate a new Surface in XTgeo."""
+
+        return {'ncol' : s.ncol, 
+                'nrow' : s.nrow, 
+                'xori' : s.xori,
+                'yori' : s.yori,
+                'rotation' : s.rotation,
+                'xinc' : s.xinc,
+                'yinc' : s.yinc,
+                'n_nodes' : len(s.values1d),
+                }
+
 
     def get_all_realization_zvalues(self):
         """Function for loading all realization zvalues into memory as a numpy matrix.
@@ -680,19 +697,33 @@ class Surface:
         if realizations is None:
             raise ValueError('No realisations')
 
-        # first make sure all realizations are in the internal datastore
+        # first make sure all realizations are in the internal datastore and that they are all identical
         for i, r in enumerate(realizations):   # n is incremental, r is realization number
+
+            if i > 0:
+                surface_specs_previous = surface_specs_current.copy()
 
             self.get_realization(r)
 
-            zvalues = self.data.get('data').get('realizations').get(r).get('zvalues')
+            surfobj = self.data.get('data').get('realizations').get(r).get('regular_surface')
+            surface_specs_current = self.get_surface_specs(surfobj)
+            #surface_specs_all.append(surface_specs)
 
-            # check that number of elements is the same as other realizations
-            if n_nodes is None:  # will trigger only first iteration
-                n_nodes = len(zvalues)
-            
-            if not n_nodes == len(zvalues):
-                raise ValueError('''Realization {} has {len(zvalues)} nodes. Expected {}.'''.format(r, len(zvalues), n_nodes))
+            if i > 0:
+                n_nodes = surface_specs_current.get('n_nodes')
+                n_nodes_previous = surface_specs_previous.get('n_nodes')
+                if not n_nodes == n_nodes_previous:
+                    raise ValueError('When checking realization {r}, inconsistency in n_nodes was found with the previous.')
+
+        # passed without crashing, assuming all surface specs are the same
+        surface_specs = surface_specs_current
+
+#            # check that specs is the same as other realizations
+#            if n_nodes is None:  # will trigger only first iteration
+#                n_nodes = len(surfobj.values1d)
+#            
+#            if not n_nodes == len(surfobj.values1d):
+#                raise ValueError('''Realization {} has {len(zvalues)} nodes. Expected {}.'''.format(r, len(surfobj.values1d), n_nodes))
 
 
         # zvalues for this realization now exists in the datastore
@@ -705,7 +736,7 @@ class Surface:
 
         for i, r in enumerate(realizations):
             realization = self.data.get('data').get('realizations').get(r)
-            zvalues_matrix[i, :] = realization.get('zvalues')   # not hedging this because it should be there...
+            zvalues_matrix[i, :] = realization.get('regular_surface').values1d   # not hedging this because it should be there...
             
             # replace funny-nans with np.nan
             undef = realization.get('undef')
@@ -717,7 +748,7 @@ class Surface:
         zvalues_matrix[zvalues_matrix > self.largest_zvalue] = np.nan
         zvalues_matrix[zvalues_matrix == -np.inf] = np.nan
 
-        return zvalues_matrix, [r for r in realizations]
+        return zvalues_matrix, [r for r in realizations], surface_specs
 
 
 
@@ -773,11 +804,10 @@ class Surface:
                 'It looked like this: {} and the type was {}  '''.format(p, type(p)))
 
         # get the realization data into a 2D array
-        realizations_zvalues_matrix, list_of_realizations = self.get_all_realization_zvalues()
+        realizations_zvalues_matrix, list_of_realizations, surface_specs = self.get_all_realization_zvalues()
 
         # calculate the new aggregated array
         zvalues = np.percentile(realizations_zvalues_matrix, p, axis=0)
-
 
 
         # The math here must be validated, and also the handling of undefined values, zeros, etc etc
@@ -785,34 +815,17 @@ class Surface:
 
         # compile and return the results
 
-        ### DUMMY-RETURN FOR NOW
+        # create regular surface
+        rs = self.create_regular_surface(surface_specs, zvalues)
 
         percentile = {
-               'representation' : p,    # adding it here, which is a bit redudant, but useful
+               'representation' : 'p{}'.format(p),    # adding it here, which is a bit redudant, but useful
                'type' : 'aggregation',
+               'regular_surface' : rs,
                'included_realizations' : list_of_realizations,
-               'ncol' : 999,
-               'nrow' : 999,
-               'n_active_nodes' : 99999999,
-               'rotation' : 999.,
-               'xinc' : 999.,
-               'yinc' : 999.,
-               'yflip' : 999,
-               'xori' : 99999.,
-               'yori' : 999999.,
-               'origin' : (99999., 999999.),
-               'xlines' : 999,
-               'xmin' : 99999.,
-               'ymin' : 999999.,
-               'xmax' : 99999.,
-               'ymax' : 999999.,
-               'undef' : 999.,
                'fill_nan_value' : self.fill_nan_value,
-               'zvalues' : zvalues,
                }
 
-        # Seems complicated to specify the whole structure here. Ideally the function should be purified a bit.
-        # Done this way now to enable simple merging into self.data on receiver side
 
         return percentile
 
@@ -850,7 +863,7 @@ class Surface:
         #realizations = np.array([np.random.rand(100), np.random.rand(100), np.random.rand(100)])
         #metadata = {'xinc' : 123, 'yinc' : 123, 'origin' : (12345, 123456)}  # this will be separated out
 
-        realizations_zvalues_matrix, list_of_realizations = self.get_all_realization_zvalues()
+        realizations_zvalues_matrix, list_of_realizations, surface_specs = self.get_all_realization_zvalues()
 
         # possibly possible to use getattr(numpy, a) here instead of explicitly programming all
 
@@ -872,33 +885,37 @@ class Surface:
             raise ValueError('''Function did not trigger on any of the defined numpy native functions.
                              This was passed as a: {}.'''.format(a))
 
+        # create regular surface
+        rs = self.create_regular_surface(surface_specs, zvalues)
+
+
         aggregation = {
                'representation' : a,    # adding it here, which is a bit redudant, but useful
                'type' : 'aggregation',
+               'regular_surface' : rs,
                'included_realizations' : list_of_realizations,
-               'ncol' : 999,
-               'nrow' : 999,
-               'n_active_nodes' : 99999999,
-               'rotation' : 999.,
-               'xinc' : 999.,
-               'yinc' : 999.,
-               'yflip' : 999,
-               'xori' : 99999.,
-               'yori' : 999999.,
-               'origin' : (99999., 999999.),
-               'xlines' : 999,
-               'xmin' : 99999.,
-               'ymin' : 999999.,
-               'xmax' : 99999.,
-               'ymax' : 999999.,
-               'undef' : 999.,
                'fill_nan_value' : self.fill_nan_value,
-               'zvalues' : zvalues,
                }
 
 
         return aggregation
-        #return {'data' : {'aggregations' : {a : aggregation_block}}}
+
+    def create_regular_surface(self, surface_specs, zvalues):
+        """Given specs and zvalues, create and return an instance
+        of xtgeo.RegularSurface"""
+
+        rs = xtgeo.RegularSurface(ncol=surface_specs.get('ncol'), 
+                                  nrow=surface_specs.get('nrow'), 
+                                  xori=surface_specs.get('xori'), 
+                                  yori=surface_specs.get('yori'),
+                                  rotation=surface_specs.get('rotation'), 
+                                  xinc=surface_specs.get('xinx'), 
+                                  yinc=surface_specs.get('yinc'),
+                                  values=np.zeros((surface_specs.get('ncol'),surface_specs.get('nrow'))))
+
+        rs.set_values1d(zvalues)
+
+        return rs
 
 
     def make_aggregation_non_numpy_native(self, a):
@@ -909,7 +926,7 @@ class Surface:
         # The function loading all the realizations must also collect metadata for them
         # end up with something like this:
 
-        realizations_zvalues_matrix, list_of_realizations = self.get_all_realization_zvalues()
+        realizations_zvalues_matrix, list_of_realizations, surface_specs = self.get_all_realization_zvalues()
 
         zvalues = None
 
@@ -920,32 +937,19 @@ class Surface:
             raise ValueError('''Function did not trigger on any of the defined non-numpy native functions.
                              This was passed as a: {}.'''.format(a))
 
+        # create regular surface
+        rs = self.create_regular_surface(surface_specs, zvalues)
+
         aggregation = {
                'representation' : a,    # adding it here, which is a bit redudant, but useful
                'type' : 'aggregation',
+               'regular_surface' : rs,
                'included_realizations' : list_of_realizations,
-               'ncol' : 999,
-               'nrow' : 999,
-               'n_active_nodes' : 99999999,
-               'rotation' : 999.,
-               'xinc' : 999.,
-               'yinc' : 999.,
-               'yflip' : 999,
-               'xori' : 99999.,
-               'yori' : 999999.,
-               'origin' : (99999., 999999.),
-               'xlines' : 999,
-               'xmin' : 99999.,
-               'ymin' : 999999.,
-               'xmax' : 99999.,
-               'ymax' : 999999.,
-               'undef' : 999.,
                'fill_nan_value' : self.fill_nan_value,
-               'zvalues' : zvalues,
                }
 
+
         return aggregation
-        # return {'data' : {'aggregations' : {p : aggregation_block}}}
 
 
 
@@ -971,8 +975,6 @@ class Surface:
         except:
             return None
 
-        print('returning {}'.format(p))
-
         return p
 
 
@@ -991,55 +993,12 @@ class Surface:
             """
 
 
-        #rs = xtgeo.surface_from_file(filepath, fformat=file_format)
-
-        # zvalues = rs.npvalues1d
-        # zvalues[np.isnan(zvalues)] = self.fill_nan_value
-
-        #return {'ncol' : rs.ncol,
-        #        'nrow' : rs.nrow,
-        #        'n_active_nodes' : rs.nactive,
-        #        'rotation' : rs.rotation,
-        #        'xinc' : rs.xinc,
-        #        'yinc' : rs.yinc,
-        #        'yflip' : rs.yflip,
-        #        'xori' : rs.xori,
-        #        'yori' : rs.yori,
-        #        'origin' : (rs.xori, rs.yori),
-        #        'xlines' : rs.xlines,
-        #        'xmin' : rs.xmin,
-        #        'ymin' : rs.ymin,
-        #        'xmax' : rs.xmax,
-        #        'ymax' : rs.ymax,
-        #        'undef' : rs.undef,
-        #        'zvalues' : zvalues,
-        #        }
+        rs = xtgeo.surface_from_file(filepath, fformat=file_format)
 
 
-        ### DUMMY-RETURN AS XTGEO NOT AVAILABLE RIGHT NOW
-
-        # for now, return values incremented by one per parsed file
-        zvalues = np.ones(100) * self.dummy_zvalue
-
-        zvalues[np.isnan(zvalues)] = self.fill_nan_value   # this will be valid with xtgeo as well
-
-        return {'ncol' : 999,
-               'nrow' : 999,
-               'n_active_nodes' : 99999999,
-               'rotation' : 999.,
-               'xinc' : 999.,
-               'yinc' : 999.,
-               'yflip' : 999,
-               'xori' : 99999.,
-               'yori' : 999999.,
-               'origin' : (99999., 999999.),
-               'xlines' : 999,
-               'xmin' : 99999.,
-               'ymin' : 999999.,
-               'xmax' : 99999.,
-               'ymax' : 999999.,
-               'undef' : 999.,
+        return {
+               'filepath' : filepath,
+               'regular_surface' : rs,
                'fill_nan_value' : self.fill_nan_value,
-               'zvalues' : zvalues,
                }
 
