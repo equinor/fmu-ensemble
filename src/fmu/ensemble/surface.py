@@ -11,7 +11,7 @@ import xtgeo
 import yaml
 import collections
 
-from .etc import Interaction
+#from .etc import Interaction
 #from etc import Interaction
 
 fmux = Interaction()
@@ -22,7 +22,7 @@ logger = fmux.basiclogger(__name__)
 
 
 
-class EnsembleSurface:
+class EnsembleSurface(object):
     """Representation of a surface from FMU represented by multiple realizations
     and statistical surfaces with functions for expanding the data with statistical
     representations if not present.
