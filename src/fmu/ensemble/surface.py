@@ -11,14 +11,11 @@ import xtgeo
 import yaml
 import collections
 
-
 from .etc import Interaction
 #from etc import Interaction
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
-
-
 
 
 ########## WORK IN PROGRESS - CONCEPTUAL DISCUSSIONS ONLY #################
