@@ -22,7 +22,7 @@ logger = fmux.basiclogger(__name__)
 
 
 
-class Surface:
+class EnsembleSurface:
     """Representation of a surface from FMU represented by multiple realizations
     and statistical surfaces with functions for expanding the data with statistical
     representations if not present.
@@ -47,7 +47,7 @@ class Surface:
                         }
         >>> aggregations = {'mean' : 'path/to/file'}
 
-        >>> s = Surface(metadata, realizations, aggregations)
+        >>> s = EnsembleSurface(metadata, realizations, aggregations)
         >>> s.mean(force_calculate=False)
 
 
@@ -107,19 +107,13 @@ class Surface:
 
                             0 : {
                                 'filepath' = 'path/to/file'
-                                'xinc' : 50,
-                                'yinc' : 50,
-                                'origin' : (12345, 123456),
-                                ...
-                                'zvalues' : np.array([1.,2.,3.,4.,5.,6.])
+                                'regular_surface' : xtgeo.surface.regular_surface.RegularSurface(),
+                                'representation' : 'realization',
                                 }
                             1 : {
                                 'filepath' = 'path/to/file'
-                                'xinc' : 50,
-                                'yinc' : 50,
-                                'origin' : (12345, 123456),
-                                ...
-                                'zvalues' : np.array([1.,2.,3.,4.,5.,6.])
+                                'regular_surface' : xtgeo.surface.regular_surface.RegularSurface(),
+                                'representation' : 'realization',
                                 }
 
                             ...
@@ -130,19 +124,13 @@ class Surface:
             
                             'mean' : {
                                 'filepath' = 'path/to/file'
-                                'xinc' : 50,
-                                'yinc' : 50,
-                                'origin' : (12345, 123456),
-                                ...
-                                'zvalues' : np.array([1.,2.,3.,4.,5.,6.])
+                                'regular_surface' : xtgeo.surface.regular_surface.RegularSurface(),
+                                'representation' : 'aggregation',
                                 }
                             'max' : {
                                 'filepath' = 'path/to/file'
-                                'xinc' : 50,
-                                'yinc' : 50,
-                                'origin' : (12345, 123456),
-                                ...
-                                'zvalues' : np.array([1.,2.,3.,4.,5.,6.])
+                                'regular_surface' : xtgeo.surface.regular_surface.RegularSurface(),
+                                'representation' : 'aggregation',
                                 }
                             }
                         }
@@ -233,10 +221,8 @@ class Surface:
 
             'aggregations' : {
                 'mean' : {
-                    'xinc' : 50,
-                    'yinc' : 50,
-                    'origin' : (12345, 123456),
-                    'zvalues' : np.array([z, z, z, z, z, z]),
+                    'regular_surface' : xtgeo.surface.regular_surface.RegularSurface(),
+                    'representation' : 'aggregation',
                 }
             }
         }
