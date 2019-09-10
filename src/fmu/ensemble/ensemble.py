@@ -9,9 +9,9 @@ from __future__ import print_function
 import re
 import os
 import glob
-import six
+from datetime import datetime
 
-from datetime import datetime, date, time
+import six
 import pandas as pd
 import numpy as np
 from ecl import EclDataType
@@ -283,10 +283,10 @@ class ScratchEnsemble(object):
             ):
                 raise ValueError("runpath dataframe not correct")
 
-        for idx, row in runpath_df.iterrows():
+        for _, row in runpath_df.iterrows():
             if runpathfilter and runpathfilter not in row["runpath"]:
                 continue
-            logger.info("Adding realization from " + row["runpath"])
+            logger.info("Adding realization from %s", row["runpath"])
             realization = ScratchRealization(
                 row["runpath"], index=int(row["index"]), autodiscovery=False
             )
@@ -495,7 +495,7 @@ class ScratchEnsemble(object):
             metadata (dict): metadata to assign for the discovered
                 files. The keys will be columns, and its values will be
                 assigned as column values for the discovered files.
-            metayaml: Additional possibility of adding metadata from
+            metayaml (boolean): Additional possibility of adding metadata from
                 associated yaml files. Yaml files to be associated to
                 a specific discovered file can have an optional dot in
                 front, and must end in .yml, added to the discovered filename.
@@ -505,7 +505,8 @@ class ScratchEnsemble(object):
 
         Returns:
             pd.DataFrame: with the slice of discovered files in each
-            realization, tagged with realization index in the column REAL
+                realization, tagged with realization index in the column REAL.
+                Empty dataframe if no files found.
         """
         df_list = {}
         for index, realization in self._realizations.items():
@@ -519,6 +520,7 @@ class ScratchEnsemble(object):
                 .rename(columns={"level_0": "REAL"})
                 .drop("level_1", axis="columns")
             )
+        return pd.DataFrame()
 
     def __repr__(self):
         return "<ScratchEnsemble {}, {} realizations>".format(self.name, len(self))
@@ -1202,7 +1204,7 @@ class ScratchEnsemble(object):
             if not (int in dtypes or float in dtypes):
                 logger.info("No numerical data to aggregate in %s", key)
                 continue
-            if len(groupby):
+            if groupby:
                 logger.info("Grouping %s by %s", key, groupby)
                 aggobject = data.groupby(groupby)
             else:
@@ -1457,6 +1459,7 @@ class ScratchEnsemble(object):
         if agg == "std":
             std_dev = self._keyword_std_dev(prop, self.global_active, mean)
             return pd.Series(std_dev.numpy_copy(), name=prop)
+        return pd.Series()
 
     def get_unrst(self, prop, report, agg):
         """
@@ -1475,6 +1478,7 @@ class ScratchEnsemble(object):
                 prop, self.global_active, mean, report=report
             )
             return pd.Series(std_dev.numpy_copy(), name=prop)
+        return pd.Series()
 
     def _keyword_mean(self, prop, global_active, report=None):
         """
@@ -1508,7 +1512,7 @@ class ScratchEnsemble(object):
         """
         if report:
             std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for real, realization in six.iteritems(self._realizations):
+            for _, realization in six.iteritems(self._realizations):
                 real_prop = realization.get_global_unrst_keyword(prop, report)
                 std_dev.add_squared(real_prop - mean)
             std_dev.safe_div(global_active)

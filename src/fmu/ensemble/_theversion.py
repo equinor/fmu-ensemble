@@ -10,19 +10,19 @@ from fmu.ensemble._version import get_versions
 def theversion():
     """Get version on proper form."""
     versions = get_versions()
-    version = versions['version']
-    sver = version.split('.')
+    version = versions["version"]
+    sver = version.split(".")
 
-    useversion = 'UNSET'
+    useversion = "UNSET"
     if len(sver) == 3:
         useversion = version
     else:
-        bugv = sver[2].replace('+', '.')
+        bugv = sver[2].replace("+", ".")
 
-        if 'dirty' in version:
-            ext = '.dev0'
+        if "dirty" in version:
+            ext = ".dev0"
         else:
-            ext = ''
-        useversion = '{}.{}.{}{}'.format(sver[0], sver[1], bugv, ext)
+            ext = ""
+        useversion = "{}.{}.{}{}".format(sver[0], sver[1], bugv, ext)
 
     return useversion
