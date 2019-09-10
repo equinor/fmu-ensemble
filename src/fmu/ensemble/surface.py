@@ -12,8 +12,8 @@ import yaml
 import collections
 
 
-#from .etc import Interaction
-from etc import Interaction
+from .etc import Interaction
+#from etc import Interaction
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -407,10 +407,17 @@ class Surface:
             if aggregations.get(a, {}).get('zvalues', None) is not None:
                 loaded_aggregations_count += 1
 
-        descr = f"""{name}
-    Realizations: {referenced_realizations_count} referenced, {loaded_realizations_count} loaded. 
-    Aggregations: {referenced_aggregations_count} referenced, {loaded_aggregations_count} loaded.
-    """
+# Python 3
+#        descr = f"""{name}
+#    Realizations: {referenced_realizations_count} referenced, {loaded_realizations_count} loaded. 
+#    Aggregations: {referenced_aggregations_count} referenced, {loaded_aggregations_count} loaded.
+#    """
+        descr = """
+        Realizations: {} referenced, {} loaded.
+        Aggregations: {} referenced, {} loaded.
+
+        """.format(referenced_realizations_count, loaded_realizations_count, referenced_aggregations_count, loaded_aggregations_count)
+
 
         return descr
 
@@ -424,7 +431,8 @@ class Surface:
         """
         return self.get_aggregation('mean', force_calculate)
 
-    def percentile(self, percentile: int):
+    #    def percentile(self, percentile: int):   # python3
+    def percentile(self, percentile):
         """Return a specific percentile. Follow fmu.ensemble conventions and use normal percentiles,
         not reverse oil-industry percentiles. I.e. p90 is the upper, p10 is the lower.
 
@@ -461,8 +469,10 @@ class Surface:
         """
 
         if not isinstance(source, dict):
-            raise ValueError(f'A {type(source)} ({source}) was passed to merge_dicts(). Takes dicts only.')
-
+            #py3   raise ValueError(f'A {type(source)} ({source}) was passed to merge_dicts(). Takes dicts only.')
+            raise ValueError('A {} ({}) was passed to merge_dicts(). Takes dicts only.'.format(
+                            type(source),
+                            source))
         for key, value in source.items():
             if isinstance(value, dict):
                 # get node or create one
@@ -505,32 +515,33 @@ class Surface:
         stored_aggregation = self.data.get('data', {}).get('aggregations', {}).get(agg, None)
 
         if force_calculate:
-            logger.info(f'Requested agg is {agg} and force_calculate is True, so calculating.')
+            #logger.info(f'Requested agg is {agg} and force_calculate is True, so calculating.')
+            logger.info('Requested agg is {} and force_calculate is True, so calculating.'.format(agg))
             aggregation = self.make_aggregation(agg)  # must return the whole dict
 
             if stored_aggregation is not None:
-                logger.warning(f'Aggregation {agg} was requested, with force_calculate = True'
-                               f'The aggregation already exists and will be overwritten.')
+                logger.warning('Aggregation {} was requested, with force_calculate = True'.format(agg))
+                logger.warning('The aggregation already exists and will be overwritten.')
 
             # update self.data
             # self.data = self.merge_dicts(aggregation, self.data)
             self.data['data']['aggregations'].update({agg : aggregation})
 
-            logger.info(f'"{agg}" is added to the internal datastore. ')
+            logger.info('"{}" is added to the internal datastore. '.format(agg))
 
             return aggregation
 
 
         if stored_aggregation is None:
             # need to calculate
-            logger.info(f'Requested agg is {agg} which is not found in internal datastore, so calculating.')
+            logger.info('Requested agg is {} which is not found in internal datastore, so calculating.'.format(agg))
             aggregation = self.make_aggregation(agg)  # must return the whole dict
 
             # update self.data
             self.data['data']['aggregations'].update({agg : aggregation})
             #self.data = self.merge_dicts(aggregation, self.data)
 
-            logger.info(f'"{agg}" is added to the internal datastore. ')
+            logger.info('"{}" is added to the internal datastore. '.format(agg))
 
             return aggregation
 
@@ -546,7 +557,7 @@ class Surface:
             self.data['data']['aggregations'].update({agg : aggregation})
             #self.data = self.merge_dicts(aggregation, self.data)
 
-            logger.info(f'"{agg}" is added to the internal datastore. ')
+            logger.info('"{}" is added to the internal datastore. '.format(agg))
 
             return aggregation
 
@@ -556,9 +567,9 @@ class Surface:
 
             return stored_aggregation
 
-        raise ValueError(f'Unexpected error: get_aggregation() made it all the way to the end '
-                         f'without triggering any of the conditions. '
-                         f'Requested aggregation was {agg} and force_calculate was {force_calculate}.')
+        raise ValueError('''Unexpected error: get_aggregation() made it all the way to the end 
+                         without triggering any of the conditions. 
+                         Requested aggregation was {} and force_calculate was {}.'''.format(agg, force_calculate))
 
     def get_aggregations(self, aggs, force_calculate):
         """Calculate or get multiple aggregations, return as dict with metadata
@@ -576,7 +587,8 @@ class Surface:
         raise NotImplementedError('Return of multiple aggregations is not implemented')
 
 
-    def get_realization(self, r: int):
+#    def get_realization(self, r: int):         # python3
+    def get_realization(self, r):
         """Get requested realization. If not present in internal
         data store, get it from file if possible, otherwise return None. 
         Return dictionary according to output spec in class docstring.
@@ -603,8 +615,8 @@ class Surface:
 
         if stored_realization is None:
             # It's not there at all
-            logger.warning(f'Realization {r} was requested, but does not exist. '
-                           f'Available realizations are {self.realizations}')
+            logger.warning('''Realization {} was requested, but does not exist.
+                           Available realizations are {}'''.format(r, self.realizations))
             return None
 
         stored_zvalues = stored_realization.get('zvalues', None)
@@ -619,7 +631,7 @@ class Surface:
 
             #update self.data
             self.data['data']['realizations'][r].update(realization)
-            logger.info(f'Realization {r} values has been added to the internal datastore.')
+            logger.info('Realization {} values has been added to the internal datastore. '.format(r))
 
             return realization
 
@@ -628,9 +640,9 @@ class Surface:
 
             return stored_realization
 
-        raise ValueError('Unexpected error: get_realization went all the way to'
-                         'the end without triggering any conditions.'
-                         f'The requested realization was {r}')
+        raise ValueError('''Unexpected error: get_realization went all the way to
+                         the end without triggering any conditions.
+                         The requested realization was {}'''.format(r))
 
 
     def get_realizations(self, realizations):
@@ -666,7 +678,7 @@ class Surface:
         n_nodes = None
 
         if realizations is None:
-            raise ValueError(f'No realisations')
+            raise ValueError('No realisations')
 
         # first make sure all realizations are in the internal datastore
         for i, r in enumerate(realizations):   # n is incremental, r is realization number
@@ -680,8 +692,7 @@ class Surface:
                 n_nodes = len(zvalues)
             
             if not n_nodes == len(zvalues):
-                raise ValueError(f'Realization {r} has {len(zvalues)} nodes. '
-                                 f'Expected {n_nodes}.')
+                raise ValueError('''Realization {} has {len(zvalues)} nodes. Expected {}.'''.format(r, len(zvalues), n_nodes))
 
 
         # zvalues for this realization now exists in the datastore
@@ -740,7 +751,7 @@ class Surface:
             return self.make_aggregation_non_numpy_native(a)
 
         # no... Well, then now is a good time to crash.
-        raise ValueError(f'Unknown aggregation requested: {a}')
+        raise ValueError('Unknown aggregation requested: {} '.format(a))
 
 
     def make_aggregation_percentile(self, p):
@@ -758,8 +769,8 @@ class Surface:
 
         # check that p is valud
         if not isinstance(p, int) or not 0 <= p <= 100:
-            raise ValueError(f'A wrongly formatted percentile was passed to make_aggregation_percentile(). '
-                f'It looked like this: {p} and the type was {type(p)}  ')
+            raise ValueError('''A wrongly formatted percentile was passed to make_aggregation_percentile(). 
+                'It looked like this: {} and the type was {}  '''.format(p, type(p)))
 
         # get the realization data into a 2D array
         realizations_zvalues_matrix, list_of_realizations = self.get_all_realization_zvalues()
@@ -858,8 +869,8 @@ class Surface:
             zvalues = np.max(realizations_zvalues_matrix, axis=0)
 
         if zvalues is None:
-            raise ValueError(f'Function did not trigger on any of the defined numpy native functions.'
-                             f'This was passed as a: {a}.')
+            raise ValueError('''Function did not trigger on any of the defined numpy native functions.
+                             This was passed as a: {}.'''.format(a))
 
         aggregation = {
                'representation' : a,    # adding it here, which is a bit redudant, but useful
@@ -906,8 +917,8 @@ class Surface:
             zvalues = np.random.rand(100)  # Dummy, dont know how to calculate this
 
         if zvalues is None:
-            raise ValueError(f'Function did not trigger on any of the defined non-numpy native functions.'
-                             f'This was passed as a: {a}.')
+            raise ValueError('''Function did not trigger on any of the defined non-numpy native functions.
+                             This was passed as a: {}.'''.format(a))
 
         aggregation = {
                'representation' : a,    # adding it here, which is a bit redudant, but useful
@@ -960,7 +971,7 @@ class Surface:
         except:
             return None
 
-        print(f'returning {p}')
+        print('returning {}'.format(p))
 
         return p
 
