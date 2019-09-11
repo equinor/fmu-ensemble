@@ -22,6 +22,7 @@ from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
+from .surface import EnsembleSurface
 from .realization import parse_number
 
 xfmu = Interaction()

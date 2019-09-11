@@ -10,9 +10,12 @@ import re
 import shutil
 import numpy as np
 import pandas as pd
+import yaml
 
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
+
+from .surface import EnsembleSurface
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -40,18 +43,32 @@ class VirtualEnsemble(object):
             try to initialize the ensemble from files on disk.
     """
 
-    def __init__(self, name=None, data=None, longdescription=None, fromdisk=None):
+    def __init__(self, name=None, data=None, longdescription=None, fromdisk=None, fromblobstore=None):
+
         if name:
             self._name = name
         else:
             self._name = "VirtualEnsemble"
 
+        if name is None and fromblobstore is not None:
+            raise ValueError('If loading from blob, a name must be provided.')
+
+        if fromblobstore is not None:
+            self._blob = True
+            self._blobstore = fromblobstore
+        else:
+            self._blob = False
+            self._blobstore = None
+
         self._longdescription = longdescription
 
-        if data and fromdisk:
+        if len([a for a in [data, fromdisk, fromblobstore] if a is not None]) > 1:
             raise ValueError(
-                "Can't initialize from both data and " + "disk at the same time"
+                "Can only initialize from either data, " + "disk or blobstore."
             )
+
+        self._blobstoreindex = None
+        self._manifest = None
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
@@ -62,6 +79,9 @@ class VirtualEnsemble(object):
 
         if fromdisk:
             self.from_disk(fromdisk)
+
+        if fromblobstore:
+            self.from_blobstore(fromblobstore, name)
 
         self.realindices = []
 
@@ -525,6 +545,120 @@ file is picked up"""
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
 
+    def from_blobstore(self, blobstorepath, ensname):
+        """Load data from blobstore.
+
+
+        Args:
+            blobstorepath (string): Path to blobstore 
+            ensname (string): Name of ensemble to load
+        """
+
+        ######### FOR NOW, MOCK-UP ON UNIX ##############
+
+
+        index = self.get_blob_index(blobstorepath, ensname)
+        self._blobstoreindex = index  # store it to globals
+
+        manifest = self.get_blob_manifest(blobstorepath, ensname)
+        self._manifest = manifest
+
+
+    def get_blob_index(self, blobstorepath, ensname):
+        """Given a blob, parse the index as a dataframe and return it
+
+        Args:
+            blobpath (string): Path to blob
+            ensname (string): Name of ensemble (same as folder for now)
+        Return:
+            index (dataframe): Index contents
+
+        """
+
+        indexpath = os.path.join(blobstorepath, ensname, 'index/index.csv')
+        index = pd.read_csv(indexpath)
+
+        return index
+
+
+    def get_blob_manifest(self, blobstorepath, ensname):
+        """Given a blobstorepath, parse the manifest file as and return
+        it as dict
+
+        Args:
+            blobstorepath (string): Path to blob
+            ensname (string): Name of ensemble (same as folder for now)
+        Return:
+            manifest (dict): Dictionary with data parsed from the manifest file
+
+        """
+
+        manifestpath = os.path.join(blobstorepath, ensname, 'manifest/manifest.yml')
+        if not os.path.isfile(manifestpath):
+            raise ValueError('Manifest file does not exist: {}'.format(manifestpath))
+
+        with open(manifestpath, 'r') as stream:
+            manifest = yaml.safe_load(stream)
+
+        return manifest
+
+
+    @property
+    def surfaces(self):
+        """List indexed surfaces, by type and name"""
+
+        if not self._blob:
+            raise NotImplementedError('The surfaces property is implemented on blobstore usage only')
+
+        df = self._blobstoreindex
+
+        if df is None:
+            raise ValueError('Blobstore index has not been loaded.')
+
+        df = df[df['data--type'] == 'grid']    # Might change this to 'surface', but for now must follow the data
+
+
+        return {'depth' : list(df[df['data--content'] == 'depth']['data--name'].unique()),
+                'iso' : list(df[df['data--content'] == 'iso']['data--name'].unique())}
+
+
+    def get_surface(self, sname):
+        """Initializes and returns a EnsembleSurface object"""
+
+        # find all instances of the specified surface in the index
+        df = self._blobstoreindex
+
+
+        df = df[df['data--name'] == sname]
+        if len(df) == 0:
+            raise ValueError('No such surface name in the index: {}'.format(sname))
+
+        # get realizations
+        df = df[~df['fmu_id--realization'].isnull()]
+
+        # check for duplicates
+        realization_ids = df['fmu_id--realization'].unique()
+
+        if len(df) != len(realization_ids):
+            raise ValueError('Duplicate realizations found for surface {}'.format(sname))
+
+        metadata = {'name' : sname}
+        realizations = {}
+        for realization_id in realization_ids:
+            relative_filepath = df.set_index('fmu_id--realization').loc[realization_id, 'filename--stored--relative']
+            filepath = os.path.join(self._blobstore, self._name, 'data', relative_filepath)
+            realizations.update({realization_id : os.path.join(self._blobstore, filepath)})
+
+        es = EnsembleSurface(metadata, realizations)
+
+        return es
+
+
+
+
+
+
+
     def from_disk(self, filesystempath, fmt="parquet"):
         """Load data from disk.
 
@@ -876,6 +1010,7 @@ file is picked up"""
     def parameters(self):
         """Quick access to parameters"""
         return self.data["parameters.txt"]
+
 
     @property
     def name(self):

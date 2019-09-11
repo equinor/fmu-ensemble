@@ -11,7 +11,7 @@ import xtgeo
 import yaml
 import collections
 
-#from .etc import Interaction
+from .etc import Interaction
 #from etc import Interaction
 
 fmux = Interaction()
@@ -974,7 +974,6 @@ class EnsembleSurface(object):
         Returns:
             Data and values (dict)
             """
-
 
         rs = xtgeo.surface_from_file(filepath, fformat=file_format)
 
