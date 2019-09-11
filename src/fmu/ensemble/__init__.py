@@ -16,3 +16,4 @@ from .virtualensemble import VirtualEnsemble  # noqa
 from .ensemblecombination import EnsembleCombination  # noqa
 from .realizationcombination import RealizationCombination  # noqa
 from .observations import Observations  # noqa
+from .surface import EnsembleSurface
