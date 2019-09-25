@@ -341,9 +341,14 @@ def test_smryh():
     mismatchdaily = obs_daily.mismatch(ens)
     mismatchlast = obs_last.mismatch(ens)
     mismatchraw = obs_raw.mismatch(ens)
+    assert mismatchraw["TIME_INDEX"].unique() == ["raw"]
 
     mismatchdate = obs_isodate.mismatch(ens)
+    assert "2003-02-01" in mismatchdate["TIME_INDEX"].unique()[0]
+
     mismatchdatestr = obs_isodatestr.mismatch(ens)
+    # There might be a clock time included
+    assert "2003-02-01" in mismatchdatestr["TIME_INDEX"].unique()[0]
     assert all(mismatchdate["L1"] == mismatchdatestr["L1"])
 
     mismatchfuture = obs_future.mismatch(ens)
@@ -426,8 +431,13 @@ def test_vens_mismatch():
     )
     assert (
         (
-            mismatch.sort_values("REAL").reset_index(drop=True)
-            == obs_monthly.mismatch(ens).sort_values("REAL").reset_index(drop=True)
+            mismatch.sort_values("REAL")
+            .reset_index(drop=True)
+            .drop("TIME_INDEX", axis=1)
+            == obs_monthly.mismatch(ens)
+            .sort_values("REAL")
+            .reset_index(drop=True)
+            .drop("TIME_INDEX", axis=1)
         )
         .all()
         .all()

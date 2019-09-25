@@ -316,7 +316,9 @@ class Observations(object):
                                 time_index=obsunit["time_index"],
                                 column_keys=[obsunit["key"], obsunit["histvec"]],
                             )
-                        elif isinstance(obsunit["time_index"], (datetime.datetime, datetime.date)):
+                        elif isinstance(
+                            obsunit["time_index"], (datetime.datetime, datetime.date)
+                        ):
                             # real.get_smry only allows strings or
                             # list of datetimes as time_index.
                             sim_hist = real.get_smry(
@@ -332,11 +334,13 @@ class Observations(object):
                             )
                             logger.error(obsunit["time_index"])
                             logger.error(type(obsunit["time_index"]))
+                        time_index_str = str(obsunit["time_index"])
                     else:
                         sim_hist = real.get_smry(
                             column_keys=[obsunit["key"], obsunit["histvec"]]
                             # (let get_smry() determine the possible time_index)
                         )
+                        time_index_str = ""
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
                         logger.warning(
@@ -357,6 +361,7 @@ class Observations(object):
                             MEASERROR=measerror,
                             L1=sim_hist["mismatch"].abs().sum(),
                             L2=math.sqrt((sim_hist["mismatch"] ** 2).sum()),
+                            TIME_INDEX=time_index_str,
                         )
                     )
                 if obstype == "smry":
