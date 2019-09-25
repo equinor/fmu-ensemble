@@ -306,6 +306,13 @@ def test_smryh():
     obs_isodatestr = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "2003-02-01"}]}
     )
+    obs_future = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "3003-02-01"}]}
+    )
+    obs_past = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "1003-02-01"}]}
+    )
+
     assert obs_isodatestr
     obs_isodate = Observations(
         {
@@ -335,6 +342,16 @@ def test_smryh():
     mismatchlast = obs_last.mismatch(ens)
     mismatchraw = obs_raw.mismatch(ens)
 
+    mismatchdate = obs_isodate.mismatch(ens)
+    mismatchdatestr = obs_isodatestr.mismatch(ens)
+    assert all(mismatchdate["L1"] == mismatchdatestr["L1"])
+
+    mismatchfuture = obs_future.mismatch(ens)
+    assert all(mismatchfuture["L1"] == mismatchlast["L1"])
+
+    mismatchpast = obs_past.mismatch(ens)
+    assert np.isclose(sum(mismatchpast["L2"]), 0.0)
+
     # When only one datapoint is included, these should be identical:
     assert (mismatchlast["L1"] == mismatchlast["L2"]).all()
     assert (mismatchlast["L1"] == mismatchlast["MISMATCH"].abs()).all()
@@ -342,10 +359,6 @@ def test_smryh():
     # Check that we have indeed calculated things differently between the time indices:
     assert mismatchyearly["L2"].sum != mismatchmonthly["L2"].sum()
     assert mismatchdaily["L2"].sum != mismatchraw["L2"].sum()
-
-    print(mismatchlast)
-    print(mismatchdaily)
-    print(obs_raw.mismatch(ens))
 
 
 def test_ens_mismatch():

@@ -45,7 +45,7 @@ class Observations(object):
     summary vector, it can also be a time-series. Mismatches will
     be computed pr. observation unit.
 
-    Pay attentiont to mismatch versus misfit. Here, mismatch is used
+    Pay attention to mismatch versus misfit. Here, mismatch is used
     for individual observation units, while misfit is used as single
     number for whole realizations.
 
@@ -311,10 +311,27 @@ class Observations(object):
                     )
                 if obstype == "smryh":
                     if "time_index" in obsunit:
-                        sim_hist = real.get_smry(
-                            time_index=obsunit["time_index"],
-                            column_keys=[obsunit["key"], obsunit["histvec"]],
-                        )
+                        if isinstance(obsunit["time_index"], str):
+                            sim_hist = real.get_smry(
+                                time_index=obsunit["time_index"],
+                                column_keys=[obsunit["key"], obsunit["histvec"]],
+                            )
+                        elif isinstance(obsunit["time_index"], (datetime.datetime, datetime.date)):
+                            # real.get_smry only allows strings or
+                            # list of datetimes as time_index.
+                            sim_hist = real.get_smry(
+                                time_index=[obsunit["time_index"]],
+                                column_keys=[obsunit["key"], obsunit["histvec"]],
+                            )
+                        else:
+                            logger.error(
+                                (
+                                    "obsunit-timeindex was not string or date object\n"
+                                    "Should not be possible, file a bug report"
+                                )
+                            )
+                            logger.error(obsunit["time_index"])
+                            logger.error(type(obsunit["time_index"]))
                     else:
                         sim_hist = real.get_smry(
                             column_keys=[obsunit["key"], obsunit["histvec"]]
@@ -460,9 +477,8 @@ class Observations(object):
                     )
                     del smryhunits[smryhunits.index(unit)]
                     continue
-                # Check if time_index can be parsed as a date.
-                # We do not parse to date object yet in this case, since
-                # mnenomics and date objects are allowed
+                # If time_index is not a supported mnemonic,
+                # parse it to a date object
                 if "time_index" in unit:
                     if unit["time_index"] not in [
                         "raw",
@@ -473,7 +489,9 @@ class Observations(object):
                         "monthly",
                     ] and not isinstance(unit["time_index"], datetime.datetime):
                         try:
-                            dateutil.parser.isoparse(unit["time_index"]).date()
+                            unit["time_index"] = dateutil.parser.isoparse(
+                                unit["time_index"]
+                            ).date()
                         except (TypeError, ValueError) as exception:
                             logger.warning(
                                 "Parsing date %s failed with error",
