@@ -437,7 +437,53 @@ class Observations(object):
                     type(self.observations[key]),
                 )
                 self.observations.pop(key)
-
+        # Check smryh observations for validity
+        if "smryh" in self.observations.keys():
+            smryhunits = self.observations["smryh"]
+            if not isinstance(smryhunits, list):
+                logger.warning(
+                    "smryh must consist of a list, deleting: %s", str(smryhunits)
+                )
+                del self.observations["smryh"]
+            for unit in smryhunits:
+                if not isinstance(unit, (dict, OrderedDict)):
+                    logger.warning("smryh-units must be dicts, deleting: %s", str(unit))
+                    del smryhunits[smryhunits.index(unit)]
+                    continue
+                if not ("key" in unit and "histvec" in unit):
+                    logger.warning(
+                        (
+                            "smryh units must contain both 'key' and "
+                            "'histvec', deleting: %s",
+                            str(unit),
+                        )
+                    )
+                    del smryhunits[smryhunits.index(unit)]
+                    continue
+                # Check if time_index can be parsed as a date.
+                # We do not parse to date object yet in this case, since
+                # mnenomics are allowed
+                if "time_index" in unit:
+                    if unit["time_index"] not in [
+                        "raw",
+                        "report",
+                        "yearly",
+                        "daily",
+                        "last",
+                        "monthly",
+                    ]:
+                        try:
+                            dateutil.parser.isoparse(unit["time_index"]).date()
+                        except (TypeError, ValueError) as exception:
+                            logger.warning(
+                                "Parsing date %s failed with error",
+                                (str(unit["time_index"]), str(exception)),
+                            )
+                            del smryhunits[smryhunits.index(unit)]
+                            continue
+            # If everything has been deleted through cleanup, delete the section
+            if not smryhunits:
+                del self.observations["smryh"]
         # Check smry observations for validity
         if "smry" in self.observations.keys():
             # We already know that observations['smry'] is a list

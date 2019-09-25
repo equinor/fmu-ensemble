@@ -305,9 +305,11 @@ def test_smryh():
     obs_error = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "ølasjkdf"}]}
     )
+    assert not len(obs_error)
     obs_error2 = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": 4.43}]}
     )
+    assert not len(obs_error2)
 
     mismatchyearly = obs_yearly.mismatch(ens)
     mismatchmonthly = obs_monthly.mismatch(ens)
@@ -322,12 +324,6 @@ def test_smryh():
     # Check that we have indeed calculated things differently between the time indices:
     assert mismatchyearly["L2"].sum != mismatchmonthly["L2"].sum()
     assert mismatchdaily["L2"].sum != mismatchraw["L2"].sum()
-
-    with pytest.raises(ValueError):
-        obs_error.mismatch(ens)
-    with pytest.raises(TypeError):
-        # Improve here, this should give ValueError instead
-        obs_error2.mismatch(ens)
 
     print(mismatchlast)
     print(mismatchdaily)
