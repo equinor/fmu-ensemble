@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import glob
 import datetime
+import dateutil
 import yaml
 import pandas as pd
 import numpy as np
@@ -302,14 +303,31 @@ def test_smryh():
     obs_last = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "last"}]}
     )
+    obs_isodatestr = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "2003-02-01"}]}
+    )
+    assert obs_isodatestr
+    obs_isodate = Observations(
+        {
+            "smryh": [
+                {
+                    "key": "FOPT",
+                    "histvec": "FOPTH",
+                    "time_index": dateutil.parser.isoparse("2003-02-01"),
+                }
+            ]
+        }
+    )
+    assert obs_isodate
+
     obs_error = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "ølasjkdf"}]}
     )
-    assert not len(obs_error)
+    assert not obs_error
     obs_error2 = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": 4.43}]}
     )
-    assert not len(obs_error2)
+    assert not obs_error2
 
     mismatchyearly = obs_yearly.mismatch(ens)
     mismatchmonthly = obs_monthly.mismatch(ens)

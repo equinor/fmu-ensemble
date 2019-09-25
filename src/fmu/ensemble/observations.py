@@ -462,7 +462,7 @@ class Observations(object):
                     continue
                 # Check if time_index can be parsed as a date.
                 # We do not parse to date object yet in this case, since
-                # mnenomics are allowed
+                # mnenomics and date objects are allowed
                 if "time_index" in unit:
                     if unit["time_index"] not in [
                         "raw",
@@ -471,7 +471,7 @@ class Observations(object):
                         "daily",
                         "last",
                         "monthly",
-                    ]:
+                    ] and not isinstance(unit["time_index"], datetime.datetime):
                         try:
                             dateutil.parser.isoparse(unit["time_index"]).date()
                         except (TypeError, ValueError) as exception:
