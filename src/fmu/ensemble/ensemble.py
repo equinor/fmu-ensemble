@@ -341,6 +341,7 @@ class ScratchEnsemble(object):
 
         Unless specified, the VirtualEnsemble object wil
         have the same 'name' as the ScratchEnsemble.
+
         Args:
             name (str): Name of the ensemble as virtualized.
         """
