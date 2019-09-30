@@ -358,16 +358,14 @@ class ScratchEnsemble(object):
         vens.append("__files", self.files)
         return vens
 
-    def to_disk(self, filesystempath, delete=False,
-                dumpcsv=True, dumpparquet=True):
+    def to_disk(self, filesystempath, delete=False, dumpcsv=True, dumpparquet=True):
         """Dump ensemble data to a directory on disk.
 
         The ScratchEnsemble is first converted to a VirtualEnsemble,
         which is then dumped to disk. This function is a
         convenience wrapper for to_disk() in VirtualEnsemble.
         """
-        self.to_virtual().to_disk(filesystempath, delete,
-                                  dumpcsv, dumpparquet)
+        self.to_virtual().to_disk(filesystempath, delete, dumpcsv, dumpparquet)
 
     @property
     def parameters(self):
