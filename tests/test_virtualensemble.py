@@ -254,6 +254,36 @@ def test_todisk():
     assert "share/results/tables/randomdata.csv" in manualens.keys()
 
 
+def test_todisk_includefile():
+    """Test that we can write VirtualEnsembles to the filesystem in a
+    retrievable manner with discovered files included"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+
+    reekensemble.load_smry(time_index="monthly", column_keys="*")
+    reekensemble.load_smry(time_index="daily", column_keys="*")
+    reekensemble.load_smry(time_index="yearly", column_keys="F*")
+    reekensemble.load_scalar("npv.txt")
+    reekensemble.load_txt("outputs.txt")
+    vens = reekensemble.to_virtual()
+
+    vens.to_disk("vens_dumped_files", delete=True, includefiles=True, symlinks=True)
+    for real in [0, 1, 2, 4, 4]:
+        runpath = os.path.join(
+            "vens_dumped_files", "__discoveredfiles", "realization-" + str(real)
+        )
+        assert os.path.exists(runpath)
+        assert os.path.exists(
+            os.path.join(runpath, "eclipse/model/2_R001_REEK-" + str(real) + ".UNSMRY")
+        )
+
+
 def test_get_smry_interpolation():
     """Test the summary resampling code for virtual ensembles"""
 

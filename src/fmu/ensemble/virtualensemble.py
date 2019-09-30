@@ -363,7 +363,15 @@ class VirtualEnsemble(object):
             return
         self.data[key] = dataframe
 
-    def to_disk(self, filesystempath, delete=False, dumpcsv=True, dumpparquet=True):
+    def to_disk(
+        self,
+        filesystempath,
+        delete=False,
+        dumpcsv=True,
+        dumpparquet=True,
+        includefiles=False,
+        symlinks=False,
+    ):
         """Dump all data to disk, in a retrieveable manner.
 
         Unless dumpcsv is set to False, all data is dumped to CSV files,
@@ -382,6 +390,10 @@ class VirtualEnsemble(object):
                 before data is dumped.
             dumpcsv: boolean for whether CSV files should be written.
             dumpparquet: boolean for whether parquet files should be written
+            includefiles (boolean): If set to True, files in the files
+                dataframe will be included in the disk-dump.
+            symlinks (boolean): If includefiles is True, setting this to True
+                means that only symlinking will take place, not full copy.
         """
         import pyarrow  # Move to top of file eventually
 
@@ -410,6 +422,25 @@ class VirtualEnsemble(object):
                 os.mkdir(filesystempath)
 
         prepare_vens_directory(filesystempath, delete)
+
+        includefilesdir = "__discoveredfiles"
+        if includefiles:
+            os.mkdir(os.path.join(filesystempath, includefilesdir))
+        for _, filerow in self.files.iterrows():
+            src_fpath = filerow["FULLPATH"]
+            dest_fpath = os.path.join(
+                filesystempath,
+                includefilesdir,
+                "realization-" + str(filerow["REAL"]),
+                filerow["LOCALPATH"],
+            )
+            directory = os.path.dirname(dest_fpath)
+            if not os.path.exists(directory):
+                os.makedirs(os.path.dirname(dest_fpath))
+            if symlinks:
+                os.symlink(src_fpath, dest_fpath)
+            else:
+                shutil.copy(src_fpath, dest_fpath)
 
         # Write ensemble meta-information to disk:
         with open(os.path.join(filesystempath, "_name"), "w") as fhandle:
