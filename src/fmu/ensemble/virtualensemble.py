@@ -104,7 +104,7 @@ class VirtualEnsemble(object):
         resemble the filenames from which they were originally
         loaded in a ScratchEnsemble.
         """
-        return self.data.keys() + self.lazy_frames.keys()
+        return list(self.data.keys()) + list(self.lazy_frames.keys())
 
     def shortcut2path(self, shortpath):
         """
@@ -696,7 +696,7 @@ file is picked up"""
             return self.data[localpath]
 
         # Allow shorthand, but check ambiguity
-        allkeys = self.data.keys() + self.lazy_frames.keys()
+        allkeys = list(self.data.keys()) + list(self.lazy_frames.keys())
         basenames = [os.path.basename(x) for x in allkeys]
         if basenames.count(localpath) == 1:
             shortcut2path = {os.path.basename(x): x for x in allkeys}
