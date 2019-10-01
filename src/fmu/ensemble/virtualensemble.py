@@ -633,16 +633,16 @@ file is picked up"""
                 else:
                     logger.debug("from_disk: Ignoring file: %s", filename)
 
-            if not lazy_load:
-                # Load all found dataframes from disk:
-                for internalizedkey, filename in self.lazy_frames.iteritems():
-                    self._load_frame_fromdisk(internalizedkey, filename)
-                self.lazy_frames = {}
+        if not lazy_load:
+            # Load all found dataframes from disk:
+            for internalizedkey, filename in self.lazy_frames.iteritems():
+                self._load_frame_fromdisk(internalizedkey, filename)
+            self.lazy_frames = {}
 
-            # This function must be called whenever we have done
-            # something manually with the dataframes, like adding realizations.
-            # IT MIGHT BE INCORRECT IF LAZY_LOAD...
-            self.update_realindices()
+        # This function must be called whenever we have done
+        # something manually with the dataframes, like adding realizations.
+        # IT MIGHT BE INCORRECT IF LAZY_LOAD...
+        self.update_realindices()
 
     def _load_frame_fromdisk(self, key, filename):
         if filename.endswith(".parquet"):
