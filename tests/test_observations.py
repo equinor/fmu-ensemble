@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import glob
 import datetime
+import dateutil
 import yaml
 import pandas as pd
 import numpy as np
@@ -302,18 +303,59 @@ def test_smryh():
     obs_last = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "last"}]}
     )
+    obs_isodatestr = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "2003-02-01"}]}
+    )
+    obs_future = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "3003-02-01"}]}
+    )
+    obs_past = Observations(
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "1003-02-01"}]}
+    )
+
+    assert obs_isodatestr
+    obs_isodate = Observations(
+        {
+            "smryh": [
+                {
+                    "key": "FOPT",
+                    "histvec": "FOPTH",
+                    "time_index": dateutil.parser.isoparse("2003-02-01"),
+                }
+            ]
+        }
+    )
+    assert obs_isodate
+
     obs_error = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "ølasjkdf"}]}
     )
+    assert not obs_error
     obs_error2 = Observations(
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": 4.43}]}
     )
+    assert not obs_error2
 
     mismatchyearly = obs_yearly.mismatch(ens)
     mismatchmonthly = obs_monthly.mismatch(ens)
     mismatchdaily = obs_daily.mismatch(ens)
     mismatchlast = obs_last.mismatch(ens)
     mismatchraw = obs_raw.mismatch(ens)
+    assert mismatchraw["TIME_INDEX"].unique() == ["raw"]
+
+    mismatchdate = obs_isodate.mismatch(ens)
+    assert "2003-02-01" in mismatchdate["TIME_INDEX"].unique()[0]
+
+    mismatchdatestr = obs_isodatestr.mismatch(ens)
+    # There might be a clock time included
+    assert "2003-02-01" in mismatchdatestr["TIME_INDEX"].unique()[0]
+    assert all(mismatchdate["L1"] == mismatchdatestr["L1"])
+
+    mismatchfuture = obs_future.mismatch(ens)
+    assert all(mismatchfuture["L1"] == mismatchlast["L1"])
+
+    mismatchpast = obs_past.mismatch(ens)
+    assert np.isclose(sum(mismatchpast["L2"]), 0.0)
 
     # When only one datapoint is included, these should be identical:
     assert (mismatchlast["L1"] == mismatchlast["L2"]).all()
@@ -322,16 +364,6 @@ def test_smryh():
     # Check that we have indeed calculated things differently between the time indices:
     assert mismatchyearly["L2"].sum != mismatchmonthly["L2"].sum()
     assert mismatchdaily["L2"].sum != mismatchraw["L2"].sum()
-
-    with pytest.raises(ValueError):
-        obs_error.mismatch(ens)
-    with pytest.raises(TypeError):
-        # Improve here, this should give ValueError instead
-        obs_error2.mismatch(ens)
-
-    print(mismatchlast)
-    print(mismatchdaily)
-    print(obs_raw.mismatch(ens))
 
 
 def test_ens_mismatch():
@@ -399,8 +431,13 @@ def test_vens_mismatch():
     )
     assert (
         (
-            mismatch.sort_values("REAL").reset_index(drop=True)
-            == obs_monthly.mismatch(ens).sort_values("REAL").reset_index(drop=True)
+            mismatch.sort_values("REAL")
+            .reset_index(drop=True)
+            .drop("TIME_INDEX", axis=1)
+            == obs_monthly.mismatch(ens)
+            .sort_values("REAL")
+            .reset_index(drop=True)
+            .drop("TIME_INDEX", axis=1)
         )
         .all()
         .all()
