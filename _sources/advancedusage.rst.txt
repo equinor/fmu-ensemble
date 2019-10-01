@@ -130,7 +130,7 @@ like:
     smryh:
       - key: FOPT
         histvec: FOPTH
-        time_index: monthly  # or yearly, daily, raw or last
+        time_index: monthly  # or yearly, daily, raw or last, or a ISO-date
 
 This file can be loaded in Python:
 
