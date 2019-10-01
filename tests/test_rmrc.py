@@ -38,7 +38,7 @@ def test_rmrc():
         "ens1", os.path.join(ens_path, "realization-*/{}".format(iteration_name))
     )
     logger.info("Loading smry")
-    # ens.load_smry(time_index="monthly")
+    ens.load_smry(time_index="yearly")
     logger.info("Finding *gri files")
     ens.find_files(
         "share/maps/depth/*.gri",
