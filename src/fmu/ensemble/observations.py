@@ -45,7 +45,7 @@ class Observations(object):
     summary vector, it can also be a time-series. Mismatches will
     be computed pr. observation unit.
 
-    Pay attentiont to mismatch versus misfit. Here, mismatch is used
+    Pay attention to mismatch versus misfit. Here, mismatch is used
     for individual observation units, while misfit is used as single
     number for whole realizations.
 
@@ -311,15 +311,36 @@ class Observations(object):
                     )
                 if obstype == "smryh":
                     if "time_index" in obsunit:
-                        sim_hist = real.get_smry(
-                            time_index=obsunit["time_index"],
-                            column_keys=[obsunit["key"], obsunit["histvec"]],
-                        )
+                        if isinstance(obsunit["time_index"], str):
+                            sim_hist = real.get_smry(
+                                time_index=obsunit["time_index"],
+                                column_keys=[obsunit["key"], obsunit["histvec"]],
+                            )
+                        elif isinstance(
+                            obsunit["time_index"], (datetime.datetime, datetime.date)
+                        ):
+                            # real.get_smry only allows strings or
+                            # list of datetimes as time_index.
+                            sim_hist = real.get_smry(
+                                time_index=[obsunit["time_index"]],
+                                column_keys=[obsunit["key"], obsunit["histvec"]],
+                            )
+                        else:
+                            logger.error(
+                                (
+                                    "obsunit-timeindex was not string or date object\n"
+                                    "Should not be possible, file a bug report"
+                                )
+                            )
+                            logger.error(obsunit["time_index"])
+                            logger.error(type(obsunit["time_index"]))
+                        time_index_str = str(obsunit["time_index"])
                     else:
                         sim_hist = real.get_smry(
                             column_keys=[obsunit["key"], obsunit["histvec"]]
                             # (let get_smry() determine the possible time_index)
                         )
+                        time_index_str = ""
                     # If empty df returned, we don't have the data for this:
                     if sim_hist.empty:
                         logger.warning(
@@ -340,6 +361,7 @@ class Observations(object):
                             MEASERROR=measerror,
                             L1=sim_hist["mismatch"].abs().sum(),
                             L2=math.sqrt((sim_hist["mismatch"] ** 2).sum()),
+                            TIME_INDEX=time_index_str,
                         )
                     )
                 if obstype == "smry":
@@ -437,7 +459,54 @@ class Observations(object):
                     type(self.observations[key]),
                 )
                 self.observations.pop(key)
-
+        # Check smryh observations for validity
+        if "smryh" in self.observations.keys():
+            smryhunits = self.observations["smryh"]
+            if not isinstance(smryhunits, list):
+                logger.warning(
+                    "smryh must consist of a list, deleting: %s", str(smryhunits)
+                )
+                del self.observations["smryh"]
+            for unit in smryhunits:
+                if not isinstance(unit, (dict, OrderedDict)):
+                    logger.warning("smryh-units must be dicts, deleting: %s", str(unit))
+                    del smryhunits[smryhunits.index(unit)]
+                    continue
+                if not ("key" in unit and "histvec" in unit):
+                    logger.warning(
+                        (
+                            "smryh units must contain both 'key' and "
+                            "'histvec', deleting: %s",
+                            str(unit),
+                        )
+                    )
+                    del smryhunits[smryhunits.index(unit)]
+                    continue
+                # If time_index is not a supported mnemonic,
+                # parse it to a date object
+                if "time_index" in unit:
+                    if unit["time_index"] not in [
+                        "raw",
+                        "report",
+                        "yearly",
+                        "daily",
+                        "last",
+                        "monthly",
+                    ] and not isinstance(unit["time_index"], datetime.datetime):
+                        try:
+                            unit["time_index"] = dateutil.parser.isoparse(
+                                unit["time_index"]
+                            ).date()
+                        except (TypeError, ValueError) as exception:
+                            logger.warning(
+                                "Parsing date %s failed with error",
+                                (str(unit["time_index"]), str(exception)),
+                            )
+                            del smryhunits[smryhunits.index(unit)]
+                            continue
+            # If everything has been deleted through cleanup, delete the section
+            if not smryhunits:
+                del self.observations["smryh"]
         # Check smry observations for validity
         if "smry" in self.observations.keys():
             # We already know that observations['smry'] is a list
