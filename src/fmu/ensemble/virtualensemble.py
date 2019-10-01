@@ -53,6 +53,8 @@ class VirtualEnsemble(object):
                 "Can't initialize from both data and " + "disk at the same time"
             )
 
+        self.realindices = []
+
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
         if data:
@@ -62,8 +64,6 @@ class VirtualEnsemble(object):
 
         if fromdisk:
             self.from_disk(fromdisk)
-
-        self.realindices = []
 
     def __len__(self):
         """Return the number of realizations (integer) included in the
@@ -634,6 +634,10 @@ file is picked up"""
                             self.data[internalizedkey] = parsedframe
                 else:
                     logger.debug("from_disk: Ignoring file: %s", filename)
+
+            # This function must be called whenever we have done
+            # something manually with the dataframes, like adding realizations.
+            self.update_realindices()
 
     def __repr__(self):
         """Textual representation of the object"""
