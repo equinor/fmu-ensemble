@@ -214,9 +214,19 @@ def test_todisk():
     # Here we could check filesystem equivalence if we want.
 
     vens.to_disk("vens_dumped_csv", delete=True, dumpparquet=False)
-    fromcsvdisk = VirtualEnsemble()
-    fromcsvdisk.from_disk("vens_dumped_csv")
+    fromcsvdisk = VirtualEnsemble(fromdisk="vens_dumped_csv")
+    lazyfromdisk = VirtualEnsemble(fromdisk="vens_dumped_csv", lazy_load=True)
     assert set(vens.keys()) == set(fromcsvdisk.keys())
+    assert set(vens.keys()) == set(lazyfromdisk.keys())
+    assert 'OK' in lazyfromdisk.lazy_frames.keys()
+    assert 'OK' not in lazyfromdisk.data.keys()
+    assert len(fromcsvdisk.get_df("OK")) == len(lazyfromdisk.get_df("OK"))
+    assert 'OK' not in lazyfromdisk.lazy_frames.keys()
+    assert 'OK' in lazyfromdisk.data.keys()
+    assert len(fromcsvdisk.parameters) == len(lazyfromdisk.parameters)
+    assert len(fromcsvdisk.get_df("unsmry--yearly")) == len(
+        lazyfromdisk.get_df("unsmry--yearly")
+    )
 
     vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
     fromparquetdisk = VirtualEnsemble()

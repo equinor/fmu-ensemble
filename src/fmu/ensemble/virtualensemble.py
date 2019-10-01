@@ -38,9 +38,13 @@ class VirtualEnsemble(object):
         longdescription: string, free form multiline description.
         fromdisk: string with filesystem path, from which we will
             try to initialize the ensemble from files on disk.
+        lazy_load (boolean): If true, it will be used if loaded from disk
+            to be lazy in actually loading dataframes from disk
     """
 
-    def __init__(self, name=None, data=None, longdescription=None, fromdisk=None):
+    def __init__(
+        self, name=None, data=None, longdescription=None, fromdisk=None, lazy_load=False
+    ):
         if name:
             self._name = name
         else:
@@ -62,8 +66,14 @@ class VirtualEnsemble(object):
         else:
             self.data = {}
 
+        # We support having some dataframes only on disk, for faster initialization
+        # of the VirtualEnsemble object. This dictionary have the same keys as self.data
+        # and the value is a full path to a filename on disk. There should never be overlap
+        # of keys in self.data and self.lazy_frames.
+        self.lazy_frames = {}
+
         if fromdisk:
-            self.from_disk(fromdisk)
+            self.from_disk(fromdisk, lazy_load=lazy_load)
 
     def __len__(self):
         """Return the number of realizations (integer) included in the
@@ -94,7 +104,7 @@ class VirtualEnsemble(object):
         resemble the filenames from which they were originally
         loaded in a ScratchEnsemble.
         """
-        return self.data.keys()
+        return self.data.keys() + self.lazy_frames.keys()
 
     def shortcut2path(self, shortpath):
         """
@@ -196,6 +206,8 @@ class VirtualEnsemble(object):
             if isinstance(dframe, (str, int, float)):
                 dframe = pd.DataFrame(index=[1], columns=[key], data=dframe)
             dframe["REAL"] = realidx
+            if key not in self.data and key in self.lazy_frames:
+                self.get_df(key)  # Trigger load from disk.
             if key not in self.data.keys():
                 self.data[key] = dframe
             else:
@@ -223,6 +235,10 @@ class VirtualEnsemble(object):
             logger.warning(
                 "Skipping undefined realization indices %s", str(indicesnotknown)
             )
+
+        # Trigger load of any lazy frames:
+        for key in list(self.lazy_frames.keys()):
+            self.get_df(key)
         # There might be Pandas tricks to avoid this outer loop.
         for realindex in indicestodelete:
             for key in self.data:
@@ -244,6 +260,9 @@ class VirtualEnsemble(object):
         for localpath in localpaths:
             if localpath in self.data:
                 del self.data[localpath]
+                logger.info("Deleted %s from ensemble", localpath)
+            elif localpath in self.lazy_frames:
+                del self.lazy_frames[localpath]
                 logger.info("Deleted %s from ensemble", localpath)
             else:
                 logger.warning("Ensemble did not contain %s", localpath)
@@ -285,9 +304,16 @@ class VirtualEnsemble(object):
         if not keylist:  # Empty list means all keys.
             if not isinstance(excludekeys, list):
                 excludekeys = [excludekeys]
-            keys = set(self.data.keys()) - set(excludekeys)
+            keys = set(self.data.keys()).union(set(self.lazy_frames.keys())) - set(
+                excludekeys
+            )
         else:
             keys = keylist
+
+        # Trigger loading of lazy and needed frames:
+        for key in list(self.lazy_frames.keys()):
+            if key in keys:
+                self.get_df(key)
 
         for key in keys:
             # Aggregate over this ensemble:
@@ -396,6 +422,10 @@ class VirtualEnsemble(object):
                 means that only symlinking will take place, not full copy.
         """
         import pyarrow  # Move to top of file eventually
+
+        # Trigger load of all lazy frames:
+        for key in list(self.lazy_frames.keys()):
+            self.get_df(key)
 
         if not dumpcsv and not dumpparquet:
             raise ValueError(
@@ -525,7 +555,7 @@ file is picked up"""
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
 
-    def from_disk(self, filesystempath, fmt="parquet"):
+    def from_disk(self, filesystempath, fmt="parquet", lazy_load=False):
         """Load data from disk.
 
         Data must be written like to_disk() would have
@@ -544,7 +574,8 @@ file is picked up"""
                 parquet files will always be ignored. If you
                 say parquet, corresponding 'csv' files will still
                 be parsed. Delete them if you really don't want them
-
+            lazy_load (bool): If True, loading of dataframes from disk
+                will be postponed until get_df() is actually called.
         """
         if fmt not in ["csv", "parquet"]:
             raise ValueError("Unknown format for from_disk: %s" % fmt)
@@ -553,35 +584,6 @@ file is picked up"""
         # with data coming from disk.
         self._data = {}
         self._name = None
-
-        def isvalidframe(frame, filename):
-            """Validate that a DataFrame we read from disk is acceptable
-            as ensemble data. It must for example contain a column called
-            REAL with numerical data"""
-            if "REAL" not in frame.columns:
-                logger.warning(
-                    "The column 'REAL' was not found in file %s - ignored", filename
-                )
-                return False
-            if frame["REAL"].dtype != np.int64:
-                logger.warning(
-                    (
-                        "The column 'REAL' must contain "
-                        "only integers in file %s  - ignored"
-                    ),
-                    filename,
-                )
-                return False
-            if frame["REAL"].min() < 0:
-                logger.warning(
-                    (
-                        "The column 'REAL' must contain only "
-                        "positive integers in file %s  - ignored"
-                    ),
-                    filename,
-                )
-                return False
-            return True
 
         for root, _, filenames in os.walk(filesystempath):
             localpath = root.replace(filesystempath, "")
@@ -613,9 +615,7 @@ file is picked up"""
                     if fmt == "csv" or not os.path.exists(
                         os.path.join(root, parquetfile)
                     ):
-                        parsedframe = pd.read_csv(os.path.join(root, filename))
-                        if isvalidframe(parsedframe, filename):
-                            self.data[internalizedkey] = parsedframe
+                        self.lazy_frames[internalizedkey] = os.path.join(root, filename)
 
                 elif filename[-8:] == ".parquet":
                     filebase = filename[:-8]
@@ -629,15 +629,30 @@ file is picked up"""
                     else:
                         internalizedkey = os.path.join(localpath, filebase + ".csv")
                     if fmt == "parquet":
-                        parsedframe = pd.read_parquet(os.path.join(root, filename))
-                        if isvalidframe(parsedframe, filename):
-                            self.data[internalizedkey] = parsedframe
+                        self.lazy_frames[internalizedkey] = os.path.join(root, filename)
                 else:
                     logger.debug("from_disk: Ignoring file: %s", filename)
 
+            if not lazy_load:
+                # Load all found dataframes from disk:
+                for internalizedkey, filename in self.lazy_frames.iteritems():
+                    self._load_frame_fromdisk(internalizedkey, filename)
+                self.lazy_frames = {}
+
             # This function must be called whenever we have done
             # something manually with the dataframes, like adding realizations.
+            # IT MIGHT BE INCORRECT IF LAZY_LOAD...
             self.update_realindices()
+
+    def _load_frame_fromdisk(self, key, filename):
+        if filename.endswith(".parquet"):
+            parsedframe = pd.read_parquet(filename)
+            if self._isvalidframe(parsedframe, filename):
+                self.data[key] = parsedframe
+        else:
+            parsedframe = pd.read_csv(filename)
+            if self._isvalidframe(parsedframe, filename):
+                self.data[key] = parsedframe
 
     def __repr__(self):
         """Textual representation of the object"""
@@ -664,27 +679,38 @@ file is picked up"""
         Returns:
             dataframe or dictionary
         """
+        inconsistent_lazy_frames = set(self.data.keys()).intersection(
+            set(self.lazy_frames.keys())
+        )
+        if inconsistent_lazy_frames:
+            logger.critical(
+                "Internal error, inconsistent lazy frames:\n %s",
+                str(inconsistent_lazy_frames),
+            )
+        if localpath in self.lazy_frames.keys():
+            logger.warning("Loading %s from disk, was lazy", localpath)
+            self._load_frame_fromdisk(localpath, self.lazy_frames[localpath])
+            self.lazy_frames.pop(localpath)
+
         if localpath in self.data.keys():
             return self.data[localpath]
 
         # Allow shorthand, but check ambiguity
-        basenames = [os.path.basename(x) for x in self.data.keys()]
+        allkeys = self.data.keys() + self.lazy_frames.keys()
+        basenames = [os.path.basename(x) for x in allkeys]
         if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
-        noexts = ["".join(x.split(".")[:-1]) for x in self.data.keys()]
+            shortcut2path = {os.path.basename(x): x for x in allkeys}
+            return self.get_df(shortcut2path[localpath])
+        noexts = ["".join(x.split(".")[:-1]) for x in allkeys]
         if noexts.count(localpath) == 1:
-            shortcut2path = {"".join(x.split(".")[:-1]): x for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
-        basenamenoexts = [
-            "".join(os.path.basename(x).split(".")[:-1]) for x in self.data.keys()
-        ]
+            shortcut2path = {"".join(x.split(".")[:-1]): x for x in allkeys}
+            return self.get_df(shortcut2path[localpath])
+        basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in allkeys]
         if basenamenoexts.count(localpath) == 1:
             shortcut2path = {
-                "".join(os.path.basename(x).split(".")[:-1]): x
-                for x in self.data.keys()
+                "".join(os.path.basename(x).split(".")[:-1]): x for x in allkeys
             }
-            return self.data[shortcut2path[localpath]]
+            return self.get_df(shortcut2path[localpath])
         raise ValueError(localpath)
 
     def get_smry(self, column_keys=None, time_index="monthly"):
@@ -879,9 +905,39 @@ file is picked up"""
     @property
     def parameters(self):
         """Quick access to parameters"""
-        return self.data["parameters.txt"]
+        return self.get_df("parameters.txt")
 
     @property
     def name(self):
         """The name of the virtual ensemble as set during initialization"""
         return self._name
+
+    @staticmethod
+    def _isvalidframe(frame, filename):
+        """Validate that a DataFrame we read from disk is acceptable
+       as ensemble data. It must for example contain a column called
+       REAL with numerical data"""
+        if "REAL" not in frame.columns:
+            logger.warning(
+                "The column 'REAL' was not found in file %s - ignored", filename
+            )
+            return False
+        if frame["REAL"].dtype != np.int64:
+            logger.warning(
+                (
+                    "The column 'REAL' must contain "
+                    "only integers in file %s  - ignored"
+                ),
+                filename,
+            )
+            return False
+        if frame["REAL"].min() < 0:
+            logger.warning(
+                (
+                    "The column 'REAL' must contain only "
+                    "positive integers in file %s  - ignored"
+                ),
+                filename,
+            )
+            return False
+        return True
