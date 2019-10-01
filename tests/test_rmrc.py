@@ -55,7 +55,7 @@ def test_rmrc():
         "js_vens_dump", delete=True, dumpcsv=True, includefiles=True, symlinks=True
     )
     logger.info("Loading back from disk")
-    vens = VirtualEnsemble(fromdisk="js_vens_dump")
+    vens = VirtualEnsemble(fromdisk="js_vens_dump", lazy_load=True)
 
     logger.info("Doing asserts")
     assert not vens.files.empty
