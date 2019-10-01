@@ -175,8 +175,12 @@ def test_todisk():
     vens = reekensemble.to_virtual()
 
     vens.to_disk("vens_dumped", delete=True)
+    assert len(vens) == len(reekensemble)
 
     fromdisk = VirtualEnsemble(fromdisk="vens_dumped")
+
+    # Same number of realizations:
+    assert len(fromdisk) == len(vens)
 
     # Should have all the same keys,
     # but change of order is fine
