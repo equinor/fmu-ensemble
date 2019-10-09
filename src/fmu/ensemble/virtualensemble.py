@@ -592,6 +592,10 @@ file is picked up"""
         self._name = None
 
         for root, _, filenames in os.walk(filesystempath):
+            if "__discoveredfiles" in root:
+                # Never traverse the collections of dumped
+                # discovered files
+                continue
             localpath = root.replace(filesystempath, "")
             if localpath and localpath[0] == os.path.sep:
                 localpath = localpath[1:]
