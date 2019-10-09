@@ -6,10 +6,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import time
+import datetime
+
 import numpy as np
 import pandas as pd
 import pytest
-
 import xtgeo
 
 from fmu.ensemble import etc
@@ -55,7 +57,13 @@ def test_rmrc():
         "js_vens_dump", delete=True, dumpcsv=True, includefiles=True, symlinks=True
     )
     logger.info("Loading back from disk")
+    vens = VirtualEnsemble(fromdisk="js_vens_dump", lazy_load=False)
+    start_time = datetime.datetime.now()
     vens = VirtualEnsemble(fromdisk="js_vens_dump", lazy_load=True)
+    end_time = datetime.datetime.now()
+
+    # Lazy load must return in hopefully much less than 2 secs
+    assert (end_time - start_time).total_seconds() < 1.0
 
     logger.info("Doing asserts")
     assert not vens.files.empty
