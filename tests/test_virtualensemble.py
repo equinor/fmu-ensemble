@@ -40,6 +40,8 @@ def test_virtualensemble():
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
     assert len(vens["parameters.txt"]) == 5
 
+    assert not vens.lazy_keys()
+
     # This is the dataframe of discovered files in the ScratchRealization
     assert isinstance(vens["__files"], pd.DataFrame)
     assert not vens["__files"].empty
@@ -94,7 +96,8 @@ def test_virtualensemble():
 
     # Test virtrealization retrieval:
     vreal = vens.get_realization(2)
-    assert vreal.keys() == vens.keys()
+    assert len(vreal.keys()) == len(vens.keys())
+    assert set(vreal.keys()) == set(vens.keys())  # Order is not preserved
 
     # Test realization removal:
     vens.remove_realizations(3)

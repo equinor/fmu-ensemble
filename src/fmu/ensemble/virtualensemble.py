@@ -106,6 +106,12 @@ class VirtualEnsemble(object):
         """
         return list(self.data.keys()) + list(self.lazy_frames.keys())
 
+    def lazy_keys(self):
+        """Return keys that are not yet loaded, but will
+        be loaded on demand"""
+        return list(self.lazy_frames.keys())
+
+
     def shortcut2path(self, shortpath):
         """
         Convert short pathnames to fully qualified pathnames
