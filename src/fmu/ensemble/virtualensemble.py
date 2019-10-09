@@ -8,6 +8,8 @@ from __future__ import print_function
 import os
 import re
 import shutil
+import datetime
+
 import numpy as np
 import pandas as pd
 
@@ -583,6 +585,7 @@ file is picked up"""
             lazy_load (bool): If True, loading of dataframes from disk
                 will be postponed until get_df() is actually called.
         """
+        start_time = datetime.datetime.now()
         if fmt not in ["csv", "parquet"]:
             raise ValueError("Unknown format for from_disk: %s" % fmt)
 
@@ -653,6 +656,14 @@ file is picked up"""
         # something manually with the dataframes, like adding realizations.
         # IT MIGHT BE INCORRECT IF LAZY_LOAD...
         self.update_realindices()
+
+        end_time = datetime.datetime.now()
+        if lazy_load:
+            lazy_str = "(lazy) "
+        else:
+            lazy_str = ""
+        logger.info("Loading ensemble from disk %stook %g seconds", lazy_str, (end_time - start_time).total_seconds())
+
 
     def _load_frame_fromdisk(self, key, filename):
         if filename.endswith(".parquet"):
@@ -908,9 +919,8 @@ file is picked up"""
 
         Return:
             pd.Dataframe. Empty if no files are meaningful"""
-        if "__files" in self.data:
-            return self.data["__files"]
-        return pd.DataFrame()
+        files = self.get_df('__files')
+        return files
 
     @property
     def parameters(self):
