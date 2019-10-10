@@ -14,7 +14,7 @@ from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
+logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():
     raise SystemExit()

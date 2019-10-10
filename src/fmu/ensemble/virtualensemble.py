@@ -445,8 +445,10 @@ class VirtualEnsemble(object):
 
             The end result is either an error, or a clean empty directory
             at the requested path"""
+            logger.info("Preparing %s for a dumped virtual ensemble", filesystempath)
             if os.path.exists(filesystempath):
                 if delete:
+                    logger.info(" - Deleted existing directory")
                     shutil.rmtree(filesystempath)
                     os.mkdir(filesystempath)
                 else:
@@ -554,6 +556,7 @@ file is picked up"""
             if dumpparquet:
                 try:
                     data.to_parquet(filebase + ".parquet", index=False, engine="auto")
+                    logger.info("Wrote %s", filebase + ".parquet")
                 except (ValueError, pyarrow.ArrowTypeError):
                     # Accept that some dataframes cannot be written by parquet,
                     # The CSV file will be there as backup.
@@ -562,6 +565,7 @@ file is picked up"""
 
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
+                logger.info("Wrote %s", filebase + ".csv")
 
     def from_disk(self, filesystempath, fmt="parquet", lazy_load=False):
         """Load data from disk.
