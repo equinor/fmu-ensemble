@@ -17,7 +17,7 @@ from .etc import Interaction
 from .virtualrealization import VirtualRealization
 
 fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level="INFO")
 
 
 class VirtualEnsemble(object):
@@ -557,7 +557,7 @@ file is picked up"""
                 try:
                     data.to_parquet(filebase + ".parquet", index=False, engine="auto")
                     logger.info("Wrote %s", filebase + ".parquet")
-                except (ValueError, pyarrow.ArrowTypeError):
+                except (ValueError, pyarrow.ArrowTypeError, TypeError):
                     # Accept that some dataframes cannot be written by parquet,
                     # The CSV file will be there as backup.
                     logger.warning("Could not write %s as parquet file", key)
