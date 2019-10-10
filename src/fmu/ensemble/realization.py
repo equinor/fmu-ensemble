@@ -690,7 +690,11 @@ class ScratchRealization(object):
             columns=["FULLPATH", "FILETYPE", "LOCALPATH", "BASENAME"]
         )
         for searchpath in paths:
-            globs = [f for f in glob.glob(os.path.join(self._origpath, searchpath)) if os.path.isfile(f)]
+            globs = [
+                f
+                for f in glob.glob(os.path.join(self._origpath, searchpath))
+                if os.path.isfile(f)
+            ]
             for match in globs:
                 absmatch = os.path.abspath(match)
                 dirname = os.path.dirname(absmatch)

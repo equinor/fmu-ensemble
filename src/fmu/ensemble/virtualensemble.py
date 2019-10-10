@@ -68,10 +68,11 @@ class VirtualEnsemble(object):
         else:
             self.data = {}
 
-        # We support having some dataframes only on disk, for faster initialization
-        # of the VirtualEnsemble object. This dictionary have the same keys as self.data
-        # and the value is a full path to a filename on disk. There should never be overlap
-        # of keys in self.data and self.lazy_frames.
+        # We support having some dataframes only on disk, for faster
+        # initialization of the VirtualEnsemble object. This
+        # dictionary have the same keys as self.data and the value is
+        # a full path to a filename on disk. There should never be
+        # overlap of keys in self.data and self.lazy_frames.
         self.lazy_frames = {}
 
         if fromdisk:
@@ -112,7 +113,6 @@ class VirtualEnsemble(object):
         """Return keys that are not yet loaded, but will
         be loaded on demand"""
         return list(self.lazy_frames.keys())
-
 
     def shortcut2path(self, shortpath):
         """
@@ -648,7 +648,7 @@ file is picked up"""
 
         if not lazy_load:
             # Load all found dataframes from disk:
-            for internalizedkey, filename in self.lazy_frames.iteritems():
+            for internalizedkey, filename in self.lazy_frames.items():
                 self._load_frame_fromdisk(internalizedkey, filename)
             self.lazy_frames = {}
 
@@ -662,8 +662,11 @@ file is picked up"""
             lazy_str = "(lazy) "
         else:
             lazy_str = ""
-        logger.info("Loading ensemble from disk %stook %g seconds", lazy_str, (end_time - start_time).total_seconds())
-
+        logger.info(
+            "Loading ensemble from disk %stook %g seconds",
+            lazy_str,
+            (end_time - start_time).total_seconds(),
+        )
 
     def _load_frame_fromdisk(self, key, filename):
         if filename.endswith(".parquet"):
@@ -919,7 +922,7 @@ file is picked up"""
 
         Return:
             pd.Dataframe. Empty if no files are meaningful"""
-        files = self.get_df('__files')
+        files = self.get_df("__files")
         return files
 
     @property
