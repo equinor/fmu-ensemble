@@ -21,6 +21,9 @@ max-module-lines=3000
 [DESIGN]
 max-attributes=25
 max-args=20
+max-locals=30
+max-statements=100
+max-branches=15
 
 [SIMILARITIES]
 min-similarity-lines=4
