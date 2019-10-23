@@ -23,7 +23,7 @@ max-attributes=25
 max-args=20
 max-locals=30
 max-statements=100
-max-branches=15
+max-branches=20
 
 [SIMILARITIES]
 min-similarity-lines=4
