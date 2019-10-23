@@ -454,8 +454,10 @@ class VirtualEnsemble(object):
                 else:
                     if os.listdir(filesystempath):
                         logger.critical(
-                            "Refusing to write virtual ensemble "
-                            + " to non-empty directory"
+                            (
+                                "Refusing to write virtual ensemble "
+                                " to non-empty directory"
+                            )
                         )
                         raise IOError("Directory %s not empty" % filesystempath)
             else:

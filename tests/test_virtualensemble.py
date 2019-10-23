@@ -205,7 +205,7 @@ def test_todisk():
         # will easily be wrong.
 
         for column in virtframe.columns:
-            if virtframe[column].dtype == object or diskframe[column].dtype == object:
+            if object in (virtframe[column].dtype, diskframe[column].dtype):
                 # Ensure we only compare strings when working with object dtype
                 assert (
                     virtframe[column].astype(str).equals(diskframe[column].astype(str))
@@ -221,11 +221,11 @@ def test_todisk():
     lazyfromdisk = VirtualEnsemble(fromdisk="vens_dumped_csv", lazy_load=True)
     assert set(vens.keys()) == set(fromcsvdisk.keys())
     assert set(vens.keys()) == set(lazyfromdisk.keys())
-    assert 'OK' in lazyfromdisk.lazy_frames.keys()
-    assert 'OK' not in lazyfromdisk.data.keys()
+    assert "OK" in lazyfromdisk.lazy_frames.keys()
+    assert "OK" not in lazyfromdisk.data.keys()
     assert len(fromcsvdisk.get_df("OK")) == len(lazyfromdisk.get_df("OK"))
-    assert 'OK' not in lazyfromdisk.lazy_frames.keys()
-    assert 'OK' in lazyfromdisk.data.keys()
+    assert "OK" not in lazyfromdisk.lazy_frames.keys()
+    assert "OK" in lazyfromdisk.data.keys()
     assert len(fromcsvdisk.parameters) == len(lazyfromdisk.parameters)
     assert len(fromcsvdisk.get_df("unsmry--yearly")) == len(
         lazyfromdisk.get_df("unsmry--yearly")
