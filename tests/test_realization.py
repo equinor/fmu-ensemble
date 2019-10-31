@@ -139,6 +139,13 @@ def test_single_realization():
     # test basename and no extension:
     assert isinstance(real.get_df("simulator_volume_fipnum"), pd.DataFrame)
 
+    # Some CSV files might already contain the REAL column, this is not allowed
+    foo_df = pd.DataFrame(columns=["REAL", "FOOBAR"], data=[[0, 1], [2, 3]])
+    foo_df.to_csv(os.path.join(realdir, "foo-real.csv"), index=False)
+    real.load_csv("foo-real.csv")  # A warning will be issued.
+    assert "REAL" not in real.get_df("foo-real")
+    assert "FOOBAR" in real.get_df("foo-real")
+
     with pytest.raises(ValueError):
         real.get_df("notexisting.csv")
 

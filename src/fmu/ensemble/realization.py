@@ -384,6 +384,15 @@ class ScratchRealization(object):
                 else:
                     dtype = str
                 dframe = pd.read_csv(fullpath, dtype=dtype)
+                if "REAL" in dframe:
+                    dframe.rename(columns={"REAL": "REAL_ORIG"}, inplace=True)
+                    logger.warning(
+                        (
+                            "Loaded file %s already had the column REAL, "
+                            "this was renamed to REAL_ORIG"
+                        ),
+                        fullpath,
+                    )
             except pd.errors.EmptyDataError:
                 dframe = None  # or empty dataframe?
 
