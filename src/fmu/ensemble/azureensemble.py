@@ -80,13 +80,13 @@ class AzureScratchEnsemble():
         if ensemble_path is not None:
             self._ensemble_path = self.confirm_ensemble_path(ensemble_path)
         else:
-            logger.error('A valid ensemble path must be provided')
-            raise ValueError()
+            self._ensemble_path = None
 
         if iter_name is not None:
             self._iter_name = iter_name
         else:
             logger.info('Iteration name not given, assuming no iteration')
+            self._iter_name = ''
 
         if isinstance(manifest, str):
             # assume path to manifest is provided, try to parse it
@@ -102,18 +102,20 @@ class AzureScratchEnsemble():
         self._searchpaths = searchpaths
         self._ignoredirs = ignoredirs
 
-        print(self._searchpaths)
-
         if self._searchpaths is None:
             # assume all files to be indexed
 
-            print('All paths')
-            # Assume that all realizations have identical structures
-            self._searchpaths = self.list_subdirectories(
-                os.path.join(self._ensemble_path, 
-                            'realization-0/{}'.format(self._iter_name)),)
+            if self._ensemble_path is None:
+                self._searchpaths = None
+            else:
+                print('All paths')
+                # Assume that all realizations have identical structures
+                rootdir = os.path.join(self._ensemble_path, 'realization-0/')
+                if self._iter_name is not '':
+                    rootdir = os.path.join(rootdir, self._iter_name)
+                self._searchpaths = self.list_subdirectories(rootdir)
 
-            self._searchpaths = self.remove_ignored_dirs(self._searchpaths, self._ignoredirs)
+                self._searchpaths = self.remove_ignored_dirs(self._searchpaths, self._ignoredirs)
 
         else:
             print('Using searchpaths')
@@ -127,20 +129,22 @@ class AzureScratchEnsemble():
                                                           self._ensemble_path,
                                                           self._searchpaths)
 
-        # create a VirtualEnsemble
-        self.virtualensemble = self.scratchensemble.to_virtual()
 
-        # add smry data
-        smry = self.scratchensemble.get_smry()
-        self.virtualensemble.append('smry', smry)   # shared is indicating that data goes across realizations
+        if len(self.scratchensemble) > 0:
+            # create a VirtualEnsemble
+            self.virtualensemble = self.scratchensemble.to_virtual()
 
-        # add x
+            # add smry data
+            smry = self.scratchensemble.get_smry()
+            self.virtualensemble.append('smry', smry)   # shared is indicating that data goes across realizations
 
-        # add y
+            # add x
 
-        self.index = self.create_index()
+            # add y
 
-        print('OK')
+            self.index = self.create_index()
+
+            print('OK')
 
 
     def upload(self, tmp_storage_path):
@@ -284,6 +288,9 @@ class AzureScratchEnsemble():
 
     def build_scratchensemble(self, ensemble_name, ensemble_path, searchpaths):
         """Initialize and return a ScratchEnsemble object"""
+
+        if ensemble_path is None:
+            return ScratchEnsemble(ensemble_name)
 
         paths = '{}/realization-*/{}'.format(ensemble_path, self._iter_name)
         manifest = self._manifest
