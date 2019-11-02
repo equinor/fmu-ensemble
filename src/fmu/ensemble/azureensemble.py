@@ -2,6 +2,21 @@
 """Module containing classes related to Azure and RMRC storage
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import os
+import yaml
+import shutil
+
+import pandas as pd
+
+from .etc import Interaction
+from .ensemble import ScratchEnsemble
+
+xfmu = Interaction()
+logger = xfmu.functionlogger(__name__)
 
 class AzureScratchEnsemble():
     """Class for handling ensembles that are to be uploaded to the RMrC
@@ -12,7 +27,39 @@ class AzureScratchEnsemble():
     Args:
         ensemble_name (str): Name of ensemble. Will be passed to ScratchEnsemble
         ensemble_path (path): Path to root of ensemble
-        manifest_path (path): 
+        iter_name (str): Name of iteration. If not included, will assume no iteration.
+        manifest (path/dict): Path to manifest file (yaml) OR actual manifest as dict
+        searchpaths (list of paths): List of paths to feed to ScratchEnsembe.find_files(). If
+                                     not provided, will assume all paths (except ignoredirs)
+        ignoredirs (list of str): List of local directories to ignore when not giving searchpaths.
+
+
+    Examples:
+
+        searchpaths = ['share/maps/depth/VIKING_Top*.gri',
+                       'eclipse/model/2019*.UNSMRY']
+
+        ignoredirs = ['rms/model', 'sim2seis', 'cohiba', 'config', 'eclipse/include', 'share']
+
+    ensemble_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/'
+    iter_name = 'pred'
+    manifest_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/pred/share/runinfo/runinfo.yaml'
+
+    tmp_storage_path='/scratch/johan_sverdrup2/rmrc/ens_full_5_azureprep15/'
+
+    from fmu import ensemble
+
+    myens = ensemble.AzureScratchEnsemble('MyEns', 
+                            ensemble_path='/path/to/ensemble/on/scratch, 
+                            iter_name='pred', 
+                            manifest='/', 
+                            ignoredirs=ignoredirs,
+                            )
+
+    azureens.upload('/tmp/storage/location/')
+
+
+
 
     TODO:
         - tmp_storage_path to be replaced by a /tmp/<random>
@@ -21,62 +68,109 @@ class AzureScratchEnsemble():
 
     def __init__(self,
         ensemble_name,
-        ensemble_path,
-        iter_name,
-        manifest_path,
-        tmp_storage_path,        # DEV ONLY, will be replaced
+        ensemble_path=None,
+        iter_name=None,
+        manifest=None,
         searchpaths=None,
+        ignoredirs=None,
         ):
 
         self._ensemble_name = ensemble_name
-        self._ensemble_path = self.confirm_ensemble_path(ensemble_path)
-        self._iter_name = iter_name
-        self._manifest = self.parse_manifest(manifest_path)
 
-        self._index = None
-
-        if searchpaths is None:
-            # assume all files to be indexed
-            # for now just a dummy path
-            searchpaths = ['share/maps/*/*.*', 
-                           #'share/maps/isochores/*.*',
-                           #'share/maps/recoverables/*.*'
-                          ]
+        if ensemble_path is not None:
+            self._ensemble_path = self.confirm_ensemble_path(ensemble_path)
         else:
-            if isinstance(searchpaths, str):
-                searchpaths = [searchpaths]
+            logger.error('A valid ensemble path must be provided')
+            raise ValueError()
+
+        if iter_name is not None:
+            self._iter_name = iter_name
+        else:
+            logger.info('Iteration name not given, assuming no iteration')
+
+        if isinstance(manifest, str):
+            # assume path to manifest is provided, try to parse it
+            self._manifest = self.confirm_manifest_path(manifest)
+            self._manifest = self.parse_manifest(self._manifest)
+        elif isinstance(manifest, dict):
+            self._manifest = manifest
+        else:
+            logger.error('A manifest must be provided')
+
+        self._tmp_stored_on_disk = False
+        self._index = None
+        self._searchpaths = searchpaths
+        self._ignoredirs = ignoredirs
+
+        print(self._searchpaths)
+
+        if self._searchpaths is None:
+            # assume all files to be indexed
+
+            print('All paths')
+            # Assume that all realizations have identical structures
+            self._searchpaths = self.list_subdirectories(
+                os.path.join(self._ensemble_path, 
+                            'realization-0/{}'.format(self._iter_name)),)
+
+            self._searchpaths = self.remove_ignored_dirs(self._searchpaths, self._ignoredirs)
+
+        else:
+            print('Using searchpaths')
+            if isinstance(self._searchpaths, str):
+                self._searchpaths = [self._searchpaths]
             else:
                 pass
 
         # create a scratchensemble
         self.scratchensemble = self.build_scratchensemble(self._ensemble_name,
                                                           self._ensemble_path,
-                                                          searchpaths)
+                                                          self._searchpaths)
 
         # create a VirtualEnsemble
-        vens = self.scratchensemble.to_virtual()
+        self.virtualensemble = self.scratchensemble.to_virtual()
 
         # add smry data
         smry = self.scratchensemble.get_smry()
-        vens.append('shared--smry', smry)   # shared is indicating that data goes across realizations
+        self.virtualensemble.append('smry', smry)   # shared is indicating that data goes across realizations
 
         # add x
 
         # add y
+
+        self.index = self.create_index()
+
+        print('OK')
+
+
+    def upload(self, tmp_storage_path):
+        """Dump ensemble to temporary storage on format as in rmrc,
+           ready for upload.
+
+        TODO: Add upload function
+
+        """
+
+        ########### DEV ONLY ############
+        if not isinstance(tmp_storage_path, str):
+            raise ValueError('tmp_storage_path must be provided')
         
-        # Dump to disk ready for upload
-        prepare_blob_structure(temporary_filesystempath)
+        #################################
+
+
+        self.prepare_blob_structure(tmp_storage_path)
 
         # DATA section
-        copy_files(temporary_filesystempath)
-        dump_internalized_dataframes(temporary_filesystempath)
+        self.copy_files(tmp_storage_path)
+        self.dump_internalized_dataframes(tmp_storage_path)
 
         # MANIFEST section
-        dump_manifest(temporary_filesystempath)
+        self.dump_manifest(tmp_storage_path)
 
         # INDEX section
-        self.index = self.vens.files()
-        self.dump_index(temporary_filesystempath)
+        self.dump_index(tmp_storage_path)
+
+        self._tmp_stored_on_disk = True
 
         print('OK')
 
@@ -87,7 +181,122 @@ class AzureScratchEnsemble():
 
     @property
     def manifest(self):
+        """Returns the internally stored manifest (dict)"""
         return self._manifest
+
+    @property
+    def tmp_storage(self):
+        """If ensemble is stored on disk, return the path. Otherwise, return None."""
+        if self._tmp_stored_on_disk:
+            return self._tmp_storage
+        return None
+
+    def list_subdirectories(self, rootpath):
+        """Given a rootpath, return all subdirectories recursively as list"""
+        print('searching for subdirs')
+        subdirs = [r.replace(rootpath, '') for r, _d, _f in os.walk(rootpath)]
+
+        print('found {} subdirs in total'.format(len(subdirs)))
+        return subdirs
+
+    def remove_ignored_dirs(self, subdirs, ignoredirs):
+        """Given list A and list B, remove all elements in list A that
+           starts with any of the elements in list B"""
+
+        keepers = []
+
+        if isinstance(ignoredirs, list):
+
+            print('ignoredirs before: {}'.format(ignoredirs))
+            ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
+            print('ignoredirs after: {}'.format(ignoredirs))
+
+            for subdir in subdirs:
+                if not subdir.startswith(ignoredirs) and len(subdir) > 0:
+                    keepers.append(subdir)
+
+            print('Removed subdirs, left with {}'.format(len(keepers)))
+            print(keepers)
+            return keepers
+        else:
+            print('No ignoredirs, still have {} subdirs'.format(len(subdirs)))
+            return subdirs
+
+
+    def confirm_ensemble_path(self, path):
+        """QC function for checking that the given
+           ensemble path is a valid path.
+
+           TODO: Also check that it's a valid ensemble?
+        """
+
+        if os.path.exists(path):
+            return path
+
+        raise ValueError('Not a valid ensemble path: {}'.format(path))
+
+
+    def confirm_manifest_path(self, fname):
+        """Given a path that could be local or global, confirm
+           the path of the manifest, return functioning path"""
+
+        print('checking for manifest')
+
+        # check if local or global path was given
+        if os.path.isabs(fname):
+            if not fname.startswith(self._ensemble_path):
+                logger.error('Absolute path was given for manifest, but was not' +
+                             'part of the same ensemble.')
+                raise ValueError('Illegal manifest path given (#1)')
+
+            if not os.path.isfile(fname):
+                logger.error('Absolute path given for manifest, but could not find file')
+                logger.error(fname)
+                raise ValueError('Illegal manifest path given (#2)')
+            else:
+                return fname
+
+        else:
+            #check if path is a valid local path
+            candidate = os.path.join(self._ensemble_path, fname)
+            if os.path.isfile(candidate):
+                logger.info('Think I found the manifest: {}'.format(candidate))
+                return candidate
+            candidate = os.path.join(self._ensemble_path, self._iter_name, fname)
+            if os.path.isfile(candidate):
+                logger.info('Think I found the manifest: {}'.format(candidate))
+                return candidate
+
+        raise ValueError('Illegal manifest path given (#3)')
+
+
+    def parse_manifest(self, fname):
+        """Parse the manifest from yaml, return as dict"""
+ 
+        if not os.path.exists(fname):
+            logger.warning('Could not find manifest in this location: {}'.format(fname))
+            return None
+
+        with open(fname, 'r') as stream:
+            manifest = yaml.load(stream, Loader=yaml.FullLoader)
+
+        return manifest
+
+    def build_scratchensemble(self, ensemble_name, ensemble_path, searchpaths):
+        """Initialize and return a ScratchEnsemble object"""
+
+        paths = '{}/realization-*/{}'.format(ensemble_path, self._iter_name)
+        manifest = self._manifest
+
+        scratchensemble = ScratchEnsemble(ensemble_name,
+                                          paths=paths)
+
+        for searchpath in searchpaths:
+            #print('searching {}'.format(searchpath))
+            scratchensemble.find_files(os.path.join(searchpath, '*.*'), metayaml=True)
+            #print(len(scratchensemble.files))
+
+        return scratchensemble
 
 
     def prepare_blob_structure(self, filesystempath, delete=False):
@@ -113,10 +322,24 @@ class AzureScratchEnsemble():
             os.mkdir(os.path.join(filesystempath, "manifest"))
             os.mkdir(os.path.join(filesystempath, "index"))
 
+
+    def get_unique_foldername(self, prefix="/tmp/"):
+        """Return the prefix + a unique folder name"""
+        import uuid
+
+        unique_folder = os.path.join(prefix, str(uuid.uuid4()))
+
+        # double-check that this worked, call it again if not
+        if os.path.exists(unique_folder):
+            unique_folder = self.get_unique_foldername()
+
+        return unique_folder
+
+
     def copy_files(self, filesystempath, localdir="data"):
 
         # code from .to_disk()
-        for _, filerow in self.files.iterrows():
+        for _, filerow in self.scratchensemble.files.iterrows():
             src_fpath = filerow["FULLPATH"]
             dest_fpath = os.path.join(
                 filesystempath,
@@ -152,25 +375,29 @@ class AzureScratchEnsemble():
 
         print('yaml dumped')
 
-    def create_index(self, filesystempath, localdir="index", indexfname="index.csv"):
+    def create_index(self):
         """Assemble index as dataframe
 
         TODO: Explore possibility of using json
         TODO: Explore extension of metadata fields
         """
 
-        indexpath = os.path.join(filesystempath, localdir, indexfname)
-        return 
+        index = self.virtualensemble.files
+
+        return index
 
 
         # parse metadata if present for each file, append to the index.
         # should be code for this elsewhere...
 
 
-
     def dump_index(self, filesystempath, localdir="index", indexfname="index.csv"):
         """Dump the index to disk"""
-        self.files.to_csv(indexpath, index=False)
+
+        indexpath = os.path.join(filesystempath, localdir, indexfname)
+
+        self.virtualensemble.files.to_csv(indexpath, index=False)
+        
         print('index dumped')
 
 
@@ -180,12 +407,20 @@ class AzureScratchEnsemble():
 
         print('dumping internal dataframes')
 
-        for key in self.data:
-            fname = os.path.join(filesystempath, localdir, str(key)+'.csv')
-            print('dumping {}'.format(fname))
-            self.data[key].to_csv(fname, index=False)
+        for key in self.virtualensemble.data:
+            if not key.startswith('__'):
 
-        # return index info here | or print to __files?
+                fname = str(key) + '.csv'
+                localpath = os.path.join(localdir, fname)
+                savepath = os.path.join(filesystempath, localpath)
+                self.virtualensemble.data[key].to_csv(savepath, index=False)
 
+                # add reference to the index
+                df = pd.DataFrame({'LOCALPATH' : [localpath],
+                                   'FILETYPE' : ['csv'],}
+                                   )
+                self.virtualensemble.files.append(df, sort=False)
+
+                print('dumped {}'.format(savepath))
 
 
