@@ -51,8 +51,9 @@ def test_reek_5real():
 
     testdir = os.path.join(testrootdir, 'TMP', 'dumped_ens')
 
-    # delete existing data in the testdir
-    shutil.rmtree(testdir)
+    # delete existing data in the testdir if already there
+    if os.path.isdir(testdir):
+        shutil.rmtree(testdir)
 
 
     reekensemble = AzureScratchEnsemble('reektest', 
