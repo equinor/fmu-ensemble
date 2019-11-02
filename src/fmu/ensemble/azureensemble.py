@@ -41,28 +41,23 @@ class AzureScratchEnsemble():
 
         ignoredirs = ['rms/model', 'sim2seis', 'cohiba', 'config', 'eclipse/include', 'share']
 
-    ensemble_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/'
-    iter_name = 'pred'
-    manifest_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/pred/share/runinfo/runinfo.yaml'
+        ensemble_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/'
+        iter_name = 'pred'
+        manifest_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/pred/share/runinfo/runinfo.yaml'
 
-    tmp_storage_path='/scratch/johan_sverdrup2/rmrc/ens_full_5_azureprep15/'
+        tmp_storage_path='/scratch/johan_sverdrup2/rmrc/ens_full_5_azureprep15/'
 
-    from fmu import ensemble
+        from fmu import ensemble
 
-    myens = ensemble.AzureScratchEnsemble('MyEns', 
-                            ensemble_path='/path/to/ensemble/on/scratch, 
-                            iter_name='pred', 
-                            manifest='/', 
-                            ignoredirs=ignoredirs,
-                            )
+        myens = ensemble.AzureScratchEnsemble('MyEns', 
+                                ensemble_path='/path/to/ensemble/on/scratch, 
+                                iter_name='pred', 
+                                manifest='/', 
+                                ignoredirs=ignoredirs,
+                                )
 
-    azureens.upload('/tmp/storage/location/')
+        azureens.upload('/tmp/storage/location/')
 
-
-
-
-    TODO:
-        - tmp_storage_path to be replaced by a /tmp/<random>
 
     """
 
@@ -97,6 +92,7 @@ class AzureScratchEnsemble():
         else:
             logger.error('A manifest must be provided')
 
+        self._tmp_storage_path = None
         self._tmp_stored_on_disk = False
         self._index = None
         self._searchpaths = searchpaths
@@ -108,7 +104,6 @@ class AzureScratchEnsemble():
             if self._ensemble_path is None:
                 self._searchpaths = None
             else:
-                print('All paths')
                 # Assume that all realizations have identical structures
                 rootdir = os.path.join(self._ensemble_path, 'realization-0/')
                 if self._iter_name is not '':
@@ -118,7 +113,6 @@ class AzureScratchEnsemble():
                 self._searchpaths = self.remove_ignored_dirs(self._searchpaths, self._ignoredirs)
 
         else:
-            print('Using searchpaths')
             if isinstance(self._searchpaths, str):
                 self._searchpaths = [self._searchpaths]
             else:
@@ -147,7 +141,7 @@ class AzureScratchEnsemble():
             print('OK')
 
 
-    def upload(self, tmp_storage_path):
+    def upload(self, tmp_storage_root='/tmp'):
         """Dump ensemble to temporary storage on format as in rmrc,
            ready for upload.
 
@@ -155,12 +149,8 @@ class AzureScratchEnsemble():
 
         """
 
-        ########### DEV ONLY ############
-        if not isinstance(tmp_storage_path, str):
-            raise ValueError('tmp_storage_path must be provided')
-        
-        #################################
-
+        tmp_storage_path = self.create_tmp_storage_folder(tmp_storage_root)
+        self._tmp_storage_path = tmp_storage_path
 
         self.prepare_blob_structure(tmp_storage_path)
 
@@ -182,6 +172,36 @@ class AzureScratchEnsemble():
         # TODO some checks towards the storage (already existing ensemble, etc) goes here
         # TODO upload function with the returned token go here
         # TODO some confirmation functions (just API calls?) go here
+
+    def create_tmp_storage_folder(self, tmp_storage_root):
+        """Make random folde name under the storage root, confirm that it
+           is not in use, make it, return the path """
+
+        if not os.path.isdir(tmp_storage_root):
+            print(tmp_storage_root)
+            logger.critical('Non-valid temporary storage path given: {}'.format(tmp_storage_root))
+            raise IOError('Not a valid temporary storage: {}'.format(tmp_storage_root))
+
+        while True:
+            unique_folder_name = self.make_unique_foldername()
+            tmp_storage_path = os.path.join(tmp_storage_root, unique_folder_name)
+            if not os.path.exists(tmp_storage_path):
+                break
+
+        # got a unique folder name, now create it
+        os.mkdir(tmp_storage_path)
+
+        return tmp_storage_path
+
+    def make_unique_foldername(self):
+        """Return unique foldername, 6 characters, lowercase"""
+
+        import uuid
+
+        unique_part = str(uuid.uuid4())[0:6]
+        unique_folder_name = 'rmrc-{}-{}'.format(self.name.lower(), unique_part.lower())
+        
+        return unique_folder_name
 
 
     @property
@@ -205,10 +225,8 @@ class AzureScratchEnsemble():
 
     def list_subdirectories(self, rootpath):
         """Given a rootpath, return all subdirectories recursively as list"""
-        print('searching for subdirs')
         subdirs = [r.replace(rootpath, '') for r, _d, _f in os.walk(rootpath)]
 
-        print('found {} subdirs in total'.format(len(subdirs)))
         return subdirs
 
     def remove_ignored_dirs(self, subdirs, ignoredirs):
@@ -219,20 +237,15 @@ class AzureScratchEnsemble():
 
         if isinstance(ignoredirs, list):
 
-            print('ignoredirs before: {}'.format(ignoredirs))
             ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
-            print('ignoredirs after: {}'.format(ignoredirs))
 
             for subdir in subdirs:
                 if not subdir.startswith(ignoredirs) and len(subdir) > 0:
                     keepers.append(subdir)
 
-            print('Removed subdirs, left with {}'.format(len(keepers)))
-            print(keepers)
             return keepers
-        else:
-            print('No ignoredirs, still have {} subdirs'.format(len(subdirs)))
-            return subdirs
+        
+        return subdirs
 
 
     def confirm_ensemble_path(self, path):
@@ -251,8 +264,6 @@ class AzureScratchEnsemble():
     def confirm_manifest_path(self, fname):
         """Given a path that could be local or global, confirm
            the path of the manifest, return functioning path"""
-
-        print('checking for manifest')
 
         # check if local or global path was given
         if os.path.isabs(fname):
@@ -307,9 +318,7 @@ class AzureScratchEnsemble():
                                           paths=paths)
 
         for searchpath in searchpaths:
-            #print('searching {}'.format(searchpath))
             scratchensemble.find_files(os.path.join(searchpath, '*.*'), metayaml=True)
-            #print(len(scratchensemble.files))
 
         return scratchensemble
 
@@ -338,19 +347,6 @@ class AzureScratchEnsemble():
         for subfolder in subfolders:
             if not os.path.exists(os.path.join(filesystempath, subfolder)):
                 os.mkdir(os.path.join(filesystempath, subfolder))
-
-
-    def get_unique_foldername(self, prefix="/tmp/"):
-        """Return the prefix + a unique folder name"""
-        import uuid
-
-        unique_folder = os.path.join(prefix, str(uuid.uuid4()))
-
-        # double-check that this worked, call it again if not
-        if os.path.exists(unique_folder):
-            unique_folder = self.get_unique_foldername()
-
-        return unique_folder
 
 
     def copy_files(self, filesystempath, localdir="data"):
@@ -420,8 +416,6 @@ class AzureScratchEnsemble():
     def dump_internalized_dataframes(self, filesystempath, localdir="data/share"):
         """Dump dataframes carried by the ScratchEnsemble object for tabular
            data to disk. Append to index."""
-
-        print('dumping internal dataframes')
 
         for key in self.virtualensemble.data:
             if not key.startswith('__'):

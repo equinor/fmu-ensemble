@@ -32,14 +32,18 @@ def test_empty_ensemble():
                             ignoredirs=None,
                                             )
 
-    # test individual functions
+    # test some individual functions
 
     subdirs = ['/one', '/one/two', '/one/three', '/two/one', '/three']
     ignoredirs = ['one']
 
     assert aens.remove_ignored_dirs(subdirs, ignoredirs) == ['/two/one', '/three']
     assert aens.manifest == {'Some key' : 'Some value'}, aens.manifest
-
+    unique1 = aens.make_unique_foldername()
+    unique2 = aens.make_unique_foldername()
+    assert unique1 != unique2
+    assert len(unique1) == len(unique2) == (len('rmrc-'+aens.name)+7)
+    assert unique1.startswith('rmrc-{}'.format(aens.name.lower()))
 
 def test_reek_5real():
 
@@ -49,16 +53,17 @@ def test_reek_5real():
     else:
         testrootdir = os.path.abspath(".")
 
+    testdir = os.path.join(testrootdir, 'TMP')
+
+    # delete existing data in the testdir if already there
+    if os.path.isdir(testdir):
+        print('** DELETING ALL CONTENTS IN {} **'.format(testdir))
+        shutil.rmtree(testdir)
+
     try: 
         os.mkdir(os.path.join(testrootdir, 'TMP')) 
     except OSError as error: 
         print(error)
-
-    testdir = os.path.join(testrootdir, 'TMP', 'dumped_ens')
-
-    # delete existing data in the testdir if already there
-    if os.path.isdir(testdir):
-        shutil.rmtree(testdir)
 
 
     reekensemble = AzureScratchEnsemble('reektest', 
@@ -80,20 +85,24 @@ def test_reek_5real():
 
     reekensemble.upload(testdir)
 
+    testdumpeddir = reekensemble._tmp_storage_path
+
+    assert testdumpeddir.startswith(testdir)
+
     # check that some known files are present in the dumped data
-    assert os.path.isfile(os.path.join(testdir, 'data/share/smry.csv'))
-    assert os.path.isfile(os.path.join(testdir, 'data/share/OK.csv'))
-    assert os.path.isfile(os.path.join(testdir, 'data/realization-4/parameters.txt'))
+    assert os.path.isfile(os.path.join(testdumpeddir, 'data/share/smry.csv'))
+    assert os.path.isfile(os.path.join(testdumpeddir, 'data/share/OK.csv'))
+    assert os.path.isfile(os.path.join(testdumpeddir, 'data/realization-4/parameters.txt'))
 
     # index
-    indexdf = pd.read_csv(os.path.join(testdir, 'index/index.csv'))
+    indexdf = pd.read_csv(os.path.join(testdumpeddir, 'index/index.csv'))
     assert sorted(list(indexdf['REAL'].fillna(-999).unique())) == [-999,0,1,2,3,4]
 
     # check that some known files are present in the index
     assert 'data/share/smry.csv' in list(indexdf['LOCALPATH'])
 
     # check that the manifest looks right
-    with open(os.path.join(testdir, 'manifest/manifest.yml'), 'r') as stream:
+    with open(os.path.join(testdumpeddir, 'manifest/manifest.yml'), 'r') as stream:
             manifest = yaml.load(stream, Loader=yaml.FullLoader)
 
     assert 'Reek has no' in manifest.keys()
