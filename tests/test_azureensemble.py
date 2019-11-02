@@ -49,6 +49,9 @@ def test_reek_5real():
     else:
         testrootdir = os.path.abspath(".")
 
+    if not os.path.isdir(os.path.join(testrootdir, 'TMP')):
+        os.path.mkdir(os.path.join(testrootdir, 'TMP'))
+
     testdir = os.path.join(testrootdir, 'TMP', 'dumped_ens')
 
     # delete existing data in the testdir if already there
