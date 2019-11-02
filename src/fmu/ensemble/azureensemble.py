@@ -67,7 +67,7 @@ class AzureScratchEnsemble():
     """
 
     def __init__(self,
-        ensemble_name,
+        name,
         ensemble_path=None,
         iter_name=None,
         manifest=None,
@@ -75,7 +75,7 @@ class AzureScratchEnsemble():
         ignoredirs=None,
         ):
 
-        self._ensemble_name = ensemble_name
+        self._ensemble_name = name
 
         if ensemble_path is not None:
             self._ensemble_path = self.confirm_ensemble_path(ensemble_path)
@@ -182,6 +182,14 @@ class AzureScratchEnsemble():
         # TODO some checks towards the storage (already existing ensemble, etc) goes here
         # TODO upload function with the returned token go here
         # TODO some confirmation functions (just API calls?) go here
+
+
+    @property
+    def name(self):
+        return self._ensemble_name
+
+    def __len__(self):
+        return len(self.scratchensemble._realizations)
 
     @property
     def manifest(self):
@@ -321,13 +329,15 @@ class AzureScratchEnsemble():
                         "Refusing to write virtual ensemble "
                         + " to non-empty directory"
                     )
-                    raise IOError("Directory %s not empty" % filesystempath)
+                    raise IOError("Directory {} not empty".format(filesystempath))
         else:
             os.mkdir(filesystempath)
-            os.mkdir(os.path.join(filesystempath, "data"))
-            os.mkdir(os.path.join(filesystempath, "data/share"))
-            os.mkdir(os.path.join(filesystempath, "manifest"))
-            os.mkdir(os.path.join(filesystempath, "index"))
+
+        subfolders = ['data', 'data/share', 'manifest', 'index']
+
+        for subfolder in subfolders:
+            if not os.path.exists(os.path.join(filesystempath, subfolder)):
+                os.mkdir(os.path.join(filesystempath, subfolder))
 
 
     def get_unique_foldername(self, prefix="/tmp/"):
@@ -364,8 +374,7 @@ class AzureScratchEnsemble():
         """Dump the internalized ensemble manifest to disk"""
 
         # initialise it with some values we might want to inject
-        compiled_manifest = {'rmrc' : {'SomeKey' : 'SomeValue',
-                                       'SomeOtherKey' : 'SomeValue'
+        compiled_manifest = {'rmrc' : {'name' : self.name,
                                        }
                             }
 
@@ -375,7 +384,7 @@ class AzureScratchEnsemble():
         dest_fpath = os.path.join(
             filesystempath,
             localdir,
-            'manifest.yaml')
+            'manifest.yml')
 
         with open(dest_fpath, 'w+') as outfile:
             yaml.dump(compiled_manifest, outfile, default_flow_style=False)
@@ -403,14 +412,14 @@ class AzureScratchEnsemble():
 
         indexpath = os.path.join(filesystempath, localdir, indexfname)
 
-        self.virtualensemble.files.to_csv(indexpath, index=False)
+        self.index.to_csv(indexpath, index=False)
         
         print('index dumped')
 
 
     def dump_internalized_dataframes(self, filesystempath, localdir="data/share"):
         """Dump dataframes carried by the ScratchEnsemble object for tabular
-           data to disk. Return information that must be appended to index."""
+           data to disk. Append to index."""
 
         print('dumping internal dataframes')
 
@@ -426,7 +435,7 @@ class AzureScratchEnsemble():
                 df = pd.DataFrame({'LOCALPATH' : [localpath],
                                    'FILETYPE' : ['csv'],}
                                    )
-                self.virtualensemble.files.append(df, sort=False)
+                self.index = self.index.append(df, sort=False)
 
                 print('dumped {}'.format(savepath))
 
