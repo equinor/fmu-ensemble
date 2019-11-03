@@ -121,7 +121,6 @@ class AzureScratchEnsemble():
                 raise ValueError('Non-valid searchpaths given')
 
         # create a scratchensemble
-        print(self._searchpaths)
         self.scratchensemble = self.build_scratchensemble(self._ensemble_name,
                                                           self._ensemble_path,
                                                           self._searchpaths)
@@ -193,7 +192,6 @@ class AzureScratchEnsemble():
            is not in use, make it, return the path """
 
         if not os.path.isdir(tmp_storage_root):
-            print(tmp_storage_root)
             logger.critical('Non-valid temporary storage path given: {}'.format(tmp_storage_root))
             raise IOError('Not a valid temporary storage: {}'.format(tmp_storage_root))
 
