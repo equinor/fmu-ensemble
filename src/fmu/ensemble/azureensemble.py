@@ -101,24 +101,27 @@ class AzureScratchEnsemble():
         if self._searchpaths is None:
             # assume all files to be indexed
 
-            if self._ensemble_path is None:
-                self._searchpaths = None
-            else:
+            if self._ensemble_path is not None:
+
                 # Assume that all realizations have identical structures
                 rootdir = os.path.join(self._ensemble_path, 'realization-0/')
                 if self._iter_name is not '':
                     rootdir = os.path.join(rootdir, self._iter_name)
-                self._searchpaths = self.list_subdirectories(rootdir)
 
+                self._searchpaths = self.list_subdirectories(rootdir)
                 self._searchpaths = self.remove_ignored_dirs(self._searchpaths, self._ignoredirs)
+                self._searchpaths = self.make_searchpaths_scratchensemble_compatible(self._searchpaths)
 
         else:
             if isinstance(self._searchpaths, str):
                 self._searchpaths = [self._searchpaths]
-            else:
+            elif isinstance(self._searchpaths, list):
                 pass
+            else:
+                raise ValueError('Non-valid searchpaths given')
 
         # create a scratchensemble
+        print(self._searchpaths)
         self.scratchensemble = self.build_scratchensemble(self._ensemble_name,
                                                           self._ensemble_path,
                                                           self._searchpaths)
@@ -139,6 +142,18 @@ class AzureScratchEnsemble():
             self.index = self.create_index()
 
             print('OK')
+
+    def make_searchpaths_scratchensemble_compatible(self, searchpaths):
+        """ScratchEnsemble requires searchpaths relative to the realization directory"""
+
+        compatible_paths = []
+
+        for searchpath in searchpaths:
+            if searchpath.startswith('/'):
+                searchpath = searchpath[1:]
+            compatible_paths.append('{}/*.*'.format(searchpath))
+
+        return compatible_paths
 
 
     def upload(self, tmp_storage_root='/tmp'):
@@ -216,6 +231,7 @@ class AzureScratchEnsemble():
         """Returns the internally stored manifest (dict)"""
         return self._manifest
 
+
     @property
     def tmp_storage(self):
         """If ensemble is stored on disk, return the path. Otherwise, return None."""
@@ -223,11 +239,13 @@ class AzureScratchEnsemble():
             return self._tmp_storage
         return None
 
+
     def list_subdirectories(self, rootpath):
         """Given a rootpath, return all subdirectories recursively as list"""
         subdirs = [r.replace(rootpath, '') for r, _d, _f in os.walk(rootpath)]
 
         return subdirs
+
 
     def remove_ignored_dirs(self, subdirs, ignoredirs):
         """Given list A and list B, remove all elements in list A that
@@ -235,17 +253,13 @@ class AzureScratchEnsemble():
 
         keepers = []
 
-        if isinstance(ignoredirs, list):
+        ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
 
-            ignoredirs = tuple([d[1:] if d.startswith('/') else d for d in ignoredirs])
+        for subdir in subdirs:
+            if not subdir.startswith(ignoredirs) and len(subdir) > 0:
+                keepers.append(subdir)
 
-            for subdir in subdirs:
-                if not subdir.startswith(ignoredirs) and len(subdir) > 0:
-                    keepers.append(subdir)
-
-            return keepers
-        
-        return subdirs
+        return keepers
 
 
     def confirm_ensemble_path(self, path):
@@ -317,8 +331,7 @@ class AzureScratchEnsemble():
         scratchensemble = ScratchEnsemble(ensemble_name,
                                           paths=paths)
 
-        for searchpath in searchpaths:
-            scratchensemble.find_files(os.path.join(searchpath, '*.*'), metayaml=True)
+        scratchensemble.find_files(searchpaths, metayaml=True)
 
         return scratchensemble
 
