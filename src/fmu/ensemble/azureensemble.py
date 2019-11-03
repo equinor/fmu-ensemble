@@ -237,7 +237,7 @@ class AzureScratchEnsemble():
 
         if isinstance(ignoredirs, list):
 
-            ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
+            ignoredirs = tuple([d[1:] if d.startswith('/') else d for d in ignoredirs])
 
             for subdir in subdirs:
                 if not subdir.startswith(ignoredirs) and len(subdir) > 0:
