@@ -135,7 +135,6 @@ class AzureScratchRealization():
            overwrite the index if already present. Perhaps smarter solutions
            can be added in the future."""
 
-        print(searchpaths)
         self.scratchrealization.find_files(searchpaths, metayaml=True)
 
         # do not return .files directly, to open for possibility of
@@ -163,7 +162,7 @@ class AzureScratchRealization():
     def dump_index(self, fname='index.csv'):
         """Dump the index to file in csv format"""
         savepath = os.path.join(self._indexpath, fname)
-        self.index.to_csv(savepath)
+        self.index.to_csv(savepath, index=False)
         logger.info('Index dumped to {}'.format(savepath))
 
         return savepath        
@@ -180,6 +179,7 @@ class AzureScratchEnsemble():
         ensemble_name (str): Name of ensemble. Will be passed to ScratchEnsemble
         ensemble_path (path): Path to root of ensemble
         iter_name (str): Name of iteration. If not included, will assume no iteration.
+        premade_index (bool): If True, do not search for files, use premade indexes per realisation
         manifest (path/dict): Path to manifest file (yaml) OR actual manifest as dict
         searchpaths (list of paths): List of paths to feed to ScratchEnsembe.find_files(). If
                                      not provided, will assume all paths (except ignoredirs)
@@ -217,6 +217,7 @@ class AzureScratchEnsemble():
         name,
         ensemble_path=None,
         iter_name=None,
+        premade_index_path=None,
         manifest=None,
         searchpaths=None,
         ignoredirs=None,
@@ -244,11 +245,13 @@ class AzureScratchEnsemble():
         else:
             logger.error('A manifest must be provided')
 
+        self.index = None
+
         self._tmp_storage_path = None
         self._tmp_stored_on_disk = False
-        self._index = None
         self._searchpaths = searchpaths
         self._ignoredirs = ignoredirs
+        self._premade_index_path = premade_index_path
 
         if self._searchpaths is None:
             # assume all files to be indexed
@@ -265,6 +268,9 @@ class AzureScratchEnsemble():
                 self._searchpaths = self.make_searchpaths_scratchensemble_compatible(self._searchpaths)
 
         else:
+            if self._premade_index_path is not None:
+                logger.warning('searchpaths will be ignored, as premade index will be used.')
+
             if isinstance(self._searchpaths, str):
                 self._searchpaths = [self._searchpaths]
             elif isinstance(self._searchpaths, list):
@@ -275,16 +281,21 @@ class AzureScratchEnsemble():
         # create a scratchensemble
         self.scratchensemble = self.build_scratchensemble(self._ensemble_name,
                                                           self._ensemble_path,
-                                                          self._searchpaths)
+                                                          )
 
+        if self._premade_index_path is None:
+            self.scratchensemble.find_files(searchpaths, metayaml=True)
+            if len(self.scratchensemble) > 0:
+                logger.warning('ScratchEnsemble returned with no content')
+                return
 
-        if len(self.scratchensemble) > 0:
             # create a VirtualEnsemble
             self.virtualensemble = self.scratchensemble.to_virtual()
 
             # add smry data
             smry = self.scratchensemble.get_smry()
-            self.virtualensemble.append('smry', smry)   # shared is indicating that data goes across realizations
+            logger.info('Getting eclipse summary for all realisations')
+            self.virtualensemble.append('smry', smry)
 
             # add x
 
@@ -292,7 +303,26 @@ class AzureScratchEnsemble():
 
             self.index = self.create_index()
 
-            print('OK')
+        else:
+
+            print('using pre-compiled index')
+
+            # pre-compiled index
+            self.index = self.compile_premade_index()
+
+            # create a VirtualEnsemble
+            self.virtualensemble = self.scratchensemble.to_virtual()
+
+            # add smry data
+            smry = self.scratchensemble.get_smry()
+            logger.info('Getting eclipse summary for all realisations')
+            self.virtualensemble.append('smry', smry)
+
+            print('self.index:')
+            print(self.index)
+
+        print('OK')
+
 
     def make_searchpaths_scratchensemble_compatible(self, searchpaths):
         """ScratchEnsemble requires searchpaths relative to the realization directory"""
@@ -403,13 +433,20 @@ class AzureScratchEnsemble():
 
         keepers = []
 
-        ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
+        if ignoredirs is not None:
+            ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
 
-        for subdir in subdirs:
-            if not subdir.startswith(ignoredirs) and len(subdir) > 0:
-                keepers.append(subdir)
+            for subdir in subdirs:
+                if not subdir.startswith(ignoredirs):
+                    keepers.append(subdir)
+        else:
+            keepers = subdirs
+
+        # remove zero-length entries
+        keepers = [k for k in keepers if len(k) > 0]
 
         return keepers
+
 
 
     def confirm_ensemble_path(self, path):
@@ -469,7 +506,7 @@ class AzureScratchEnsemble():
 
         return manifest
 
-    def build_scratchensemble(self, ensemble_name, ensemble_path, searchpaths):
+    def build_scratchensemble(self, ensemble_name, ensemble_path):
         """Initialize and return a ScratchEnsemble object"""
 
         if ensemble_path is None:
@@ -480,8 +517,6 @@ class AzureScratchEnsemble():
 
         scratchensemble = ScratchEnsemble(ensemble_name,
                                           paths=paths)
-
-        scratchensemble.find_files(searchpaths, metayaml=True)
 
         return scratchensemble
 
@@ -565,6 +600,20 @@ class AzureScratchEnsemble():
         # parse metadata if present for each file, append to the index.
         # should be code for this elsewhere...
 
+
+    def compile_premade_index(self):
+        """Concatenate index files for all realisation in self.scratchensemble"""
+
+        dfs = []
+        for real in self.scratchensemble._realizations.keys():
+            path = os.path.join(self._ensemble_path, 'realization-{}'.format(real), self._iter_name, self._premade_index_path)
+            df_this_real = pd.read_csv(path)
+            df_this_real['REAL'] = real
+            dfs.append(df_this_real)
+
+        df = pd.concat(dfs)
+
+        return df
 
     def dump_index(self, filesystempath, localdir="index", indexfname="index.csv"):
         """Dump the index to disk"""
