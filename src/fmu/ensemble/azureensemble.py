@@ -305,7 +305,7 @@ class AzureScratchEnsemble():
 
         else:
 
-            print('using pre-compiled index')
+            logger.info('using pre-compiled index')
 
             # pre-compiled index
             self.index = self.compile_premade_index()
@@ -318,8 +318,6 @@ class AzureScratchEnsemble():
             logger.info('Getting eclipse summary for all realisations')
             self.virtualensemble.append('smry', smry)
 
-            print('self.index:')
-            print(self.index)
 
         print('OK')
 
@@ -351,13 +349,16 @@ class AzureScratchEnsemble():
         self.prepare_blob_structure(tmp_storage_path)
 
         # DATA section
+        logger.info('Copying files')
         self.copy_files(tmp_storage_path)
         self.dump_internalized_dataframes(tmp_storage_path)
 
         # MANIFEST section
+        logger.info('Dumping manifest')
         self.dump_manifest(tmp_storage_path)
 
         # INDEX section
+        logger.info('Dumping index')
         self.dump_index(tmp_storage_path)
 
         self._tmp_stored_on_disk = True
@@ -550,7 +551,7 @@ class AzureScratchEnsemble():
     def copy_files(self, filesystempath, localdir="data"):
 
         # code from .to_disk()
-        for _, filerow in self.scratchensemble.files.iterrows():
+        for _, filerow in self.index.iterrows():
             src_fpath = filerow["FULLPATH"]
             dest_fpath = os.path.join(
                 filesystempath,
@@ -583,7 +584,7 @@ class AzureScratchEnsemble():
         with open(dest_fpath, 'w+') as outfile:
             yaml.dump(compiled_manifest, outfile, default_flow_style=False)
 
-        print('yaml dumped')
+        logger.info('yaml dumped')
 
     def create_index(self):
         """Assemble index as dataframe
@@ -622,20 +623,57 @@ class AzureScratchEnsemble():
 
         self.index.to_csv(indexpath, index=False)
         
-        print('index dumped')
+        logger.info('index dumped')
 
 
-    def dump_internalized_dataframes(self, filesystempath, localdir="data/share"):
+    def dump_internalized_dataframes(self, filesystempath, localdir="data/share", fformat=None):
         """Dump dataframes carried by the ScratchEnsemble object for tabular
-           data to disk. Append to index."""
+           data to disk. Append to index.
+
+           Args:
+                filesystempath (path): Absolute path to temporary storage location usually on /tmp/
+                localdir (path): Relative path inside the package for storing the dumped data
+                fformat (str): Allowed file format ('csv' or 'parquet') for forcing file format. If None,
+                               format will be derived from looking at the data.
+
+        """
+
+        def derive_fformat(df):
+            """Look at the data, decide which format to use, return format as string"""
+            if len(df) > 1000:
+                return 'parquet'
+            return 'csv'
+
+        import pyarrow
+
+        allowed_fformats = ['csv', 'parquet', None]
+
+        if not fformat in allowed_fformats:
+            logger.critical('dump_internalized_dataframes() was given {} as the fformat argument. Not allowed.'.format(fformat))
+            raise ValueError('Illegal fformat: {}. Allowed formats: {}'.format(fformat, str(allowed_fformats)))
 
         for key in self.virtualensemble.data:
             if not key.startswith('__'):
+                filebase = str(key)
+                localpath = os.path.join(localdir, filebase)
 
-                fname = str(key) + '.csv'
-                localpath = os.path.join(localdir, fname)
-                savepath = os.path.join(filesystempath, localpath)
-                self.virtualensemble.data[key].to_csv(savepath, index=False)
+                df = self.virtualensemble.data[key]
+
+                if fformat is None:
+                    use_fformat = derive_fformat(df)
+                    logger.info('Working with filebase. Derived format is {}'.format(use_fformat))
+                else:
+                    use_fformat = fformat
+                    logger.info('fformat was predefined to {}'.format(fformat))
+
+                if use_fformat == 'csv':
+                    savepath = os.path.join(filesystempath, localpath+'.'+use_fformat)
+                    df.to_csv(savepath, index=False)
+                elif use_fformat == 'parquet':
+                    savepath = os.path.join(filesystempath, localpath+'.'+use_fformat)
+                    df.to_parquet(savepath, index=False, engine="auto")
+                else:
+                    ValueError('Non-valid file format: {}'.format(use_fformat))
 
                 # add reference to the index
                 df = pd.DataFrame({'LOCALPATH' : [localpath],
@@ -643,6 +681,6 @@ class AzureScratchEnsemble():
                                    )
                 self.index = self.index.append(df, sort=False)
 
-                print('dumped {}'.format(savepath))
+                logger.info('dumped {}'.format(savepath))
 
 
