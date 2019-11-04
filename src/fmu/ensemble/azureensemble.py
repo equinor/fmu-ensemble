@@ -13,10 +13,162 @@ import shutil
 import pandas as pd
 
 from .etc import Interaction
-from .ensemble import ScratchEnsemble
+from .ensemble import ScratchEnsemble, ScratchRealization
 
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
+
+class AzureScratchRealization():
+    """Class for handling indiviual realisations that are to be uploaded to the 
+       RMrC storage on Azure.
+
+       Class is initialized for a specific realisation, assembles an index of this
+       particular realisation, to be concatenated by AzureScratchEnsemble.
+
+    Args:
+        path (path):                 Path to the realization. Will be given to ScratchRealization.
+                                     Path must include the iteration, if iterations are used.
+        realisation-id (int):        The ID of the realisation within an ensemble. Will be passed
+                                     ScratchRealization through the index argument.
+        searchpaths (list of paths): List of pats to feed to ScratchRealization.find_files().
+                                     If not provided, will assume all pahts (except ignordirs)
+        ignoredirs (list of str):    List of strings representing paths to ignore when searching
+                                     for files.
+        indexdir (path):             Root directory for placing the index dataframe. Will be made 
+                                     if not present.
+
+        
+        Inconsistencies with rest of fmu-ensemble:
+        - The term 'index' is used in ScratchRealization for representing the realization ID. Here,
+          the index refers to the index of files in a realisation.
+
+
+       """
+
+    def __init__(self, path, realization_id, searchpaths=None, ignoredirs=None, indexdir='share/rmrc/index'):
+
+        self._path = path
+        self._searchpaths = searchpaths
+        self._ignoredirs = ignoredirs
+        self._realization_id = realization_id
+        self._indexdir = indexdir
+        self._index = None
+
+        if 'realization-{}'.format(realization_id) not in path:
+            logger.critical('Incosistency between path and realization ID. This looks very wrong, so crashing.')
+            raise ValueError('Realization ID is {}, but that looks wrong given the realization path: {}'.format(realization_id, path))
+
+        if not os.path.isdir(path):
+            logger.critical('Given path is not valid: {}'.format(path))
+            raise IOError('Path not valid')
+
+        self._indexpath = self.make_indexpath(self._path, self._indexdir)
+
+        self.scratchrealization = ScratchRealization(path=self._path, index=self._realization_id)
+
+        if self._searchpaths is None:
+            # assume all files to be indexed
+            self._searchpaths = self.list_subdirectories(self._path)
+            self._searchpaths = self.remove_ignored_dirs(self._searchpaths, self._ignoredirs)
+            self._searchpaths = self.make_searchpaths_scratchrealization_compatible(self._searchpaths)
+
+        else:
+
+            if isinstance(self._searchpaths, str):
+                self._searchpaths = [self._searchpaths]
+            elif isinstance(self._searchpaths, list):
+                pass
+            else:
+                raise ValueError('Non-valid searchpaths given')
+
+        self.virtualrealization = self.scratchrealization.to_virtual()
+
+    @property
+    def index(self):
+        """Returns the index as a dataframe"""
+
+        if self._index is None:
+            self._index = self.compile_index(searchpaths=self._searchpaths)
+        return self._index
+
+    def list_subdirectories(self, rootpath):
+        """Given a rootpath, return all subdirectories recursively as list"""
+        subdirs = [r.replace(rootpath, '') for r, _d, _f in os.walk(rootpath)]
+
+        return subdirs
+
+
+    def remove_ignored_dirs(self, subdirs, ignoredirs):
+        """Given list A and list B, remove all elements in list A that
+           starts with any of the elements in list B"""
+
+        keepers = []
+
+        if ignoredirs is not None:
+            ignoredirs = tuple(['/' + d if not d.startswith('/') else d for d in ignoredirs])
+
+            for subdir in subdirs:
+                if not subdir.startswith(ignoredirs):
+                    keepers.append(subdir)
+        else:
+            keepers = subdirs
+
+        # remove zero-length entries
+        keepers = [k for k in keepers if len(k) > 0]
+
+        return keepers
+
+    def make_searchpaths_scratchrealization_compatible(self, searchpaths):
+        """ScratchRealization requires searchpaths relative to the realization directory"""
+
+        compatible_paths = []
+
+        for searchpath in searchpaths:
+            if searchpath.startswith('/'):
+                searchpath = searchpath[1:]
+            compatible_paths.append('{}/*.*'.format(searchpath))
+
+        return compatible_paths
+
+    def compile_index(self, searchpaths):
+        """Search all files in current realisation, index them. For now
+           overwrite the index if already present. Perhaps smarter solutions
+           can be added in the future."""
+
+        print(searchpaths)
+        self.scratchrealization.find_files(searchpaths, metayaml=True)
+
+        # do not return .files directly, to open for possibility of
+        # adding more stuff to it before returning
+        index = self.scratchrealization.files
+
+        return index
+
+    def make_indexpath(self, path, indexdir):
+        """Check/create the directory where index will be dumped"""
+
+        fullpath = os.path.join(path, indexdir)
+
+        if not os.path.isdir(fullpath):
+            logger.warning('Directory does not exist. Creating {}'.format(fullpath))
+            os.makedirs(fullpath)
+            return fullpath
+        else:
+            return fullpath
+
+        logger.critical('AzureScratchRealization.make_indexpath() made it to the end without returning. That is strange.')
+        raise ValueError('Unexpected error')
+
+
+    def dump_index(self, fname='index.csv'):
+        """Dump the index to file in csv format"""
+        savepath = os.path.join(self._indexpath, fname)
+        self.index.to_csv(savepath)
+        logger.info('Index dumped to {}'.format(savepath))
+
+        return savepath        
+
+
 
 class AzureScratchEnsemble():
     """Class for handling ensembles that are to be uploaded to the RMrC

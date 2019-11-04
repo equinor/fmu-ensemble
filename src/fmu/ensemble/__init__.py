@@ -17,3 +17,4 @@ from .ensemblecombination import EnsembleCombination  # noqa
 from .realizationcombination import RealizationCombination  # noqa
 from .observations import Observations  # noqa
 from .azureensemble import AzureScratchEnsemble # noqa
+from .azureensemble import AzureScratchRealization # noqa
