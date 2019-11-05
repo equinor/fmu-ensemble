@@ -223,6 +223,8 @@ class AzureScratchEnsemble():
         dumpparquet=False
         ):
 
+        # create a unique ID for this instance
+        self._id = 'rmrc-{}'.format(self.make_unique_string())
         self._name = None
 
         if ensemble_path is not None:
@@ -346,7 +348,7 @@ class AzureScratchEnsemble():
         return compatible_paths
 
 
-    def upload(self, tmp_storage_root='/tmp'):
+    def upload(self, tmp_storage_root='/tmp', symlinks=True):
         """Dump ensemble to temporary storage on format as in rmrc,
            ready for upload.
 
@@ -367,7 +369,7 @@ class AzureScratchEnsemble():
 
         # DATA section
         logger.info('Copying files')
-        self.copy_files(tmp_storage_path, symlinks=True)
+        self.copy_files(tmp_storage_path, symlinks=symlinks)
         self.dump_internalized_dataframes(tmp_storage_path)
 
         ## Alternatively, use virtualensemble.to_disk()
@@ -412,39 +414,43 @@ class AzureScratchEnsemble():
             logger.critical('Non-valid temporary storage path given: {}'.format(tmp_storage_root))
             raise IOError('Not a valid temporary storage: {}'.format(tmp_storage_root))
 
-        while True:
-            unique_folder_name = self.make_unique_foldername()
-            tmp_storage_path = os.path.join(tmp_storage_root, unique_folder_name)
-            if not os.path.exists(tmp_storage_path):
-                break
+        unique_folder_name = 'rmrc-{}'.format(self._id)
+
+        tmp_storage_path = os.path.join(tmp_storage_root, unique_folder_name)
+        if os.path.exists(tmp_storage_path):
+            logger.critical('temporary storage path already exists: {}'.format(tmp_storage_path))
 
         # got a unique folder name, now create it
         os.mkdir(tmp_storage_path)
 
         return tmp_storage_path
 
-    def make_unique_foldername(self):
-        """Return unique foldername, 6 characters, lowercase"""
+    def make_unique_string(self):
+        """Return unique string, 6 characters, lowercase"""
 
         import uuid
 
-        unique_part = str(uuid.uuid4())[0:6]
-        unique_folder_name = 'rmrc-{}'.format(unique_part.lower())
+        unique = str(uuid.uuid4())[0:6].lower()
         
-        return unique_folder_name
+        return unique
 
 
     @property
     def name(self):
-        """Name of ensemble. Not used, but if used in the future, it should
-           be parsed from the manifest."""
+        """Name of ensemble. Parsed from the manifest."""
 
         if self._name is None:
-            self._name = 'SomeName'
+            self._name = self.manifest.get('case', {}).get('case', None)
+        if self._name is None:
+            # Well that failed, so make something up
+            self._name = "NoName-{}".format(self._id)
+
+        self._name = self._name
         return self._name
 
     def __len__(self):
         return len(self.scratchensemble._realizations)
+
 
     @property
     def manifest(self):
@@ -486,7 +492,6 @@ class AzureScratchEnsemble():
         keepers = [k for k in keepers if len(k) > 0]
 
         return keepers
-
 
 
     def confirm_ensemble_path(self, path):
@@ -621,6 +626,7 @@ class AzureScratchEnsemble():
 
         # initialise it with some values we might want to inject
         compiled_manifest = {'rmrc' : {'name' : self.name,
+                                       'id'   : self._id,
                                        }
                             }
 

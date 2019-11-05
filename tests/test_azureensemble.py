@@ -38,11 +38,15 @@ def test_empty_ensemble():
 
     assert aens.remove_ignored_dirs(subdirs, ignoredirs) == ['/two/one', '/three']
     assert aens.manifest == {'Some key' : 'Some value'}, aens.manifest
-    unique1 = aens.make_unique_foldername()
-    unique2 = aens.make_unique_foldername()
+    unique1 = aens.make_unique_string()
+    unique2 = aens.make_unique_string()
     assert unique1 != unique2
-    assert len(unique1) == len(unique2) == (len('rmrc-')+6)
-    assert unique1.startswith('rmrc-')
+    assert len(unique1) == len(unique2) == 6
+
+    # make sure that the ID stays constant even if called several times
+    aens_id1 = aens._id
+    aens_id2 = aens._id
+    assert aens_id1 == aens_id2
 
 def test_reek_5real():
 
