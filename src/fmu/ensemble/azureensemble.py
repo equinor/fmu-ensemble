@@ -87,8 +87,6 @@ class AzureScratchRealization():
     def index(self):
         """Returns the index as a dataframe"""
 
-        if self._index is None:
-            self._index = self.compile_index(searchpaths=self._searchpaths)
         return self._index
 
     def list_subdirectories(self, rootpath):
@@ -162,7 +160,7 @@ class AzureScratchRealization():
     def dump_index(self, fname='index.csv'):
         """Dump the index to file in csv format"""
         savepath = os.path.join(self._indexpath, fname)
-        self.index.to_csv(savepath, index=False)
+        self._index.to_csv(savepath, index=False)
         logger.info('Index dumped to {}'.format(savepath))
 
         return savepath        
@@ -245,7 +243,7 @@ class AzureScratchEnsemble():
         else:
             logger.error('A manifest must be provided')
 
-        self.index = None
+        self._index = None
 
         self._tmp_storage_path = None
         self._tmp_stored_on_disk = False
@@ -255,6 +253,8 @@ class AzureScratchEnsemble():
 
         if self._searchpaths is None:
             # assume all files to be indexed
+
+            print('Assuming all files to be indexed')
 
             if self._ensemble_path is not None:
 
@@ -268,6 +268,7 @@ class AzureScratchEnsemble():
                 self._searchpaths = self.make_searchpaths_scratchensemble_compatible(self._searchpaths)
 
         else:
+
             if self._premade_index_path is not None:
                 logger.warning('searchpaths will be ignored, as premade index will be used.')
 
@@ -284,8 +285,10 @@ class AzureScratchEnsemble():
                                                           )
 
         if self._premade_index_path is None:
-            self.scratchensemble.find_files(searchpaths, metayaml=True)
-            if len(self.scratchensemble) > 0:
+            print('running find_files')
+            self.scratchensemble.find_files(self._searchpaths, metayaml=True)
+            if not len(self.scratchensemble) > 0:
+                print('Length of scratchensemble is 0, returning now')
                 logger.warning('ScratchEnsemble returned with no content')
                 return
 
@@ -301,14 +304,15 @@ class AzureScratchEnsemble():
 
             # add y
 
-            self.index = self.create_index()
+            print('Calling create_index()')
+            self._index = self.create_index()
 
         else:
 
-            logger.info('using pre-compiled index')
+            print('using pre-compiled index')
 
             # pre-compiled index
-            self.index = self.compile_premade_index()
+            self._index = self.compile_premade_index()
 
             # create a VirtualEnsemble
             self.virtualensemble = self.scratchensemble.to_virtual()
@@ -317,7 +321,6 @@ class AzureScratchEnsemble():
             smry = self.scratchensemble.get_smry()
             logger.info('Getting eclipse summary for all realisations')
             self.virtualensemble.append('smry', smry)
-
 
         print('OK')
 
@@ -343,22 +346,29 @@ class AzureScratchEnsemble():
 
         """
 
+        if not len(self.scratchensemble) > 0:
+            logger.warning('ScratchEnsemble has zero-length. Nothing to upload.')
+            return
+
         tmp_storage_path = self.create_tmp_storage_folder(tmp_storage_root)
         self._tmp_storage_path = tmp_storage_path
 
         self.prepare_blob_structure(tmp_storage_path)
 
         # DATA section
-        logger.info('Copying files')
-        self.copy_files(tmp_storage_path)
-        self.dump_internalized_dataframes(tmp_storage_path)
+        logger.info('ScratchEnsemble.to_disk()')
+        self.scratchensemble.to_disk(os.path.join(tmp_storage_path, 'data'), dumpparquet=False)
+
+#        logger.info('Copying files')
+#        self.copy_files(tmp_storage_path)
+#        self.dump_internalized_dataframes(tmp_storage_path)
 
         # MANIFEST section
         logger.info('Dumping manifest')
         self.dump_manifest(tmp_storage_path)
 
         # INDEX section
-        logger.info('Dumping index')
+        print('Dumping index')
         self.dump_index(tmp_storage_path)
 
         self._tmp_stored_on_disk = True
@@ -541,7 +551,8 @@ class AzureScratchEnsemble():
         else:
             os.mkdir(filesystempath)
 
-        subfolders = ['data', 'data/share', 'manifest', 'index']
+        #subfolders = ['data', 'data/share', 'manifest', 'index']
+        subfolders = ['data', 'manifest', 'index']
 
         for subfolder in subfolders:
             if not os.path.exists(os.path.join(filesystempath, subfolder)):
@@ -551,7 +562,7 @@ class AzureScratchEnsemble():
     def copy_files(self, filesystempath, localdir="data"):
 
         # code from .to_disk()
-        for _, filerow in self.index.iterrows():
+        for _, filerow in self._index.iterrows():
             src_fpath = filerow["FULLPATH"]
             dest_fpath = os.path.join(
                 filesystempath,
@@ -593,6 +604,7 @@ class AzureScratchEnsemble():
         TODO: Explore extension of metadata fields
         """
 
+        print('returning self.virtualensemble.files')
         index = self.virtualensemble.files
 
         return index
@@ -621,7 +633,7 @@ class AzureScratchEnsemble():
 
         indexpath = os.path.join(filesystempath, localdir, indexfname)
 
-        self.index.to_csv(indexpath, index=False)
+        self._index.to_csv(indexpath, index=False)
         
         logger.info('index dumped')
 
@@ -679,7 +691,7 @@ class AzureScratchEnsemble():
                 df = pd.DataFrame({'LOCALPATH' : [localpath],
                                    'FILETYPE' : ['csv'],}
                                    )
-                self.index = self.index.append(df, sort=False)
+                self._index = self._index.append(df, sort=False)
 
                 logger.info('dumped {}'.format(savepath))
 
