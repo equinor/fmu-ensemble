@@ -25,11 +25,10 @@ if not fmux.testsetup():
 def test_empty_ensemble():
 
     # initialize an empty AzureScratchEnsemble
-    aens = AzureScratchEnsemble('MyEns', 
-                            ensemble_path=None, 
-                            iter_name=None, 
-                            manifest={'Some key' : 'Some value'}, 
-                            ignoredirs=None,
+    aens = AzureScratchEnsemble(ensemble_path=None, 
+                                iter_name=None, 
+                                manifest={'Some key' : 'Some value'}, 
+                                ignoredirs=None,
                                             )
 
     # test some individual functions
@@ -42,8 +41,8 @@ def test_empty_ensemble():
     unique1 = aens.make_unique_foldername()
     unique2 = aens.make_unique_foldername()
     assert unique1 != unique2
-    assert len(unique1) == len(unique2) == (len('rmrc-'+aens.name)+7)
-    assert unique1.startswith('rmrc-{}'.format(aens.name.lower()))
+    assert len(unique1) == len(unique2) == (len('rmrc-')+6)
+    assert unique1.startswith('rmrc-')
 
 def test_reek_5real():
 
@@ -66,7 +65,7 @@ def test_reek_5real():
         print(error)
 
 
-    reekensemble = AzureScratchEnsemble('reektest', 
+    reekensemble = AzureScratchEnsemble(
             ensemble_path = os.path.join(testrootdir, 'data/testensemble-reek001/'),
             iter_name = 'iter-0',
             manifest = {'Reek has no' : 'manifest'},
@@ -78,7 +77,6 @@ def test_reek_5real():
     assert isinstance(reekensemble.scratchensemble, ScratchEnsemble)
     assert isinstance(reekensemble.virtualensemble, VirtualEnsemble)
     assert isinstance(reekensemble.scratchensemble[0], ScratchRealization)
-    assert reekensemble.name == 'reektest'
     assert len(reekensemble.scratchensemble) == 5
     assert len(reekensemble) == 5
 
@@ -107,4 +105,3 @@ def test_reek_5real():
 
     assert 'Reek has no' in manifest.keys()
     assert 'rmrc' in manifest.keys()
-    assert manifest.get('rmrc').get('name') == 'reektest'
