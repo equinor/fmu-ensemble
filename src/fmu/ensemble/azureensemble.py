@@ -9,6 +9,7 @@ from __future__ import print_function
 import os
 import yaml
 import shutil
+from timeit import default_timer as timer
 
 import pandas as pd
 
@@ -173,57 +174,56 @@ class AzureScratchEnsemble():
     """Class for handling ensembles that are to be uploaded to the RMrC
        storage on Azure. Class is initialized in an ensemble-centric way,
        initializes a ScratchEnsemble object, which in turn initializes a
-       VirtualEnsemble object
+       VirtualEnsemble object.
+
+       This class wraps around ScratchEnsemble and VirtualEnsemble.
 
     Args:
-        ensemble_name (str): Name of ensemble. Will be passed to ScratchEnsemble
-        ensemble_path (path): Path to root of ensemble
-        iter_name (str): Name of iteration. If not included, will assume no iteration.
-        premade_index (bool): If True, do not search for files, use premade indexes per realisation
-        manifest (path/dict): Path to manifest file (yaml) OR actual manifest as dict
+        ensemble_name (str):         Name of ensemble. Will be passed to ScratchEnsemble
+        ensemble_path (path):        Path to root of ensemble
+        iter_name (str):             Name of iteration. If not included, will assume no iteration.
+        premade_index (bool):        If True, do not search for files, use premade indexes per realisation
+        premade_index_path (path):   Path to premade-index. Default: 'share/rmrc/index/index.csv'
+        manifest (path/dict):        Path to manifest file (yaml) OR actual manifest as dict
         searchpaths (list of paths): List of paths to feed to ScratchEnsembe.find_files(). If
                                      not provided, will assume all paths (except ignoredirs)
-        ignoredirs (list of str): List of local directories to ignore when not giving searchpaths.
+        ignoredirs (list of str):    List of local directories to ignore when not giving searchpaths.
+        dumpparquet (bool):          Temporary argument to bypass use of parquet
 
 
-    Examples:
+    Example:
 
-        searchpaths = ['share/maps/depth/VIKING_Top*.gri',
-                       'eclipse/model/2019*.UNSMRY']
+        ensemble_path='/path/to/ensemble/root/on/scratch'
+        iter_name = 'iter-0'
+        manifest_path='share/runinfo/runinfo.yaml' (to be generalized at some point)
+        ignoredirs = ['sim2seis', 'rms', 'eclipse', 'cohiba', 'bin', 'config']
 
-        ignoredirs = ['rms/model', 'sim2seis', 'cohiba', 'config', 'eclipse/include', 'share']
-
-        ensemble_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/'
-        iter_name = 'pred'
-        manifest_path='/scratch/johan_sverdrup2/rmrc/ens_full_5/pred/share/runinfo/runinfo.yaml'
-
-        tmp_storage_path='/scratch/johan_sverdrup2/rmrc/ens_full_5_azureprep15/'
-
-        from fmu import ensemble
-
-        myens = ensemble.AzureScratchEnsemble('MyEns', 
-                                ensemble_path='/path/to/ensemble/on/scratch, 
-                                iter_name='pred', 
-                                manifest='/', 
-                                ignoredirs=ignoredirs,
-                                )
-
-        azureens.upload('/tmp/storage/location/')
-
+        # initialize the AzureScratchEnsemble
+        azureens = ensemble.AzureScratchEnsemble('MyEns',
+                                                 ensemble_path=ensemble_path,
+                                                 iter_name=iter_name,
+                                                 manifest=manifest_path,
+                                                 ignoredirs=ignoredirs,
+                                                 premade_index=True,
+                                                 dumpparquet=False
+                                                 )
+        # upload the ensemble
+        azureens.upload()
 
     """
 
     def __init__(self,
-        name,
         ensemble_path=None,
         iter_name=None,
+        premade_index=False,
         premade_index_path=None,
         manifest=None,
         searchpaths=None,
         ignoredirs=None,
+        dumpparquet=False
         ):
 
-        self._ensemble_name = name
+        self._name = None
 
         if ensemble_path is not None:
             self._ensemble_path = self.confirm_ensemble_path(ensemble_path)
@@ -251,12 +251,19 @@ class AzureScratchEnsemble():
         self._tmp_stored_on_disk = False
         self._searchpaths = searchpaths
         self._ignoredirs = ignoredirs
-        self._premade_index_path = premade_index_path
+        self._premade_index = premade_index
+        self._dumpparquet = dumpparquet
+
+        if premade_index:
+            if premade_index_path is None:
+                self._premade_index_path = 'share/rmrc/index/index.csv'
+            else:
+                self._premade_index_path = premade_index_path
 
         if self._searchpaths is None:
             # assume all files to be indexed
 
-            print('Assuming all files to be indexed')
+            logger.info('No searchpaths given, so assuming all files to be indexed')
 
             if self._ensemble_path is not None:
 
@@ -271,7 +278,7 @@ class AzureScratchEnsemble():
 
         else:
 
-            if self._premade_index_path is not None:
+            if self._premade_index:
                 logger.warning('searchpaths will be ignored, as premade index will be used.')
 
             if isinstance(self._searchpaths, str):
@@ -282,33 +289,27 @@ class AzureScratchEnsemble():
                 raise ValueError('Non-valid searchpaths given')
 
         # create a scratchensemble
-        self.scratchensemble = self.build_scratchensemble(self._ensemble_name,
+        self.scratchensemble = self.build_scratchensemble(self.name,
                                                           self._ensemble_path,
                                                           )
 
-        if self._premade_index_path is None:
+        if not self._premade_index:
 
-            print('No premade index, running find_files')
+            logger.debug('No premade index, running find_files')
             self.scratchensemble.find_files(self._searchpaths, metayaml=True)
             if not len(self.scratchensemble) > 0:
-                print('Length of scratchensemble is 0, returning now')
+                logger.debug('Length of scratchensemble is 0, returning now')
                 logger.warning('ScratchEnsemble returned with no content')
                 return
 
             # create a VirtualEnsemble
-            print('creating virtualensemble')
             self.virtualensemble = self.scratchensemble.to_virtual()
 
             # add smry data
-            print('getting smry')
             logger.info('Getting eclipse summary for all realisations')
             smry = self.scratchensemble.get_smry()
 
-            print('appending smry to virtualensemble')
             self.virtualensemble.append('smry', smry)
-
-            print('keys in VirtualEnsemble now:')
-            print(self.virtualensemble.keys())
 
             # add x
 
@@ -319,7 +320,6 @@ class AzureScratchEnsemble():
         else:
 
             # pre-compiled index
-            print('premade index, NOT running find_files')
             self._index = self.compile_premade_index()
 
             # create a VirtualEnsemble
@@ -330,7 +330,7 @@ class AzureScratchEnsemble():
             logger.info('Getting eclipse summary for all realisations')
             self.virtualensemble.append('smry', smry)
 
-        print('OK')
+        logger.debug('__init__ done')
 
 
     def make_searchpaths_scratchensemble_compatible(self, searchpaths):
@@ -350,9 +350,11 @@ class AzureScratchEnsemble():
         """Dump ensemble to temporary storage on format as in rmrc,
            ready for upload.
 
-        TODO: Add upload function
+        TODO: Add actual upload
 
         """
+
+        starttime = timer()
 
         if not len(self.scratchensemble) > 0:
             logger.warning('ScratchEnsemble has zero-length. Nothing to upload.')
@@ -364,6 +366,9 @@ class AzureScratchEnsemble():
         self.prepare_blob_structure(tmp_storage_path)
 
         # DATA section
+        logger.info('Copying files')
+        self.copy_files(tmp_storage_path, symlinks=True)
+        self.dump_internalized_dataframes(tmp_storage_path)
 
         ## Alternatively, use virtualensemble.to_disk()
         ## - Have to include additional files (dumped dataframes) directly to .files, not to .index
@@ -372,21 +377,27 @@ class AzureScratchEnsemble():
 
         #self.virtualensemble.to_disk(os.path.join(tmp_storage_path, 'data'), dumpparquet=False)
 
-        logger.info('Copying files')
-        self.copy_files(tmp_storage_path, symlinks=True)
-        self.dump_internalized_dataframes(tmp_storage_path)
+
+
 
         # MANIFEST section
         logger.info('Dumping manifest')
         self.dump_manifest(tmp_storage_path)
 
         # INDEX section
-        print('Dumping index')
+        logger.info('Dumping index')
         self.dump_index(tmp_storage_path)
 
         self._tmp_stored_on_disk = True
 
-        print('OK')
+        elapsedtime = timer() - starttime
+
+        print('*'*50)
+        print('Upload done.')
+        print('Wall time: {} seconds'.format(round(elapsedtime, 1)))
+        print('Tmp storage: {}'.format(self._tmp_storage_path))
+        print('')
+        print('')
 
         # TODO authentication towards azure go here, returns a token
         # TODO some checks towards the storage (already existing ensemble, etc) goes here
@@ -418,14 +429,19 @@ class AzureScratchEnsemble():
         import uuid
 
         unique_part = str(uuid.uuid4())[0:6]
-        unique_folder_name = 'rmrc-{}-{}'.format(self.name.lower(), unique_part.lower())
+        unique_folder_name = 'rmrc-{}'.format(unique_part.lower())
         
         return unique_folder_name
 
 
     @property
     def name(self):
-        return self._ensemble_name
+        """Name of ensemble. Not used, but if used in the future, it should
+           be parsed from the manifest."""
+
+        if self._name is None:
+            self._name = 'SomeName'
+        return self._name
 
     def __len__(self):
         return len(self.scratchensemble._realizations)
@@ -628,7 +644,6 @@ class AzureScratchEnsemble():
         TODO: Explore extension of metadata fields
         """
 
-        print('returning self.virtualensemble.files')
         index = self.virtualensemble.files
 
         return index
@@ -677,7 +692,7 @@ class AzureScratchEnsemble():
 
         def derive_fformat(df):
             """Look at the data, decide which format to use, return format as string"""
-            if len(df) > 1000:
+            if len(df) > 1000 and self._dumpparquet:
                 return 'parquet'
             return 'csv'
 
