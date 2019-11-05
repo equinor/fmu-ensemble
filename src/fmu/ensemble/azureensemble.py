@@ -85,7 +85,9 @@ class AzureScratchRealization():
 
     @property
     def index(self):
-        """Returns the index as a dataframe"""
+        """Returns the index as a dataframe
+        NOTE! index in this setting refers to the list of files, not the realization number
+        """
 
         return self._index
 
@@ -285,7 +287,8 @@ class AzureScratchEnsemble():
                                                           )
 
         if self._premade_index_path is None:
-            print('running find_files')
+
+            print('No premade index, running find_files')
             self.scratchensemble.find_files(self._searchpaths, metayaml=True)
             if not len(self.scratchensemble) > 0:
                 print('Length of scratchensemble is 0, returning now')
@@ -293,25 +296,30 @@ class AzureScratchEnsemble():
                 return
 
             # create a VirtualEnsemble
+            print('creating virtualensemble')
             self.virtualensemble = self.scratchensemble.to_virtual()
 
             # add smry data
-            smry = self.scratchensemble.get_smry()
+            print('getting smry')
             logger.info('Getting eclipse summary for all realisations')
+            smry = self.scratchensemble.get_smry()
+
+            print('appending smry to virtualensemble')
             self.virtualensemble.append('smry', smry)
+
+            print('keys in VirtualEnsemble now:')
+            print(self.virtualensemble.keys())
 
             # add x
 
             # add y
 
-            print('Calling create_index()')
             self._index = self.create_index()
 
         else:
 
-            print('using pre-compiled index')
-
             # pre-compiled index
+            print('premade index, NOT running find_files')
             self._index = self.compile_premade_index()
 
             # create a VirtualEnsemble
@@ -356,12 +364,17 @@ class AzureScratchEnsemble():
         self.prepare_blob_structure(tmp_storage_path)
 
         # DATA section
-        logger.info('ScratchEnsemble.to_disk()')
-        self.scratchensemble.to_disk(os.path.join(tmp_storage_path, 'data'), dumpparquet=False)
 
-#        logger.info('Copying files')
-#        self.copy_files(tmp_storage_path)
-#        self.dump_internalized_dataframes(tmp_storage_path)
+        ## Alternatively, use virtualensemble.to_disk()
+        ## - Have to include additional files (dumped dataframes) directly to .files, not to .index
+        ## - Have to include STOREDPATH directly to .files, not in the .index derivative
+        ##   Currently, .files is used to initiate the index, but further operations happen on .index, not .files
+
+        #self.virtualensemble.to_disk(os.path.join(tmp_storage_path, 'data'), dumpparquet=False)
+
+        logger.info('Copying files')
+        self.copy_files(tmp_storage_path, symlinks=True)
+        self.dump_internalized_dataframes(tmp_storage_path)
 
         # MANIFEST section
         logger.info('Dumping manifest')
@@ -551,29 +564,40 @@ class AzureScratchEnsemble():
         else:
             os.mkdir(filesystempath)
 
-        #subfolders = ['data', 'data/share', 'manifest', 'index']
-        subfolders = ['data', 'manifest', 'index']
+        subfolders = ['data', 'data/share', 'manifest', 'index']
+        #subfolders = ['data', 'manifest', 'index']
 
         for subfolder in subfolders:
             if not os.path.exists(os.path.join(filesystempath, subfolder)):
                 os.mkdir(os.path.join(filesystempath, subfolder))
 
 
-    def copy_files(self, filesystempath, localdir="data"):
+    def copy_files(self, filesystempath, localdir="data", symlinks=True):
+        """Symlink (or copy) files to temporary storage location, update the index"""
 
-        # code from .to_disk()
-        for _, filerow in self._index.iterrows():
-            src_fpath = filerow["FULLPATH"]
+
+        storedpaths = []
+
+        for src_fpath, real, localpath in zip(self._index['FULLPATH'], self._index['REAL'], self._index['LOCALPATH']):
+            storedpath = os.path.join('realization-' + str(real), localpath)
             dest_fpath = os.path.join(
-                filesystempath,
-                localdir,
-                "realization-" + str(filerow["REAL"]),
-                filerow["LOCALPATH"],
-            )
+                    filesystempath,
+                    localdir,
+                    storedpath)
+
             directory = os.path.dirname(dest_fpath)
+            
             if not os.path.exists(directory):
                 os.makedirs(os.path.dirname(dest_fpath))
-            shutil.copy(src_fpath, dest_fpath)
+
+            if not symlinks:
+                shutil.copy(src_fpath, dest_fpath)
+            else:
+                os.symlink(src_fpath, dest_fpath)
+
+            storedpaths.append(storedpath)
+
+        self._index['STOREDPATH'] = storedpath
 
 
     def dump_manifest(self, filesystempath, localdir="manifest"):
@@ -627,6 +651,7 @@ class AzureScratchEnsemble():
         df = pd.concat(dfs)
 
         return df
+
 
     def dump_index(self, filesystempath, localdir="index", indexfname="index.csv"):
         """Dump the index to disk"""
