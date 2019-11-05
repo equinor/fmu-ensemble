@@ -728,10 +728,13 @@ class AzureScratchEnsemble():
                     ValueError('Non-valid file format: {}'.format(use_fformat))
 
                 # add reference to the index
-                df = pd.DataFrame({'LOCALPATH' : [localpath],
-                                   'FILETYPE' : ['csv'],}
+                df = pd.DataFrame({'LOCALPATH' : [localpath+'.'+use_fformat],
+                                   'FILETYPE' : [use_fformat],}
                                    )
                 self._index = self._index.append(df, sort=False)
+
+                print('added to index:')
+                print(key)
 
                 logger.info('dumped {}'.format(savepath))
 
