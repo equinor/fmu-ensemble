@@ -359,7 +359,7 @@ class ScratchEnsemble(object):
         if not name:
             name = self._name
         logger.info("Creating virtual ensemble named %s", str(name))
-        vens = VirtualEnsemble(name=name)
+        vens = VirtualEnsemble(name=name, manifest=self.manifest)
 
         for key in self.keys():
             vens.append(key, self.get_df(key))

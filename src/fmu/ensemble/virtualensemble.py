@@ -42,11 +42,13 @@ class VirtualEnsemble(object):
             try to initialize the ensemble from files on disk.
         lazy_load (boolean): If true, it will be used if loaded from disk
             to be lazy in actually loading dataframes from disk
+        manifest: dict with any information about the ensemble
     """
 
     def __init__(
-        self, name=None, data=None, longdescription=None, fromdisk=None, lazy_load=False
+        self, name=None, data=None, longdescription=None, fromdisk=None, lazy_load=False, manifest=None
     ):
+
         if name:
             self._name = name
         else:
@@ -60,6 +62,13 @@ class VirtualEnsemble(object):
             )
 
         self.realindices = []
+
+        if isinstance(manifest, dict) and not fromdisk:
+            self._manifest = manifest
+        else:
+            logger.warning(
+                "The manifest supplied to VirtualEnsemble " "must be of type dict"
+            )
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
@@ -930,6 +939,10 @@ file is picked up"""
             pd.Dataframe. Empty if no files are meaningful"""
         files = self.get_df("__files")
         return files
+
+    @property
+    def manifest(self):
+        return self._manifest
 
     @property
     def parameters(self):
