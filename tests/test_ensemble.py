@@ -906,7 +906,7 @@ def test_apply():
 
 
 def test_manifest(tmpdir):
-    """Test import of a stripped 5 realization ensemble"""
+    """Test initializing ensembles with manifest """
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -928,6 +928,9 @@ def test_manifest(tmpdir):
         manifest=manifest,
     )
     assert "project_id" in ens.manifest
+
+    vens = ens.to_virtual()
+    assert "project_id" in vens.manifest
 
     # Initialize without, and add it later:
     ens = ScratchEnsemble(
@@ -955,6 +958,8 @@ def test_manifest(tmpdir):
     )
     assert isinstance(ens.manifest, dict)
     assert not ens.manifest  # (empty dictionary)
+    vens = ens.to_virtual()
+    assert not vens.manifest
 
     # Load from empty file:
     with open(str(tmpdir.join("empty")), "w") as file_h:

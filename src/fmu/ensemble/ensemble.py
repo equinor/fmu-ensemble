@@ -353,7 +353,7 @@ class ScratchEnsemble(object):
         Args:
             name (str): Name of the ensemble as virtualized.
         """
-        vens = VirtualEnsemble(name=name)
+        vens = VirtualEnsemble(name=name, manifest=self.manifest)
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
