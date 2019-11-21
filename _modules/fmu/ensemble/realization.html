@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.1.1.1 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.1.1.2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.1
+                v1.1.1.2
               </div>
             
           
@@ -189,6 +189,14 @@
 <span class="kn">from</span> <span class="nn">ecl.eclfile</span> <span class="k">import</span> <span class="n">EclFile</span>
 <span class="kn">from</span> <span class="nn">ecl.grid</span> <span class="k">import</span> <span class="n">EclGrid</span>
 <span class="kn">from</span> <span class="nn">ecl</span> <span class="k">import</span> <span class="n">EclFileFlagEnum</span>
+
+<span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">ecl2df</span>
+
+    <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="kn">from</span> <span class="nn">.etc</span> <span class="k">import</span> <span class="n">Interaction</span>
 <span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="k">import</span> <span class="n">VirtualRealization</span>
@@ -919,6 +927,52 @@
 <span class="sd">            dict with data from parameters.txt</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ScratchRealization.get_eclfiles"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_eclfiles">[docs]</a>    <span class="k">def</span> <span class="nf">get_eclfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return an ecl2df.EclFiles object to connect to the ecl2df package</span>
+
+<span class="sd">        If autodiscovery, it will search for a DATA file in</span>
+<span class="sd">        the standard location eclipse/model/*DATA.</span>
+
+<span class="sd">        If you have multiple DATA files, you must discover</span>
+<span class="sd">        the one you need explicitly before calling this function, example:</span>
+
+<span class="sd">            &gt;&gt;&gt; real = ScratchRealization(&quot;myrealpath&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; real.find_files(&quot;eclipse/model/MYMODELPREDICTION.DATA&quot;)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ecl2df.EclFiles. None if nothing found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAVE_ECL2DF</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;ecl2df not installed. Skipping&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">data_file_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FILETYPE&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;DATA&quot;</span><span class="p">]</span>
+        <span class="n">data_filename</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_file_row</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">data_filename</span> <span class="o">=</span> <span class="n">data_file_row</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autodiscovery</span><span class="p">:</span>
+            <span class="n">data_fileguess</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">,</span> <span class="s2">&quot;eclipse/model&quot;</span><span class="p">,</span> <span class="s2">&quot;*.DATA&quot;</span><span class="p">)</span>
+            <span class="n">data_filenamelist</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">data_fileguess</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">data_filenamelist</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">data_filenamelist</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># No filename matches *DATA</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_filenamelist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="s2">&quot;Multiple DATA files found, &quot;</span>
+                        <span class="s2">&quot;consider turning off auto-discovery&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">data_filename</span> <span class="o">=</span> <span class="n">data_filenamelist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="n">data_filename</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># There is no DATA file to be found.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No DATA file found!&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_filename</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">ecl2df</span><span class="o">.</span><span class="n">EclFiles</span><span class="p">(</span><span class="n">data_filename</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_eclsum"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_eclsum">[docs]</a>    <span class="k">def</span> <span class="nf">get_eclsum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

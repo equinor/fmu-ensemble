@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.1 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.2 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.1.1
+                v1.1.1.2
               </div>
             
           
@@ -2145,6 +2145,25 @@ been discovered earlier)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>dict with data from parameters.txt</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.realization.ScratchRealization.get_eclfiles">
+<code class="sig-name descname">get_eclfiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.get_eclfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.get_eclfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an ecl2df.EclFiles object to connect to the ecl2df package</p>
+<p>If autodiscovery, it will search for a DATA file in
+the standard location eclipse/model/<a href="#id1"><span class="problematic" id="id2">*</span></a>DATA.</p>
+<p>If you have multiple DATA files, you must discover
+the one you need explicitly before calling this function, example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="p">(</span><span class="s2">&quot;myrealpath&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">real</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="s2">&quot;eclipse/model/MYMODELPREDICTION.DATA&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>ecl2df.EclFiles. None if nothing found</p>
 </dd>
 </dl>
 </dd></dl>

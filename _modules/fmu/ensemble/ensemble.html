@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.1 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.1
+                v1.1.1.2
               </div>
             
           
@@ -969,9 +969,12 @@
 <span class="sd">            on each realization.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Ensemble </span><span class="si">%s</span><span class="s2"> is running callback </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="c1"># (we took a copy since we are modifying it here:)</span>
+            <span class="c1"># Todo: Avoid copy by concatenatint a dict of dataframes</span>
+            <span class="c1"># where realization index is the dict keys.</span>
             <span class="n">result</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
             <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
