@@ -942,6 +942,12 @@ file is picked up"""
 
     @property
     def manifest(self):
+        """Get the manifest of the ensemble. The manifest
+        is nothing but a dictionary with unspecified content
+
+        Returns:
+            dict
+        """
         return self._manifest
 
     @property
