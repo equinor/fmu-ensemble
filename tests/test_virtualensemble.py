@@ -28,13 +28,22 @@ def test_virtualensemble():
     else:
         testdir = os.path.abspath(".")
 
+    manifest = {
+        "what": "A test ensemble for pytest usage",
+        "coordinate_system": "The correct one",
+    }
+
     reekensemble = ScratchEnsemble(
-        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest=manifest,
     )
     reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
     reekensemble.load_scalar("npv.txt")
     reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()
+
+    assert "coordinate_system" in vens.manifest
 
     # Check that we have data for 5 realizations
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
@@ -167,7 +176,9 @@ def test_todisk():
     else:
         testdir = os.path.abspath(".")
     reekensemble = ScratchEnsemble(
-        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest={"foo": "bar.com"},
     )
 
     reekensemble.load_smry(time_index="monthly", column_keys="*")
@@ -176,11 +187,13 @@ def test_todisk():
     reekensemble.load_scalar("npv.txt")
     reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()
+    assert "foo" in vens.manifest
 
     vens.to_disk("vens_dumped", delete=True)
     assert len(vens) == len(reekensemble)
 
     fromdisk = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "foo" in fromdisk.manifest
 
     # Same number of realizations:
     assert len(fromdisk) == len(vens)

@@ -10,6 +10,8 @@ import re
 import shutil
 import datetime
 
+import six
+import yaml
 import numpy as np
 import pandas as pd
 
@@ -46,7 +48,13 @@ class VirtualEnsemble(object):
     """
 
     def __init__(
-        self, name=None, data=None, longdescription=None, fromdisk=None, lazy_load=False, manifest=None
+        self,
+        name=None,
+        data=None,
+        longdescription=None,
+        fromdisk=None,
+        lazy_load=False,
+        manifest=None,
     ):
 
         if name:
@@ -55,6 +63,7 @@ class VirtualEnsemble(object):
             self._name = "VirtualEnsemble"
 
         self._longdescription = longdescription
+        self._manifest = {}
 
         if data and fromdisk:
             raise ValueError(
@@ -63,12 +72,8 @@ class VirtualEnsemble(object):
 
         self.realindices = []
 
-        if isinstance(manifest, dict) and not fromdisk:
-            self._manifest = manifest
-        else:
-            logger.warning(
-                "The manifest supplied to VirtualEnsemble " "must be of type dict"
-            )
+        if manifest and not fromdisk:
+            self.manifest = manifest
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
@@ -498,6 +503,9 @@ class VirtualEnsemble(object):
             fhandle.write(str(self._name))
         with open(os.path.join(filesystempath, "__repr__"), "w") as fhandle:
             fhandle.write(self.__repr__())
+        if self._manifest:
+            with open(os.path.join(filesystempath, "_manifest.yml"), "w") as fhandle:
+                fhandle.write(yaml.dump(self._manifest))
 
         # The README dumped here is just for convenience. Do not assume
         # anything about its content.
@@ -623,6 +631,9 @@ file is picked up"""
                     self._name = "".join(
                         open(os.path.join(root, filename), "r").readlines()
                     ).strip()
+
+                if filename == "_manifest.yml":
+                    self.manifest = os.path.join(root, "_manifest.yml")
 
                 # We will loop through the directory structure, and
                 # data will be duplicated as they can be both in csv
@@ -949,6 +960,37 @@ file is picked up"""
             dict
         """
         return self._manifest
+
+    @manifest.setter
+    def manifest(self, manifest):
+        """Set the manifest of the ensemble. The manifest
+        is nothing but a Python dictionary with unspecified
+        content
+
+        Args:
+            manifest: dict or str. If dict, it is used as is, if str it
+                is assumed to be a filename with YAML syntax which is
+                parsed into a dict and stored as dict
+        """
+        if isinstance(manifest, dict):
+            if not manifest:
+                logger.warning("Empty manifest")
+                self._manifest = {}
+            else:
+                self._manifest = manifest
+        elif isinstance(manifest, six.string_types):
+            if os.path.exists(manifest):
+                manifest_fromyaml = yaml.safe_load(open(manifest))
+                if not manifest_fromyaml:
+                    logger.warning("Empty manifest")
+                    self._manifest = {}
+                else:
+                    self._manifest = manifest_fromyaml
+            else:
+                logger.error("Manifest file %s not found", manifest)
+        else:
+            # NoneType will also end here.
+            logger.error("Wrong manifest type supplied")
 
     @property
     def parameters(self):
