@@ -809,9 +809,12 @@ class ScratchEnsemble(object):
             on each realization.
         """
         results = []
+        logger.info("Ensemble %s is running callback %s", self.name, str(callback))
         for realidx, realization in self._realizations.items():
             result = realization.apply(callback, **kwargs).copy()
             # (we took a copy since we are modifying it here:)
+            # Todo: Avoid copy by concatenatint a dict of dataframes
+            # where realization index is the dict keys.
             result["REAL"] = realidx
             results.append(result)
         return pd.concat(results, sort=False, ignore_index=True)
