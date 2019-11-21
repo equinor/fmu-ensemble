@@ -362,10 +362,25 @@ class ScratchEnsemble(object):
 
     @property
     def manifest(self):
+        """Get the manifest of the ensemble. The manifest is
+        nothing but a Python dictionary with unspecified content
+
+        Returns:
+            dict
+        """
         return self._manifest
 
     @manifest.setter
     def manifest(self, manifest):
+        """Set the manifest of the ensemble. The manifest
+        is nothing but a Python dictionary with unspecified
+        content
+
+        Args:
+            manifest: dict or str. If dict, it is used as is, if str it
+                is assumed to be a filename with YAML syntax which is
+                parsed into a dict and stored as dict
+        """
         if isinstance(manifest, dict):
             if not manifest:
                 logger.warning("Empty manifest")
