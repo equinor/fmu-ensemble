@@ -308,10 +308,10 @@ class AzureScratchEnsemble():
             self.virtualensemble = self.scratchensemble.to_virtual()
 
             # add smry data
-            logger.info('Getting eclipse summary for all realisations')
-            smry = self.scratchensemble.get_smry()
+            #logger.info('Getting eclipse summary for all realisations')
+            #smry = self.scratchensemble.get_smry()
 
-            self.virtualensemble.append('smry', smry)
+            #self.virtualensemble.append('smry', smry)
 
             # add x
 
@@ -414,7 +414,7 @@ class AzureScratchEnsemble():
             logger.critical('Non-valid temporary storage path given: {}'.format(tmp_storage_root))
             raise IOError('Not a valid temporary storage: {}'.format(tmp_storage_root))
 
-        unique_folder_name = 'rmrc-{}'.format(self._id)
+        unique_folder_name = '{}'.format(self._id)
 
         tmp_storage_path = os.path.join(tmp_storage_root, unique_folder_name)
         if os.path.exists(tmp_storage_path):
@@ -599,6 +599,9 @@ class AzureScratchEnsemble():
 
         storedpaths = []
 
+        if not symlinks:
+            print('Copying files to temporary storage. This will take some time.')
+
         for src_fpath, real, localpath in zip(self._index['FULLPATH'], self._index['REAL'], self._index['LOCALPATH']):
             storedpath = os.path.join('realization-' + str(real), localpath)
             dest_fpath = os.path.join(
@@ -618,7 +621,7 @@ class AzureScratchEnsemble():
 
             storedpaths.append(storedpath)
 
-        self._index['STOREDPATH'] = storedpath
+        self._index['STOREDPATH'] = storedpaths
 
 
     def dump_manifest(self, filesystempath, localdir="manifest"):
