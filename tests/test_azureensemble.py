@@ -92,7 +92,6 @@ def test_reek_5real():
     assert testdumpeddir.startswith(testdir)
 
     # check that some known files are present in the dumped data
-    assert os.path.isfile(os.path.join(testdumpeddir, 'data/share/smry.csv'))
     assert os.path.isfile(os.path.join(testdumpeddir, 'data/share/OK.csv'))
     assert os.path.isfile(os.path.join(testdumpeddir, 'data/realization-4/parameters.txt'))
 
@@ -101,7 +100,19 @@ def test_reek_5real():
     assert sorted(list(indexdf['REAL'].fillna(-999).unique())) == [-999,0,1,2,3,4]
 
     # check that some known files are present in the index
-    assert 'data/share/smry.csv' in list(indexdf['LOCALPATH'])
+    assert 'parameters.txt' in list(indexdf[indexdf['REAL'] == 0]['LOCALPATH'])
+    assert 'parameters.txt' in list(indexdf[indexdf['REAL'] == 1]['LOCALPATH'])
+    assert 'parameters.txt' in list(indexdf[indexdf['REAL'] == 2]['LOCALPATH'])
+    assert 'parameters.txt' in list(indexdf[indexdf['REAL'] == 3]['LOCALPATH'])
+    assert 'parameters.txt' in list(indexdf[indexdf['REAL'] == 4]['LOCALPATH'])
+
+    # bug found: realizations in the index does not match realization in storedpath
+    for realization in [0,1,2,3,4]:
+        storedpaths = list(indexdf[(indexdf['REAL'] == realization)]['STOREDPATH'])
+        assert len(storedpaths) > 5
+        for storedpath in storedpaths:
+            assert storedpath.startswith('realization-{}/'.format(realization)), storedpath
+
 
     # check that the manifest looks right
     with open(os.path.join(testdumpeddir, 'manifest/manifest.yml'), 'r') as stream:
