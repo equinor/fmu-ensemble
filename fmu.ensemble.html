@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.2 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.3 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.1.2
+                v1.1.1.3
               </div>
             
           
@@ -185,7 +185,7 @@
 <p>Module containing the ScratchEnsemble class</p>
 <dl class="class">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.ensemble.</code><code class="sig-name descname">ScratchEnsemble</code><span class="sig-paren">(</span><em class="sig-param">ensemble_name</em>, <em class="sig-param">paths=None</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">runpathfile=None</em>, <em class="sig-param">runpathfilter=None</em>, <em class="sig-param">autodiscovery=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.ensemble.</code><code class="sig-name descname">ScratchEnsemble</code><span class="sig-paren">(</span><em class="sig-param">ensemble_name</em>, <em class="sig-param">paths=None</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">runpathfile=None</em>, <em class="sig-param">runpathfilter=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">manifest=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>An ensemble is a collection of Realizations.</p>
 <p>Ensembles are initialized from path(s) pointing to
@@ -225,6 +225,8 @@ Use to select only a specific realization f.ex.</p></li>
 <li><p><strong>autodiscovery</strong> (<em>boolean</em>) – True by default, means that the class
 can try to autodiscover data in the realization. Turn
 off to gain more fined tuned control.</p></li>
+<li><p><strong>manifest</strong> – dict or filename to use for manifest. If filename,
+it must be a yaml-file that will be parsed to a single dict.</p></li>
 </ul>
 </dd>
 </dl>
@@ -358,6 +360,18 @@ VirtualEnsemble</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the ensemble as virtualized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.ensemble.ScratchEnsemble.manifest">
+<em class="property">property </em><code class="sig-name descname">manifest</code><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the manifest of the ensemble. The manifest is
+nothing but a Python dictionary with unspecified content</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2658,7 +2672,7 @@ get_df().</p>
 <p>Module containing a VirtualEnsemble class</p>
 <dl class="class">
 <dt id="fmu.ensemble.virtualensemble.VirtualEnsemble">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.virtualensemble.</code><code class="sig-name descname">VirtualEnsemble</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">longdescription=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.virtualensemble.</code><code class="sig-name descname">VirtualEnsemble</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">longdescription=None</em>, <em class="sig-param">manifest=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A computed or archived ensemble</p>
 <p>Computed or archived, there is no link to the original dataset(s)
@@ -2675,6 +2689,7 @@ to_virtual() in a ScratchEnsemble.</p>
 <li><p><strong>name</strong> – string, can be chosen freely</p></li>
 <li><p><strong>data</strong> – dict with data to initialize with. Defaults to empty</p></li>
 <li><p><strong>longdescription</strong> – string, free form multiline description.</p></li>
+<li><p><strong>manifest</strong> – dict with any information about the ensemble</p></li>
 </ul>
 </dd>
 </dl>
@@ -2949,6 +2964,18 @@ If set to ‘days’, ‘months’ or ‘years’, the rates will
 be scaled to represent a daily, monthly or yearly rate that
 is compatible with the date index and the cumulative data.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.manifest">
+<em class="property">property </em><code class="sig-name descname">manifest</code><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.manifest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the manifest of the ensemble. The manifest
+is nothing but a dictionary with unspecified content</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
