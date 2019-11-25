@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import shutil
 
+import yaml
 import numpy
 import pandas as pd
 
@@ -902,3 +903,71 @@ def test_apply():
     )
     assert rmsvols_df["STOIIP_OIL"].sum() > 0
     assert len(rmsvols_df["REAL"].unique()) == 4
+
+
+def test_manifest(tmpdir):
+    """Test initializing ensembles with manifest """
+
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    # Make a dummy manifest:
+    manifest = {
+        "description": "Demo ensemble for testing of fmu-ensemble",
+        "project_id": "Foobar",
+        "coordinate_system": "somethingfunny",
+    }
+
+    # Initialize with a ready made manifest dict:
+    ens = ScratchEnsemble(
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest=manifest,
+    )
+    assert "project_id" in ens.manifest
+
+    vens = ens.to_virtual()
+    assert "project_id" in vens.manifest
+
+    # Initialize without, and add it later:
+    ens = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    assert "coordinate_system" not in ens.manifest
+    ens.manifest = manifest
+    assert "coordinate_system" in ens.manifest
+
+    # Dump to random filename, and load from that file:
+    with open(str(tmpdir.join("foo.yml")), "w") as file_h:
+        file_h.write(yaml.dump(manifest))
+    ens = ScratchEnsemble(
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest=str(tmpdir.join("foo.yml")),
+    )
+    assert "description" in ens.manifest
+
+    # Load from non-existing file:
+    ens = ScratchEnsemble(
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest=str(tmpdir.join("foo-notexisting.yml")),
+    )
+    assert isinstance(ens.manifest, dict)
+    assert not ens.manifest  # (empty dictionary)
+    vens = ens.to_virtual()
+    assert not vens.manifest
+
+    # Load from empty file:
+    with open(str(tmpdir.join("empty")), "w") as file_h:
+        file_h.write("")
+
+    ens = ScratchEnsemble(
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest=str(tmpdir.join("empty")),
+    )
+    assert not ens.manifest

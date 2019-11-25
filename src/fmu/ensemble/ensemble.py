@@ -14,6 +14,7 @@ from datetime import datetime
 import six
 import pandas as pd
 import numpy as np
+import yaml
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
@@ -70,6 +71,8 @@ class ScratchEnsemble(object):
         autodiscovery (boolean): True by default, means that the class
             can try to autodiscover data in the realization. Turn
             off to gain more fined tuned control.
+        manifest: dict or filename to use for manifest. If filename,
+            it must be a yaml-file that will be parsed to a single dict.
     """
 
     def __init__(
@@ -80,14 +83,18 @@ class ScratchEnsemble(object):
         runpathfile=None,
         runpathfilter=None,
         autodiscovery=True,
+        manifest=None,
     ):
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
         self._ens_df = pd.DataFrame()
+        self._manifest = {}
+
         self._global_active = None
         self._global_size = None
         self._global_grid = None
+
         self.obs = None
 
         if isinstance(paths, str):
@@ -129,6 +136,10 @@ class ScratchEnsemble(object):
             count = self.add_from_runpathfile(runpathfile, runpathfilter)
         if isinstance(runpathfile, pd.DataFrame) and not runpathfile.empty:
             count = self.add_from_runpathfile(runpathfile, runpathfilter)
+
+        if manifest:
+            # The _manifest variable is set using a property decorator
+            self.manifest = manifest
 
         if count:
             logger.info("ScratchEnsemble initialized with %d realizations", count)
@@ -342,12 +353,53 @@ class ScratchEnsemble(object):
         Args:
             name (str): Name of the ensemble as virtualized.
         """
-        vens = VirtualEnsemble(name=name)
+        vens = VirtualEnsemble(name=name, manifest=self.manifest)
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
         vens.update_realindices()
         return vens
+
+    @property
+    def manifest(self):
+        """Get the manifest of the ensemble. The manifest is
+        nothing but a Python dictionary with unspecified content
+
+        Returns:
+            dict
+        """
+        return self._manifest
+
+    @manifest.setter
+    def manifest(self, manifest):
+        """Set the manifest of the ensemble. The manifest
+        is nothing but a Python dictionary with unspecified
+        content
+
+        Args:
+            manifest: dict or str. If dict, it is used as is, if str it
+                is assumed to be a filename with YAML syntax which is
+                parsed into a dict and stored as dict
+        """
+        if isinstance(manifest, dict):
+            if not manifest:
+                logger.warning("Empty manifest")
+                self._manifest = {}
+            else:
+                self._manifest = manifest
+        elif isinstance(manifest, six.string_types):
+            if os.path.exists(manifest):
+                manifest_fromyaml = yaml.safe_load(open(manifest))
+                if not manifest_fromyaml:
+                    logger.warning("Empty manifest")
+                    self._manifest = {}
+                else:
+                    self._manifest = manifest_fromyaml
+            else:
+                logger.error("Manifest file %s not found", manifest)
+        else:
+            # NoneType will also end here.
+            logger.error("Wrong manifest type supplied")
 
     @property
     def parameters(self):

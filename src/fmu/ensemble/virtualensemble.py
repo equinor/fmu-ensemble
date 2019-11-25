@@ -34,15 +34,23 @@ class VirtualEnsemble(object):
         name: string, can be chosen freely
         data: dict with data to initialize with. Defaults to empty
         longdescription: string, free form multiline description.
+        manifest: dict with any information about the ensemble
     """
 
-    def __init__(self, name=None, data=None, longdescription=None):
+    def __init__(self, name=None, data=None, longdescription=None, manifest=None):
         if name:
             self._name = name
         else:
             self._name = "VirtualEnsemble"
 
         self._longdescription = longdescription
+
+        if isinstance(manifest, dict):
+            self._manifest = manifest
+        else:
+            logger.warning(
+                "The manifest supplied to VirtualEnsemble " "must be of type dict"
+            )
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
@@ -590,6 +598,16 @@ class VirtualEnsemble(object):
             vol_rate_df["REAL"] = realidx
             vol_rates_dfs.append(vol_rate_df)
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
+
+    @property
+    def manifest(self):
+        """Get the manifest of the ensemble. The manifest
+        is nothing but a dictionary with unspecified content
+
+        Returns:
+            dict
+        """
+        return self._manifest
 
     @property
     def parameters(self):
