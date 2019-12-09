@@ -10,6 +10,11 @@ import re
 import os
 import glob
 from datetime import datetime
+try:
+    import concurrent.futures
+    USE_CONCURRENT = True
+except ImportError:
+    USE_CONCURRENT = False
 
 import six
 import pandas as pd
@@ -205,6 +210,20 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
+    def InitScratchRealization(self, realdir):
+        """Wrapper function used for concurrent loading
+
+        Args:
+            realdir (string): directory to realization
+
+        Returns:
+            realization (ScratchRealization): Initialized ScratchRealization
+        """
+        realization = ScratchRealization(
+            realdir, realidxregexp=None, autodiscovery=True
+        )
+        return realization
+
     def add_realizations(self, paths, realidxregexp=None, autodiscovery=True):
         """Utility function to add realizations to the ensemble.
 
@@ -232,23 +251,39 @@ class ScratchEnsemble(object):
             )
         else:
             globbedpaths = glob.glob(paths)
-
+        
         count = 0
-        for realdir in globbedpaths:
-            realization = ScratchRealization(
-                realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
-            )
-            if realization.index is None:
-                logger.critical(
-                    "Could not determine realization index " + "for path " + realdir
+        if USE_CONCURRENT:
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                for realization in executor.map(self.InitScratchRealization, globbedpaths):
+                    if realization.index is None:
+                        logger.critical(
+                        "Could not determine realization index " + "for path " + realdir
+                        )
+                        if not realidxregexp:
+                            logger.critical("Maybe you need to supply a regexp.")
+                        else:
+                            logger.critical("Your regular expression is maybe wrong.")
+                    else:
+                        count += 1
+                        self._realizations[realization.index] = realization
+        else:
+            for realdir in globbedpaths:
+                realization = ScratchRealization(
+                    realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
                 )
-                if not realidxregexp:
-                    logger.critical("Maybe you need to supply a regexp.")
+                if realization.index is None:
+                    logger.critical(
+                        "Could not determine realization index " + "for path " + realdir
+                    )
+                    if not realidxregexp:
+                        logger.critical("Maybe you need to supply a regexp.")
+                    else:
+                        logger.critical("Your regular expression is maybe wrong.")
                 else:
-                    logger.critical("Your regular expression is maybe wrong.")
-            else:
-                count += 1
-                self._realizations[realization.index] = realization
+                    count += 1
+                    self._realizations[realization.index] = realization
+
         logger.info("add_realizations() found %d realizations", len(self._realizations))
         return count
 
