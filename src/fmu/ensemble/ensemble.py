@@ -268,6 +268,9 @@ class ScratchEnsemble(object):
         This function passes on initialization to ScratchRealization
         and stores a reference to those generated objects.
 
+        This function will use multithreading when running in Python 3.2+,
+        via the concurrent.futures modules.
+
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
@@ -566,7 +569,8 @@ class ScratchEnsemble(object):
     def load_file(self, localpath, fformat, convert_numeric=False, force_reread=False):
         """Function for calling load_file() in every realization
 
-        This function may utilize multithreading.
+        This function will use multithreading when running in Python 3.2+,
+        via the concurrent.futures modules.
 
         Args:
             localpath (str): path to the text file, relative to each realization
@@ -581,7 +585,7 @@ class ScratchEnsemble(object):
                 returned cached results.
         Returns:
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
-            distuinguishes each realizations data.
+            distinguishes each realizations data.
 
         """
         if USE_CONCURRENT:
