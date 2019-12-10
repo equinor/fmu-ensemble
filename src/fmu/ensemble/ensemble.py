@@ -302,13 +302,14 @@ class ScratchEnsemble(object):
                     )
         else:
             for realdir in globbedpaths:
-                realization = ScratchRealization(realdir, realidxregexp, autodiscovery)
+                realization = ScratchRealization(
+                    realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
+                )
                 count += self._check_loading_of_realization(
                     realization, realdir, realidxregexp
                 )
 
         logger.info("add_realizations() found %d realizations", len(self._realizations))
-
         return count
 
     def add_from_runpathfile(self, runpath, runpathfilter=None):
