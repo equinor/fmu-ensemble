@@ -234,7 +234,7 @@ class ScratchEnsemble(object):
         Args:
             realization (ScratchRealization): Initialized ScratchRealization
             realdir (str): directory to realization
-            realidxregexp (str): Regular expression
+            realidxregexp (str): Regular expression or None
 
         Returns:
             int: either 0 on fail, or 1 on success
@@ -267,7 +267,7 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
-            realidxregexp (str): Regular expression
+            realidxregexp (str): Regular expression or None
             autodiscovery (boolean): whether files can be attempted
                 auto-discovered
 
@@ -292,6 +292,7 @@ class ScratchEnsemble(object):
                     count += self._check_loading_of_realization(
                         realization, realdir, realidxregexp
                     )
+                    print(realidxregexp)
         else:
             for realdir in globbedpaths:
                 realization = ScratchRealization(realdir, realidxregexp, autodiscovery)
