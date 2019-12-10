@@ -529,8 +529,9 @@ class ScratchEnsemble(object):
         """
         return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
+    @staticmethod
     def _load_file(
-        self, realization, localpath, fformat, convert_numeric, force_reread, index
+        realization, localpath, fformat, convert_numeric, force_reread, index
     ):
         """Wrapper function to be used for parallel loading of files
 
@@ -549,7 +550,7 @@ class ScratchEnsemble(object):
             index (int): realization index
 
         Returns:
-            Nothing
+            realization with loaded file.
 
         """
         try:
@@ -563,6 +564,8 @@ class ScratchEnsemble(object):
             # At ensemble level, we allow files to be missing in
             # some realizations
             logger.warning("Could not read %s for realization %d", localpath, index)
+
+        return realization
 
     def load_file(self, localpath, fformat, convert_numeric=False, force_reread=False):
         """Function for calling load_file() in every realization
@@ -600,8 +603,8 @@ class ScratchEnsemble(object):
                     )
                 )
             with ProcessPoolExecutor() as executor:
-                for _ in executor.map(self._load_file, *zip(*args)):
-                    pass
+                for realization in executor.map(self._load_file, *zip(*args)):
+                    self._realizations[realization.index] = realization
         else:
             for index, realization in self._realizations.items():
                 self._load_file(
