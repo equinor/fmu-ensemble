@@ -231,8 +231,9 @@ class ScratchEnsemble(object):
         return realdir, realization
 
     def _check_loading_of_realization(self, realization, realdir, realidxregexp):
-        """Helper function for checking and logging the results of loading a realization.
-        Succesfully loaded realizations will be added to self._realizations.
+        """Helper function for checking and logging the results of loading a
+        realization. Successfully loaded realizations will be added to
+        self._realizations.
 
         Args:
             realization (ScratchRealization): Initialized ScratchRealization
@@ -525,7 +526,7 @@ class ScratchEnsemble(object):
         return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
     def _load_file(
-        self, realization, localpath, fformat, convert_numeric, force_reread
+        self, realization, localpath, fformat, convert_numeric, force_reread, index
     ):
         """Wrapper function to be used for parallel loading of files
 
@@ -541,6 +542,7 @@ class ScratchEnsemble(object):
             force_reread (boolean): Force reread from file system. If
                 False, repeated calls to this function will
                 returned cached results.
+            index (int): realization index
 
         Returns:
             Nothing
@@ -583,17 +585,22 @@ class ScratchEnsemble(object):
 
         """
         if USE_CONCURRENT:
+            args = [
+                (realization, localpath, fformat, convert_numeric, force_reread, index)
+                for index, realization in self._realizations.items()
+            ]
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                for realization in executor.map(
-                    self._load_file, self._realizations.items()
-                ):
-                    self._load_(
-                        realization, localpath, fformat, convert_numeric, force_reread
-                    )
+                for _ in executor.map(self._load_file, *zip(*args)):
+                    pass
         else:
             for index, realization in self._realizations.items():
-                self._load_(
-                    realization, localpath, fformat, convert_numeric, force_reread
+                self._load_file(
+                    realization,
+                    localpath,
+                    fformat,
+                    convert_numeric,
+                    force_reread,
+                    index,
                 )
 
         return self.get_df(localpath)
