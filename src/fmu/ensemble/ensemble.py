@@ -210,11 +210,12 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-    def InitScratchRealization(self, realdir):
+    @staticmethod
+    def _init_scratch_realization(realdir):
         """Wrapper function used for concurrent loading
 
         Args:
-            realdir (string): directory to realization
+            realdir (str): directory to realization
 
         Returns:
             realization (ScratchRealization): Initialized ScratchRealization
@@ -222,7 +223,34 @@ class ScratchEnsemble(object):
         realization = ScratchRealization(
             realdir, realidxregexp=None, autodiscovery=True
         )
-        return realization
+        return realdir, realization
+
+    def _check_loading_of_realization(self, realization, realdir, realidxregexp):
+        """Helper function for checking and logging the results of loading a realization.
+        Succesfully loaded realizations will be added to self._realizations.
+
+        Args:
+            realization (ScratchRealization): Initialized ScratchRealization
+            realdir (str): directory to realization
+            realidxregexp (str): Regular expression
+
+        Returns:
+            int: either 0 on fail, or 1 on success
+        """
+        return_value = 0
+        if realization.index is None:
+            logger.critical(
+                "Could not determine realization index " + "for path " + realdir
+            )
+            if not realidxregexp:
+                logger.critical("Maybe you need to supply a regexp.")
+            else:
+                logger.critical("Your regular expression is maybe wrong.")
+        else:
+            self._realizations[realization.index] = realization
+            return_value = 1
+
+        return return_value
 
     def add_realizations(self, paths, realidxregexp=None, autodiscovery=True):
         """Utility function to add realizations to the ensemble.
@@ -237,6 +265,7 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
+            realidxregexp (str): Regular expression
             autodiscovery (boolean): whether files can be attempted
                 auto-discovered
 
@@ -255,36 +284,17 @@ class ScratchEnsemble(object):
         count = 0
         if USE_CONCURRENT:
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                for realization in executor.map(self.InitScratchRealization, globbedpaths):
-                    if realization.index is None:
-                        logger.critical(
-                        "Could not determine realization index " + "for path " + realdir
-                        )
-                        if not realidxregexp:
-                            logger.critical("Maybe you need to supply a regexp.")
-                        else:
-                            logger.critical("Your regular expression is maybe wrong.")
-                    else:
-                        count += 1
-                        self._realizations[realization.index] = realization
+                for realdir, realization in executor.map(self._init_scratch_realization, globbedpaths):
+                    count += self._check_loading_of_realization(realization=realization, realdir=realdir, realidxregexp=realidxregexp)
         else:
             for realdir in globbedpaths:
                 realization = ScratchRealization(
                     realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
                 )
-                if realization.index is None:
-                    logger.critical(
-                        "Could not determine realization index " + "for path " + realdir
-                    )
-                    if not realidxregexp:
-                        logger.critical("Maybe you need to supply a regexp.")
-                    else:
-                        logger.critical("Your regular expression is maybe wrong.")
-                else:
-                    count += 1
-                    self._realizations[realization.index] = realization
+                count += self._check_loading_of_realization(realization=realization, realdir=realdir, realidxregexp=realidxregexp)
 
         logger.info("add_realizations() found %d realizations", len(self._realizations))
+
         return count
 
     def add_from_runpathfile(self, runpath, runpathfilter=None):
