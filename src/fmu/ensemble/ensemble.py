@@ -564,9 +564,6 @@ class ScratchEnsemble(object):
             # some realizations
             logger.warning("Could not read %s for realization %d", localpath, index)
 
-        if self.get_df(localpath).empty:
-            raise ValueError("No ensemble data found for %s", localpath)
-
     def load_file(self, localpath, fformat, convert_numeric=False, force_reread=False):
         """Function for calling load_file() in every realization
 
@@ -590,10 +587,18 @@ class ScratchEnsemble(object):
 
         """
         if USE_CONCURRENT:
-            args = [
-                (realization, localpath, fformat, convert_numeric, force_reread, index)
-                for index, realization in self._realizations.items()
-            ]
+            args = []
+            for index, realization in self._realizations.items():
+                args.append(
+                    (
+                        realization,
+                        localpath,
+                        fformat,
+                        convert_numeric,
+                        force_reread,
+                        index,
+                    )
+                )
             with ProcessPoolExecutor() as executor:
                 for _ in executor.map(self._load_file, *zip(*args)):
                     pass
@@ -607,6 +612,9 @@ class ScratchEnsemble(object):
                     force_reread,
                     index,
                 )
+
+        if self.get_df(localpath).empty:
+            raise ValueError("No ensemble data found for %s", localpath)
 
         return self.get_df(localpath)
 
@@ -723,6 +731,7 @@ class ScratchEnsemble(object):
                 # No logging here, those error messages
                 # should have appeared at construction using load_*()
                 pass
+
         if dflist:
             # Merge a dictionary of dataframes. The dict key is
             # the realization index, and end up in a MultiIndex
