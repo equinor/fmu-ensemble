@@ -745,6 +745,28 @@ class ScratchEnsemble(object):
         else:
             raise ValueError("No data found for " + localpath)
 
+    @staticmethod
+    def _load_smry(
+        realidx,
+        realization,
+        time_index,
+        column_keys,
+        cache_eclsum,
+        start_date,
+        end_date,
+        include_restart,
+    ):
+        logger.info("Loading smry from realization %s", realidx)
+        realization.load_smry(
+            time_index=time_index,
+            column_keys=column_keys,
+            cache_eclsum=cache_eclsum,
+            start_date=start_date,
+            end_date=end_date,
+            include_restart=include_restart,
+        )
+        return realization
+
     def load_smry(
         self,
         time_index="raw",
@@ -814,21 +836,40 @@ class ScratchEnsemble(object):
         """
         if not stacked:
             raise NotImplementedError
-        # Future: Multithread this!
-        for realidx, realization in self._realizations.items():
-            # We do not store the returned DataFrames here,
-            # instead we look them up afterwards using get_df()
-            # Downside is that we have to compute the name of the
-            # cached object as it is not returned.
-            logger.info("Loading smry from realization %s", realidx)
-            realization.load_smry(
-                time_index=time_index,
-                column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
+
+        if USE_CONCURRENT:
+            args = []
+            for realidx, realization in self._realizations.items():
+                args.append(
+                    (
+                        realidx,
+                        realization,
+                        time_index,
+                        column_keys,
+                        False,
+                        start_date,
+                        end_date,
+                        include_restart,
+                    )
+                )
+            with ProcessPoolExecutor() as executor:
+                for realization in executor.map(self._load_smry, *zip(*args)):
+                    self._realizations[realization.index] = realization
+        else:
+            for realidx, realization in self._realizations.items():
+                # We do not store the returned DataFrames here,
+                # instead we look them up afterwards using get_df()
+                # Downside is that we have to compute the name of the
+                # cached object as it is not returned.
+                logger.info("Loading smry from realization %s", realidx)
+                realization.load_smry(
+                    time_index=time_index,
+                    column_keys=column_keys,
+                    cache_eclsum=cache_eclsum,
+                    start_date=start_date,
+                    end_date=end_date,
+                    include_restart=include_restart,
+                )
         if isinstance(time_index, list):
             time_index = "custom"
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
