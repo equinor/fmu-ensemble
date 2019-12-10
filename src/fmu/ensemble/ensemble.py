@@ -290,19 +290,13 @@ class ScratchEnsemble(object):
                     self._init_scratch_realization, globbedpaths
                 ):
                     count += self._check_loading_of_realization(
-                        realization=realization,
-                        realdir=realdir,
-                        realidxregexp=realidxregexp,
+                        realization, realdir, realidxregexp
                     )
         else:
             for realdir in globbedpaths:
-                realization = ScratchRealization(
-                    realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
-                )
+                realization = ScratchRealization(realdir, realidxregexp, autodiscovery)
                 count += self._check_loading_of_realization(
-                    realization=realization,
-                    realdir=realdir,
-                    realidxregexp=realidxregexp,
+                    realization, realdir, realidxregexp
                 )
 
         logger.info("add_realizations() found %d realizations", len(self._realizations))
