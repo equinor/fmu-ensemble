@@ -251,7 +251,7 @@ class ScratchEnsemble(object):
             )
         else:
             globbedpaths = glob.glob(paths)
-        
+
         count = 0
         if USE_CONCURRENT:
             with concurrent.futures.ProcessPoolExecutor() as executor:
