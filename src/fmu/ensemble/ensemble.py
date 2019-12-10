@@ -10,8 +10,10 @@ import re
 import os
 import glob
 from datetime import datetime
+
 try:
     import concurrent.futures
+
     USE_CONCURRENT = True
 except ImportError:
     USE_CONCURRENT = False
@@ -284,14 +286,24 @@ class ScratchEnsemble(object):
         count = 0
         if USE_CONCURRENT:
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                for realdir, realization in executor.map(self._init_scratch_realization, globbedpaths):
-                    count += self._check_loading_of_realization(realization=realization, realdir=realdir, realidxregexp=realidxregexp)
+                for realdir, realization in executor.map(
+                    self._init_scratch_realization, globbedpaths
+                ):
+                    count += self._check_loading_of_realization(
+                        realization=realization,
+                        realdir=realdir,
+                        realidxregexp=realidxregexp,
+                    )
         else:
             for realdir in globbedpaths:
                 realization = ScratchRealization(
                     realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
                 )
-                count += self._check_loading_of_realization(realization=realization, realdir=realdir, realidxregexp=realidxregexp)
+                count += self._check_loading_of_realization(
+                    realization=realization,
+                    realdir=realdir,
+                    realidxregexp=realidxregexp,
+                )
 
         logger.info("add_realizations() found %d realizations", len(self._realizations))
 
