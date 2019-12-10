@@ -12,7 +12,7 @@ import glob
 from datetime import datetime
 
 try:
-    import concurrent.futures
+    from concurrent.futures import ProcessPoolExecutor
 
     USE_CONCURRENT = True
 except ImportError:
@@ -290,7 +290,7 @@ class ScratchEnsemble(object):
         count = 0
         if USE_CONCURRENT:
             args = [(realdir, realidxregexp, autodiscovery) for realdir in globbedpaths]
-            with concurrent.futures.ProcessPoolExecutor() as executor:
+            with ProcessPoolExecutor() as executor:
                 for realdir, realization in executor.map(
                     self._init_scratch_realization, *zip(*args)
                 ):
@@ -589,7 +589,7 @@ class ScratchEnsemble(object):
                 (realization, localpath, fformat, convert_numeric, force_reread, index)
                 for index, realization in self._realizations.items()
             ]
-            with concurrent.futures.ProcessPoolExecutor() as executor:
+            with ProcessPoolExecutor() as executor:
                 for _ in executor.map(self._load_file, *zip(*args)):
                     pass
         else:
