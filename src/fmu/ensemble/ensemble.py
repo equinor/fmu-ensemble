@@ -292,7 +292,6 @@ class ScratchEnsemble(object):
                     count += self._check_loading_of_realization(
                         realization, realdir, realidxregexp
                     )
-                    print(realidxregexp)
         else:
             for realdir in globbedpaths:
                 realization = ScratchRealization(realdir, realidxregexp, autodiscovery)
@@ -521,6 +520,43 @@ class ScratchEnsemble(object):
         """
         return self.load_file(localpath, "csv", convert_numeric, force_reread)
 
+    def _load_file(
+        self, realization, localpath, fformat, convert_numeric, force_reread
+    ):
+        """Wrapper function to be used for parallel loading of files
+
+        Args:
+            realization: Single realization
+            localpath (str): path to the text file, relative to each realization
+            fformat (str): string identifying the file format. Supports 'txt'
+                and 'csv'.
+            convert_numeric (boolean): If set to True, numerical columns
+                will be searched for and have their dtype set
+                to integers or floats. If scalars, only numerical
+                data will be loaded.
+            force_reread (boolean): Force reread from file system. If
+                False, repeated calls to this function will
+                returned cached results.
+
+        Returns:
+            Nothing
+
+        """
+        try:
+            realization.load_file(localpath, fformat, convert_numeric, force_reread)
+        except ValueError:
+            # This would at least occur for unsupported fileformat,
+            # and that we should not skip.
+            logger.critical("load_file() failed in realization %d", index)
+            raise ValueError
+        except IOError:
+            # At ensemble level, we allow files to be missing in
+            # some realizations
+            logger.warning("Could not read %s for realization %d", localpath, index)
+
+        if self.get_df(localpath).empty:
+            raise ValueError("No ensemble data found for %s", localpath)
+
     def load_file(self, localpath, fformat, convert_numeric=False, force_reread=False):
         """Function for calling load_file() in every realization
 
@@ -540,21 +576,22 @@ class ScratchEnsemble(object):
         Returns:
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
             distuinguishes each realizations data.
+
         """
-        for index, realization in self._realizations.items():
-            try:
-                realization.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError:
-                # This would at least occur for unsupported fileformat,
-                # and that we should not skip.
-                logger.critical("load_file() failed in realization %d", index)
-                raise ValueError
-            except IOError:
-                # At ensemble level, we allow files to be missing in
-                # some realizations
-                logger.warning("Could not read %s for realization %d", localpath, index)
-        if self.get_df(localpath).empty:
-            raise ValueError("No ensemble data found for %s", localpath)
+        if USE_CONCURRENT:
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                for realization in executor.map(
+                    self._load_file, self._realizations.items()
+                ):
+                    self._load_(
+                        realization, localpath, fformat, convert_numeric, force_reread
+                    )
+        else:
+            for index, realization in self._realizations.items():
+                self._load_(
+                    realization, localpath, fformat, convert_numeric, force_reread
+                )
+
         return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None, metayaml=False):
