@@ -626,9 +626,7 @@ class EnsembleSet(object):
         if smrylist:
             return pd.concat(smrylist, sort=False)
 
-    def get_smry_dates(
-        self, freq="monthly", cache_eclsum=False, start_date=None, end_date=None
-    ):
+    def get_smry_dates(self, freq="monthly", start_date=None, end_date=None):
         """Return list of datetimes from an ensembleset
 
         Datetimes from each realization in each ensemble can

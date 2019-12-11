@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import os
 import re
 import copy
@@ -38,16 +39,14 @@ try:
 except ImportError:
     HAVE_ECL2DF = False
 
-try:
-    from concurrent.futures import ProcessPoolExecutor
-
-    USE_CONCURRENT = True
-except ImportError:
-    USE_CONCURRENT = False
-
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
+
+if sys.version_info >= (3, 2):
+    USE_CONCURRENT = True
+else:
+    USE_CONCURRENT = False
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -948,9 +947,6 @@ class ScratchRealization(object):
             DataFrame: with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
-        if USE_CONCURRENT:
-            cache = False
-
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()

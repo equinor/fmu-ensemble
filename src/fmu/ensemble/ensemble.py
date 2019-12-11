@@ -1220,9 +1220,6 @@ class ScratchEnsemble(object):
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
         """
-        if USE_CONCURRENT:
-            cache = False
-
         if quantiles is None:
             quantiles = [10, 90]
 
