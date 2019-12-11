@@ -1040,8 +1040,8 @@ class ScratchRealization(object):
             if not cache_eclsum:
                 # Ensure EclSum object can be garbage collected
                 # Commented out otherwise segmetation error
-                # self._eclsum = None
-                pass
+                if not USE_CONCURRENT:
+                    self._eclsum = None
             return dataframe
         else:
             return pd.DataFrame()
