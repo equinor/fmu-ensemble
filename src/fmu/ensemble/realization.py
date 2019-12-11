@@ -43,10 +43,7 @@ from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
 
-if sys.version_info >= (3, 2):
-    USE_CONCURRENT = True
-else:
-    USE_CONCURRENT = False
+USE_CONCURRENT = bool(sys.version_info >= (3, 2))
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)

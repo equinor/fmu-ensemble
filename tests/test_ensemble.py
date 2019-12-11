@@ -751,25 +751,23 @@ def test_nonexisting():
 
 def test_eclsumcaching():
     """Test caching of eclsum"""
-
-    if "__file__" in globals():
-        # Easen up copying test code into interactive sessions
-        testdir = os.path.dirname(os.path.abspath(__file__))
-    else:
-        testdir = os.path.abspath(".")
-
-    dirs = testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
-    ens = ScratchEnsemble("reektest", dirs)
-
-    # The problem here is if you load in a lot of UNSMRY files
-    # and the Python process keeps them in memory. Not sure
-    # how to check in code that an object has been garbage collected
-    # but for garbage collection to work, at least the realization
-    # _eclsum variable must be None.
-
-    ens.load_smry()
-
     if sys.version_info < (3, 2):
+        if "__file__" in globals():
+            # Easen up copying test code into interactive sessions
+            testdir = os.path.dirname(os.path.abspath(__file__))
+        else:
+            testdir = os.path.abspath(".")
+
+        dirs = testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+        ens = ScratchEnsemble("reektest", dirs)
+
+        # The problem here is if you load in a lot of UNSMRY files
+        # and the Python process keeps them in memory. Not sure
+        # how to check in code that an object has been garbage collected
+        # but for garbage collection to work, at least the realization
+        # _eclsum variable must be None.
+        ens.load_smry()
+
         # When not using concurrent, in older Python versions, the default is
         # to do caching, so these will not be None:
         assert all([x._eclsum for (idx, x) in ens._realizations.items()])
