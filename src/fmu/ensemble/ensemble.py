@@ -213,23 +213,6 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-    @staticmethod
-    def _init_scratch_realization(realdir, realidxregexp, autodiscovery):
-        """Wrapper function used for concurrent loading
-
-        Args:
-            realdir (str): directory to realization
-            realidxregexp (str): Regular expression or None
-            autodiscovery (boolean): whether files can be attempted
-                auto-discovered
-
-        Returns:
-            realization (ScratchRealization): Initialized ScratchRealization
-        """
-        realization = ScratchRealization(
-            realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
-        )
-        return realdir, realization
 
     def _check_loading_of_realization(self, realization, realdir, realidxregexp):
         """Helper function for checking and logging the results of loading a
@@ -295,12 +278,12 @@ class ScratchEnsemble(object):
         if USE_CONCURRENT:
             args = [(realdir, realidxregexp, autodiscovery) for realdir in globbedpaths]
             with ProcessPoolExecutor() as executor:
-                for realdir, realization in executor.map(
-                    self._init_scratch_realization, *zip(*args)
-                ):
-                    count += self._check_loading_of_realization(
-                        realization, realdir, realidxregexp
-                    )
+                realfutures = [executor.submit(ScratchRealization, realdir, realidxregexp=realidxregexp,
+                    autodiscovery=autodiscovery) for realdir in globbedpaths]
+
+            for realfuture in realfutures:
+                count += self._check_loading_of_realization(
+                    realfuture.result(), "dummydirfornow", None)
         else:
             for realdir in globbedpaths:
                 realization = ScratchRealization(
