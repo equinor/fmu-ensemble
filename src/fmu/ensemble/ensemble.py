@@ -6,16 +6,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import re
 import os
 import glob
 from datetime import datetime
 
-try:
+if sys.version_info >= (3, 2):
     from concurrent.futures import ProcessPoolExecutor
-
     USE_CONCURRENT = True
-except ImportError:
+else:
     USE_CONCURRENT = False
 
 import six
