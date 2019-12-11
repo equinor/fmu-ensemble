@@ -752,6 +752,7 @@ def test_nonexisting():
 def test_eclsumcaching():
     """Test caching of eclsum"""
     if sys.version_info < (3, 2):
+        # pylint: disable=W0212
         if "__file__" in globals():
             # Easen up copying test code into interactive sessions
             testdir = os.path.dirname(os.path.abspath(__file__))
