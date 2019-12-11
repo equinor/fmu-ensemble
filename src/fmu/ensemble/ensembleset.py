@@ -6,6 +6,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import re
 import os
 import glob
@@ -526,7 +527,7 @@ class EnsembleSet(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=False,
         start_date=None,
         end_date=None,
     ):
@@ -626,7 +627,7 @@ class EnsembleSet(object):
             return pd.concat(smrylist, sort=False)
 
     def get_smry_dates(
-        self, freq="monthly", cache_eclsum=True, start_date=None, end_date=None
+        self, freq="monthly", cache_eclsum=False, start_date=None, end_date=None
     ):
         """Return list of datetimes from an ensembleset
 
@@ -658,7 +659,7 @@ class EnsembleSet(object):
             rawdates = rawdates.union(
                 ensemble.get_smry_dates(
                     freq="report",
-                    cache_eclsum=cache_eclsum,
+                    cache_eclsum=False,
                     start_date=start_date,
                     end_date=end_date,
                 )
@@ -696,7 +697,15 @@ class EnsembleSet(object):
             summary file or no matched well names.
 
         """
+        # Caching should not be used when running concurrent
+        if sys.version_info >= (3, 2):
+            cache = False
+        else:
+            cache = True
+
         result = set()
         for _, ensemble in self._ensembles.items():
-            result = result.union(ensemble.get_wellnames(well_match))
+            result = result.union(
+                ensemble.get_wellnames(well_match=well_match, cache=cache)
+            )
         return sorted(list(result))

@@ -14,6 +14,7 @@ from datetime import datetime
 
 if sys.version_info >= (3, 2):
     from concurrent.futures import ProcessPoolExecutor
+
     USE_CONCURRENT = True
 else:
     USE_CONCURRENT = False
@@ -751,7 +752,6 @@ class ScratchEnsemble(object):
         realization,
         time_index,
         column_keys,
-        cache_eclsum,
         start_date,
         end_date,
         include_restart,
@@ -760,7 +760,7 @@ class ScratchEnsemble(object):
         realization.load_smry(
             time_index=time_index,
             column_keys=column_keys,
-            cache_eclsum=cache_eclsum,
+            cache_eclsum=False,
             start_date=start_date,
             end_date=end_date,
             include_restart=include_restart,
@@ -846,7 +846,6 @@ class ScratchEnsemble(object):
                         realization,
                         time_index,
                         column_keys,
-                        False,
                         start_date,
                         end_date,
                         include_restart,
@@ -1065,6 +1064,8 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes. Empty list if no data found.
         """
+        if USE_CONCURRENT:
+            cache_eclsum = False
 
         # Build list of list of eclsum dates
         eclsumsdates = []
@@ -1169,6 +1170,7 @@ class ScratchEnsemble(object):
                 datetimes = [start_date] + datetimes
             if end_date and end_date not in datetimes:
                 datetimes = datetimes + [end_date]
+
             return datetimes
 
     def get_smry_stats(
@@ -1218,6 +1220,9 @@ class ScratchEnsemble(object):
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
         """
+        if USE_CONCURRENT:
+            cache = False
+
         if quantiles is None:
             quantiles = [10, 90]
 
@@ -1253,7 +1258,7 @@ class ScratchEnsemble(object):
 
         return pd.concat(dframes, names=["STATISTIC"], sort=False)
 
-    def get_wellnames(self, well_match=None):
+    def get_wellnames(self, well_match=None, cache=True):
         """
         Return a union of all Eclipse Summary well names
         in all realizations (union). In addition, can return a list
@@ -1262,6 +1267,7 @@ class ScratchEnsemble(object):
         Args:
             well_match: `Optional`. String (or list of strings)
                with wildcard filter. If None, all wells are returned
+            cache (bool): `Optional`. Bool to set caching or not.
         Returns:
             list of strings with eclipse well names. Empty list if no
             summary file or no matched well names.
@@ -1271,7 +1277,7 @@ class ScratchEnsemble(object):
             well_match = [well_match]
         result = set()
         for _, realization in self._realizations.items():
-            eclsum = realization.get_eclsum()
+            eclsum = realization.get_eclsum(cache=cache)
             if eclsum:
                 if well_match is None:
                     result = result.union(set(eclsum.wells()))

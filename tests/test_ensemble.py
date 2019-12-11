@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import os
 import shutil
 
@@ -767,35 +768,38 @@ def test_eclsumcaching():
     # _eclsum variable must be None.
 
     ens.load_smry()
-    # Default is to do caching, so these will not be None:
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    # If we redo this operation, the same objects should all
-    # be None afterwards:
-    ens.load_smry(cache_eclsum=None)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+    if sys.version_info < (3, 2):
+        # When not using concurrent, in older Python versions, the default is
+        # to do caching, so these will not be None:
+        assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    ens.get_smry()
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+        # If we redo this operation, the same objects should all
+        # be None afterwards:
+        ens.load_smry(cache_eclsum=None)
+        assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    ens.get_smry(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+        ens.get_smry()
+        assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    ens.get_smry_stats()
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+        ens.get_smry(cache_eclsum=False)
+        assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    ens.get_smry_stats(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+        ens.get_smry_stats()
+        assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    ens.get_smry_dates()
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+        ens.get_smry_stats(cache_eclsum=False)
+        assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    # Clear the cached objects because the statement above has cached it..
-    for _, realization in ens._realizations.items():
-        realization._eclsum = None
+        ens.get_smry_dates()
+        assert all([x._eclsum for (idx, x) in ens._realizations.items()])
 
-    ens.get_smry_dates(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+        # Clear the cached objects because the statement above has cached it..
+        for _, realization in ens._realizations.items():
+            realization._eclsum = None
+
+        ens.get_smry_dates(cache_eclsum=False)
+        assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
 
 
 def test_filedescriptors():

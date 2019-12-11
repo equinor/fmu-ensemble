@@ -38,6 +38,13 @@ try:
 except ImportError:
     HAVE_ECL2DF = False
 
+try:
+    from concurrent.futures import ProcessPoolExecutor
+
+    USE_CONCURRENT = True
+except ImportError:
+    USE_CONCURRENT = False
+
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
@@ -838,6 +845,13 @@ class ScratchRealization(object):
             EclSum: object representing the summary file. None if
                 nothing was found.
         """
+
+        if USE_CONCURRENT:
+            # Using caching when in concurrent mode will result
+            # in segementation errors from libecl.
+            # cache=False
+            pass
+
         if cache and self._eclsum:  # Return cached object if available
             if self._eclsum_include_restart == include_restart:
                 return self._eclsum
@@ -934,6 +948,9 @@ class ScratchRealization(object):
             DataFrame: with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
+        if USE_CONCURRENT:
+            cache = False
+
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
@@ -1019,7 +1036,6 @@ class ScratchRealization(object):
             )
         else:
             time_index_arg = time_index
-
         if self.get_eclsum(cache=cache_eclsum, include_restart=include_restart):
             try:
                 dataframe = self.get_eclsum(
@@ -1030,7 +1046,9 @@ class ScratchRealization(object):
                 return pd.DataFrame()
             if not cache_eclsum:
                 # Ensure EclSum object can be garbage collected
-                self._eclsum = None
+                # Commented out otherwise segmetation error
+                # self._eclsum = None
+                pass
             return dataframe
         else:
             return pd.DataFrame()
@@ -1237,6 +1255,7 @@ class ScratchRealization(object):
                 prop: self._eclsum.get_values(prop, report_only=False) for prop in props
             }
         dates = self._eclsum.get_dates(report_only=False)
+
         return pd.DataFrame(data=data, index=dates)
 
     def get_smry_dates(
