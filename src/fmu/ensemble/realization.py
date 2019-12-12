@@ -84,9 +84,15 @@ class ScratchRealization(object):
             override anything else.
         autodiscovery (boolean): whether the realization should try to
             auto-discover certain data (UNSMRY files in standard location)
+        batch (dict): List of functions (load_*) that
+            should be run at time of initialization. Each element is a
+            length 1 dictionary with the function name to run as the key
+            and each keys value should be the function arguments as a dict.
     """
 
-    def __init__(self, path, realidxregexp=None, index=None, autodiscovery=True):
+    def __init__(
+        self, path, realidxregexp=None, index=None, autodiscovery=True, batch=None
+    ):
         self._origpath = os.path.abspath(path)
         self.index = None
         self._autodiscovery = autodiscovery
@@ -165,7 +171,55 @@ class ScratchRealization(object):
         if os.path.exists(os.path.join(abspath, "parameters.txt")):
             self.load_txt("parameters.txt")
 
+        if batch:
+            print(batch)
+            self.process_batch(batch)
+
         logger.info("Initialized %s", abspath)
+
+    def process_batch(self, batch):
+        """Process a list of functions to run/apply
+
+        This is equivalent to calling each function individually
+        but this enables more efficient concurrency. It is meant
+        to be used for functions that modifies the realization
+        object, not for functions that returns a dataframe already.
+
+        Args:
+            batch (list): Each list element is a dictionary with one key,
+                being a function names, value pr key is a dict with keyword
+                arguments to be supplied to each function.
+        Returns:
+            ScratchRealization: This realization object (self), for it
+                to be picked up by ProcessPoolExecutor and pickling.
+        """
+        assert isinstance(batch, list)
+        allowed_functions = [
+            "apply",
+            "find_files",
+            "load_smry",
+            "load_txt",
+            "load_file",
+            "load_csv",
+            "load_status",
+            "load_scalar",
+        ]
+        for cmd in batch:
+            assert isinstance(cmd, dict)
+            assert len(cmd) == 1
+            fn_name = list(cmd.keys())[0]
+            logger.info(
+                "Batch processing (#%d): %s with args %s",
+                self.index,
+                fn_name,
+                str(cmd[fn_name]),
+            )
+            if fn_name not in allowed_functions:
+                logger.warning("process_batch skips illegal function: " + fn_name)
+                continue
+            assert isinstance(cmd[fn_name], dict)
+            getattr(self, fn_name)(**cmd[fn_name])
+        return self
 
     def runpath(self):
         """Return the runpath ("root") of the realization
