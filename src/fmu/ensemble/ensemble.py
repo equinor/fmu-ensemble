@@ -286,9 +286,9 @@ class ScratchEnsemble(object):
                     for realdir in globbedpaths
                 ]
 
-            for i, realfuture in enumerate(realfutures):
+            for idx, realfuture in enumerate(realfutures):
                 count += self._check_loading_of_realization(
-                    realfuture.result(), globbedpaths[i], realidxregexp
+                    realfuture.result(), globbedpaths[idx], realidxregexp
                 )
         else:
             for realdir in globbedpaths:
