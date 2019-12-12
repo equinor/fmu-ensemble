@@ -213,7 +213,6 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-
     def _check_loading_of_realization(self, realization, realdir, realidxregexp):
         """Helper function for checking and logging the results of loading a
         realization. Successfully loaded realizations will be added to
@@ -276,14 +275,21 @@ class ScratchEnsemble(object):
 
         count = 0
         if USE_CONCURRENT:
-            args = [(realdir, realidxregexp, autodiscovery) for realdir in globbedpaths]
             with ProcessPoolExecutor() as executor:
-                realfutures = [executor.submit(ScratchRealization, realdir, realidxregexp=realidxregexp,
-                    autodiscovery=autodiscovery) for realdir in globbedpaths]
+                realfutures = [
+                    executor.submit(
+                        ScratchRealization,
+                        realdir,
+                        realidxregexp=realidxregexp,
+                        autodiscovery=autodiscovery,
+                    )
+                    for realdir in globbedpaths
+                ]
 
-            for realfuture in realfutures:
+            for i, realfuture in enumerate(realfutures):
                 count += self._check_loading_of_realization(
-                    realfuture.result(), "dummydirfornow", None)
+                    realfuture.result(), globbedpaths[i], realidxregexp
+                )
         else:
             for realdir in globbedpaths:
                 realization = ScratchRealization(
