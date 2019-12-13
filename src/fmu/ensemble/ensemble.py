@@ -17,12 +17,18 @@ import yaml
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
+try:
+    from concurrent.futures import ProcessPoolExecutor
+except (ImportError, ModuleNotFoundError):
+    pass
+
 from .etc import Interaction
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .realization import parse_number
+from .common import use_concurrent
 
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -199,13 +205,29 @@ class ScratchEnsemble(object):
             globbedpaths = glob.glob(paths)
 
         count = 0
-        for realdir in globbedpaths:
-            realization = ScratchRealization(
-                realdir,
-                realidxregexp=realidxregexp,
-                autodiscovery=autodiscovery,
-                batch=batch,
-            )
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                loaded_reals = [
+                    executor.submit(
+                        ScratchRealization,
+                        realdir,
+                        realidxregexp=realidxregexp,
+                        autodiscovery=autodiscovery,
+                        batch=batch,
+                    ).result()
+                    for realdir in globbedpaths
+                ]
+        else:
+            loaded_reals = [
+                ScratchRealization(
+                    realdir,
+                    realidxregexp=realidxregexp,
+                    autodiscovery=autodiscovery,
+                    batch=batch,
+                )
+                for realdir in globbedpaths
+            ]
+        for realdir, realization in zip(globbedpaths, loaded_reals):
             if realization.index is None:
                 logger.critical(
                     "Could not determine realization index for path %s", realdir
@@ -496,18 +518,30 @@ class ScratchEnsemble(object):
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
             distuinguishes each realizations data.
         """
-        for index, realization in self.realizations.items():
-            try:
-                realization.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError:
-                # This would at least occur for unsupported fileformat,
-                # and that we should not skip.
-                logger.critical("load_file() failed in realization %d", index)
-                raise ValueError
-            except IOError:
-                # At ensemble level, we allow files to be missing in
-                # some realizations
-                logger.warning("Could not read %s for realization %d", localpath, index)
+        self.process_batch(
+                batch=[
+                    {
+                        "load_file": {
+                            "localpath": localpath,
+                            "fformat": fformat,
+                            "convert_numeric": convert_numeric,
+                            "force_reread": force_reread,
+                            }
+                        }
+                    ]
+                )
+        #for index, realization in self.realizations.items():
+        #    try:
+        #        realization.load_file(localpath, fformat, convert_numeric, force_reread)
+        #    except ValueError:
+        #        # This would at least occur for unsupported fileformat,
+        #        # and that we should not skip.
+        #        logger.critical("load_file() failed in realization %d", index)
+        #        raise ValueError
+        #    except IOError:
+        #        # At ensemble level, we allow files to be missing in
+        #        # some realizations
+        #        logger.warning("Could not read %s for realization %d", localpath, index)
         if self.get_df(localpath).empty:
             raise ValueError("No ensemble data found for {}".format(localpath))
         return self.get_df(localpath)
@@ -756,23 +790,43 @@ class ScratchEnsemble(object):
         """
         if not stacked:
             raise NotImplementedError
-        # Future: Multithread this!
-        for realidx, realization in self.realizations.items():
-            # We do not store the returned DataFrames here,
-            # instead we look them up afterwards using get_df()
-            # Downside is that we have to compute the name of the
-            # cached object as it is not returned.
-            logger.info("Loading smry from realization %s", realidx)
-            realization.load_smry(
-                time_index=time_index,
-                column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
+#<<<<<<< HEAD
+#        # Future: Multithread this!
+#        for realidx, realization in self.realizations.items():
+#            # We do not store the returned DataFrames here,
+#            # instead we look them up afterwards using get_df()
+#            # Downside is that we have to compute the name of the
+#            # cached object as it is not returned.
+#            logger.info("Loading smry from realization %s", realidx)
+#            realization.load_smry(
+#                time_index=time_index,
+#                column_keys=column_keys,
+#                cache_eclsum=cache_eclsum,
+#                start_date=start_date,
+#                end_date=end_date,
+#                include_restart=include_restart,
+#            )
+#=======
+        self.process_batch(
+            batch=[
+                {
+                    "load_smry": {
+                        "column_keys": column_keys,
+                        "time_index": time_index,
+                        "cache_eclsum": cache_eclsum,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "include_restart": include_restart,
+                    }
+                }
+            ]
+        )
+
+#>>>>>>> Forward batch command from ensembles and ensemblesets
         if isinstance(time_index, list):
             time_index = "custom"
+        # Note the dependency that the load_smry() function in
+        # ScratchRealization will store to this key-name:
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None):
@@ -913,8 +967,24 @@ class ScratchEnsemble(object):
             ScratchEnsemble: This ensemble object (self), for it
                 to be picked up by ProcessPoolExecutor and pickling.
         """
-        for realization in self.realizations.values():
-            realization.process_batch(batch)
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                real_indices = self.realizations.keys()
+                futures_reals = [
+                    executor.submit(real.process_batch, batch)
+                    for real in self._realizations.values()
+                ]
+                # Reassemble the realization dictionary from
+                # the pickled results of the ProcessPool:
+                self.realizations = {
+                    r_idx: real
+                    for (r_idx, real) in zip(
+                        real_indices, [x.result() for x in futures_reals]
+                    )
+                }
+        else:
+            for realization in self.realizations.values():
+                realization.process_batch(batch)
         return self
 
     def apply(self, callback, **kwargs):

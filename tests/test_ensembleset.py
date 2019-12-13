@@ -256,7 +256,7 @@ def test_ensembleset_reek001(tmp="TMP"):
             {"load_scalar": {"localpath": "npv.txt"}},
             {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
             {"load_smry": {"column_keys": "*", "time_index": "daily"}},
-        ]
+        ],
     )
     assert len(ensset5.get_df("npv.txt")) == 10
     assert len(ensset5.get_df("unsmry--yearly")) == 50

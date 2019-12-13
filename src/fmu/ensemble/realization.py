@@ -32,6 +32,7 @@ from ecl import EclFileFlagEnum
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
+from .common import use_concurrent
 
 HAVE_ECL2DF = False
 try:
@@ -108,7 +109,7 @@ class ScratchRealization(object):
             columns=["FULLPATH", "FILETYPE", "LOCALPATH", "BASENAME"]
         )
         self._eclsum = None  # Placeholder for caching
-        self._eclsum_include_restart = None  # Flag for cached object
+        self._eclsum_include_restart = None
 
         # The datastore for internalized data. Dictionary
         # indexed by filenames (local to the realization).
@@ -947,6 +948,10 @@ class ScratchRealization(object):
             EclSum: object representing the summary file. None if
                 nothing was found.
         """
+        if use_concurrent():
+            # In concurrent mode, caching is not used as
+            # we do not pickle the loaded EclSum objects
+            cache = False
         if cache and self._eclsum:  # Return cached object if available
             if self._eclsum_include_restart == include_restart:
                 return self._eclsum
@@ -1206,7 +1211,7 @@ class ScratchRealization(object):
         keys = set()
         for key in column_keys:
             if isinstance(key, str):
-                keys = keys.union(set(self._eclsum.keys(key)))
+                keys = keys.union(set(self.get_eclsum().keys(key)))
         return list(keys)
 
     def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
@@ -1365,6 +1370,8 @@ class ScratchRealization(object):
         """
         Fetch selected vectors from Eclipse Summary data.
 
+        NOTE: This function might face depreciation.
+
         Args:
             props_wildcard : string or list of strings with vector
                 wildcards
@@ -1372,24 +1379,22 @@ class ScratchRealization(object):
             a dataframe with values. Raw times from UNSMRY.
             Empty dataframe if no summary file data available
         """
-        if not self._eclsum:  # check if it is cached
-            self.get_eclsum()
-
-        if not self._eclsum:
+        if not self.get_eclsum():
+            # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
 
         props = self._glob_smry_keys(props_wildcard)
 
-        if "numpy_vector" in dir(self._eclsum):
+        if "numpy_vector" in dir(self.get_eclsum()):
             data = {
-                prop: self._eclsum.numpy_vector(prop, report_only=False)
+                prop: self.get_eclsum().numpy_vector(prop, report_only=False)
                 for prop in props
             }
         else:  # get_values() is deprecated in newer libecl
             data = {
-                prop: self._eclsum.get_values(prop, report_only=False) for prop in props
+                prop: self.get_eclsum().get_values(prop, report_only=False) for prop in props
             }
-        dates = self._eclsum.get_dates(report_only=False)
+        dates = self.get_eclsum().get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
 
     def get_smry_dates(
