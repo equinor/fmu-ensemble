@@ -237,6 +237,19 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert len(ensset5.get_df("unsmry--yearly")) == 50
     assert len(ensset5.get_df("unsmry--daily")) == 10980
 
+    # Try batch processing after initialization:
+    ensset6 = EnsembleSet("reek001", frompath=ensdir)
+    ensset6.process_batch(
+        batch=[
+            {"load_scalar": {"localpath": "npv.txt"}},
+            {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
+            {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+        ],
+    )
+    assert len(ensset5.get_df("npv.txt")) == 10
+    assert len(ensset5.get_df("unsmry--yearly")) == 50
+    assert len(ensset5.get_df("unsmry--daily")) == 10980
+
     # Delete the symlink and leftover from apply-testing when we are done.
     for real_dir in glob.glob(ensdir + "/realization-*"):
         if not SKIP_FMU_TOOLS:

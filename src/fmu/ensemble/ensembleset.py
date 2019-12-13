@@ -447,6 +447,23 @@ class EnsembleSet(object):
             except ValueError:
                 pass  # Allow localpath to be missing in some ensembles.
 
+    def process_batch(self, batch=None):
+        """Process a list of functions to run/apply
+
+        This is equivalent to calling each function individually
+        but this enables more efficient concurrency. It is meant
+        to be used for functions that modifies the realization
+        object, not for functions that returns a dataframe already.
+
+        Args:
+            batch (list): Each list element is a dictionary with one key,
+                being a function names, value pr key is a dict with keyword
+                arguments to be supplied to each function.
+        """
+        for ensemble in self._ensembles.values():
+            if isinstance(ensemble, ScratchEnsemble):
+                ensemble.process_batch(batch)
+
     def apply(self, callback, **kwargs):
         """Callback functionalty, apply a function to every realization
 

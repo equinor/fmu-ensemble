@@ -874,6 +874,26 @@ class ScratchEnsemble(object):
             except ValueError:
                 pass  # Allow localpath to be missing in some realizations
 
+    def process_batch(self, batch=None):
+        """Process a list of functions to run/apply
+
+        This is equivalent to calling each function individually
+        but this enables more efficient concurrency. It is meant
+        to be used for functions that modifies the realization
+        object, not for functions that returns a dataframe already.
+
+        Args:
+            batch (list): Each list element is a dictionary with one key,
+                being a function names, value pr key is a dict with keyword
+                arguments to be supplied to each function.
+        Returns:
+            ScratchEnsemble: This ensemble object (self), for it
+                to be picked up by ProcessPoolExecutor and pickling.
+        """
+        for realization in self._realizations.values():
+            realization.process_batch(batch)
+        return self
+
     def apply(self, callback, **kwargs):
         """Callback functionalty, apply a function to every realization
 
