@@ -21,6 +21,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.6', '3.7', '3.8']
+        FMU_CONCURRENCY: ['True', 'False']
 
     steps:
       - name: 📖 Checkout commit locally
