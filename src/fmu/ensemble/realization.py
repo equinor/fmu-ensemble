@@ -172,7 +172,6 @@ class ScratchRealization(object):
             self.load_txt("parameters.txt")
 
         if batch:
-            print(batch)
             self.process_batch(batch)
 
         logger.info("Initialized %s", abspath)

@@ -54,7 +54,10 @@ class EnsembleSet(object):
         autodiscovery: boolean, sent to initializing Realization objects,
             instructing them on whether certain files should be
             auto-discovered.
-
+        batch (dict): List of functions (load_*) that
+            should be run at time of initialization for each realization.
+            Each element is a length 1 dictionary with the function name to run as
+            the key and each keys value should be the function arguments as a dict.
         """
 
     def __init__(
@@ -67,6 +70,7 @@ class EnsembleSet(object):
         iterregexp=None,
         batchregexp=None,
         autodiscovery=True,
+        batch=None,
     ):
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
@@ -101,6 +105,10 @@ class EnsembleSet(object):
             return
 
         if ensembles and isinstance(ensembles, list):
+            if batch:
+                logger.warning(
+                    "Batch commands not procesed when loading finished ensembles"
+                )
             for ensemble in ensembles:
                 if isinstance(ensemble, (ScratchEnsemble, VirtualEnsemble)):
                     self._ensembles[ensemble.name] = ensemble
@@ -108,7 +116,6 @@ class EnsembleSet(object):
                     logger.warning("Supplied object was not an ensemble")
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
-
         if frompath:
             self.add_ensembles_frompath(
                 frompath,
@@ -116,6 +123,7 @@ class EnsembleSet(object):
                 iterregexp,
                 batchregexp,
                 autodiscovery=autodiscovery,
+                batch=batch,
             )
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
@@ -124,7 +132,7 @@ class EnsembleSet(object):
             if not os.path.exists(runpathfile):
                 logger.error("Could not open runpath file %s", runpathfile)
                 raise IOError
-            self.add_ensembles_fromrunpath(runpathfile)
+            self.add_ensembles_fromrunpath(runpathfile, batch=batch)
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
 
@@ -171,6 +179,7 @@ class EnsembleSet(object):
         iterregexp=None,
         batchregexp=None,
         autodiscovery=True,
+        batch=None,
     ):
         """Convenience function for adding multiple ensembles.
 
@@ -189,7 +198,10 @@ class EnsembleSet(object):
             autodiscovery: boolean, sent to initializing Realization objects,
                 instructing them on whether certain files should be
                 auto-discovered.
-
+            batch (dict): List of functions (load_*) that
+                should be run at time of initialization for each realization.
+                Each element is a length 1 dictionary with the function name to run as
+                the key and each keys value should be the function arguments as a dict.
         """
         # Try to catch the most common use case and make that easy:
         if isinstance(paths, str):
@@ -244,7 +256,7 @@ class EnsembleSet(object):
         for path in globbedpaths:
             real = None
             iterr = None  # 'iter' is a builtin..
-            batch = None
+            batchname = None
             for path_comp in reversed(path.split(os.path.sep)):
                 realmatch = re.match(realidxregexp, path_comp)
                 if realmatch:
@@ -258,9 +270,9 @@ class EnsembleSet(object):
             for path_comp in reversed(path.split(os.path.sep)):
                 batchmatch = re.match(batchregexp, path_comp)
                 if batchmatch:
-                    batch = str(itermatch.group(1))
+                    batchname = str(itermatch.group(1))
                     break
-            df_row = {"path": path, "real": real, "iter": iterr, "batch": batch}
+            df_row = {"path": path, "real": real, "iter": iterr, "batch": batchname}
             paths_df = paths_df.append(df_row, ignore_index=True)
         paths_df.fillna(value="Unknown", inplace=True)
         # Initialize ensemble objects for each iter found:
@@ -282,10 +294,11 @@ class EnsembleSet(object):
                 pathsforiter,
                 realidxregexp=realidxregexp,
                 autodiscovery=autodiscovery,
+                batch=batch,
             )
             self._ensembles[ens.name] = ens
 
-    def add_ensembles_fromrunpath(self, runpathfile):
+    def add_ensembles_fromrunpath(self, runpathfile, batch=None):
         """Add one or many ensembles from an ERT runpath file.
 
         autodiscovery is not an argument, it is by default set to False
@@ -305,7 +318,10 @@ class EnsembleSet(object):
             # Make a runpath slice, and initialize from that:
             ens_runpath = runpath_df[runpath_df["iter"] == iterr]
             ens = ScratchEnsemble(
-                "iter-" + str(iterr), runpathfile=ens_runpath, autodiscovery=False
+                "iter-" + str(iterr),
+                runpathfile=ens_runpath,
+                autodiscovery=False,
+                batch=batch,
             )
             self._ensembles[ens.name] = ens
 

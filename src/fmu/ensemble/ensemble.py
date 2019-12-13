@@ -73,6 +73,11 @@ class ScratchEnsemble(object):
             off to gain more fined tuned control.
         manifest: dict or filename to use for manifest. If filename,
             it must be a yaml-file that will be parsed to a single dict.
+        batch (dict): List of functions (load_*) that
+            should be run at time of initialization for each realization.
+            Each element is a length 1 dictionary with the function name to run as
+            the key and each keys value should be the function arguments as a dict.
+
     """
 
     def __init__(
@@ -84,6 +89,7 @@ class ScratchEnsemble(object):
         runpathfilter=None,
         autodiscovery=True,
         manifest=None,
+        batch=None,
     ):
         self._name = ensemble_name  # ensemble name
         self._realizations = {}  # dict of ScratchRealization objects,
@@ -129,13 +135,13 @@ class ScratchEnsemble(object):
             # Search and locate minimal set of files
             # representing the realizations.
             count = self.add_realizations(
-                paths, realidxregexp, autodiscovery=autodiscovery
+                paths, realidxregexp, autodiscovery=autodiscovery, batch=batch
             )
 
         if isinstance(runpathfile, str) and runpathfile:
-            count = self.add_from_runpathfile(runpathfile, runpathfilter)
+            count = self.add_from_runpathfile(runpathfile, runpathfilter, batch=batch)
         if isinstance(runpathfile, pd.DataFrame) and not runpathfile.empty:
-            count = self.add_from_runpathfile(runpathfile, runpathfilter)
+            count = self.add_from_runpathfile(runpathfile, runpathfilter, batch=batch)
 
         if manifest:
             # The _manifest variable is set using a property decorator
@@ -205,7 +211,9 @@ class ScratchEnsemble(object):
         # calling function handle further errors.
         return shortpath
 
-    def add_realizations(self, paths, realidxregexp=None, autodiscovery=True):
+    def add_realizations(
+        self, paths, realidxregexp=None, autodiscovery=True, batch=None
+    ):
         """Utility function to add realizations to the ensemble.
 
         Realizations are identified by their integer index.
@@ -220,6 +228,7 @@ class ScratchEnsemble(object):
                 to file system. Absolute or relative paths.
             autodiscovery (boolean): whether files can be attempted
                 auto-discovered
+            batch (list): Batch commands sent to each realization.
 
         Returns:
             count (int): Number of realizations successfully added.
@@ -236,7 +245,10 @@ class ScratchEnsemble(object):
         count = 0
         for realdir in globbedpaths:
             realization = ScratchRealization(
-                realdir, realidxregexp=realidxregexp, autodiscovery=autodiscovery
+                realdir,
+                realidxregexp=realidxregexp,
+                autodiscovery=autodiscovery,
+                batch=batch,
             )
             if realization.index is None:
                 logger.critical(
@@ -252,7 +264,7 @@ class ScratchEnsemble(object):
         logger.info("add_realizations() found %d realizations", len(self._realizations))
         return count
 
-    def add_from_runpathfile(self, runpath, runpathfilter=None):
+    def add_from_runpathfile(self, runpath, runpathfilter=None, batch=None):
         """Add realizations from a runpath file typically
         coming from ERT.
 
@@ -269,6 +281,7 @@ class ScratchEnsemble(object):
                 a Pandas DataFrame parsed from a runpath file
             runpathfilter (str). A filter which each filepath has to match
                 in order to be included. Default None which means not filter
+            batch (list): Batch commands to be sent to each realization.
 
         Returns:
             int: Number of successfully added realizations.
@@ -299,7 +312,10 @@ class ScratchEnsemble(object):
                 continue
             logger.info("Adding realization from %s", row["runpath"])
             realization = ScratchRealization(
-                row["runpath"], index=int(row["index"]), autodiscovery=False
+                row["runpath"],
+                index=int(row["index"]),
+                autodiscovery=False,
+                batch=batch,
             )
             # Use the ECLBASE from the runpath file to
             # ensure we recognize the correct UNSMRY file
