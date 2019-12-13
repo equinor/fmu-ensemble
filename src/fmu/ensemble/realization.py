@@ -214,7 +214,7 @@ class ScratchRealization(object):
                 str(cmd[fn_name]),
             )
             if fn_name not in allowed_functions:
-                logger.warning("process_batch skips illegal function: " + fn_name)
+                logger.warning("process_batch skips illegal function: %s", fn_name)
                 continue
             assert isinstance(cmd[fn_name], dict)
             getattr(self, fn_name)(**cmd[fn_name])

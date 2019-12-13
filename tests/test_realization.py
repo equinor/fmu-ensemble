@@ -175,6 +175,7 @@ def test_batch():
             {"load_scalar": {"localpath": "npv.txt"}},
             {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
             {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+            {"illegal-ignoreme": {}},
         ],
     )
     assert real.get_df("npv.txt") == 3444
@@ -816,6 +817,21 @@ def test_apply():
         rms_vol2df,
         filename="share/results/volumes/" + "geogrid_vol_oil_1.txt",
         localpath="share/results/volumes/geogrid--oil.csv",
+    )
+    assert real.get_df("geogrid--oil")["STOIIP_OIL"].sum() > 0
+
+    # Run rms_vol2df in batch when initializing:
+    real = ensemble.ScratchRealization(
+        realdir,
+        batch=[
+            {
+                "apply": {
+                    "callback": rms_vol2df,
+                    "filename": "share/results/volumes/" + "geogrid_vol_oil_1.txt",
+                    "localpath": "share/results/volumes/geogrid--oil.csv",
+                }
+            }
+        ],
     )
     assert real.get_df("geogrid--oil")["STOIIP_OIL"].sum() > 0
 
