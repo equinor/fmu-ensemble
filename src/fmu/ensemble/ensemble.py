@@ -5,6 +5,7 @@ import os
 import glob
 import logging
 import warnings
+from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 import numpy as np
@@ -12,7 +13,6 @@ import yaml
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
-from .etc import Interaction  # noqa
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
@@ -20,6 +20,7 @@ from .ensemblecombination import EnsembleCombination
 from .realization import parse_number
 from .util import shortcut2path
 from .util.dates import unionize_smry_dates
+from .common import use_concurrent
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +61,8 @@ class ScratchEnsemble(object):
             or relative path to a realization RUNPATH, third column is
             the basename of the Eclipse simulation, relative to RUNPATH.
             Fourth column is not used.
-        runpathfilter (str): If supplied, the only the runpaths in
-            the runpathfile which contains this string will be included
+        runpathfilter (str): If supplied, only the runpaths in
+            the runpathfile which contain this string will be included
             Use to select only a specific realization f.ex.
         autodiscovery (boolean): True by default, means that the class
             can try to autodiscover data in the realization. Turn
@@ -180,9 +181,12 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
+            realidxregexp (str): Passed on to ScratchRealization init,
+                used to determine index from the path.
             autodiscovery (boolean): whether files can be attempted
                 auto-discovered
-            batch (list): Batch commands sent to each realization.
+            batch (list): Batch commands sent to each realization for
+                immediate execution after initialization.
 
         Returns:
             count (int): Number of realizations successfully added.
@@ -195,13 +199,29 @@ class ScratchEnsemble(object):
             globbedpaths = glob.glob(paths)
 
         count = 0
-        for realdir in globbedpaths:
-            realization = ScratchRealization(
-                realdir,
-                realidxregexp=realidxregexp,
-                autodiscovery=autodiscovery,
-                batch=batch,
-            )
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                loaded_reals = [
+                    executor.submit(
+                        ScratchRealization,
+                        realdir,
+                        realidxregexp=realidxregexp,
+                        autodiscovery=autodiscovery,
+                        batch=batch,
+                    ).result()
+                    for realdir in globbedpaths
+                ]
+        else:
+            loaded_reals = [
+                ScratchRealization(
+                    realdir,
+                    realidxregexp=realidxregexp,
+                    autodiscovery=autodiscovery,
+                    batch=batch,
+                )
+                for realdir in globbedpaths
+            ]
+        for realdir, realization in zip(globbedpaths, loaded_reals):
             if realization.index is None:
                 logger.critical(
                     "Could not determine realization index for path %s", realdir
@@ -259,21 +279,46 @@ class ScratchEnsemble(object):
             ):
                 raise ValueError("runpath dataframe not correct")
 
-        for _, row in runpath_df.iterrows():
-            if runpathfilter and runpathfilter not in row["runpath"]:
-                continue
-            logger.info("Adding realization from %s", row["runpath"])
-            realization = ScratchRealization(
-                row["runpath"],
-                index=int(row["index"]),
-                autodiscovery=False,
-                batch=batch,
+        if runpathfilter:
+            runpath_df = runpath_df[runpath_df["runpath"].str.contains(runpathfilter)]
+
+        if use_concurrent():
+            logger.info(
+                "Loading %s realizations concurrently from runpathfile",
+                str(len(runpath_df)),
             )
-            # Use the ECLBASE from the runpath file to
-            # ensure we recognize the correct UNSMRY file
-            realization.find_files(row["eclbase"] + ".DATA")
-            realization.find_files(row["eclbase"] + ".UNSMRY")
-            self.realizations[int(row["index"])] = realization
+            with ProcessPoolExecutor() as executor:
+                loaded_reals = [
+                    executor.submit(
+                        ScratchRealization,
+                        row.runpath,
+                        index=int(row.index),
+                        autodiscovery=False,
+                        find_files=[
+                            row.eclbase + ".DATA",
+                            row.eclbase + ".UNSMRY",
+                        ],
+                        batch=batch,
+                    ).result()
+                    for row in runpath_df.itertuples()
+                ]
+        else:
+            logger.info(
+                "Loading %s realizations sequentially from runpathfile",
+                str(len(runpath_df)),
+            )
+            loaded_reals = [
+                ScratchRealization(
+                    row.runpath,
+                    index=int(row.index),
+                    autodiscovery=False,
+                    find_files=[row.eclbase + ".DATA", row.eclbase + ".UNSMRY"],
+                    batch=batch,
+                )
+                for row in runpath_df.itertuples()
+            ]
+        for real in loaded_reals:
+            self.realizations[real.index] = real
 
         return len(self) - prelength
 
@@ -307,8 +352,11 @@ class ScratchEnsemble(object):
             realindices = [realindices]
         popped = 0
         for index in realindices:
-            self.realizations.pop(index, None)
-            popped += 1
+            if index in self.realizations.keys():
+                self.realizations.pop(index, None)
+                popped += 1
+            else:
+                logger.warning("Can't remove realization %d, it is not there", index)
         logger.info("removed %d realization(s)", popped)
 
     def to_virtual(self, name=None):
@@ -502,18 +550,18 @@ class ScratchEnsemble(object):
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
             distuinguishes each realizations data.
         """
-        for index, realization in self.realizations.items():
-            try:
-                realization.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError as exc:
-                # This would at least occur for unsupported fileformat,
-                # and that we should not skip.
-                logger.critical("load_file() failed in realization %d", index)
-                raise ValueError from exc
-            except IOError:
-                # At ensemble level, we allow files to be missing in
-                # some realizations
-                logger.warning("Could not read %s for realization %d", localpath, index)
+        self.process_batch(
+            batch=[
+                {
+                    "load_file": {
+                        "localpath": localpath,
+                        "fformat": fformat,
+                        "convert_numeric": convert_numeric,
+                        "force_reread": force_reread,
+                    }
+                }
+            ]
+        )
         if self.get_df(localpath).empty:
             raise ValueError("No ensemble data found for {}".format(localpath))
         return self.get_df(localpath)
@@ -651,6 +699,10 @@ class ScratchEnsemble(object):
         dflist = {}
         meta = {}
         for index, realization in self.realizations.items():
+            # There is probably no gain from running this concurrently
+            # over the realizations. Each realization object holds
+            # the dataframes in memory already, so retrieval
+            # is at no cost.
             try:
                 data = realization.get_df(localpath, merge=merge)
                 if isinstance(data, dict):
@@ -742,24 +794,32 @@ class ScratchEnsemble(object):
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
-        # Future: Multithread this!
-        for realidx, realization in self.realizations.items():
-            # We do not store the returned DataFrames here,
-            # instead we look them up afterwards using get_df()
-            # Downside is that we have to compute the name of the
-            # cached object as it is not returned.
-            logger.info("Loading smry from realization %s", realidx)
-            realization.load_smry(
-                time_index=time_index,
-                column_keys=column_keys,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
+        # process_batch() will modify each Realization object
+        # and add the loaded smry data to the list of internalized
+        # data, under a well-defined name (<dir>/unsmry--<timeindexstr>.csv)
+
+        # Since load_smry() also should return the aggregation
+        # of the loaded smry data, we need to pick up this
+        # data and aggregate it.
+        self.process_batch(
+            batch=[
+                {
+                    "load_smry": {
+                        "column_keys": column_keys,
+                        "time_index": time_index,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "include_restart": include_restart,
+                    }
+                }
+            ]
+        )
         if isinstance(time_index, (list, np.ndarray)):
             time_index = "custom"
         elif time_index is None:
             time_index = "raw"
+        # Note the dependency that the load_smry() function in
+        # ScratchRealization will store to this key-name:
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None):
@@ -900,12 +960,31 @@ class ScratchEnsemble(object):
             ScratchEnsemble: This ensemble object (self), for it
                 to be picked up by ProcessPoolExecutor and pickling.
         """
-        for realization in self.realizations.values():
-            realization.process_batch(batch)
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                real_indices = self.realizations.keys()
+                futures_reals = [
+                    executor.submit(
+                        real.process_batch, batch, excepts=(OSError, IOError)
+                    )
+                    for real in self.realizations.values()
+                ]
+                # Reassemble the realization dictionary from
+                # the pickled results of the ProcessPool:
+                self.realizations = {
+                    r_idx: real
+                    for (r_idx, real) in zip(
+                        real_indices, [x.result() for x in futures_reals]
+                    )
+                }
+        else:
+            for realization in self.realizations.values():
+                realization.process_batch(batch, excepts=(OSError, IOError))
+
         return self
 
     def apply(self, callback, **kwargs):
-        """Callback functionalty, apply a function to every realization
+        """Callback functionality, apply a function to every realization
 
         The supplied function handle will be handed over to
         each underlying realization object. The function supplied
@@ -925,16 +1004,47 @@ class ScratchEnsemble(object):
             pd.DataFrame, aggregated result of the supplied function
             on each realization.
         """
-        results = []
         logger.info("Ensemble %s is running callback %s", self.name, str(callback))
-        for realidx, realization in self.realizations.items():
-            result = realization.apply(callback, **kwargs).copy()
-            # (we took a copy since we are modifying it here:)
-            # Todo: Avoid copy by concatenatint a dict of dataframes
-            # where realization index is the dict keys.
-            result["REAL"] = realidx
-            results.append(result)
-        return pd.concat(results, sort=False, ignore_index=True)
+
+        # It is tempting to just call process_batch() here, but then we
+        # don't know how to collect the results from this particular
+        # apply() operation (if we enforced nonempty localpath, we could)
+        # > kwargs["callback"] = callback
+        # > ens.process_batch(batch=[{"apply": **kwargs}])  # (untested)
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                real_indices = self.realizations.keys()
+                kwargs["excepts"] = (OSError, IOError)
+                futures_reals = [
+                    executor.submit(real.apply, callback, **kwargs)
+                    for real in self.realizations.values()
+                ]
+                # Reassemble a list of dataframes from the pickled results
+                # of the ProcessPool:
+                dframes_dict_from_apply = {
+                    realidx: dframe
+                    for (realidx, dframe) in zip(
+                        real_indices, [x.result() for x in futures_reals]
+                    )
+                }
+                # If localpath is an argument to the apply function, we not only
+                # need to return the data aggregated, but should also modify
+                # the realization data-dictionary for each member of the ensemble
+                # object.
+                if "localpath" in kwargs:
+                    for realidx, dataframe in dframes_dict_from_apply.items():
+                        self.realizations[realidx].data[kwargs["localpath"]] = dataframe
+                dframes_from_apply = [
+                    dframe.assign(REAL=realidx)
+                    for (realidx, dframe) in dframes_dict_from_apply.items()
+                ]
+
+        else:
+            dframes_from_apply = [
+                realization.apply(callback, **kwargs).assign(REAL=realidx)
+                for (realidx, realization) in self.realizations.items()
+            ]
+        return pd.concat(dframes_from_apply, sort=False, ignore_index=True)
 
     def get_smry_dates(
         self,
@@ -1354,24 +1464,37 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
-        dflist = []
-        meta = {}
-        for index, realization in self.realizations.items():
-            dframe = realization.get_smry(
-                time_index=time_index,
-                column_keys=column_keys,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
-            if "meta" in dframe.attrs:
-                meta.update(dframe.attrs["meta"])
-            dframe.insert(0, "REAL", index)
-            dflist.append(dframe)
-        if dflist:
-            dframes = pd.concat(dflist, sort=False)
-            dframes.attrs["meta"] = meta
-            return dframes
+        dframes = []
+        with ProcessPoolExecutor() as executor:
+            real_indices = self.realizations.keys()
+            # Note that we cannot use process_batch()
+            # here as we need dataframes in return, not
+            # realizations.
+            futures_dframes = [
+                executor.submit(
+                    realization.get_smry,
+                    time_index=time_index,
+                    column_keys=column_keys,
+                    start_date=start_date,
+                    end_date=end_date,
+                    include_restart=include_restart,
+                )
+                for realization in self.realizations.values()
+            ]
+            # Reassemble a list of dataframes from the pickled results
+            # of the ProcessPool, also preserving smry metadata:
+            meta = {}
+            for realidx, dframe in zip(
+                real_indices, [x.result() for x in futures_dframes]
+            ):
+                if "meta" in dframe.attrs:
+                    meta.update(dframe.attrs["meta"])
+                dframes.append(dframe.assign(REAL=realidx))
+
+        if dframes:
+            merged = pd.concat(dframes, sort=False)
+            merged.attrs["meta"] = meta
+            return merged
         return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg="mean", active_only=False):

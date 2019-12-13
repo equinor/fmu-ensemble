@@ -12,7 +12,7 @@ import re
 import copy
 import glob
 import json
-from datetime import datetime, date, time
+import datetime
 import dateutil
 import logging
 import warnings
@@ -79,10 +79,18 @@ class ScratchRealization(object):
             should be run at time of initialization. Each element is a
             length 1 dictionary with the function name to run as the key
             and each keys value should be the function arguments as a dict.
+        find_files (list of str): Each element in this list will be given
+            to find_files() before any batch commands are processed.
     """
 
     def __init__(
-        self, path, realidxregexp=None, index=None, autodiscovery=True, batch=None
+        self,
+        path,
+        realidxregexp=None,
+        index=None,
+        autodiscovery=True,
+        batch=None,
+        find_files=None,
     ):
         self._origpath = os.path.abspath(path)
         self.index = None
@@ -161,12 +169,16 @@ class ScratchRealization(object):
         if os.path.exists(os.path.join(abspath, "parameters.txt")):
             self.load_txt("parameters.txt")
 
+        if find_files is not None:
+            for to_find in find_files:
+                self.find_files(to_find)
+
         if batch:
             self.process_batch(batch)
 
         logger.info("Initialized %s", abspath)
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, excepts=None):
         """Process a list of functions to run/apply
 
         This is equivalent to calling each function individually
@@ -178,6 +190,8 @@ class ScratchRealization(object):
             batch (list): Each list element is a dictionary with one key,
                 being a function names, value pr key is a dict with keyword
                 arguments to be supplied to each function.
+            excepts (tuple): Tuple of exceptions that are to be ignored in
+                each individual realization.
         Returns:
             ScratchRealization: This realization object (self), for it
                 to be picked up by ProcessPoolExecutor and pickling.
@@ -207,7 +221,15 @@ class ScratchRealization(object):
                 logger.warning("process_batch skips illegal function: %s", fn_name)
                 continue
             assert isinstance(cmd[fn_name], dict)
-            getattr(self, fn_name)(**cmd[fn_name])
+            if excepts is None:
+                getattr(self, fn_name)(**cmd[fn_name])
+            else:
+                try:
+                    getattr(self, fn_name)(**cmd[fn_name])
+                except excepts as exception:
+                    logger.info(
+                        "Ignoring exception in real %d: %s", self.index, str(exception)
+                    )
         return self
 
     def runpath(self):
@@ -527,12 +549,14 @@ class ScratchRealization(object):
             else:
                 try:
                     hms = list(map(int, jobrow["STARTTIME"].split(":")))
-                    start = datetime.combine(
-                        date.today(), time(hour=hms[0], minute=hms[1], second=hms[2])
+                    start = datetime.datetime.combine(
+                        datetime.date.today(),
+                        datetime.time(hour=hms[0], minute=hms[1], second=hms[2]),
                     )
                     hms = list(map(int, jobrow["ENDTIME"].split(":")))
-                    end = datetime.combine(
-                        date.today(), time(hour=hms[0], minute=hms[1], second=hms[2])
+                    end = datetime.datetime.combine(
+                        datetime.date.today(),
+                        datetime.time(hour=hms[0], minute=hms[1], second=hms[2]),
                     )
                     # This works also when we have crossed 00:00:00.
                     # Jobs > 24 h will be wrong.
@@ -1078,6 +1102,8 @@ class ScratchRealization(object):
     def get_smryvalues(self, props_wildcard=None):
         """
         Fetch selected vectors from Eclipse Summary data.
+
+        NOTE: This function might face depreciation.
 
         Args:
             props_wildcard : string or list of strings with vector

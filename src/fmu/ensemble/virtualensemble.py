@@ -755,7 +755,7 @@ file is picked up"""
         else:
             lazy_str = ""
         logger.info(
-            "Loading ensemble from disk %stook %g seconds",
+            "Loading ensemble from disk %s took %g seconds",
             lazy_str,
             (end_time - start_time).total_seconds(),
         )
