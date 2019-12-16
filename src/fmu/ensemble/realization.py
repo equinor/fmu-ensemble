@@ -991,7 +991,8 @@ class ScratchRealization(object):
                'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
                return the simulated report steps (also default).
                If a list of DateTime is supplied, data will be resampled
-               to these.
+               to these. If a date in ISO-8601 format is supplied, that is
+               used as a single date.
             column_keys: list of column key wildcards. None means everything.
             cache_eclsum: boolean for whether to keep the loaded EclSum
                 object in memory after data has been loaded.
@@ -1011,12 +1012,17 @@ class ScratchRealization(object):
         if isinstance(time_index, str) and time_index == "raw":
             time_index_arg = None
         elif isinstance(time_index, str):
-            time_index_arg = self.get_smry_dates(
-                freq=time_index,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
+            try:
+                parseddate = dateutil.parser.isoparse(time_index)
+                time_index_arg = [parseddate]
+            except ValueError:
+
+                time_index_arg = self.get_smry_dates(
+                    freq=time_index,
+                    start_date=start_date,
+                    end_date=end_date,
+                    include_restart=include_restart,
+                )
         else:
             time_index_arg = time_index
 
