@@ -30,6 +30,14 @@ from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
 
+HAVE_ECL2DF = False
+try:
+    import ecl2df
+
+    HAVE_ECL2DF = True
+except ImportError:
+    HAVE_ECL2DF = False
+
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
@@ -764,6 +772,52 @@ class ScratchRealization(object):
             dict with data from parameters.txt
         """
         return self.data["parameters.txt"]
+
+    def get_eclfiles(self):
+        """
+        Return an ecl2df.EclFiles object to connect to the ecl2df package
+
+        If autodiscovery, it will search for a DATA file in
+        the standard location eclipse/model/*DATA.
+
+        If you have multiple DATA files, you must discover
+        the one you need explicitly before calling this function, example:
+
+            >>> real = ScratchRealization("myrealpath")
+            >>> real.find_files("eclipse/model/MYMODELPREDICTION.DATA")
+
+        Returns:
+            ecl2df.EclFiles. None if nothing found
+        """
+        if not HAVE_ECL2DF:
+            logger.warning("ecl2df not installed. Skipping")
+            return None
+        data_file_row = self.files[self.files["FILETYPE"] == "DATA"]
+        data_filename = None
+        if len(data_file_row) == 1:
+            data_filename = data_file_row["FULLPATH"].values[0]
+        elif self._autodiscovery:
+            data_fileguess = os.path.join(self._origpath, "eclipse/model", "*.DATA")
+            data_filenamelist = glob.glob(data_fileguess)
+            print(data_filenamelist)
+            if not data_filenamelist:
+                return None  # No filename matches *DATA
+            if len(data_filenamelist) > 1:
+                logger.warning(
+                    (
+                        "Multiple DATA files found, "
+                        "consider turning off auto-discovery"
+                    )
+                )
+            data_filename = data_filenamelist[0]
+            self.find_files(data_filename)
+        else:
+            # There is no DATA file to be found.
+            logger.warning("No DATA file found!")
+            return None
+        if not os.path.exists(data_filename):
+            return None
+        return ecl2df.EclFiles(data_filename)
 
     def get_eclsum(self, cache=True, include_restart=True):
         """

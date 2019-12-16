@@ -56,7 +56,6 @@ class VirtualEnsemble(object):
         lazy_load=False,
         manifest=None,
     ):
-
         if name:
             self._name = name
         else:
@@ -74,6 +73,13 @@ class VirtualEnsemble(object):
 
         if manifest and not fromdisk:
             self.manifest = manifest
+
+        if isinstance(manifest, dict):
+            self._manifest = manifest
+        else:
+            logger.warning(
+                "The manifest supplied to VirtualEnsemble " "must be of type dict"
+            )
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
