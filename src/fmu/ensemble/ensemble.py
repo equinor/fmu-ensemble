@@ -350,15 +350,75 @@ class ScratchEnsemble(object):
         aggregated and stored as dataframes in the returned
         VirtualEnsemble
 
+        Unless specified, the VirtualEnsemble object wil
+        have the same 'name' as the ScratchEnsemble.
+
         Args:
             name (str): Name of the ensemble as virtualized.
         """
+        if not name:
+            name = self._name
+        logger.info("Creating virtual ensemble named %s", str(name))
         vens = VirtualEnsemble(name=name, manifest=self.manifest)
 
         for key in self.keys():
             vens.append(key, self.get_df(key))
         vens.update_realindices()
+
+        # __files is the magic name for the dataframe of
+        # loaded files.
+        vens.append("__files", self.files)
         return vens
+
+    def to_disk(self, filesystempath, delete=False, dumpcsv=True, dumpparquet=True):
+        """Dump ensemble data to a directory on disk.
+
+        The ScratchEnsemble is first converted to a VirtualEnsemble,
+        which is then dumped to disk. This function is a
+        convenience wrapper for to_disk() in VirtualEnsemble.
+        """
+        self.to_virtual().to_disk(filesystempath, delete, dumpcsv, dumpparquet)
+
+    @property
+    def manifest(self):
+        """Get the manifest of the ensemble. The manifest is
+        nothing but a Python dictionary with unspecified content
+
+        Returns:
+            dict
+        """
+        return self._manifest
+
+    @manifest.setter
+    def manifest(self, manifest):
+        """Set the manifest of the ensemble. The manifest
+        is nothing but a Python dictionary with unspecified
+        content
+
+        Args:
+            manifest: dict or str. If dict, it is used as is, if str it
+                is assumed to be a filename with YAML syntax which is
+                parsed into a dict and stored as dict
+        """
+        if isinstance(manifest, dict):
+            if not manifest:
+                logger.warning("Empty manifest")
+                self._manifest = {}
+            else:
+                self._manifest = manifest
+        elif isinstance(manifest, six.string_types):
+            if os.path.exists(manifest):
+                manifest_fromyaml = yaml.safe_load(open(manifest))
+                if not manifest_fromyaml:
+                    logger.warning("Empty manifest")
+                    self._manifest = {}
+                else:
+                    self._manifest = manifest_fromyaml
+            else:
+                logger.error("Manifest file %s not found", manifest)
+        else:
+            # NoneType will also end here.
+            logger.error("Wrong manifest type supplied")
 
     @property
     def manifest(self):
