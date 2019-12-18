@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.3 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.4 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.3
+                v1.1.1.4
               </div>
             
           
@@ -162,28 +162,28 @@
 <span class="sd">&quot;&quot;&quot;Module containing the ScratchEnsemble class</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
 <span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">from</span> <span class="nn">ecl</span> <span class="k">import</span> <span class="n">EclDataType</span>
-<span class="kn">from</span> <span class="nn">ecl.eclfile</span> <span class="k">import</span> <span class="n">EclKW</span>
+<span class="kn">from</span> <span class="nn">ecl</span> <span class="kn">import</span> <span class="n">EclDataType</span>
+<span class="kn">from</span> <span class="nn">ecl.eclfile</span> <span class="kn">import</span> <span class="n">EclKW</span>
 
-<span class="kn">from</span> <span class="nn">.etc</span> <span class="k">import</span> <span class="n">Interaction</span>
-<span class="kn">from</span> <span class="nn">.realization</span> <span class="k">import</span> <span class="n">ScratchRealization</span>
-<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="k">import</span> <span class="n">VirtualRealization</span>
-<span class="kn">from</span> <span class="nn">.virtualensemble</span> <span class="k">import</span> <span class="n">VirtualEnsemble</span>
-<span class="kn">from</span> <span class="nn">.ensemblecombination</span> <span class="k">import</span> <span class="n">EnsembleCombination</span>
-<span class="kn">from</span> <span class="nn">.realization</span> <span class="k">import</span> <span class="n">parse_number</span>
+<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
+<span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">ScratchRealization</span>
+<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
+<span class="kn">from</span> <span class="nn">.virtualensemble</span> <span class="kn">import</span> <span class="n">VirtualEnsemble</span>
+<span class="kn">from</span> <span class="nn">.ensemblecombination</span> <span class="kn">import</span> <span class="n">EnsembleCombination</span>
+<span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">parse_number</span>
 
 <span class="n">xfmu</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">xfmu</span><span class="o">.</span><span class="n">functionlogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -235,7 +235,7 @@
 <span class="sd">            it must be a yaml-file that will be parsed to a single dict.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">ensemble_name</span><span class="p">,</span>
         <span class="n">paths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -306,7 +306,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;ScratchEnsemble empty&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realizationindex</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realizationindex</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get one of the ScratchRealization objects.</span>
 
 <span class="sd">        Indexed by integers.&quot;&quot;&quot;</span>
@@ -510,15 +510,75 @@
 <span class="sd">        aggregated and stored as dataframes in the returned</span>
 <span class="sd">        VirtualEnsemble</span>
 
+<span class="sd">        Unless specified, the VirtualEnsemble object wil</span>
+<span class="sd">        have the same &#39;name&#39; as the ScratchEnsemble.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            name (str): Name of the ensemble as virtualized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating virtual ensemble named </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
         <span class="n">vens</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">manifest</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manifest</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
         <span class="n">vens</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
+
+        <span class="c1"># __files is the magic name for the dataframe of</span>
+        <span class="c1"># loaded files.</span>
+        <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;__files&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vens</span></div>
+
+<div class="viewcode-block" id="ScratchEnsemble.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dumpcsv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dumpparquet</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump ensemble data to a directory on disk.</span>
+
+<span class="sd">        The ScratchEnsemble is first converted to a VirtualEnsemble,</span>
+<span class="sd">        which is then dumped to disk. This function is a</span>
+<span class="sd">        convenience wrapper for to_disk() in VirtualEnsemble.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span><span class="o">.</span><span class="n">to_disk</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">dumpcsv</span><span class="p">,</span> <span class="n">dumpparquet</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the manifest of the ensemble. The manifest is</span>
+<span class="sd">        nothing but a Python dictionary with unspecified content</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span>
+
+    <span class="nd">@manifest</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifest</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the manifest of the ensemble. The manifest</span>
+<span class="sd">        is nothing but a Python dictionary with unspecified</span>
+<span class="sd">        content</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            manifest: dict or str. If dict, it is used as is, if str it</span>
+<span class="sd">                is assumed to be a filename with YAML syntax which is</span>
+<span class="sd">                parsed into a dict and stored as dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">manifest</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty manifest&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="n">manifest</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">manifest</span><span class="p">):</span>
+                <span class="n">manifest_fromyaml</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">manifest</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">manifest_fromyaml</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty manifest&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="n">manifest_fromyaml</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Manifest file </span><span class="si">%s</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">manifest</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># NoneType will also end here.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Wrong manifest type supplied&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -714,10 +774,10 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;ScratchEnsemble </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> realizations&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_smrykeys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_smrykeys">[docs]</a>    <span class="k">def</span> <span class="nf">get_smrykeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector_match</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1093,7 +1153,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">dateutil.parser</span>
-        <span class="kn">from</span> <span class="nn">.realization</span> <span class="k">import</span> <span class="n">normalize_dates</span>
+        <span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">normalize_dates</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">eclsumsdates</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
@@ -1445,27 +1505,27 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Name input is not a string&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
 

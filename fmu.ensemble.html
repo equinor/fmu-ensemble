@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.3 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.4 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.1.3
+                v1.1.1.4
               </div>
             
           
@@ -194,7 +194,7 @@ filesystem locations containing realizations.</p>
 <p>Realizations in an ensembles are uniquely determined
 by their realization index (integer).</p>
 <p>Example for initialization:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fmu</span> <span class="k">import</span> <span class="n">ensemble</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">fmu</span> <span class="kn">import</span> <span class="n">ensemble</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ensemblename&#39;</span><span class="p">,</span>
 <span class="go">            &#39;/scratch/fmu/foobert/r089/casename/realization-*/iter-0&#39;)</span>
 </pre></div>
@@ -326,7 +326,7 @@ a Pandas DataFrame parsed from a runpath file</p></li>
 <dd><p>Remove certain datatypes from each realizations
 datastores. This modifies the underlying realization
 objects, and is equivalent to</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">realization</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">realization</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>on each realization in the ensemble.</p>
@@ -357,11 +357,22 @@ indices to be removed</p>
 <p>This means that all imported data in each realization is
 aggregated and stored as dataframes in the returned
 VirtualEnsemble</p>
+<p>Unless specified, the VirtualEnsemble object wil
+have the same ‘name’ as the ScratchEnsemble.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the ensemble as virtualized.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.ensemble.ScratchEnsemble.to_disk">
+<code class="sig-name descname">to_disk</code><span class="sig-paren">(</span><em class="sig-param">filesystempath</em>, <em class="sig-param">delete=False</em>, <em class="sig-param">dumpcsv=True</em>, <em class="sig-param">dumpparquet=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.to_disk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.to_disk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump ensemble data to a directory on disk.</p>
+<p>The ScratchEnsemble is first converted to a VirtualEnsemble,
+which is then dumped to disk. This function is a
+convenience wrapper for to_disk() in VirtualEnsemble.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1536,7 +1547,7 @@ summary file or no matched well names.</p>
 </div>
 <p>Other levels are DEBUG, ERROR and CRITICAL. WARNING is default.</p>
 <p>Usage of logging in scripts:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="k">import</span> <span class="n">etc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">etc</span>
 <span class="n">fmux</span> <span class="o">=</span> <span class="n">etc</span><span class="o">.</span><span class="n">Interaction</span><span class="p">()</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;This is logging of </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">something</span><span class="p">)</span>
@@ -2171,7 +2182,7 @@ been discovered earlier)</p>
 the standard location eclipse/model/<a href="#id1"><span class="problematic" id="id2">*</span></a>DATA.</p>
 <p>If you have multiple DATA files, you must discover
 the one you need explicitly before calling this function, example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="p">(</span><span class="s2">&quot;myrealpath&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="p">(</span><span class="s2">&quot;myrealpath&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">real</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="s2">&quot;eclipse/model/MYMODELPREDICTION.DATA&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -2672,7 +2683,7 @@ get_df().</p>
 <p>Module containing a VirtualEnsemble class</p>
 <dl class="class">
 <dt id="fmu.ensemble.virtualensemble.VirtualEnsemble">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.virtualensemble.</code><code class="sig-name descname">VirtualEnsemble</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">longdescription=None</em>, <em class="sig-param">manifest=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.virtualensemble.</code><code class="sig-name descname">VirtualEnsemble</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">data=None</em>, <em class="sig-param">longdescription=None</em>, <em class="sig-param">fromdisk=None</em>, <em class="sig-param">lazy_load=False</em>, <em class="sig-param">manifest=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A computed or archived ensemble</p>
 <p>Computed or archived, there is no link to the original dataset(s)
@@ -2689,6 +2700,10 @@ to_virtual() in a ScratchEnsemble.</p>
 <li><p><strong>name</strong> – string, can be chosen freely</p></li>
 <li><p><strong>data</strong> – dict with data to initialize with. Defaults to empty</p></li>
 <li><p><strong>longdescription</strong> – string, free form multiline description.</p></li>
+<li><p><strong>fromdisk</strong> – string with filesystem path, from which we will
+try to initialize the ensemble from files on disk.</p></li>
+<li><p><strong>lazy_load</strong> (<em>boolean</em>) – If true, it will be used if loaded from disk
+to be lazy in actually loading dataframes from disk</p></li>
 <li><p><strong>manifest</strong> – dict with any information about the ensemble</p></li>
 </ul>
 </dd>
@@ -2711,6 +2726,13 @@ will intentionally error.</p>
 filenames they would be written to if dumped to disk, and also
 resemble the filenames from which they were originally
 loaded in a ScratchEnsemble.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.lazy_keys">
+<code class="sig-name descname">lazy_keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.lazy_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.lazy_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return keys that are not yet loaded, but will
+be loaded on demand</p>
 </dd></dl>
 
 <dl class="method">
@@ -2846,16 +2868,57 @@ only issue a warning if the dataset exists already.</p></li>
 
 <dl class="method">
 <dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk">
-<code class="sig-name descname">to_disk</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.to_disk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to_disk</code><span class="sig-paren">(</span><em class="sig-param">filesystempath</em>, <em class="sig-param">delete=False</em>, <em class="sig-param">dumpcsv=True</em>, <em class="sig-param">dumpparquet=True</em>, <em class="sig-param">includefiles=False</em>, <em class="sig-param">symlinks=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.to_disk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dump all data to disk, in a retrieveable manner.</p>
+<p>Unless dumpcsv is set to False, all data is dumped to CSV files,
+except if some CSV files cannot be dumped as parquet.</p>
+<p>Unless dumpparquet is set to False, all data is attempted dumped
+as Parquet files. If parquet dumping fails for some reason, a CSV
+file is always left behind.</p>
+<p>dumpcsv and dumpparquet cannot be False at the same time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filesystempath</strong> – string with a directory, absolute or relative.
+If it exists already it must be empty, or delete must be True.</p></li>
+<li><p><strong>delete</strong> – boolean for whether an existing directory will be cleared
+before data is dumped.</p></li>
+<li><p><strong>dumpcsv</strong> – boolean for whether CSV files should be written.</p></li>
+<li><p><strong>dumpparquet</strong> – boolean for whether parquet files should be written</p></li>
+<li><p><strong>includefiles</strong> (<em>boolean</em>) – If set to True, files in the files
+dataframe will be included in the disk-dump.</p></li>
+<li><p><strong>symlinks</strong> (<em>boolean</em>) – If includefiles is True, setting this to True
+means that only symlinking will take place, not full copy.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.load_disk">
-<code class="sig-name descname">load_disk</code><span class="sig-paren">(</span><em class="sig-param">directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.load_disk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.load_disk" title="Permalink to this definition">¶</a></dt>
+<dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.from_disk">
+<code class="sig-name descname">from_disk</code><span class="sig-paren">(</span><em class="sig-param">filesystempath</em>, <em class="sig-param">fmt='parquet'</em>, <em class="sig-param">lazy_load=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.from_disk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.from_disk" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load data from disk.</p>
 <p>Data must be written like to_disk() would have
-written it.</p>
+written it. As long as you follow that convention,
+you are able to add data manually to the filesystem
+and load them into a VirtualEnsemble.</p>
+<p>Any DataFrame not containing a column called ‘REAL’ with
+integers will be ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filesystempath</strong> (<em>string</em>) – path to a directory that was written by
+VirtualEnsemble.to_disk().</p></li>
+<li><p><strong>fmt</strong> (<em>string</em>) – the preferred format to load,
+must be either csv or parquet. If you say ‘csv’
+parquet files will always be ignored. If you
+say parquet, corresponding ‘csv’ files will still
+be parsed. Delete them if you really don’t want them</p></li>
+<li><p><strong>lazy_load</strong> (<em>bool</em>) – If True, loading of dataframes from disk
+will be postponed until get_df() is actually called.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -2969,6 +3032,18 @@ is compatible with the date index and the cumulative data.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.files">
+<em class="property">property </em><code class="sig-name descname">files</code><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access the list of internalized files as they came from
+a ScratchEnsemble. Might be empty</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>pd.Dataframe. Empty if no files are meaningful</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.manifest">
 <em class="property">property </em><code class="sig-name descname">manifest</code><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.manifest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the manifest of the ensemble. The manifest
@@ -3030,9 +3105,13 @@ nothing will be appended unless overwrite is set to True</p>
 to their localpaths (keys).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filesystempath</strong> – string with a directory, absolute or
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filesystempath</strong> – string with a directory, absolute or
 relative. If it exists already, it must be empty,
-otherwise we give up.</p>
+otherwise we give up.</p></li>
+<li><p><strong>delete</strong> – boolean, if True, existing directory at the filesystempath
+will be deleted before export.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

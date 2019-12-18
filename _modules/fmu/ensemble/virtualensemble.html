@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.1.1.3 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.1.1.4 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.3
+                v1.1.1.4
               </div>
             
           
@@ -161,19 +161,25 @@
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="sd">&quot;&quot;&quot;Module containing a VirtualEnsemble class&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">.etc</span> <span class="k">import</span> <span class="n">Interaction</span>
-<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="k">import</span> <span class="n">VirtualRealization</span>
+<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
+<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
 
 <span class="n">fmux</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="VirtualEnsemble"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble">[docs]</a><span class="k">class</span> <span class="nc">VirtualEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -194,16 +200,39 @@
 <span class="sd">        name: string, can be chosen freely</span>
 <span class="sd">        data: dict with data to initialize with. Defaults to empty</span>
 <span class="sd">        longdescription: string, free form multiline description.</span>
+<span class="sd">        fromdisk: string with filesystem path, from which we will</span>
+<span class="sd">            try to initialize the ensemble from files on disk.</span>
+<span class="sd">        lazy_load (boolean): If true, it will be used if loaded from disk</span>
+<span class="sd">            to be lazy in actually loading dataframes from disk</span>
 <span class="sd">        manifest: dict with any information about the ensemble</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longdescription</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">manifest</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">longdescription</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">fromdisk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">lazy_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">manifest</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;VirtualEnsemble&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_longdescription</span> <span class="o">=</span> <span class="n">longdescription</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">fromdisk</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Can&#39;t initialize from both data and &quot;</span> <span class="o">+</span> <span class="s2">&quot;disk at the same time&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">manifest</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">fromdisk</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manifest</span> <span class="o">=</span> <span class="n">manifest</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="n">manifest</span>
@@ -219,9 +248,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># We support having some dataframes only on disk, for faster</span>
+        <span class="c1"># initialization of the VirtualEnsemble object. This</span>
+        <span class="c1"># dictionary have the same keys as self.data and the value is</span>
+        <span class="c1"># a full path to a filename on disk. There should never be</span>
+        <span class="c1"># overlap of keys in self.data and self.lazy_frames.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fromdisk</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">from_disk</span><span class="p">(</span><span class="n">fromdisk</span><span class="p">,</span> <span class="n">lazy_load</span><span class="o">=</span><span class="n">lazy_load</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the number of realizations (integer) included in the</span>
 <span class="sd">        ensemble&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">)</span>
@@ -250,7 +287,12 @@
 <span class="sd">        resemble the filenames from which they were originally</span>
 <span class="sd">        loaded in a ScratchEnsemble.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.lazy_keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.lazy_keys">[docs]</a>    <span class="k">def</span> <span class="nf">lazy_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return keys that are not yet loaded, but will</span>
+<span class="sd">        be loaded on demand&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="VirtualEnsemble.shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.shortcut2path">[docs]</a>    <span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -269,11 +311,11 @@
 <span class="sd">        of ambiguity, the shortpath will be returned.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="k">import</span> <span class="n">ScratchEnsemble</span>
+        <span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
 
         <span class="k">return</span> <span class="n">ScratchEnsemble</span><span class="o">.</span><span class="n">_shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">shortpath</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Shorthand for .get_df()</span>
 
 <span class="sd">        Args:</span>
@@ -352,6 +394,8 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dframe</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
                 <span class="n">dframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">data</span><span class="o">=</span><span class="n">dframe</span><span class="p">)</span>
             <span class="n">dframe</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># Trigger load from disk.</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span>
             <span class="k">else</span><span class="p">:</span>
@@ -379,6 +423,10 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Skipping undefined realization indices </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indicesnotknown</span><span class="p">)</span>
             <span class="p">)</span>
+
+        <span class="c1"># Trigger load of any lazy frames:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="c1"># There might be Pandas tricks to avoid this outer loop.</span>
         <span class="k">for</span> <span class="n">realindex</span> <span class="ow">in</span> <span class="n">indicestodelete</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
@@ -400,6 +448,9 @@
         <span class="k">for</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="n">localpaths</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleted </span><span class="si">%s</span><span class="s2"> from ensemble&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleted </span><span class="si">%s</span><span class="s2"> from ensemble&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ensemble did not contain </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span></div>
@@ -441,9 +492,16 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">keylist</span><span class="p">:</span>  <span class="c1"># Empty list means all keys.</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">excludekeys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="n">excludekeys</span> <span class="o">=</span> <span class="p">[</span><span class="n">excludekeys</span><span class="p">]</span>
-            <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">excludekeys</span><span class="p">)</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span>
+                <span class="n">excludekeys</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">keys</span> <span class="o">=</span> <span class="n">keylist</span>
+
+        <span class="c1"># Trigger loading of lazy and needed frames:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
             <span class="c1"># Aggregate over this ensemble:</span>
@@ -519,21 +577,300 @@
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Dump all data to disk, in a retrieveable manner.&quot;&quot;&quot;</span>
-        <span class="c1"># Mature analogue function in VirtualRealization before commencing this</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+<div class="viewcode-block" id="VirtualEnsemble.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">filesystempath</span><span class="p">,</span>
+        <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">dumpcsv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dumpparquet</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">includefiles</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">symlinks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump all data to disk, in a retrieveable manner.</span>
 
-<div class="viewcode-block" id="VirtualEnsemble.load_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.load_disk">[docs]</a>    <span class="k">def</span> <span class="nf">load_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+<span class="sd">        Unless dumpcsv is set to False, all data is dumped to CSV files,</span>
+<span class="sd">        except if some CSV files cannot be dumped as parquet.</span>
+
+<span class="sd">        Unless dumpparquet is set to False, all data is attempted dumped</span>
+<span class="sd">        as Parquet files. If parquet dumping fails for some reason, a CSV</span>
+<span class="sd">        file is always left behind.</span>
+
+<span class="sd">        dumpcsv and dumpparquet cannot be False at the same time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filesystempath: string with a directory, absolute or relative.</span>
+<span class="sd">                If it exists already it must be empty, or delete must be True.</span>
+<span class="sd">            delete: boolean for whether an existing directory will be cleared</span>
+<span class="sd">                before data is dumped.</span>
+<span class="sd">            dumpcsv: boolean for whether CSV files should be written.</span>
+<span class="sd">            dumpparquet: boolean for whether parquet files should be written</span>
+<span class="sd">            includefiles (boolean): If set to True, files in the files</span>
+<span class="sd">                dataframe will be included in the disk-dump.</span>
+<span class="sd">            symlinks (boolean): If includefiles is True, setting this to True</span>
+<span class="sd">                means that only symlinking will take place, not full copy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">pyarrow</span>  <span class="c1"># Move to top of file eventually</span>
+
+        <span class="c1"># Trigger load of all lazy frames:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dumpcsv</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dumpparquet</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;dumpcsv and dumpparquet &quot;</span> <span class="o">+</span> <span class="s2">&quot;cannot be False at the same time&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">prepare_vens_directory</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Prepare a directory for dumping a virtual ensemble.</span>
+
+<span class="sd">            The end result is either an error, or a clean empty directory</span>
+<span class="sd">            at the requested path&quot;&quot;&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Preparing </span><span class="si">%s</span><span class="s2"> for a dumped virtual ensemble&quot;</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">delete</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot; - Deleted existing directory&quot;</span><span class="p">)</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">)</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
+                            <span class="p">(</span>
+                                <span class="s2">&quot;Refusing to write virtual ensemble &quot;</span>
+                                <span class="s2">&quot; to non-empty directory&quot;</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Directory </span><span class="si">%s</span><span class="s2"> not empty&quot;</span> <span class="o">%</span> <span class="n">filesystempath</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">)</span>
+
+        <span class="n">prepare_vens_directory</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="p">)</span>
+
+        <span class="n">includefilesdir</span> <span class="o">=</span> <span class="s2">&quot;__discoveredfiles&quot;</span>
+        <span class="k">if</span> <span class="n">includefiles</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">includefilesdir</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">filerow</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">src_fpath</span> <span class="o">=</span> <span class="n">filerow</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span>
+            <span class="n">dest_fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">filesystempath</span><span class="p">,</span>
+                <span class="n">includefilesdir</span><span class="p">,</span>
+                <span class="s2">&quot;realization-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">filerow</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]),</span>
+                <span class="n">filerow</span><span class="p">[</span><span class="s2">&quot;LOCALPATH&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">dest_fpath</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">dest_fpath</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">symlinks</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">symlink</span><span class="p">(</span><span class="n">src_fpath</span><span class="p">,</span> <span class="n">dest_fpath</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">src_fpath</span><span class="p">,</span> <span class="n">dest_fpath</span><span class="p">)</span>
+
+        <span class="c1"># Write ensemble meta-information to disk:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="s2">&quot;_name&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fhandle</span><span class="p">:</span>
+            <span class="n">fhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="s2">&quot;__repr__&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fhandle</span><span class="p">:</span>
+            <span class="n">fhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="s2">&quot;_manifest.yml&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fhandle</span><span class="p">:</span>
+                <span class="n">fhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span><span class="p">))</span>
+
+        <span class="c1"># The README dumped here is just for convenience. Do not assume</span>
+        <span class="c1"># anything about its content.</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="s2">&quot;README&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fhandle</span><span class="p">:</span>
+            <span class="n">fhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;The data in here has been dumped by</span>
+<span class="sd">fmu.ensemble.VirtualEnsemble.to_disk()</span>
+
+<span class="sd">Each filename represents a DataFrame with aggregated data</span>
+<span class="sd">for an ensemble. The DataFrames exists both in a csv format and</span>
+<span class="sd">in a binary format. If you need to do manual edits, choose to</span>
+<span class="sd">edit the csv file and delete the parquet file (or vice versa) to</span>
+<span class="sd">ensure that when reloaded into a VirtualEnsemble object, the correct</span>
+<span class="sd">file is picked up&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># Write all data we have to disk:</span>
+
+        <span class="c1"># We are out on a limb with respect to what the keys</span>
+        <span class="c1"># in the internalized dict-storage should be, and what</span>
+        <span class="c1"># we should call files on disk.</span>
+        <span class="c1"># Loaded txt files keep their txt extension in the internalized</span>
+        <span class="c1"># dict, so that the localpath is often &#39;npv.txt&#39; for a dataframe</span>
+        <span class="c1"># This will be written as &#39;npv.txt.csv&#39; and/or &#39;npv.txt.parquet&#39; on</span>
+        <span class="c1"># disk. This we can handle.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Internalized csv files are one notch more strange.</span>
+        <span class="c1"># When we internalize a csv file, we keep the csv extension in</span>
+        <span class="c1"># the dict-key, say unsmry--daily.csv.</span>
+        <span class="c1"># The logic from npv.txt implies that we write</span>
+        <span class="c1"># to unsmry--daily.csv.csv and unsmry--daily.csv.parquet.</span>
+        <span class="c1"># This would be easier to program, but will look to strange on disk</span>
+        <span class="c1"># It is an aim that the user should be able to fill the filesystem</span>
+        <span class="c1"># with CSV files, and reload ensembles.</span>
+
+        <span class="c1"># The chosen strategy is currently like this:</span>
+        <span class="c1"># to_disk:</span>
+        <span class="c1"># parameters.txt -&gt; parameters.txt.csv and parameters.txt.parquet</span>
+        <span class="c1"># unsmry--daily.csv -&gt; unsmry--daily.csv and unsmry--daily.parquet</span>
+
+        <span class="c1"># from_disk:</span>
+        <span class="c1"># parameters.txt.csv -&gt; parameters.txt because there is a known</span>
+        <span class="c1">#     extension after removal of csv.</span>
+        <span class="c1"># STATUS.csv -&gt; STATUS, because STATUS is a special file</span>
+        <span class="c1"># unsmry--daily.csv -&gt; unsmry--daily.csv</span>
+        <span class="c1"># unsmry--daily.parquet -&gt; unsmry--daily.csv</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">dirname</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+            <span class="c1"># Trim .csv from end of dict-key</span>
+            <span class="c1"># .csv will be reinstated by logic in from_disk()</span>
+            <span class="k">if</span> <span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+                <span class="n">filebase</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># parameters.txt or STATUS ends here:</span>
+                <span class="n">filebase</span> <span class="o">=</span> <span class="n">filename</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;VirtualEnsembles should &quot;</span> <span class="o">+</span> <span class="s2">&quot;only store DataFrames&quot;</span><span class="p">)</span>
+            <span class="n">parquetfailed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">dumpparquet</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.parquet&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Wrote </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.parquet&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">pyarrow</span><span class="o">.</span><span class="n">ArrowTypeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                    <span class="c1"># Accept that some dataframes cannot be written by parquet,</span>
+                    <span class="c1"># The CSV file will be there as backup.</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not write </span><span class="si">%s</span><span class="s2"> as parquet file&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                    <span class="n">parquetfailed</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">dumpcsv</span> <span class="ow">or</span> <span class="n">parquetfailed</span><span class="p">:</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Wrote </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirtualEnsemble.from_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.from_disk">[docs]</a>    <span class="k">def</span> <span class="nf">from_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">lazy_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load data from disk.</span>
 
 <span class="sd">        Data must be written like to_disk() would have</span>
-<span class="sd">        written it.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Mature analogue function in VirtualRealization before commencing this</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+<span class="sd">        written it. As long as you follow that convention,</span>
+<span class="sd">        you are able to add data manually to the filesystem</span>
+<span class="sd">        and load them into a VirtualEnsemble.</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">        Any DataFrame not containing a column called &#39;REAL&#39; with</span>
+<span class="sd">        integers will be ignored.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            filesystempath (string): path to a directory that was written by</span>
+<span class="sd">                VirtualEnsemble.to_disk().</span>
+<span class="sd">            fmt (string): the preferred format to load,</span>
+<span class="sd">                must be either csv or parquet. If you say &#39;csv&#39;</span>
+<span class="sd">                parquet files will always be ignored. If you</span>
+<span class="sd">                say parquet, corresponding &#39;csv&#39; files will still</span>
+<span class="sd">                be parsed. Delete them if you really don&#39;t want them</span>
+<span class="sd">            lazy_load (bool): If True, loading of dataframes from disk</span>
+<span class="sd">                will be postponed until get_df() is actually called.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">fmt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="s2">&quot;parquet&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown format for from_disk: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fmt</span><span class="p">)</span>
+
+        <span class="c1"># Clear all data we have, we don&#39;t dare to merge VirtualEnsembles</span>
+        <span class="c1"># with data coming from disk.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot;__discoveredfiles&quot;</span> <span class="ow">in</span> <span class="n">root</span><span class="p">:</span>
+                <span class="c1"># Never traverse the collections of dumped</span>
+                <span class="c1"># discovered files</span>
+                <span class="k">continue</span>
+            <span class="n">localpath</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">localpath</span> <span class="ow">and</span> <span class="n">localpath</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">:</span>
+                <span class="n">localpath</span> <span class="o">=</span> <span class="n">localpath</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+                <span class="c1"># Special treatment of the filename &quot;_name&quot;</span>
+                <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="s2">&quot;_name&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="s2">&quot;_manifest.yml&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">manifest</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;_manifest.yml&quot;</span><span class="p">)</span>
+
+                <span class="c1"># We will loop through the directory structure, and</span>
+                <span class="c1"># data will be duplicated as they can be both in csv</span>
+                <span class="c1"># and parquet files. We will only load one of them if so.</span>
+                <span class="k">elif</span> <span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+                    <span class="n">filebase</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+                    <span class="n">parquetfile</span> <span class="o">=</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.parquet&quot;</span>
+                    <span class="c1"># Treat special cases (!!!) NB: Code duplication below</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">filebase</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;.txt&quot;</span>
+                        <span class="ow">or</span> <span class="n">filebase</span><span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;STATUS&quot;</span>
+                        <span class="ow">or</span> <span class="n">filebase</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;OK&quot;</span>
+                        <span class="ow">or</span> <span class="n">filebase</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;__&quot;</span>
+                    <span class="p">):</span>
+                        <span class="n">internalizedkey</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">filebase</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">internalizedkey</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;csv&quot;</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">parquetfile</span><span class="p">)</span>
+                    <span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="p">[</span><span class="n">internalizedkey</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">filename</span><span class="p">[</span><span class="o">-</span><span class="mi">8</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;.parquet&quot;</span><span class="p">:</span>
+                    <span class="n">filebase</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">8</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">filebase</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;.txt&quot;</span>
+                        <span class="ow">or</span> <span class="n">filebase</span><span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;STATUS&quot;</span>
+                        <span class="ow">or</span> <span class="n">filebase</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">&quot;OK&quot;</span>
+                        <span class="ow">or</span> <span class="n">filebase</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;__&quot;</span>
+                    <span class="p">):</span>
+                        <span class="n">internalizedkey</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">filebase</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">internalizedkey</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">fmt</span> <span class="o">==</span> <span class="s2">&quot;parquet&quot;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="p">[</span><span class="n">internalizedkey</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;from_disk: Ignoring file: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">lazy_load</span><span class="p">:</span>
+            <span class="c1"># Load all found dataframes from disk:</span>
+            <span class="k">for</span> <span class="n">internalizedkey</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_load_frame_fromdisk</span><span class="p">(</span><span class="n">internalizedkey</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># This function must be called whenever we have done</span>
+        <span class="c1"># something manually with the dataframes, like adding realizations.</span>
+        <span class="c1"># IT MIGHT BE INCORRECT IF LAZY_LOAD...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
+
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">lazy_load</span><span class="p">:</span>
+            <span class="n">lazy_str</span> <span class="o">=</span> <span class="s2">&quot;(lazy) &quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lazy_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Loading ensemble from disk </span><span class="si">%s</span><span class="s2">took </span><span class="si">%g</span><span class="s2"> seconds&quot;</span><span class="p">,</span>
+            <span class="n">lazy_str</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_load_frame_fromdisk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.parquet&quot;</span><span class="p">):</span>
+            <span class="n">parsedframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isvalidframe</span><span class="p">(</span><span class="n">parsedframe</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parsedframe</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parsedframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isvalidframe</span><span class="p">(</span><span class="n">parsedframe</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parsedframe</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Textual representation of the object&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;VirtualEnsemble, </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
 
@@ -558,27 +895,38 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            dataframe or dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inconsistent_lazy_frames</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">inconsistent_lazy_frames</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
+                <span class="s2">&quot;Internal error, inconsistent lazy frames:</span><span class="se">\n</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">inconsistent_lazy_frames</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Loading </span><span class="si">%s</span><span class="s2"> from disk, was lazy&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_frame_fromdisk</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="p">[</span><span class="n">localpath</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
 
         <span class="c1"># Allow shorthand, but check ambiguity</span>
-        <span class="n">basenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="n">allkeys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">basenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">allkeys</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">basenames</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">]]</span>
-        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">allkeys</span><span class="p">}</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">])</span>
+        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">allkeys</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">noexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">]]</span>
-        <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="p">]</span>
+            <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">allkeys</span><span class="p">}</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">])</span>
+        <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">allkeys</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">basenamenoexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">shortcut2path</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span>
-                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">allkeys</span>
             <span class="p">}</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">]]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">shortcut2path</span><span class="p">[</span><span class="n">localpath</span><span class="p">])</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="VirtualEnsemble.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
@@ -760,6 +1108,16 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">vol_rates_dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the list of internalized files as they came from</span>
+<span class="sd">        a ScratchEnsemble. Might be empty</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            pd.Dataframe. Empty if no files are meaningful&quot;&quot;&quot;</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;__files&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">files</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the manifest of the ensemble. The manifest</span>
 <span class="sd">        is nothing but a dictionary with unspecified content</span>
@@ -769,15 +1127,76 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span>
 
+    <span class="nd">@manifest</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifest</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the manifest of the ensemble. The manifest</span>
+<span class="sd">        is nothing but a Python dictionary with unspecified</span>
+<span class="sd">        content</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            manifest: dict or str. If dict, it is used as is, if str it</span>
+<span class="sd">                is assumed to be a filename with YAML syntax which is</span>
+<span class="sd">                parsed into a dict and stored as dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">manifest</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty manifest&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="n">manifest</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">manifest</span><span class="p">):</span>
+                <span class="n">manifest_fromyaml</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">manifest</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">manifest_fromyaml</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty manifest&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="n">manifest_fromyaml</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Manifest file </span><span class="si">%s</span><span class="s2"> not found&quot;</span><span class="p">,</span> <span class="n">manifest</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># NoneType will also end here.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Wrong manifest type supplied&quot;</span><span class="p">)</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Quick access to parameters&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The name of the virtual ensemble as set during initialization&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_isvalidframe</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validate that a DataFrame we read from disk is acceptable</span>
+<span class="sd">       as ensemble data. It must for example contain a column called</span>
+<span class="sd">       REAL with numerical data&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The column &#39;REAL&#39; was not found in file </span><span class="si">%s</span><span class="s2"> - ignored&quot;</span><span class="p">,</span> <span class="n">filename</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;The column &#39;REAL&#39; must contain &quot;</span>
+                    <span class="s2">&quot;only integers in file </span><span class="si">%s</span><span class="s2">  - ignored&quot;</span>
+                <span class="p">),</span>
+                <span class="n">filename</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;The column &#39;REAL&#39; must contain only &quot;</span>
+                    <span class="s2">&quot;positive integers in file </span><span class="si">%s</span><span class="s2">  - ignored&quot;</span>
+                <span class="p">),</span>
+                <span class="n">filename</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 </pre></div>
 
            </div>
