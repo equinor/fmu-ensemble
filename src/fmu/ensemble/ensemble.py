@@ -421,47 +421,6 @@ class ScratchEnsemble(object):
             logger.error("Wrong manifest type supplied")
 
     @property
-    def manifest(self):
-        """Get the manifest of the ensemble. The manifest is
-        nothing but a Python dictionary with unspecified content
-
-        Returns:
-            dict
-        """
-        return self._manifest
-
-    @manifest.setter
-    def manifest(self, manifest):
-        """Set the manifest of the ensemble. The manifest
-        is nothing but a Python dictionary with unspecified
-        content
-
-        Args:
-            manifest: dict or str. If dict, it is used as is, if str it
-                is assumed to be a filename with YAML syntax which is
-                parsed into a dict and stored as dict
-        """
-        if isinstance(manifest, dict):
-            if not manifest:
-                logger.warning("Empty manifest")
-                self._manifest = {}
-            else:
-                self._manifest = manifest
-        elif isinstance(manifest, six.string_types):
-            if os.path.exists(manifest):
-                manifest_fromyaml = yaml.safe_load(open(manifest))
-                if not manifest_fromyaml:
-                    logger.warning("Empty manifest")
-                    self._manifest = {}
-                else:
-                    self._manifest = manifest_fromyaml
-            else:
-                logger.error("Manifest file %s not found", manifest)
-        else:
-            # NoneType will also end here.
-            logger.error("Wrong manifest type supplied")
-
-    @property
     def parameters(self):
         """Getter for get_parameters(convert_numeric=True)
         """
