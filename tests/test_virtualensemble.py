@@ -6,14 +6,15 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import numpy as np
 import pandas as pd
 import pytest
 
 from fmu.ensemble import etc
-from fmu.ensemble import ScratchEnsemble
+from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
+logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -27,17 +28,32 @@ def test_virtualensemble():
     else:
         testdir = os.path.abspath(".")
 
+    manifest = {
+        "what": "A test ensemble for pytest usage",
+        "coordinate_system": "The correct one",
+    }
+
     reekensemble = ScratchEnsemble(
-        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest=manifest,
     )
     reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
     reekensemble.load_scalar("npv.txt")
     reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()
 
+    assert "coordinate_system" in vens.manifest
+
     # Check that we have data for 5 realizations
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
     assert len(vens["parameters.txt"]) == 5
+
+    assert not vens.lazy_keys()
+
+    # This is the dataframe of discovered files in the ScratchRealization
+    assert isinstance(vens["__files"], pd.DataFrame)
+    assert not vens["__files"].empty
 
     assert "REAL" in vens["STATUS"].columns
 
@@ -89,7 +105,8 @@ def test_virtualensemble():
 
     # Test virtrealization retrieval:
     vreal = vens.get_realization(2)
-    assert vreal.keys() == vens.keys()
+    assert len(vreal.keys()) == len(vens.keys())
+    assert set(vreal.keys()) == set(vens.keys())  # Order is not preserved
 
     # Test realization removal:
     vens.remove_realizations(3)
@@ -148,6 +165,153 @@ def test_virtualensemble():
 
     # Betterdata should be returned as a dictionary
     assert isinstance(vens.agg("min").get_df("betterdata"), dict)
+
+
+def test_todisk():
+    """Test that we can write VirtualEnsembles to the filesystem in a
+    retrievable manner"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    reekensemble = ScratchEnsemble(
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        manifest={"foo": "bar.com"},
+    )
+
+    reekensemble.load_smry(time_index="monthly", column_keys="*")
+    reekensemble.load_smry(time_index="daily", column_keys="*")
+    reekensemble.load_smry(time_index="yearly", column_keys="F*")
+    reekensemble.load_scalar("npv.txt")
+    reekensemble.load_txt("outputs.txt")
+    vens = reekensemble.to_virtual()
+    assert "foo" in vens.manifest
+
+    vens.to_disk("vens_dumped", delete=True)
+    assert len(vens) == len(reekensemble)
+
+    fromdisk = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "foo" in fromdisk.manifest
+
+    # Same number of realizations:
+    assert len(fromdisk) == len(vens)
+
+    # Should have all the same keys,
+    # but change of order is fine
+    assert set(vens.keys()) == set(fromdisk.keys())
+
+    for frame in vens.keys():
+        if frame == "STATUS":
+            continue
+        # Columns that only contains NaN will not have their
+        # type preserved, this is too much to ask for, especially
+        # with CSV files. So we drop columns with NaN
+        virtframe = vens.get_df(frame).dropna("columns")
+        diskframe = fromdisk.get_df(frame).dropna("columns")
+
+        assert (virtframe.columns == diskframe.columns).all()
+
+        # It would be nice to be able to use pd.Dataframe.equals,
+        # but it is too strict, as columns with mixed type number/strings
+        # will easily be wrong.
+
+        for column in virtframe.columns:
+            if object in (virtframe[column].dtype, diskframe[column].dtype):
+                # Ensure we only compare strings when working with object dtype
+                assert (
+                    virtframe[column].astype(str).equals(diskframe[column].astype(str))
+                )
+            else:
+                assert virtframe[column].equals(diskframe[column])
+
+    fromdisk.to_disk("vens_double_dumped", delete=True)
+    # Here we could check filesystem equivalence if we want.
+
+    vens.to_disk("vens_dumped_csv", delete=True, dumpparquet=False)
+    fromcsvdisk = VirtualEnsemble(fromdisk="vens_dumped_csv")
+    lazyfromdisk = VirtualEnsemble(fromdisk="vens_dumped_csv", lazy_load=True)
+    assert set(vens.keys()) == set(fromcsvdisk.keys())
+    assert set(vens.keys()) == set(lazyfromdisk.keys())
+    assert "OK" in lazyfromdisk.lazy_frames.keys()
+    assert "OK" not in lazyfromdisk.data.keys()
+    assert len(fromcsvdisk.get_df("OK")) == len(lazyfromdisk.get_df("OK"))
+    assert "OK" not in lazyfromdisk.lazy_frames.keys()
+    assert "OK" in lazyfromdisk.data.keys()
+    assert len(fromcsvdisk.parameters) == len(lazyfromdisk.parameters)
+    assert len(fromcsvdisk.get_df("unsmry--yearly")) == len(
+        lazyfromdisk.get_df("unsmry--yearly")
+    )
+
+    vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
+    fromparquetdisk = VirtualEnsemble()
+    fromparquetdisk.from_disk("vens_dumped_parquet")
+    assert set(vens.keys()) == set(fromparquetdisk.keys())
+
+    fromparquetdisk2 = VirtualEnsemble()
+    fromparquetdisk2.from_disk("vens_dumped_parquet", fmt="csv")
+    # Here we will miss a lot of CSV files, because we only wrote parquet:
+    assert len(vens.keys()) > len(fromparquetdisk2.keys())
+
+    fromcsvdisk2 = VirtualEnsemble()
+    fromcsvdisk2.from_disk("vens_dumped_csv", fmt="parquet")
+    # But even if we only try to load parquet files, when CSV
+    # files are found without corresponding parquet, the CSV file
+    # will be read.
+    assert set(vens.keys()) == set(fromcsvdisk2.keys())
+
+    # Test manual intervention:
+    fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["FOO", "BAR", "COM"])
+    fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
+    manualens = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "share/results/tables/randomdata.csv" not in manualens.keys()
+
+    # Now with correct column header,
+    # but floating point data for realizations..
+    fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["REAL", "BAR", "COM"])
+    fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
+    manualens = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "share/results/tables/randomdata.csv" not in manualens.keys()
+
+    # Now with correct column header, and with integer data for REAL..
+    fooframe = pd.DataFrame(
+        data=np.random.randint(low=0, high=100, size=(3, 3)),
+        columns=["REAL", "BAR", "COM"],
+    )
+    fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
+    manualens = VirtualEnsemble(fromdisk="vens_dumped")
+    assert "share/results/tables/randomdata.csv" in manualens.keys()
+
+
+def test_todisk_includefile():
+    """Test that we can write VirtualEnsembles to the filesystem in a
+    retrievable manner with discovered files included"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+
+    reekensemble.load_smry(time_index="monthly", column_keys="*")
+    reekensemble.load_smry(time_index="daily", column_keys="*")
+    reekensemble.load_smry(time_index="yearly", column_keys="F*")
+    reekensemble.load_scalar("npv.txt")
+    reekensemble.load_txt("outputs.txt")
+    vens = reekensemble.to_virtual()
+
+    vens.to_disk("vens_dumped_files", delete=True, includefiles=True, symlinks=True)
+    for real in [0, 1, 2, 4, 4]:
+        runpath = os.path.join(
+            "vens_dumped_files", "__discoveredfiles", "realization-" + str(real)
+        )
+        assert os.path.exists(runpath)
+        assert os.path.exists(
+            os.path.join(runpath, "eclipse/model/2_R001_REEK-" + str(real) + ".UNSMRY")
+        )
 
 
 def test_get_smry_interpolation():

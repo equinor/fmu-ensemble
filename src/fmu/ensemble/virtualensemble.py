@@ -7,13 +7,19 @@ from __future__ import print_function
 
 import os
 import re
+import shutil
+import datetime
+
+import six
+import yaml
+import numpy as np
 import pandas as pd
 
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
 
 fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = fmux.basiclogger(__name__, level="INFO")
 
 
 class VirtualEnsemble(object):
@@ -34,16 +40,39 @@ class VirtualEnsemble(object):
         name: string, can be chosen freely
         data: dict with data to initialize with. Defaults to empty
         longdescription: string, free form multiline description.
+        fromdisk: string with filesystem path, from which we will
+            try to initialize the ensemble from files on disk.
+        lazy_load (boolean): If true, it will be used if loaded from disk
+            to be lazy in actually loading dataframes from disk
         manifest: dict with any information about the ensemble
     """
 
-    def __init__(self, name=None, data=None, longdescription=None, manifest=None):
+    def __init__(
+        self,
+        name=None,
+        data=None,
+        longdescription=None,
+        fromdisk=None,
+        lazy_load=False,
+        manifest=None,
+    ):
         if name:
             self._name = name
         else:
             self._name = "VirtualEnsemble"
 
         self._longdescription = longdescription
+        self._manifest = {}
+
+        if data and fromdisk:
+            raise ValueError(
+                "Can't initialize from both data and " + "disk at the same time"
+            )
+
+        self.realindices = []
+
+        if manifest and not fromdisk:
+            self.manifest = manifest
 
         if isinstance(manifest, dict):
             self._manifest = manifest
@@ -59,7 +88,15 @@ class VirtualEnsemble(object):
         else:
             self.data = {}
 
-        self.realindices = []
+        # We support having some dataframes only on disk, for faster
+        # initialization of the VirtualEnsemble object. This
+        # dictionary have the same keys as self.data and the value is
+        # a full path to a filename on disk. There should never be
+        # overlap of keys in self.data and self.lazy_frames.
+        self.lazy_frames = {}
+
+        if fromdisk:
+            self.from_disk(fromdisk, lazy_load=lazy_load)
 
     def __len__(self):
         """Return the number of realizations (integer) included in the
@@ -90,7 +127,12 @@ class VirtualEnsemble(object):
         resemble the filenames from which they were originally
         loaded in a ScratchEnsemble.
         """
-        return self.data.keys()
+        return list(self.data.keys()) + list(self.lazy_frames.keys())
+
+    def lazy_keys(self):
+        """Return keys that are not yet loaded, but will
+        be loaded on demand"""
+        return list(self.lazy_frames.keys())
 
     def shortcut2path(self, shortpath):
         """
@@ -192,6 +234,8 @@ class VirtualEnsemble(object):
             if isinstance(dframe, (str, int, float)):
                 dframe = pd.DataFrame(index=[1], columns=[key], data=dframe)
             dframe["REAL"] = realidx
+            if key not in self.data and key in self.lazy_frames:
+                self.get_df(key)  # Trigger load from disk.
             if key not in self.data.keys():
                 self.data[key] = dframe
             else:
@@ -219,6 +263,10 @@ class VirtualEnsemble(object):
             logger.warning(
                 "Skipping undefined realization indices %s", str(indicesnotknown)
             )
+
+        # Trigger load of any lazy frames:
+        for key in list(self.lazy_frames.keys()):
+            self.get_df(key)
         # There might be Pandas tricks to avoid this outer loop.
         for realindex in indicestodelete:
             for key in self.data:
@@ -240,6 +288,9 @@ class VirtualEnsemble(object):
         for localpath in localpaths:
             if localpath in self.data:
                 del self.data[localpath]
+                logger.info("Deleted %s from ensemble", localpath)
+            elif localpath in self.lazy_frames:
+                del self.lazy_frames[localpath]
                 logger.info("Deleted %s from ensemble", localpath)
             else:
                 logger.warning("Ensemble did not contain %s", localpath)
@@ -281,9 +332,16 @@ class VirtualEnsemble(object):
         if not keylist:  # Empty list means all keys.
             if not isinstance(excludekeys, list):
                 excludekeys = [excludekeys]
-            keys = set(self.data.keys()) - set(excludekeys)
+            keys = set(self.data.keys()).union(set(self.lazy_frames.keys())) - set(
+                excludekeys
+            )
         else:
             keys = keylist
+
+        # Trigger loading of lazy and needed frames:
+        for key in list(self.lazy_frames.keys()):
+            if key in keys:
+                self.get_df(key)
 
         for key in keys:
             # Aggregate over this ensemble:
@@ -359,19 +417,298 @@ class VirtualEnsemble(object):
             return
         self.data[key] = dataframe
 
-    def to_disk(self, path):
-        """Dump all data to disk, in a retrieveable manner."""
-        # Mature analogue function in VirtualRealization before commencing this
-        raise NotImplementedError
+    def to_disk(
+        self,
+        filesystempath,
+        delete=False,
+        dumpcsv=True,
+        dumpparquet=True,
+        includefiles=False,
+        symlinks=False,
+    ):
+        """Dump all data to disk, in a retrieveable manner.
 
-    def load_disk(self, directory):
+        Unless dumpcsv is set to False, all data is dumped to CSV files,
+        except if some CSV files cannot be dumped as parquet.
+
+        Unless dumpparquet is set to False, all data is attempted dumped
+        as Parquet files. If parquet dumping fails for some reason, a CSV
+        file is always left behind.
+
+        dumpcsv and dumpparquet cannot be False at the same time.
+
+        Args:
+            filesystempath: string with a directory, absolute or relative.
+                If it exists already it must be empty, or delete must be True.
+            delete: boolean for whether an existing directory will be cleared
+                before data is dumped.
+            dumpcsv: boolean for whether CSV files should be written.
+            dumpparquet: boolean for whether parquet files should be written
+            includefiles (boolean): If set to True, files in the files
+                dataframe will be included in the disk-dump.
+            symlinks (boolean): If includefiles is True, setting this to True
+                means that only symlinking will take place, not full copy.
+        """
+        import pyarrow  # Move to top of file eventually
+
+        # Trigger load of all lazy frames:
+        for key in list(self.lazy_frames.keys()):
+            self.get_df(key)
+
+        if not dumpcsv and not dumpparquet:
+            raise ValueError(
+                "dumpcsv and dumpparquet " + "cannot be False at the same time"
+            )
+
+        def prepare_vens_directory(filesystempath, delete=False):
+            """Prepare a directory for dumping a virtual ensemble.
+
+            The end result is either an error, or a clean empty directory
+            at the requested path"""
+            logger.info("Preparing %s for a dumped virtual ensemble", filesystempath)
+            if os.path.exists(filesystempath):
+                if delete:
+                    logger.info(" - Deleted existing directory")
+                    shutil.rmtree(filesystempath)
+                    os.mkdir(filesystempath)
+                else:
+                    if os.listdir(filesystempath):
+                        logger.critical(
+                            (
+                                "Refusing to write virtual ensemble "
+                                " to non-empty directory"
+                            )
+                        )
+                        raise IOError("Directory %s not empty" % filesystempath)
+            else:
+                os.mkdir(filesystempath)
+
+        prepare_vens_directory(filesystempath, delete)
+
+        includefilesdir = "__discoveredfiles"
+        if includefiles:
+            os.mkdir(os.path.join(filesystempath, includefilesdir))
+        for _, filerow in self.files.iterrows():
+            src_fpath = filerow["FULLPATH"]
+            dest_fpath = os.path.join(
+                filesystempath,
+                includefilesdir,
+                "realization-" + str(filerow["REAL"]),
+                filerow["LOCALPATH"],
+            )
+            directory = os.path.dirname(dest_fpath)
+            if not os.path.exists(directory):
+                os.makedirs(os.path.dirname(dest_fpath))
+            if symlinks:
+                os.symlink(src_fpath, dest_fpath)
+            else:
+                shutil.copy(src_fpath, dest_fpath)
+
+        # Write ensemble meta-information to disk:
+        with open(os.path.join(filesystempath, "_name"), "w") as fhandle:
+            fhandle.write(str(self._name))
+        with open(os.path.join(filesystempath, "__repr__"), "w") as fhandle:
+            fhandle.write(self.__repr__())
+        if self._manifest:
+            with open(os.path.join(filesystempath, "_manifest.yml"), "w") as fhandle:
+                fhandle.write(yaml.dump(self._manifest))
+
+        # The README dumped here is just for convenience. Do not assume
+        # anything about its content.
+        with open(os.path.join(filesystempath, "README"), "w") as fhandle:
+            fhandle.write(
+                """The data in here has been dumped by
+fmu.ensemble.VirtualEnsemble.to_disk()
+
+Each filename represents a DataFrame with aggregated data
+for an ensemble. The DataFrames exists both in a csv format and
+in a binary format. If you need to do manual edits, choose to
+edit the csv file and delete the parquet file (or vice versa) to
+ensure that when reloaded into a VirtualEnsemble object, the correct
+file is picked up"""
+            )
+        # Write all data we have to disk:
+
+        # We are out on a limb with respect to what the keys
+        # in the internalized dict-storage should be, and what
+        # we should call files on disk.
+        # Loaded txt files keep their txt extension in the internalized
+        # dict, so that the localpath is often 'npv.txt' for a dataframe
+        # This will be written as 'npv.txt.csv' and/or 'npv.txt.parquet' on
+        # disk. This we can handle.
+        #
+        # Internalized csv files are one notch more strange.
+        # When we internalize a csv file, we keep the csv extension in
+        # the dict-key, say unsmry--daily.csv.
+        # The logic from npv.txt implies that we write
+        # to unsmry--daily.csv.csv and unsmry--daily.csv.parquet.
+        # This would be easier to program, but will look to strange on disk
+        # It is an aim that the user should be able to fill the filesystem
+        # with CSV files, and reload ensembles.
+
+        # The chosen strategy is currently like this:
+        # to_disk:
+        # parameters.txt -> parameters.txt.csv and parameters.txt.parquet
+        # unsmry--daily.csv -> unsmry--daily.csv and unsmry--daily.parquet
+
+        # from_disk:
+        # parameters.txt.csv -> parameters.txt because there is a known
+        #     extension after removal of csv.
+        # STATUS.csv -> STATUS, because STATUS is a special file
+        # unsmry--daily.csv -> unsmry--daily.csv
+        # unsmry--daily.parquet -> unsmry--daily.csv
+
+        for key in self.keys():
+            dirname = os.path.join(filesystempath, os.path.dirname(key))
+            if dirname:
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+
+            data = self.get_df(key)
+            filename = os.path.join(dirname, os.path.basename(key))
+
+            # Trim .csv from end of dict-key
+            # .csv will be reinstated by logic in from_disk()
+            if filename[-4:] == ".csv":
+                filebase = filename[:-4]
+            else:
+                # parameters.txt or STATUS ends here:
+                filebase = filename
+
+            if not isinstance(data, pd.DataFrame):
+                raise ValueError("VirtualEnsembles should " + "only store DataFrames")
+            parquetfailed = False
+            if dumpparquet:
+                try:
+                    data.to_parquet(filebase + ".parquet", index=False, engine="auto")
+                    logger.info("Wrote %s", filebase + ".parquet")
+                except (ValueError, pyarrow.ArrowTypeError, TypeError):
+                    # Accept that some dataframes cannot be written by parquet,
+                    # The CSV file will be there as backup.
+                    logger.warning("Could not write %s as parquet file", key)
+                    parquetfailed = True
+
+            if dumpcsv or parquetfailed:
+                data.to_csv(filebase + ".csv", index=False)
+                logger.info("Wrote %s", filebase + ".csv")
+
+    def from_disk(self, filesystempath, fmt="parquet", lazy_load=False):
         """Load data from disk.
 
         Data must be written like to_disk() would have
-        written it.
+        written it. As long as you follow that convention,
+        you are able to add data manually to the filesystem
+        and load them into a VirtualEnsemble.
+
+        Any DataFrame not containing a column called 'REAL' with
+        integers will be ignored.
+
+        Args:
+            filesystempath (string): path to a directory that was written by
+                VirtualEnsemble.to_disk().
+            fmt (string): the preferred format to load,
+                must be either csv or parquet. If you say 'csv'
+                parquet files will always be ignored. If you
+                say parquet, corresponding 'csv' files will still
+                be parsed. Delete them if you really don't want them
+            lazy_load (bool): If True, loading of dataframes from disk
+                will be postponed until get_df() is actually called.
         """
-        # Mature analogue function in VirtualRealization before commencing this
-        raise NotImplementedError
+        start_time = datetime.datetime.now()
+        if fmt not in ["csv", "parquet"]:
+            raise ValueError("Unknown format for from_disk: %s" % fmt)
+
+        # Clear all data we have, we don't dare to merge VirtualEnsembles
+        # with data coming from disk.
+        self._data = {}
+        self._name = None
+
+        for root, _, filenames in os.walk(filesystempath):
+            if "__discoveredfiles" in root:
+                # Never traverse the collections of dumped
+                # discovered files
+                continue
+            localpath = root.replace(filesystempath, "")
+            if localpath and localpath[0] == os.path.sep:
+                localpath = localpath[1:]
+            for filename in filenames:
+                # Special treatment of the filename "_name"
+                if filename == "_name":
+                    self._name = "".join(
+                        open(os.path.join(root, filename), "r").readlines()
+                    ).strip()
+
+                if filename == "_manifest.yml":
+                    self.manifest = os.path.join(root, "_manifest.yml")
+
+                # We will loop through the directory structure, and
+                # data will be duplicated as they can be both in csv
+                # and parquet files. We will only load one of them if so.
+                elif filename[-4:] == ".csv":
+                    filebase = filename[:-4]
+                    parquetfile = filebase + ".parquet"
+                    # Treat special cases (!!!) NB: Code duplication below
+                    if (
+                        filebase[-4:] == ".txt"
+                        or filebase[-6:] == "STATUS"
+                        or filebase[-2:] == "OK"
+                        or filebase[0:2] == "__"
+                    ):
+                        internalizedkey = os.path.join(localpath, filebase)
+                    else:
+                        internalizedkey = os.path.join(localpath, filebase + ".csv")
+                    if fmt == "csv" or not os.path.exists(
+                        os.path.join(root, parquetfile)
+                    ):
+                        self.lazy_frames[internalizedkey] = os.path.join(root, filename)
+
+                elif filename[-8:] == ".parquet":
+                    filebase = filename[:-8]
+                    if (
+                        filebase[-4:] == ".txt"
+                        or filebase[-6:] == "STATUS"
+                        or filebase[-2:] == "OK"
+                        or filebase[0:2] == "__"
+                    ):
+                        internalizedkey = os.path.join(localpath, filebase)
+                    else:
+                        internalizedkey = os.path.join(localpath, filebase + ".csv")
+                    if fmt == "parquet":
+                        self.lazy_frames[internalizedkey] = os.path.join(root, filename)
+                else:
+                    logger.debug("from_disk: Ignoring file: %s", filename)
+
+        if not lazy_load:
+            # Load all found dataframes from disk:
+            for internalizedkey, filename in self.lazy_frames.items():
+                self._load_frame_fromdisk(internalizedkey, filename)
+            self.lazy_frames = {}
+
+        # This function must be called whenever we have done
+        # something manually with the dataframes, like adding realizations.
+        # IT MIGHT BE INCORRECT IF LAZY_LOAD...
+        self.update_realindices()
+
+        end_time = datetime.datetime.now()
+        if lazy_load:
+            lazy_str = "(lazy) "
+        else:
+            lazy_str = ""
+        logger.info(
+            "Loading ensemble from disk %stook %g seconds",
+            lazy_str,
+            (end_time - start_time).total_seconds(),
+        )
+
+    def _load_frame_fromdisk(self, key, filename):
+        if filename.endswith(".parquet"):
+            parsedframe = pd.read_parquet(filename)
+            if self._isvalidframe(parsedframe, filename):
+                self.data[key] = parsedframe
+        else:
+            parsedframe = pd.read_csv(filename)
+            if self._isvalidframe(parsedframe, filename):
+                self.data[key] = parsedframe
 
     def __repr__(self):
         """Textual representation of the object"""
@@ -398,27 +735,38 @@ class VirtualEnsemble(object):
         Returns:
             dataframe or dictionary
         """
+        inconsistent_lazy_frames = set(self.data.keys()).intersection(
+            set(self.lazy_frames.keys())
+        )
+        if inconsistent_lazy_frames:
+            logger.critical(
+                "Internal error, inconsistent lazy frames:\n %s",
+                str(inconsistent_lazy_frames),
+            )
+        if localpath in self.lazy_frames.keys():
+            logger.warning("Loading %s from disk, was lazy", localpath)
+            self._load_frame_fromdisk(localpath, self.lazy_frames[localpath])
+            self.lazy_frames.pop(localpath)
+
         if localpath in self.data.keys():
             return self.data[localpath]
 
         # Allow shorthand, but check ambiguity
-        basenames = [os.path.basename(x) for x in self.data.keys()]
+        allkeys = list(self.data.keys()) + list(self.lazy_frames.keys())
+        basenames = [os.path.basename(x) for x in allkeys]
         if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
-        noexts = ["".join(x.split(".")[:-1]) for x in self.data.keys()]
+            shortcut2path = {os.path.basename(x): x for x in allkeys}
+            return self.get_df(shortcut2path[localpath])
+        noexts = ["".join(x.split(".")[:-1]) for x in allkeys]
         if noexts.count(localpath) == 1:
-            shortcut2path = {"".join(x.split(".")[:-1]): x for x in self.data.keys()}
-            return self.data[shortcut2path[localpath]]
-        basenamenoexts = [
-            "".join(os.path.basename(x).split(".")[:-1]) for x in self.data.keys()
-        ]
+            shortcut2path = {"".join(x.split(".")[:-1]): x for x in allkeys}
+            return self.get_df(shortcut2path[localpath])
+        basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in allkeys]
         if basenamenoexts.count(localpath) == 1:
             shortcut2path = {
-                "".join(os.path.basename(x).split(".")[:-1]): x
-                for x in self.data.keys()
+                "".join(os.path.basename(x).split(".")[:-1]): x for x in allkeys
             }
-            return self.data[shortcut2path[localpath]]
+            return self.get_df(shortcut2path[localpath])
         raise ValueError(localpath)
 
     def get_smry(self, column_keys=None, time_index="monthly"):
@@ -600,6 +948,16 @@ class VirtualEnsemble(object):
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
 
     @property
+    def files(self):
+        """Access the list of internalized files as they came from
+        a ScratchEnsemble. Might be empty
+
+        Return:
+            pd.Dataframe. Empty if no files are meaningful"""
+        files = self.get_df("__files")
+        return files
+
+    @property
     def manifest(self):
         """Get the manifest of the ensemble. The manifest
         is nothing but a dictionary with unspecified content
@@ -609,12 +967,73 @@ class VirtualEnsemble(object):
         """
         return self._manifest
 
+    @manifest.setter
+    def manifest(self, manifest):
+        """Set the manifest of the ensemble. The manifest
+        is nothing but a Python dictionary with unspecified
+        content
+
+        Args:
+            manifest: dict or str. If dict, it is used as is, if str it
+                is assumed to be a filename with YAML syntax which is
+                parsed into a dict and stored as dict
+        """
+        if isinstance(manifest, dict):
+            if not manifest:
+                logger.warning("Empty manifest")
+                self._manifest = {}
+            else:
+                self._manifest = manifest
+        elif isinstance(manifest, six.string_types):
+            if os.path.exists(manifest):
+                manifest_fromyaml = yaml.safe_load(open(manifest))
+                if not manifest_fromyaml:
+                    logger.warning("Empty manifest")
+                    self._manifest = {}
+                else:
+                    self._manifest = manifest_fromyaml
+            else:
+                logger.error("Manifest file %s not found", manifest)
+        else:
+            # NoneType will also end here.
+            logger.error("Wrong manifest type supplied")
+
     @property
     def parameters(self):
         """Quick access to parameters"""
-        return self.data["parameters.txt"]
+        return self.get_df("parameters.txt")
 
     @property
     def name(self):
         """The name of the virtual ensemble as set during initialization"""
         return self._name
+
+    @staticmethod
+    def _isvalidframe(frame, filename):
+        """Validate that a DataFrame we read from disk is acceptable
+       as ensemble data. It must for example contain a column called
+       REAL with numerical data"""
+        if "REAL" not in frame.columns:
+            logger.warning(
+                "The column 'REAL' was not found in file %s - ignored", filename
+            )
+            return False
+        if frame["REAL"].dtype != np.int64:
+            logger.warning(
+                (
+                    "The column 'REAL' must contain "
+                    "only integers in file %s  - ignored"
+                ),
+                filename,
+            )
+            return False
+        if frame["REAL"].min() < 0:
+            logger.warning(
+                (
+                    "The column 'REAL' must contain only "
+                    "positive integers in file %s  - ignored"
+                ),
+                filename,
+            )
+            return False
+        return True
