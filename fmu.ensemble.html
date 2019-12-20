@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.5 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.6 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.1.5
+                v1.1.1.6
               </div>
             
           
@@ -928,8 +928,10 @@ ecl.summary.EclSum.pandas_frame()</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_index</strong> – list of DateTime if interpolation is wanted
 default is None, which returns the raw Eclipse report times
-If a string is supplied, that string is attempted used
-via get_smry_dates() in order to obtain a time index.</p></li>
+If a string with an ISO-8601 date is supplied, that date
+is used directly, otherwise the string is assumed to indicate
+a wanted frequencey for dates, daily, weekly, monthly, yearly,
+that will be send to get_smry_dates()</p></li>
 <li><p><strong>column_keys</strong> – list of column key wildcards</p></li>
 <li><p><strong>cache_eclsum</strong> – boolean for whether to cache the EclSum
 objects. Defaults to True. Set to False if
@@ -2293,7 +2295,8 @@ touching internalized dataframes.</p>
 ‘yearly’, ‘monthly’, ‘daily’, ‘last’ or ‘raw’, the latter will
 return the simulated report steps (also default).
 If a list of DateTime is supplied, data will be resampled
-to these.</p></li>
+to these. If a date in ISO-8601 format is supplied, that is
+used as a single date.</p></li>
 <li><p><strong>column_keys</strong> – list of column key wildcards. None means everything.</p></li>
 <li><p><strong>cache_eclsum</strong> – boolean for whether to keep the loaded EclSum
 object in memory after data has been loaded.</p></li>

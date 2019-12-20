@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.5 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.6 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.5
+                v1.1.1.6
               </div>
             
           
@@ -170,6 +170,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">dateutil</span>
 
 <span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -1111,7 +1112,6 @@
 <span class="sd">        in will have length 1, if not, it can be larger.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">dateutil.parser</span>
         <span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">normalize_dates</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">eclsumsdates</span><span class="p">:</span>
@@ -1119,7 +1119,7 @@
 
         <span class="k">if</span> <span class="n">start_date</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">start_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="n">start_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1127,7 +1127,7 @@
 
         <span class="k">if</span> <span class="n">end_date</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">end_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="n">end_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1506,8 +1506,10 @@
 <span class="sd">        Args:</span>
 <span class="sd">            time_index: list of DateTime if interpolation is wanted</span>
 <span class="sd">               default is None, which returns the raw Eclipse report times</span>
-<span class="sd">               If a string is supplied, that string is attempted used</span>
-<span class="sd">               via get_smry_dates() in order to obtain a time index.</span>
+<span class="sd">               If a string with an ISO-8601 date is supplied, that date</span>
+<span class="sd">               is used directly, otherwise the string is assumed to indicate</span>
+<span class="sd">               a wanted frequencey for dates, daily, weekly, monthly, yearly,</span>
+<span class="sd">               that will be send to get_smry_dates()</span>
 <span class="sd">            column_keys: list of column key wildcards</span>
 <span class="sd">            cache_eclsum: boolean for whether to cache the EclSum</span>
 <span class="sd">                objects. Defaults to True. Set to False if</span>
@@ -1528,12 +1530,18 @@
 <span class="sd">            no realizations, empty DataFrame is returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span>
-                <span class="n">time_index</span><span class="p">,</span>
-                <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
-                <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
-                <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="c1"># Try interpreting as ISO-date:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">parseddate</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="p">[</span><span class="n">parseddate</span><span class="p">]</span>
+            <span class="c1"># But this should fail when a frequency string is supplied:</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span>
+                    <span class="n">time_index</span><span class="p">,</span>
+                    <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+                    <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+                    <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="n">dflist</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dframe</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>

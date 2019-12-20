@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.1.1.5 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.1.1.6 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.5
+                v1.1.1.6
               </div>
             
           
@@ -1156,7 +1156,8 @@
 <span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;last&#39; or &#39;raw&#39;, the latter will</span>
 <span class="sd">               return the simulated report steps (also default).</span>
 <span class="sd">               If a list of DateTime is supplied, data will be resampled</span>
-<span class="sd">               to these.</span>
+<span class="sd">               to these. If a date in ISO-8601 format is supplied, that is</span>
+<span class="sd">               used as a single date.</span>
 <span class="sd">            column_keys: list of column key wildcards. None means everything.</span>
 <span class="sd">            cache_eclsum: boolean for whether to keep the loaded EclSum</span>
 <span class="sd">                object in memory after data has been loaded.</span>
@@ -1176,12 +1177,17 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">time_index</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
             <span class="n">time_index_arg</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">time_index_arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span>
-                <span class="n">freq</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span>
-                <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
-                <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
-                <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">parseddate</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+                <span class="n">time_index_arg</span> <span class="o">=</span> <span class="p">[</span><span class="n">parseddate</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+
+                <span class="n">time_index_arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span>
+                    <span class="n">freq</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span>
+                    <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+                    <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+                    <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">time_index_arg</span> <span class="o">=</span> <span class="n">time_index</span>
 
