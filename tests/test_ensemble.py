@@ -411,6 +411,11 @@ def test_ensemble_ecl():
     assert len(reekensemble.load_smry(column_keys=["FOPR"], time_index="last")) == 5
     assert isinstance(reekensemble.get_df("unsmry--last.csv"), pd.DataFrame)
 
+    # Give ISO-dates directly:
+    assert (
+        len(reekensemble.get_smry(column_keys=["FOPR"], time_index="2001-01-02")) == 5
+    )
+
     # Eclipse well names list
     assert len(reekensemble.get_wellnames("OP*")) == 5
     assert len(reekensemble.get_wellnames(None)) == 8
