@@ -179,6 +179,43 @@ def test_reek001(tmp="TMP"):
     assert len(reekensemble.keys()) == keycount - 1
 
 
+def test_batch():
+    """Test batch processing at time of object initialization"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    ens = ScratchEnsemble(
+        "reektest",
+        testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        batch=[
+            {"load_scalar": {"localpath": "npv.txt"}},
+            {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
+            {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+        ],
+    )
+    assert len(ens.get_df("npv.txt")) == 5
+    assert len(ens.get_df("unsmry--daily")["FOPR"]) == 5490
+    assert len(ens.get_df("unsmry--yearly")["FOPT"]) == 25
+
+    # Also possible to batch process afterwards:
+    ens = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    ens.process_batch(
+        batch=[
+            {"load_scalar": {"localpath": "npv.txt"}},
+            {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
+            {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+        ],
+    )
+    assert len(ens.get_df("npv.txt")) == 5
+    assert len(ens.get_df("unsmry--daily")["FOPR"]) == 5490
+    assert len(ens.get_df("unsmry--yearly")["FOPT"]) == 25
+
+
 def test_emptyens():
     """Check that we can initialize an empty ensemble"""
     ens = ScratchEnsemble("emptyens")
@@ -251,7 +288,6 @@ def test_reek001_scalars():
     assert isinstance(npv, pd.DataFrame)
     assert "REAL" in npv
     assert "npv.txt" in npv  # filename is the column name
-    print(npv)
     assert len(npv) == 5
     assert npv.dtypes["REAL"] == int
     assert npv.dtypes["npv.txt"] == object

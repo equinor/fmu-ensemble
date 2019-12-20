@@ -223,6 +223,33 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert isinstance(ensset4["iter-0"], ScratchEnsemble)
     assert isinstance(ensset4["iter-1"], ScratchEnsemble)
 
+    # Try the batch command feature:
+    ensset5 = EnsembleSet(
+        "reek001",
+        frompath=ensdir,
+        batch=[
+            {"load_scalar": {"localpath": "npv.txt"}},
+            {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
+            {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+        ],
+    )
+    assert len(ensset5.get_df("npv.txt")) == 10
+    assert len(ensset5.get_df("unsmry--yearly")) == 50
+    assert len(ensset5.get_df("unsmry--daily")) == 10980
+
+    # Try batch processing after initialization:
+    ensset6 = EnsembleSet("reek001", frompath=ensdir)
+    ensset6.process_batch(
+        batch=[
+            {"load_scalar": {"localpath": "npv.txt"}},
+            {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
+            {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+        ],
+    )
+    assert len(ensset5.get_df("npv.txt")) == 10
+    assert len(ensset5.get_df("unsmry--yearly")) == 50
+    assert len(ensset5.get_df("unsmry--daily")) == 10980
+
     # Delete the symlink and leftover from apply-testing when we are done.
     for real_dir in glob.glob(ensdir + "/realization-*"):
         if not SKIP_FMU_TOOLS:

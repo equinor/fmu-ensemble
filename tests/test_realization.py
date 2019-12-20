@@ -27,7 +27,7 @@ except ImportError:
     SKIP_FMU_TOOLS = True
 
 fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
+logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -158,6 +158,29 @@ def test_single_realization():
     # at ensemble level it is fine.
     with pytest.raises(IOError):
         real.load_csv("bogus.csv")
+
+
+def test_batch():
+    """Test batch processing at time of object initialization"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(
+        realdir,
+        batch=[
+            {"load_scalar": {"localpath": "npv.txt"}},
+            {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
+            {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+            {"illegal-ignoreme": {}},
+        ],
+    )
+    assert real.get_df("npv.txt") == 3444
+    assert len(real.get_df("unsmry--daily")["FOPR"]) > 2
+    assert len(real.get_df("unsmry--yearly")["FOPT"]) > 2
 
 
 def test_volumetric_rates():
@@ -799,6 +822,21 @@ def test_apply():
         rms_vol2df,
         filename="share/results/volumes/" + "geogrid_vol_oil_1.txt",
         localpath="share/results/volumes/geogrid--oil.csv",
+    )
+    assert real.get_df("geogrid--oil")["STOIIP_OIL"].sum() > 0
+
+    # Run rms_vol2df in batch when initializing:
+    real = ensemble.ScratchRealization(
+        realdir,
+        batch=[
+            {
+                "apply": {
+                    "callback": rms_vol2df,
+                    "filename": "share/results/volumes/" + "geogrid_vol_oil_1.txt",
+                    "localpath": "share/results/volumes/geogrid--oil.csv",
+                }
+            }
+        ],
     )
     assert real.get_df("geogrid--oil")["STOIIP_OIL"].sum() > 0
 
