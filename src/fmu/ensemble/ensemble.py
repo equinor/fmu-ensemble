@@ -10,6 +10,7 @@ import re
 import os
 import glob
 from datetime import datetime
+import dateutil
 
 import six
 import pandas as pd
@@ -987,7 +988,6 @@ class ScratchEnsemble(object):
         in will have length 1, if not, it can be larger.
 
         """
-        import dateutil.parser
         from .realization import normalize_dates
 
         if not eclsumsdates:
@@ -995,7 +995,7 @@ class ScratchEnsemble(object):
 
         if start_date:
             if isinstance(start_date, str):
-                start_date = dateutil.parser.parse(start_date).date()
+                start_date = dateutil.parser.isoparse(start_date).date()
             elif isinstance(start_date, datetime.date):
                 pass
             else:
@@ -1003,7 +1003,7 @@ class ScratchEnsemble(object):
 
         if end_date:
             if isinstance(end_date, str):
-                end_date = dateutil.parser.parse(end_date).date()
+                end_date = dateutil.parser.isoparse(end_date).date()
             elif isinstance(end_date, datetime.date):
                 pass
             else:
@@ -1382,8 +1382,10 @@ class ScratchEnsemble(object):
         Args:
             time_index: list of DateTime if interpolation is wanted
                default is None, which returns the raw Eclipse report times
-               If a string is supplied, that string is attempted used
-               via get_smry_dates() in order to obtain a time index.
+               If a string with an ISO-8601 date is supplied, that date
+               is used directly, otherwise the string is assumed to indicate
+               a wanted frequencey for dates, daily, weekly, monthly, yearly,
+               that will be send to get_smry_dates()
             column_keys: list of column key wildcards
             cache_eclsum: boolean for whether to cache the EclSum
                 objects. Defaults to True. Set to False if
@@ -1404,12 +1406,18 @@ class ScratchEnsemble(object):
             no realizations, empty DataFrame is returned.
         """
         if isinstance(time_index, str):
-            time_index = self.get_smry_dates(
-                time_index,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
+            # Try interpreting as ISO-date:
+            try:
+                parseddate = dateutil.parser.isoparse(time_index)
+                time_index = [parseddate]
+            # But this should fail when a frequency string is supplied:
+            except ValueError:
+                time_index = self.get_smry_dates(
+                    time_index,
+                    start_date=start_date,
+                    end_date=end_date,
+                    include_restart=include_restart,
+                )
         dflist = []
         for index, realization in self._realizations.items():
             dframe = realization.get_smry(

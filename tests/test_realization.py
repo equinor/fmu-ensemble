@@ -419,6 +419,11 @@ def test_singlereal_ecl(tmp="TMP"):
     assert len(monthly) == 38
     assert len(real.get_smry_dates(freq="daily")) == 1098
 
+    # Try ISO-date for time_index:
+    singledata = real.get_smry(time_index="2000-05-05", column_keys="FOPT")
+    assert "FOPT" in singledata
+    assert "2000-05-05" in singledata.index
+
     # start and end should be included:
     assert (
         len(
