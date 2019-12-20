@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.1.1.6 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.1.1.7 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.6
+                v1.1.1.7
               </div>
             
           
@@ -244,9 +244,15 @@
 <span class="sd">            override anything else.</span>
 <span class="sd">        autodiscovery (boolean): whether the realization should try to</span>
 <span class="sd">            auto-discover certain data (UNSMRY files in standard location)</span>
+<span class="sd">        batch (dict): List of functions (load_*) that</span>
+<span class="sd">            should be run at time of initialization. Each element is a</span>
+<span class="sd">            length 1 dictionary with the function name to run as the key</span>
+<span class="sd">            and each keys value should be the function arguments as a dict.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_autodiscovery</span> <span class="o">=</span> <span class="n">autodiscovery</span>
@@ -325,7 +331,54 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">abspath</span><span class="p">,</span> <span class="s2">&quot;parameters.txt&quot;</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_txt</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">batch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initialized </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">abspath</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ScratchRealization.process_batch"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.process_batch">[docs]</a>    <span class="k">def</span> <span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process a list of functions to run/apply</span>
+
+<span class="sd">        This is equivalent to calling each function individually</span>
+<span class="sd">        but this enables more efficient concurrency. It is meant</span>
+<span class="sd">        to be used for functions that modifies the realization</span>
+<span class="sd">        object, not for functions that returns a dataframe already.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch (list): Each list element is a dictionary with one key,</span>
+<span class="sd">                being a function names, value pr key is a dict with keyword</span>
+<span class="sd">                arguments to be supplied to each function.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            ScratchRealization: This realization object (self), for it</span>
+<span class="sd">                to be picked up by ProcessPoolExecutor and pickling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="n">allowed_functions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;apply&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;find_files&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;load_smry&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;load_txt&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;load_file&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;load_csv&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;load_status&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;load_scalar&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="n">fn_name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Batch processing (#</span><span class="si">%d</span><span class="s2">): </span><span class="si">%s</span><span class="s2"> with args </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                <span class="n">fn_name</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">cmd</span><span class="p">[</span><span class="n">fn_name</span><span class="p">]),</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">fn_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_functions</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;process_batch skips illegal function: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fn_name</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmd</span><span class="p">[</span><span class="n">fn_name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_name</span><span class="p">)(</span><span class="o">**</span><span class="n">cmd</span><span class="p">[</span><span class="n">fn_name</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.runpath"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.runpath">[docs]</a>    <span class="k">def</span> <span class="nf">runpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the runpath (&quot;root&quot;) of the realization</span>

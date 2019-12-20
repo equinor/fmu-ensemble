@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.6 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.7 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.1.6
+                v1.1.1.7
               </div>
             
           
@@ -185,7 +185,7 @@
 <p>Module containing the ScratchEnsemble class</p>
 <dl class="class">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.ensemble.</code><code class="sig-name descname">ScratchEnsemble</code><span class="sig-paren">(</span><em class="sig-param">ensemble_name</em>, <em class="sig-param">paths=None</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">runpathfile=None</em>, <em class="sig-param">runpathfilter=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">manifest=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.ensemble.</code><code class="sig-name descname">ScratchEnsemble</code><span class="sig-paren">(</span><em class="sig-param">ensemble_name</em>, <em class="sig-param">paths=None</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">runpathfile=None</em>, <em class="sig-param">runpathfilter=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">manifest=None</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>An ensemble is a collection of Realizations.</p>
 <p>Ensembles are initialized from path(s) pointing to
@@ -227,6 +227,10 @@ can try to autodiscover data in the realization. Turn
 off to gain more fined tuned control.</p></li>
 <li><p><strong>manifest</strong> – dict or filename to use for manifest. If filename,
 it must be a yaml-file that will be parsed to a single dict.</p></li>
+<li><p><strong>batch</strong> (<em>dict</em>) – List of functions (load_*) that
+should be run at time of initialization for each realization.
+Each element is a length 1 dictionary with the function name to run as
+the key and each keys value should be the function arguments as a dict.</p></li>
 </ul>
 </dd>
 </dl>
@@ -263,7 +267,7 @@ of ambiguity, the shortpath will be returned.</p>
 
 <dl class="method">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.add_realizations">
-<code class="sig-name descname">add_realizations</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">autodiscovery=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.add_realizations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.add_realizations" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_realizations</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.add_realizations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.add_realizations" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function to add realizations to the ensemble.</p>
 <p>Realizations are identified by their integer index.
 If the realization index already exists, it will be replaced
@@ -277,6 +281,7 @@ and stores a reference to those generated objects.</p>
 to file system. Absolute or relative paths.</p></li>
 <li><p><strong>autodiscovery</strong> (<em>boolean</em>) – whether files can be attempted
 auto-discovered</p></li>
+<li><p><strong>batch</strong> (<em>list</em>) – Batch commands sent to each realization.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -290,7 +295,7 @@ auto-discovered</p></li>
 
 <dl class="method">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.add_from_runpathfile">
-<code class="sig-name descname">add_from_runpathfile</code><span class="sig-paren">(</span><em class="sig-param">runpath</em>, <em class="sig-param">runpathfilter=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.add_from_runpathfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.add_from_runpathfile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_from_runpathfile</code><span class="sig-paren">(</span><em class="sig-param">runpath</em>, <em class="sig-param">runpathfilter=None</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.add_from_runpathfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.add_from_runpathfile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add realizations from a runpath file typically
 coming from ERT.</p>
 <p>The runpath file is a space separated table with the columns:</p>
@@ -309,6 +314,7 @@ minus the trailing ‘.DATA’)</p></li>
 <li><p><strong>runpath</strong> (<em>str</em>) – Filename, absolute or relative, or
 a Pandas DataFrame parsed from a runpath file</p></li>
 <li><p><strong>runpathfilter</strong> (<em>str</em>) – in order to be included. Default None which means not filter</p></li>
+<li><p><strong>batch</strong> (<em>list</em>) – Batch commands to be sent to each realization.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -735,6 +741,33 @@ dataframes</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="fmu.ensemble.ensemble.ScratchEnsemble.process_batch">
+<code class="sig-name descname">process_batch</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.process_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.process_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a list of functions to run/apply</p>
+<p>This is equivalent to calling each function individually
+but this enables more efficient concurrency. It is meant
+to be used for functions that modifies the realization
+object, not for functions that returns a dataframe already.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>list</em>) – Each list element is a dictionary with one key,
+being a function names, value pr key is a dict with keyword
+arguments to be supplied to each function.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>This ensemble object (self), for it</dt><dd><p>to be picked up by ProcessPoolExecutor and pickling.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#fmu.ensemble.ensemble.ScratchEnsemble" title="fmu.ensemble.ensemble.ScratchEnsemble">ScratchEnsemble</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.apply">
 <code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.apply" title="Permalink to this definition">¶</a></dt>
 <dd><p>Callback functionalty, apply a function to every realization</p>
@@ -1145,7 +1178,7 @@ standard, opposite to the oil industry standard.</p>
 <p>Module for book-keeping and aggregation of ensembles</p>
 <dl class="class">
 <dt id="fmu.ensemble.ensembleset.EnsembleSet">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.ensembleset.</code><code class="sig-name descname">EnsembleSet</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">ensembles=None</em>, <em class="sig-param">frompath=None</em>, <em class="sig-param">runpathfile=None</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">iterregexp=None</em>, <em class="sig-param">batchregexp=None</em>, <em class="sig-param">autodiscovery=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.ensembleset.</code><code class="sig-name descname">EnsembleSet</code><span class="sig-paren">(</span><em class="sig-param">name=None</em>, <em class="sig-param">ensembles=None</em>, <em class="sig-param">frompath=None</em>, <em class="sig-param">runpathfile=None</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">iterregexp=None</em>, <em class="sig-param">batchregexp=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>An ensemble set is any collection of ensemble objects</p>
 <p>Ensemble objects are ScratchEnsembles or VirtualEnsembles.</p>
@@ -1180,6 +1213,10 @@ level similar to iterations</p></li>
 <li><p><strong>autodiscovery</strong> – boolean, sent to initializing Realization objects,
 instructing them on whether certain files should be
 auto-discovered.</p></li>
+<li><p><strong>batch</strong> (<em>dict</em>) – List of functions (load_*) that
+should be run at time of initialization for each realization.
+Each element is a length 1 dictionary with the function name to run as
+the key and each keys value should be the function arguments as a dict.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1206,7 +1243,7 @@ of dataframes or dicts.</p>
 
 <dl class="method">
 <dt id="fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_frompath">
-<code class="sig-name descname">add_ensembles_frompath</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">iterregexp=None</em>, <em class="sig-param">batchregexp=None</em>, <em class="sig-param">autodiscovery=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.add_ensembles_frompath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_frompath" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_ensembles_frompath</code><span class="sig-paren">(</span><em class="sig-param">paths</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">iterregexp=None</em>, <em class="sig-param">batchregexp=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.add_ensembles_frompath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_frompath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience function for adding multiple ensembles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1225,6 +1262,10 @@ match strings.</p></li>
 <li><p><strong>autodiscovery</strong> – boolean, sent to initializing Realization objects,
 instructing them on whether certain files should be
 auto-discovered.</p></li>
+<li><p><strong>batch</strong> (<em>dict</em>) – List of functions (load_*) that
+should be run at time of initialization for each realization.
+Each element is a length 1 dictionary with the function name to run as
+the key and each keys value should be the function arguments as a dict.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1232,7 +1273,7 @@ auto-discovered.</p></li>
 
 <dl class="method">
 <dt id="fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_fromrunpath">
-<code class="sig-name descname">add_ensembles_fromrunpath</code><span class="sig-paren">(</span><em class="sig-param">runpathfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.add_ensembles_fromrunpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_fromrunpath" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_ensembles_fromrunpath</code><span class="sig-paren">(</span><em class="sig-param">runpathfile</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.add_ensembles_fromrunpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_fromrunpath" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add one or many ensembles from an ERT runpath file.</p>
 <p>autodiscovery is not an argument, it is by default set to False
 for runpath-files, since the location of the UNSMRY-file is given in
@@ -1326,6 +1367,23 @@ Thus it might work on dates, but be careful with numbers.</p></li>
 dataframes</p></li>
 <li><p><strong>keys</strong> – list of strings of keys to delete from a dictionary</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.ensembleset.EnsembleSet.process_batch">
+<code class="sig-name descname">process_batch</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.process_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.process_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a list of functions to run/apply</p>
+<p>This is equivalent to calling each function individually
+but this enables more efficient concurrency. It is meant
+to be used for functions that modifies the realization
+object, not for functions that returns a dataframe already.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>list</em>) – Each list element is a dictionary with one key,
+being a function names, value pr key is a dict with keyword
+arguments to be supplied to each function.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1836,7 +1894,7 @@ it can be computed from other realizations, or it can be
 an archived realization.</p>
 <dl class="class">
 <dt id="fmu.ensemble.realization.ScratchRealization">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">ScratchRealization</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">index=None</em>, <em class="sig-param">autodiscovery=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">ScratchRealization</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">realidxregexp=None</em>, <em class="sig-param">index=None</em>, <em class="sig-param">autodiscovery=True</em>, <em class="sig-param">batch=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A representation of results still present on disk</p>
 <p>ScratchRealizations point to the filesystem for their
@@ -1871,9 +1929,40 @@ compiled into a regular expression.</p></li>
 override anything else.</p></li>
 <li><p><strong>autodiscovery</strong> (<em>boolean</em>) – whether the realization should try to
 auto-discover certain data (UNSMRY files in standard location)</p></li>
+<li><p><strong>batch</strong> (<em>dict</em>) – List of functions (load_*) that
+should be run at time of initialization. Each element is a
+length 1 dictionary with the function name to run as the key
+and each keys value should be the function arguments as a dict.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="fmu.ensemble.realization.ScratchRealization.process_batch">
+<code class="sig-name descname">process_batch</code><span class="sig-paren">(</span><em class="sig-param">batch</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.process_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.process_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a list of functions to run/apply</p>
+<p>This is equivalent to calling each function individually
+but this enables more efficient concurrency. It is meant
+to be used for functions that modifies the realization
+object, not for functions that returns a dataframe already.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>list</em>) – Each list element is a dictionary with one key,
+being a function names, value pr key is a dict with keyword
+arguments to be supplied to each function.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>This realization object (self), for it</dt><dd><p>to be picked up by ProcessPoolExecutor and pickling.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#fmu.ensemble.realization.ScratchRealization" title="fmu.ensemble.realization.ScratchRealization">ScratchRealization</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="fmu.ensemble.realization.ScratchRealization.runpath">
 <code class="sig-name descname">runpath</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.runpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.runpath" title="Permalink to this definition">¶</a></dt>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.6 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.1.1.7 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.6
+                v1.1.1.7
               </div>
             
           
@@ -234,6 +234,11 @@
 <span class="sd">            off to gain more fined tuned control.</span>
 <span class="sd">        manifest: dict or filename to use for manifest. If filename,</span>
 <span class="sd">            it must be a yaml-file that will be parsed to a single dict.</span>
+<span class="sd">        batch (dict): List of functions (load_*) that</span>
+<span class="sd">            should be run at time of initialization for each realization.</span>
+<span class="sd">            Each element is a length 1 dictionary with the function name to run as</span>
+<span class="sd">            the key and each keys value should be the function arguments as a dict.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -245,6 +250,7 @@
         <span class="n">runpathfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">manifest</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">ensemble_name</span>  <span class="c1"># ensemble name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict of ScratchRealization objects,</span>
@@ -290,13 +296,13 @@
             <span class="c1"># Search and locate minimal set of files</span>
             <span class="c1"># representing the realizations.</span>
             <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_realizations</span><span class="p">(</span>
-                <span class="n">paths</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="n">autodiscovery</span>
+                <span class="n">paths</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="n">autodiscovery</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">runpathfile</span><span class="p">:</span>
-            <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_from_runpathfile</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_from_runpathfile</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">runpathfile</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_from_runpathfile</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_from_runpathfile</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">manifest</span><span class="p">:</span>
             <span class="c1"># The _manifest variable is set using a property decorator</span>
@@ -366,7 +372,9 @@
         <span class="c1"># calling function handle further errors.</span>
         <span class="k">return</span> <span class="n">shortpath</span>
 
-<div class="viewcode-block" id="ScratchEnsemble.add_realizations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.add_realizations">[docs]</a>    <span class="k">def</span> <span class="nf">add_realizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="ScratchEnsemble.add_realizations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.add_realizations">[docs]</a>    <span class="k">def</span> <span class="nf">add_realizations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Utility function to add realizations to the ensemble.</span>
 
 <span class="sd">        Realizations are identified by their integer index.</span>
@@ -381,6 +389,7 @@
 <span class="sd">                to file system. Absolute or relative paths.</span>
 <span class="sd">            autodiscovery (boolean): whether files can be attempted</span>
 <span class="sd">                auto-discovered</span>
+<span class="sd">            batch (list): Batch commands sent to each realization.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            count (int): Number of realizations successfully added.</span>
@@ -397,7 +406,10 @@
         <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">realdir</span> <span class="ow">in</span> <span class="n">globbedpaths</span><span class="p">:</span>
             <span class="n">realization</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="p">(</span>
-                <span class="n">realdir</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="o">=</span><span class="n">realidxregexp</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="n">autodiscovery</span>
+                <span class="n">realdir</span><span class="p">,</span>
+                <span class="n">realidxregexp</span><span class="o">=</span><span class="n">realidxregexp</span><span class="p">,</span>
+                <span class="n">autodiscovery</span><span class="o">=</span><span class="n">autodiscovery</span><span class="p">,</span>
+                <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">realization</span><span class="o">.</span><span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
@@ -413,7 +425,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;add_realizations() found </span><span class="si">%d</span><span class="s2"> realizations&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">count</span></div>
 
-<div class="viewcode-block" id="ScratchEnsemble.add_from_runpathfile"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.add_from_runpathfile">[docs]</a>    <span class="k">def</span> <span class="nf">add_from_runpathfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runpath</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ScratchEnsemble.add_from_runpathfile"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.add_from_runpathfile">[docs]</a>    <span class="k">def</span> <span class="nf">add_from_runpathfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runpath</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add realizations from a runpath file typically</span>
 <span class="sd">        coming from ERT.</span>
 
@@ -430,6 +442,7 @@
 <span class="sd">                a Pandas DataFrame parsed from a runpath file</span>
 <span class="sd">            runpathfilter (str). A filter which each filepath has to match</span>
 <span class="sd">                in order to be included. Default None which means not filter</span>
+<span class="sd">            batch (list): Batch commands to be sent to each realization.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            int: Number of successfully added realizations.</span>
@@ -460,7 +473,10 @@
                 <span class="k">continue</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding realization from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">])</span>
             <span class="n">realization</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="p">(</span>
-                <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]),</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">False</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">&quot;runpath&quot;</span><span class="p">],</span>
+                <span class="n">index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]),</span>
+                <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># Use the ECLBASE from the runpath file to</span>
             <span class="c1"># ensure we recognize the correct UNSMRY file</span>
@@ -1018,6 +1034,26 @@
                 <span class="n">realization</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">pass</span>  <span class="c1"># Allow localpath to be missing in some realizations</span></div>
+
+<div class="viewcode-block" id="ScratchEnsemble.process_batch"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.process_batch">[docs]</a>    <span class="k">def</span> <span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process a list of functions to run/apply</span>
+
+<span class="sd">        This is equivalent to calling each function individually</span>
+<span class="sd">        but this enables more efficient concurrency. It is meant</span>
+<span class="sd">        to be used for functions that modifies the realization</span>
+<span class="sd">        object, not for functions that returns a dataframe already.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch (list): Each list element is a dictionary with one key,</span>
+<span class="sd">                being a function names, value pr key is a dict with keyword</span>
+<span class="sd">                arguments to be supplied to each function.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            ScratchEnsemble: This ensemble object (self), for it</span>
+<span class="sd">                to be picked up by ProcessPoolExecutor and pickling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">realization</span><span class="o">.</span><span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.apply"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Callback functionalty, apply a function to every realization</span>

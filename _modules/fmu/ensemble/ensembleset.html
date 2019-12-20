@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble v1.1.1.6 documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble v1.1.1.7 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.6
+                v1.1.1.7
               </div>
             
           
@@ -214,7 +214,10 @@
 <span class="sd">        autodiscovery: boolean, sent to initializing Realization objects,</span>
 <span class="sd">            instructing them on whether certain files should be</span>
 <span class="sd">            auto-discovered.</span>
-
+<span class="sd">        batch (dict): List of functions (load_*) that</span>
+<span class="sd">            should be run at time of initialization for each realization.</span>
+<span class="sd">            Each element is a length 1 dictionary with the function name to run as</span>
+<span class="sd">            the key and each keys value should be the function arguments as a dict.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -227,6 +230,7 @@
         <span class="n">iterregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">batchregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary indexed by each ensemble&#39;s name.</span>
@@ -261,6 +265,10 @@
             <span class="k">return</span>
 
         <span class="k">if</span> <span class="n">ensembles</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensembles</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">batch</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Batch commands not procesed when loading finished ensembles&quot;</span>
+                <span class="p">)</span>
             <span class="k">for</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="n">ensembles</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensemble</span><span class="p">,</span> <span class="p">(</span><span class="n">ScratchEnsemble</span><span class="p">,</span> <span class="n">VirtualEnsemble</span><span class="p">)):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensemble</span>
@@ -268,7 +276,6 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Supplied object was not an ensemble&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ensembles added to EnsembleSet&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">frompath</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_ensembles_frompath</span><span class="p">(</span>
                 <span class="n">frompath</span><span class="p">,</span>
@@ -276,6 +283,7 @@
                 <span class="n">iterregexp</span><span class="p">,</span>
                 <span class="n">batchregexp</span><span class="p">,</span>
                 <span class="n">autodiscovery</span><span class="o">=</span><span class="n">autodiscovery</span><span class="p">,</span>
+                <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ensembles added to EnsembleSet&quot;</span><span class="p">)</span>
@@ -284,7 +292,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not open runpath file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">IOError</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_ensembles_fromrunpath</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_ensembles_fromrunpath</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ensembles added to EnsembleSet&quot;</span><span class="p">)</span>
 
@@ -331,6 +339,7 @@
         <span class="n">iterregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">batchregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convenience function for adding multiple ensembles.</span>
 
@@ -349,7 +358,10 @@
 <span class="sd">            autodiscovery: boolean, sent to initializing Realization objects,</span>
 <span class="sd">                instructing them on whether certain files should be</span>
 <span class="sd">                auto-discovered.</span>
-
+<span class="sd">            batch (dict): List of functions (load_*) that</span>
+<span class="sd">                should be run at time of initialization for each realization.</span>
+<span class="sd">                Each element is a length 1 dictionary with the function name to run as</span>
+<span class="sd">                the key and each keys value should be the function arguments as a dict.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Try to catch the most common use case and make that easy:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -404,7 +416,7 @@
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">globbedpaths</span><span class="p">:</span>
             <span class="n">real</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">iterr</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &#39;iter&#39; is a builtin..</span>
-            <span class="n">batch</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">batchname</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">for</span> <span class="n">path_comp</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)):</span>
                 <span class="n">realmatch</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">realidxregexp</span><span class="p">,</span> <span class="n">path_comp</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">realmatch</span><span class="p">:</span>
@@ -418,9 +430,9 @@
             <span class="k">for</span> <span class="n">path_comp</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)):</span>
                 <span class="n">batchmatch</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">batchregexp</span><span class="p">,</span> <span class="n">path_comp</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">batchmatch</span><span class="p">:</span>
-                    <span class="n">batch</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">itermatch</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">batchname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">itermatch</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
                     <span class="k">break</span>
-            <span class="n">df_row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span> <span class="n">real</span><span class="p">,</span> <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="n">iterr</span><span class="p">,</span> <span class="s2">&quot;batch&quot;</span><span class="p">:</span> <span class="n">batch</span><span class="p">}</span>
+            <span class="n">df_row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span> <span class="n">real</span><span class="p">,</span> <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="n">iterr</span><span class="p">,</span> <span class="s2">&quot;batch&quot;</span><span class="p">:</span> <span class="n">batchname</span><span class="p">}</span>
             <span class="n">paths_df</span> <span class="o">=</span> <span class="n">paths_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df_row</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">paths_df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Unknown&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Initialize ensemble objects for each iter found:</span>
@@ -442,10 +454,11 @@
                 <span class="n">pathsforiter</span><span class="p">,</span>
                 <span class="n">realidxregexp</span><span class="o">=</span><span class="n">realidxregexp</span><span class="p">,</span>
                 <span class="n">autodiscovery</span><span class="o">=</span><span class="n">autodiscovery</span><span class="p">,</span>
+                <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">ens</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ens</span></div>
 
-<div class="viewcode-block" id="EnsembleSet.add_ensembles_fromrunpath"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_fromrunpath">[docs]</a>    <span class="k">def</span> <span class="nf">add_ensembles_fromrunpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">):</span>
+<div class="viewcode-block" id="EnsembleSet.add_ensembles_fromrunpath"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_fromrunpath">[docs]</a>    <span class="k">def</span> <span class="nf">add_ensembles_fromrunpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add one or many ensembles from an ERT runpath file.</span>
 
 <span class="sd">        autodiscovery is not an argument, it is by default set to False</span>
@@ -465,7 +478,10 @@
             <span class="c1"># Make a runpath slice, and initialize from that:</span>
             <span class="n">ens_runpath</span> <span class="o">=</span> <span class="n">runpath_df</span><span class="p">[</span><span class="n">runpath_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">]</span>
             <span class="n">ens</span> <span class="o">=</span> <span class="n">ScratchEnsemble</span><span class="p">(</span>
-                <span class="s2">&quot;iter-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iterr</span><span class="p">),</span> <span class="n">runpathfile</span><span class="o">=</span><span class="n">ens_runpath</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">False</span>
+                <span class="s2">&quot;iter-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iterr</span><span class="p">),</span>
+                <span class="n">runpathfile</span><span class="o">=</span><span class="n">ens_runpath</span><span class="p">,</span>
+                <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">ens</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ens</span></div>
 
@@ -590,6 +606,23 @@
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">pass</span>  <span class="c1"># Allow localpath to be missing in some ensembles.</span></div>
+
+<div class="viewcode-block" id="EnsembleSet.process_batch"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.process_batch">[docs]</a>    <span class="k">def</span> <span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Process a list of functions to run/apply</span>
+
+<span class="sd">        This is equivalent to calling each function individually</span>
+<span class="sd">        but this enables more efficient concurrency. It is meant</span>
+<span class="sd">        to be used for functions that modifies the realization</span>
+<span class="sd">        object, not for functions that returns a dataframe already.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch (list): Each list element is a dictionary with one key,</span>
+<span class="sd">                being a function names, value pr key is a dict with keyword</span>
+<span class="sd">                arguments to be supplied to each function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensemble</span><span class="p">,</span> <span class="n">ScratchEnsemble</span><span class="p">):</span>
+                <span class="n">ensemble</span><span class="o">.</span><span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="EnsembleSet.apply"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Callback functionalty, apply a function to every realization</span>
