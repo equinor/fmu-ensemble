@@ -20,6 +20,8 @@ from .etc import Interaction
 from .realization import ScratchRealization
 from .ensemble import ScratchEnsemble
 from .ensembleset import EnsembleSet
+from .ensemblecombination import EnsembleCombination
+from .realizationcombination import RealizationCombination
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 
@@ -115,6 +117,12 @@ class Observations(object):
         """
         # For ensembles, we should in the future be able to loop
         # over realizations in a multiprocessing fashion
+        if isinstance(ens_or_real, EnsembleCombination):
+            logger.info("Evaluating EnsembleCombination")
+            ens_or_real = ens_or_real.to_virtual()
+        if isinstance(ens_or_real, RealizationCombination):
+            logger.info("Evaluating RealizationCombination")
+            ens_or_real = ens_or_real.to_virtual()
         if isinstance(ens_or_real, EnsembleSet):
             mismatches = {}
             for ensname, ens in ens_or_real._ensembles.items():
@@ -132,6 +140,7 @@ class Observations(object):
                 mismatches[realidx]["REAL"] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
         elif isinstance(ens_or_real, VirtualEnsemble):
+            logger.info("Calculating mismatch on ensemble %s", ens_or_real.name)
             mismatches = {}
             for realidx in ens_or_real.realindices:
                 mismatches[realidx] = self._realization_mismatch(
@@ -182,6 +191,12 @@ class Observations(object):
         # A ValueError will be thrown if the realization does not have
         # the smry data loaded, and a KeyError if incorrect summary vector name
         dataseries = realization.get_df(data_name).set_index("DATE")[smryvector]
+
+        # In the context of this function, datetimes are not supported. Ensure dates:
+        if isinstance(dataseries.index, pd.DatetimeIndex):
+            dataseries.index = dataseries.index.date
+        # If the index is a list of strings (object),
+        # it is ok (assuming ISO-datestrings)
 
         # Modify the observation object (self)
         if "smry" not in self.observations.keys():

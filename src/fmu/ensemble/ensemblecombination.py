@@ -83,7 +83,7 @@ class EnsembleCombination(object):
         for index in indexcandidates:
             if index in self.ref.get_df(localpath).columns:
                 indexlist.append(index)
-        logger.info("get_df() inferred index columns to %s", str(indexlist))
+        logger.debug("get_df() inferred index columns to %s", str(indexlist))
         refdf = self.ref.get_df(localpath).set_index(indexlist)
         refdf = refdf.select_dtypes(include="number")
         result = refdf.mul(self.scale)
@@ -111,6 +111,7 @@ class EnsembleCombination(object):
         for key in self.keys():
             logger.info("Calculating ensemblecombination on %s", key)
             vens.append(key, self.get_df(key))
+        vens.update_realindices()
         return vens
 
     def get_smry_dates(

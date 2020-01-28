@@ -803,7 +803,12 @@ file is picked up"""
         else:
             chosen_smry = time_index
 
-        logger.info("Using %s for interpolation", chosen_smry)
+        logger.info(
+            "Using %s for interpolation of timeindex %s in ensemble %s",
+            chosen_smry,
+            str(time_index),
+            self.name,
+        )
 
         # Explicit creation of VirtualRealization allows for later
         # multiprocessing of the interpolation.
