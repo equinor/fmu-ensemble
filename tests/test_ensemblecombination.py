@@ -34,6 +34,9 @@ def test_ensemblecombination_basic():
 
     # Difference with itself should give zero..
     diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
+    # Implicit virtualization and aggregation
+    assert diff.agg("mean")["parameters"]["KRW1"] == 0
+
     assert diff["parameters"]["KRW1"].sum() == 0
     assert diff["unsmry--yearly"]["FOPT"].sum() == 0
     assert diff["npv.txt"]["npv.txt"].sum() == 0

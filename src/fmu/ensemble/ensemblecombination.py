@@ -83,6 +83,7 @@ class EnsembleCombination(object):
         for index in indexcandidates:
             if index in self.ref.get_df(localpath).columns:
                 indexlist.append(index)
+        logger.info("get_df() inferred index columns to %s", str(indexlist))
         refdf = self.ref.get_df(localpath).set_index(indexlist)
         refdf = refdf.select_dtypes(include="number")
         result = refdf.mul(self.scale)
@@ -108,6 +109,7 @@ class EnsembleCombination(object):
         """
         vens = VirtualEnsemble(name=str(self))
         for key in self.keys():
+            logger.info("Calculating ensemblecombination on %s", key)
             vens.append(key, self.get_df(key))
         return vens
 
@@ -204,6 +206,13 @@ class EnsembleCombination(object):
             names=["statistic"],
             sort=False,
         )
+
+    def agg(self, aggregation, keylist=None, excludekeys=None):
+        """Aggregator, this is a wrapper that will
+        call .to_virtual() on your behalf and call the corresponding
+        agg() in VirtualEnsemble.
+        """
+        return self.to_virtual().agg(aggregation, keylist, excludekeys)
 
     def __getitem__(self, localpath):
         return self.get_df(localpath)
