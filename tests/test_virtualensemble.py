@@ -45,6 +45,11 @@ def test_virtualensemble():
 
     assert "coordinate_system" in vens.manifest
 
+    # Overwrite the manifest:
+    vens.manifest = {"foo": "bar"}
+    assert "foo" in vens.manifest
+    assert "coordinate_system" not in vens.manifest
+
     # Check that we have data for 5 realizations
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
     assert len(vens["parameters.txt"]) == 5
