@@ -72,14 +72,8 @@ class VirtualEnsemble(object):
         self.realindices = []
 
         if manifest and not fromdisk:
+            # The _manifest variable is set using a property decorator
             self.manifest = manifest
-
-        if isinstance(manifest, dict):
-            self._manifest = manifest
-        else:
-            logger.warning(
-                "The manifest supplied to VirtualEnsemble " "must be of type dict"
-            )
 
         # At ensemble level, this dictionary has dataframes only.
         # All dataframes have the column REAL.
