@@ -132,7 +132,7 @@ class EnsembleCombination(object):
         dates.sort()
         return dates
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def get_smry(self, column_keys=None, time_index=None):
         """
         Loads the Eclipse summary data directly from the underlying
         ensemble data, independent of whether you have issued
