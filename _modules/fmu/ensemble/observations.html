@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble v1.1.1.8 documentation</title>
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble v1.2.0.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.8
+                v1.2.0.1
               </div>
             
           
@@ -180,6 +180,8 @@
 <span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">ScratchRealization</span>
 <span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
 <span class="kn">from</span> <span class="nn">.ensembleset</span> <span class="kn">import</span> <span class="n">EnsembleSet</span>
+<span class="kn">from</span> <span class="nn">.ensemblecombination</span> <span class="kn">import</span> <span class="n">EnsembleCombination</span>
+<span class="kn">from</span> <span class="nn">.realizationcombination</span> <span class="kn">import</span> <span class="n">RealizationCombination</span>
 <span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
 <span class="kn">from</span> <span class="nn">.virtualensemble</span> <span class="kn">import</span> <span class="n">VirtualEnsemble</span>
 
@@ -275,6 +277,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># For ensembles, we should in the future be able to loop</span>
         <span class="c1"># over realizations in a multiprocessing fashion</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">EnsembleCombination</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Evaluating EnsembleCombination&quot;</span><span class="p">)</span>
+            <span class="n">ens_or_real</span> <span class="o">=</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">RealizationCombination</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Evaluating RealizationCombination&quot;</span><span class="p">)</span>
+            <span class="n">ens_or_real</span> <span class="o">=</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">EnsembleSet</span><span class="p">):</span>
             <span class="n">mismatches</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">ens</span> <span class="ow">in</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -292,6 +300,7 @@
                 <span class="n">mismatches</span><span class="p">[</span><span class="n">realidx</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">realidx</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">mismatches</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">VirtualEnsemble</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating mismatch on ensemble </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">mismatches</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">realindices</span><span class="p">:</span>
                 <span class="n">mismatches</span><span class="p">[</span><span class="n">realidx</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realization_mismatch</span><span class="p">(</span>
@@ -342,6 +351,12 @@
         <span class="c1"># A ValueError will be thrown if the realization does not have</span>
         <span class="c1"># the smry data loaded, and a KeyError if incorrect summary vector name</span>
         <span class="n">dataseries</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">data_name</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;DATE&quot;</span><span class="p">)[</span><span class="n">smryvector</span><span class="p">]</span>
+
+        <span class="c1"># In the context of this function, datetimes are not supported. Ensure dates:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataseries</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+            <span class="n">dataseries</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">dataseries</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">date</span>
+        <span class="c1"># If the index is a list of strings (object),</span>
+        <span class="c1"># it is ok (assuming ISO-datestrings)</span>
 
         <span class="c1"># Modify the observation object (self)</span>
         <span class="k">if</span> <span class="s2">&quot;smry&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>

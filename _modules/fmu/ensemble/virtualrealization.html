@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble v1.1.1.8 documentation</title>
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble v1.2.0.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.8
+                v1.2.0.1
               </div>
             
           
@@ -549,7 +549,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">chosen_smry</span> <span class="o">=</span> <span class="n">time_index</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using &quot;</span> <span class="o">+</span> <span class="n">chosen_smry</span> <span class="o">+</span> <span class="s2">&quot; for interpolation&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Using </span><span class="si">%s</span><span class="s2"> for interpolation of </span><span class="si">%s</span><span class="s2"> in REAL </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">chosen_smry</span><span class="p">,</span>
+            <span class="n">time_index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">smry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;unsmry--&quot;</span> <span class="o">+</span> <span class="n">chosen_smry</span><span class="p">)[[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">column_keys</span><span class="p">]</span>
 

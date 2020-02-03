@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.1.1.8 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.2.0.1 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.1.1.8
+                v1.2.0.1
               </div>
             
           
@@ -1132,7 +1132,7 @@ involved ensembles</p>
 
 <dl class="method">
 <dt id="fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry">
-<code class="sig-name descname">get_smry</code><span class="sig-paren">(</span><em class="sig-param">time_index=None</em>, <em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemblecombination.html#EnsembleCombination.get_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_smry</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em>, <em class="sig-param">time_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemblecombination.html#EnsembleCombination.get_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the Eclipse summary data directly from the underlying
 ensemble data, independent of whether you have issued
 load_smry() first in the ensembles.</p>
@@ -1168,6 +1168,14 @@ standard, opposite to the oil industry standard.</p>
 </dd>
 </dl>
 <p>TODO: add warning message when failed realizations are removed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.ensemblecombination.EnsembleCombination.agg">
+<code class="sig-name descname">agg</code><span class="sig-paren">(</span><em class="sig-param">aggregation</em>, <em class="sig-param">keylist=None</em>, <em class="sig-param">excludekeys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemblecombination.html#EnsembleCombination.agg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemblecombination.EnsembleCombination.agg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aggregator, this is a wrapper that will
+call .to_virtual() on your behalf and call the corresponding
+agg() in VirtualEnsemble.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2757,7 +2765,7 @@ involved ensembles</p>
 
 <dl class="method">
 <dt id="fmu.ensemble.realizationcombination.RealizationCombination.get_smry">
-<code class="sig-name descname">get_smry</code><span class="sig-paren">(</span><em class="sig-param">time_index=None</em>, <em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realizationcombination.html#RealizationCombination.get_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realizationcombination.RealizationCombination.get_smry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_smry</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em>, <em class="sig-param">time_index=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realizationcombination.html#RealizationCombination.get_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realizationcombination.RealizationCombination.get_smry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the Eclipse summary data directly from the underlying
 realization data, independent of whether you have issued
 load_smry() first in the realization.</p>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble v1.1.1.8 documentation</title>
+  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble v1.2.0.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.1.1.8
+                v1.2.0.1
               </div>
             
           
@@ -243,6 +243,7 @@
         <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indexcandidates</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="n">indexlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;get_df() inferred index columns to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indexlist</span><span class="p">))</span>
         <span class="n">refdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
         <span class="n">refdf</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
@@ -268,7 +269,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">vens</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating ensemblecombination on </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
             <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+        <span class="n">vens</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">vens</span></div>
 
 <div class="viewcode-block" id="EnsembleCombination.get_smry_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry_dates">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_dates</span><span class="p">(</span>
@@ -290,7 +293,7 @@
         <span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">dates</span></div>
 
-<div class="viewcode-block" id="EnsembleCombination.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="EnsembleCombination.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads the Eclipse summary data directly from the underlying</span>
 <span class="sd">        ensemble data, independent of whether you have issued</span>
@@ -364,6 +367,13 @@
             <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;statistic&quot;</span><span class="p">],</span>
             <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+<div class="viewcode-block" id="EnsembleCombination.agg"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.agg">[docs]</a>    <span class="k">def</span> <span class="nf">agg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excludekeys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Aggregator, this is a wrapper that will</span>
+<span class="sd">        call .to_virtual() on your behalf and call the corresponding</span>
+<span class="sd">        agg() in VirtualEnsemble.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="p">,</span> <span class="n">excludekeys</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
