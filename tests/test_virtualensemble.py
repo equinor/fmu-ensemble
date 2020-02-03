@@ -325,6 +325,69 @@ def test_todisk_includefile():
         )
 
 
+def test_get_smry_meta(tmpdir):
+    """Test the conservation of smry meta-data in virtual ensembles"""
+
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    reekensemble = ScratchEnsemble(
+        "reekmetatest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    # If no smry loaded before virtualization, nothing should be there:
+    assert "__smry_metadata" not in reekensemble.to_virtual().keys()
+
+    reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
+    origmeta = reekensemble.get_smry_meta()
+    vens = reekensemble.to_virtual()
+    assert "__smry_metadata" in vens.keys()
+    meta = vens.get_df("__smry_metadata")
+    # Internally it is stored as a DataFrame, we check that
+    # since it is possible to get it using get_df(), and thereby
+    # almost part of the API
+    assert isinstance(meta, pd.DataFrame)
+
+    # But rather users should use get_smry_meta() to obtain
+    # stuff from the internal frame __smry_metadata:
+    metadict = vens.get_smry_meta()
+    assert isinstance(metadict, dict)
+    assert len(metadict) + 2 == len(
+        vens.get_smry(time_index="yearly", column_keys="*").columns
+    )
+    # (the vens only knows of F* columns)
+    assert len(metadict) + 2 == len(
+        vens.get_smry(time_index="yearly", column_keys="F*").columns
+    )
+
+    assert origmeta["FOPT"] == metadict["FOPT"]
+    assert origmeta["FWPTH"] == metadict["FWPTH"]
+
+    assert not vens.get_smry_meta([])
+    assert vens.get_smry_meta(column_keys="FOPT")["FOPT"] == origmeta["FOPT"]
+
+    assert not vens.get_smry_meta(column_keys="WOPT:NOTEXISTING")
+
+    # Test that it is retrievable after dumping to disk:
+    vens_disk_path = str(tmpdir.join("vens_dumped"))
+    vens.to_disk(vens_disk_path)
+    disk_vens = VirtualEnsemble(fromdisk=vens_disk_path)
+    metadict = disk_vens.get_smry_meta()
+    assert isinstance(metadict, dict)
+    assert len(metadict) + 2 == len(
+        vens.get_smry(time_index="yearly", column_keys="*").columns
+    )
+    # (the vens only knows of F* columns)
+    assert len(metadict) + 2 == len(
+        vens.get_smry(time_index="yearly", column_keys="F*").columns
+    )
+
+    assert origmeta["FOPT"] == metadict["FOPT"]
+    assert origmeta["FWPTH"] == metadict["FWPTH"]
+
+
 def test_get_smry_interpolation():
     """Test the summary resampling code for virtual ensembles"""
 

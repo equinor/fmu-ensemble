@@ -61,6 +61,9 @@ def test_ensemblecombination_basic():
         ].sum()
     )
 
+    smrymeta = diff.get_smry_meta(["FO*"])
+    assert "FOPT" in smrymeta
+
     # This is only true since we only juggle one ensemble here:
     assert len(half.get_smry_dates(freq="monthly")) == len(
         reekensemble.get_smry_dates(freq="monthly")
@@ -94,6 +97,8 @@ def test_ensemblecombination_basic():
     # We can test something cheaper:
     zero = reekensemble + reekensemble - 2 * reekensemble
     assert zero["parameters"]["KRW1"].sum() == 0
+    smrymeta = zero.get_smry_meta(["FO*"])
+    assert "FOPT" in smrymeta
 
     vzero = (
         reekensemble.to_virtual()

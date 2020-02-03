@@ -125,10 +125,11 @@ def test_virtual_fromdisk(tmp="TMP"):
     vreal.load_disk(os.path.join(tmp, "virtreal2"))
 
     for key in vreal.keys():
-        if isinstance(real.get_df(key), (pd.DataFrame, dict)):
-            assert len(real.get_df(key)) == len(vreal.get_df(key))
-        else:  # Scalars:
-            assert real.get_df(key) == vreal.get_df(key)
+        if key != "__smry_metadata":
+            if isinstance(real.get_df(key), (pd.DataFrame, dict)):
+                assert len(real.get_df(key)) == len(vreal.get_df(key))
+            else:  # Scalars:
+                assert real.get_df(key) == vreal.get_df(key)
     assert real.get_df("parameters")["FWL"] == vreal.get_df("parameters")["FWL"]
     assert (
         real.get_df("unsmry--yearly").iloc[-1]["FGIP"]

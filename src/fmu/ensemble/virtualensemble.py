@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 import re
 import shutil
+import fnmatch
 import datetime
 
 import six
@@ -125,7 +126,8 @@ class VirtualEnsemble(object):
         # Check all dataframes:
         idxset = set()
         for key in self.data.keys():
-            idxset = idxset | set(self.data[key]["REAL"].unique())
+            if key != "__smry_metadata":
+                idxset = idxset | set(self.data[key]["REAL"].unique())
         self.realindices = list(idxset)
 
     def keys(self):
@@ -191,7 +193,10 @@ class VirtualEnsemble(object):
         )
         for key in self.data.keys():
             data = self.get_df(key)
-            realizationdata = data[data["REAL"] == realindex]
+            if key != "__smry_metadata":
+                # Special treatment of the internal special frame
+                # that is constant over all realizations
+                realizationdata = data[data["REAL"] == realindex]
             if len(realizationdata) == 1:
                 # Convert scalar values to dictionaries, avoiding
                 # getting length-one-series returned later on access.
@@ -200,9 +205,13 @@ class VirtualEnsemble(object):
                 realizationdata.reset_index(inplace=True, drop=True)
             else:
                 continue
-            del realizationdata["REAL"]
+            if "REAL" in realizationdata:
+                del realizationdata["REAL"]
             vreal.append(key, realizationdata)
         if vreal.keys():
+            # Add the smry metadata to the realization
+            if "__smry_metadata" in self.keys():
+                vreal.append("__smry_metadata", self.get_df("__smry_metadata"))
             return vreal
         raise ValueError("No data for realization %d" % realindex)
 
@@ -279,7 +288,8 @@ class VirtualEnsemble(object):
         # There might be Pandas tricks to avoid this outer loop.
         for realindex in indicestodelete:
             for key in self.data:
-                self.data[key] = self.data[key][self.data[key]["REAL"] != realindex]
+                if key != "__smry_metadata":
+                    self.data[key] = self.data[key][self.data[key]["REAL"] != realindex]
         self.update_realindices()
         logger.info(
             "Removed %s realization(s) from VirtualEnsemble", len(indicestodelete)
@@ -356,6 +366,8 @@ class VirtualEnsemble(object):
             # Aggregate over this ensemble:
             # Ensure we operate on fully qualified localpath's
             key = self.shortcut2path(key)
+            if key == "__smry_metadata":
+                continue
             data = self.get_df(key).drop(columns="REAL")
 
             # Look for data we should group by. This would be beneficial
@@ -419,7 +431,7 @@ class VirtualEnsemble(object):
         """
         if not isinstance(dataframe, pd.DataFrame):
             raise ValueError("Can only append dataframes")
-        if "REAL" not in dataframe.columns:
+        if "REAL" not in dataframe.columns and not key.startswith("__"):
             raise ValueError("REAL column not in incoming dataframe")
         if key in self.data.keys() and not overwrite:
             logger.warning("Ignoring %s data already exists", key)
@@ -698,6 +710,7 @@ file is picked up"""
         if not lazy_load:
             # Load all found dataframes from disk:
             for internalizedkey, filename in self.lazy_frames.items():
+                logger.info("Loading file %s", filename)
                 self._load_frame_fromdisk(internalizedkey, filename)
             self.lazy_frames = {}
 
@@ -843,7 +856,8 @@ file is picked up"""
         smry = self.get_df(smry_path)
         smry_interpolated = []
         for realidx in smry["REAL"].unique():
-            vreal = VirtualRealization()
+            logger.info("Creating VirtualRealization index %s", str(realidx))
+            vreal = VirtualRealization(str(realidx))
             # Inject the summary data for that specific realization
             vreal.append(smry_path, smry[smry["REAL"] == realidx])
 
@@ -969,6 +983,45 @@ file is picked up"""
             vol_rates_dfs.append(vol_rate_df)
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
 
+    def get_smry_meta(self, column_keys=None):
+        """
+        Provide metadata for summary data vectors.
+
+        A dictionary indexed by summary vector names is returned, and each
+        value is another dictionary with potentially the following metadata types:
+        * unit (string)
+        * is_total (bool)
+        * is_rate (bool)
+        * is_historical (bool)
+        * get_num (int) (only provided if not None)
+
+        This data is produced from loaded summary dataframes upon ensemble
+        virtualization.
+
+        Args:
+            column_keys (list or str): Column key wildcards.
+
+        Returns:
+            dict of dict with metadata.
+        """
+        if column_keys is None:
+            column_keys = ["*"]
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+
+        available_smrynames = self.get_df("__smry_metadata")["SMRYCOLUMN"].values
+        matches = set()
+        for key in column_keys:
+            matches = matches.union(
+                [name for name in available_smrynames if fnmatch.fnmatch(name, key)]
+            )
+        return (
+            self.get_df("__smry_metadata")
+            .set_index("SMRYCOLUMN")
+            .loc[matches, :]
+            .to_dict(orient="index")
+        )
+
     def __sub__(self, other):
         """Substract another ensemble from this"""
         result = EnsembleCombination(ref=self, sub=other)
@@ -1063,8 +1116,11 @@ file is picked up"""
     @staticmethod
     def _isvalidframe(frame, filename):
         """Validate that a DataFrame we read from disk is acceptable
-       as ensemble data. It must for example contain a column called
-       REAL with numerical data"""
+        as ensemble data. It must for example contain a column called
+        REAL with numerical data"""
+        if "__smry_metadata" in filename:
+            # This frame does not have the REAL column
+            return True
         if "REAL" not in frame.columns:
             logger.warning(
                 "The column 'REAL' was not found in file %s - ignored", filename

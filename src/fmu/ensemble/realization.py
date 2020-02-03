@@ -242,8 +242,22 @@ class ScratchRealization(object):
         if not name:
             name = self._origpath
         if deepcopy:
-            return VirtualRealization(name, copy.deepcopy(self.data))
-        return VirtualRealization(name, self.data)
+            vreal = VirtualRealization(name, copy.deepcopy(self.data))
+        else:
+            vreal = VirtualRealization(name, self.data)
+
+        # Conserve metadata for smry vectors. Build metadata dict for all
+        # loaded summary vectors.
+        smrycolumns = [
+            self.get_df(key).columns for key in self.keys() if "unsmry" in key
+        ]
+        smrycolumns = {smrykey for sublist in smrycolumns for smrykey in sublist}
+        meta = self.get_smry_meta(list(smrycolumns))
+        if meta:
+            meta_df = pd.DataFrame.from_dict(meta, orient="index")
+            meta_df.index.name = "SMRYCOLUMN"
+            vreal.append("__smry_metadata", meta_df.reset_index())
+        return vreal
 
     def load_file(self, localpath, fformat, convert_numeric=True, force_reread=False):
         """
@@ -1097,6 +1111,35 @@ class ScratchRealization(object):
                 self._eclsum = None
             return dataframe
         return pd.DataFrame()
+
+    def get_smry_meta(self, column_keys=None):
+        """
+        Provide metadata for summary data vectors.
+
+        A dictionary indexed by summary vector names is returned, and each
+        value is another dictionary with potentially the metadata types:
+        * unit (string)
+        * is_total (bool)
+        * is_rate (bool)
+        * is_historical (bool)
+        * get_num (int) (only provided if not None)
+
+        Args:
+            column_keys: List or str of column key wildcards
+        """
+        column_keys = self._glob_smry_keys(column_keys)
+        meta = {}
+        eclsum = self.get_eclsum()
+        for col in column_keys:
+            meta[col] = {}
+            meta[col]["unit"] = eclsum.unit(col)
+            meta[col]["is_total"] = eclsum.is_total(col)
+            meta[col]["is_rate"] = eclsum.is_rate(col)
+            meta[col]["is_historical"] = eclsum.smspec_node(col).is_historical()
+            num = eclsum.smspec_node(col).get_num()
+            if num is not None:
+                meta[col]["get_num"] = num
+        return meta
 
     def _glob_smry_keys(self, column_keys):
         """Utility function for globbing column names
