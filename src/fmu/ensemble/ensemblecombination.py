@@ -83,6 +83,7 @@ class EnsembleCombination(object):
         for index in indexcandidates:
             if index in self.ref.get_df(localpath).columns:
                 indexlist.append(index)
+        logger.debug("get_df() inferred index columns to %s", str(indexlist))
         refdf = self.ref.get_df(localpath).set_index(indexlist)
         refdf = refdf.select_dtypes(include="number")
         result = refdf.mul(self.scale)
@@ -108,7 +109,9 @@ class EnsembleCombination(object):
         """
         vens = VirtualEnsemble(name=str(self))
         for key in self.keys():
+            logger.info("Calculating ensemblecombination on %s", key)
             vens.append(key, self.get_df(key))
+        vens.update_realindices()
         return vens
 
     def get_smry_dates(
@@ -130,7 +133,7 @@ class EnsembleCombination(object):
         dates.sort()
         return dates
 
-    def get_smry(self, time_index=None, column_keys=None):
+    def get_smry(self, column_keys=None, time_index=None):
         """
         Loads the Eclipse summary data directly from the underlying
         ensemble data, independent of whether you have issued
@@ -204,6 +207,13 @@ class EnsembleCombination(object):
             names=["statistic"],
             sort=False,
         )
+
+    def agg(self, aggregation, keylist=None, excludekeys=None):
+        """Aggregator, this is a wrapper that will
+        call .to_virtual() on your behalf and call the corresponding
+        agg() in VirtualEnsemble.
+        """
+        return self.to_virtual().agg(aggregation, keylist, excludekeys)
 
     def __getitem__(self, localpath):
         return self.get_df(localpath)

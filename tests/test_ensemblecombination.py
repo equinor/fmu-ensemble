@@ -13,7 +13,7 @@ from fmu.ensemble import etc
 from fmu import ensemble
 
 fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
+logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -34,6 +34,9 @@ def test_ensemblecombination_basic():
 
     # Difference with itself should give zero..
     diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
+    # Implicit virtualization and aggregation
+    assert diff.agg("mean")["parameters"]["KRW1"] == 0
+
     assert diff["parameters"]["KRW1"].sum() == 0
     assert diff["unsmry--yearly"]["FOPT"].sum() == 0
     assert diff["npv.txt"]["npv.txt"].sum() == 0
@@ -49,13 +52,16 @@ def test_ensemblecombination_basic():
     )
 
     # Test something long:
-    zero = (
-        reekensemble
-        + 4 * reekensemble
-        - reekensemble * 2
-        - (-1) * reekensemble
-        - reekensemble * 4
-    )
+    # zero = (
+    #    reekensemble
+    #    + 4 * reekensemble
+    #    - reekensemble * 2
+    #    - (-1) * reekensemble
+    #    - reekensemble * 4
+    # )
+    # The above takes too long time to compute until #10 is solved.
+    # We can test something cheaper:
+    zero = reekensemble + reekensemble - 2 * reekensemble
     assert zero["parameters"]["KRW1"].sum() == 0
 
     assert len(diff.get_smry(column_keys=["FOPR", "FGPR", "FWCT"]).columns) == 5
@@ -86,6 +92,33 @@ def test_ensemblecombination_basic():
     # (equals comutation of everything)
     vzero = zero.to_virtual()
     assert len(vzero.keys()) == len(zero.keys())
+
+
+def test_ensemblecomb_observations():
+    """Test a combination of EnsembleCombinations and mismatch calculations"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    reekensemble = ensemble.ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
+
+    delta_ens = reekensemble - 0.5 * reekensemble
+
+    # Now find the realization in delta_ens that is closest to
+    # the mean delta-FOPT profile:
+    mean = delta_ens.agg("mean")  # a virtual realization
+    obs = ensemble.Observations({})
+    obs.load_smry(mean, "FOPT", time_index="yearly")
+    mis = obs.mismatch(delta_ens)
+    # Realization 4 is best representing the mean delta FOPT:
+    assert mis.groupby("REAL").sum()["L2"].sort_values().index.values[0] == 4
+    # (this is the same as the representative realization for mean as
+    # found in test_observations.py::test_virtual_observations)
 
 
 def test_ensemblecombination_sparse():

@@ -389,7 +389,12 @@ class VirtualRealization(object):
         else:
             chosen_smry = time_index
 
-        logger.info("Using " + chosen_smry + " for interpolation")
+        logger.info(
+            "Using %s for interpolation of %s in REAL %s",
+            chosen_smry,
+            time_index,
+            self.name,
+        )
 
         smry = self.get_df("unsmry--" + chosen_smry)[["DATE"] + column_keys]
 
