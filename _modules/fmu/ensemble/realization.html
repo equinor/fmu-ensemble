@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.2.0.1 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.2.0.2 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.0.1
+                v1.2.0.2
               </div>
             
           
@@ -695,17 +695,22 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">jobrow</span><span class="p">[</span><span class="s2">&quot;ENDTIME&quot;</span><span class="p">]:</span>  <span class="c1"># A job that is not finished.</span>
                 <span class="n">durations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">hms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">jobrow</span><span class="p">[</span><span class="s2">&quot;STARTTIME&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)))</span>
-                <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
-                    <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minute</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">second</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-                <span class="p">)</span>
-                <span class="n">hms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">jobrow</span><span class="p">[</span><span class="s2">&quot;ENDTIME&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)))</span>
-                <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
-                    <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minute</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">second</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-                <span class="p">)</span>
-                <span class="c1"># This works also when we have crossed 00:00:00.</span>
-                <span class="c1"># Jobs &gt; 24 h will be wrong.</span>
-                <span class="n">durations</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">hms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">jobrow</span><span class="p">[</span><span class="s2">&quot;STARTTIME&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)))</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                        <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minute</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">second</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="p">)</span>
+                    <span class="n">hms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">jobrow</span><span class="p">[</span><span class="s2">&quot;ENDTIME&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)))</span>
+                    <span class="n">end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                        <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minute</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">second</span><span class="o">=</span><span class="n">hms</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="p">)</span>
+                    <span class="c1"># This works also when we have crossed 00:00:00.</span>
+                    <span class="c1"># Jobs &gt; 24 h will be wrong.</span>
+                    <span class="n">durations</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c1"># We get where if STARTIME.split(&#39;:&#39;) does not contain</span>
+                    <span class="c1"># integers only:</span>
+                    <span class="n">durations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
         <span class="n">status</span><span class="p">[</span><span class="s2">&quot;DURATION&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">durations</span>
 
         <span class="c1"># Augment data from jobs.json if that file is available:</span>
