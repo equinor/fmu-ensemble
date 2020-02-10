@@ -160,6 +160,104 @@ def test_single_realization():
         real.load_csv("bogus.csv")
 
 
+def test_status_load(tmpdir):
+    """Test loading of STATUS file with different errors in them
+
+    These files are custom text files, and can have stray error
+    messages in them. Robustness (i.e. no crash) is more
+    important than best-effort parsing. Better parsing
+    is left for issue #12
+    """
+
+    # Mock a realization:
+    tmpdir.join("realization-0").mkdir()
+
+    # Test with some selected STATUS files:
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    assert real.get_df("STATUS").empty
+
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("\n")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    assert real.get_df("STATUS").empty
+
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("foo bar bogus com\n")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    assert real.get_df("STATUS").empty
+
+    # Two sucessfull jobs
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("first line always ignored\n")
+        status_fh.write("INCLUDE_PC                      : 12:40:55 .... 12:40:55  \n")
+        status_fh.write("ECLIPSE100_2014.2               : 12:40:55 .... 12:43:16\n")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    status = real.get_df("STATUS")
+    assert len(status) == 2
+    assert "FORWARD_MODEL" in status
+    assert "STARTTIME" in status
+    assert "ENDTIME" in status
+    assert "DURATION" in status
+    assert (status["DURATION"].values == [0, 141]).all()  # in seconds
+
+    # Two sucessfull jobs, but with error string
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("first line always ignored\n")
+        status_fh.write("INCLUDE_PC                      : 12:40:55 .... 12:40:55  \n")
+        status_fh.write(
+            "ECLIPSE100_2014.2               : 12:40:55 "
+            ".... 12:43:16 SOMEERRORSTRING_FOO\n"
+        )
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    status = real.get_df("STATUS")
+    assert len(status) == 2
+    assert "FORWARD_MODEL" in status
+    assert (status["DURATION"].values == [0, 141]).all()  # in seconds
+    assert status["errorstring"].values[1] == "SOMEERRORSTRING_FOO"
+
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("first line always ignored\n")
+        status_fh.write("INCLUDE_PC                      : 12:40:55 .... 12:40:55  \n")
+        status_fh.write("ECLIPSE100_2014.2               : 12:40:55 ....")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    status = real.get_df("STATUS")
+    assert len(status) == 2
+    assert "FORWARD_MODEL" in status
+    assert status["DURATION"].values[0] == 0  # in seconds
+    assert np.isnan(status["DURATION"].values[1])
+
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("first line always ignored\n")
+        status_fh.write("INCLUDE_PC                      : 12:40:55 .... 12:40:55  \n")
+        status_fh.write("error message: something went really wrong")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    status = real.get_df("STATUS")
+    assert len(status) == 2
+    assert "FORWARD_MODEL" in status
+    assert status["DURATION"].values[0] == 0  # in seconds
+    # NB: The current code is not able to pick this error string
+
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("first line always ignored\n")
+        status_fh.write("INCLUDE_PC                      : 12:XX:55 .... 12:40:55  \n")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    status = real.get_df("STATUS")
+    assert len(status) == 1
+    assert "FORWARD_MODEL" in status
+    assert np.isnan(status["DURATION"].values[0])
+
+    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
+        status_fh.write("first line always ignored\n")
+        status_fh.write("INCLUDE_PC                      : 12:40.... 12:40:55  \n")
+    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
+    status = real.get_df("STATUS")
+    assert len(status) == 1
+    assert "FORWARD_MODEL" in status
+    assert np.isnan(status["DURATION"].values[0])  # Unsupported time syntax
+
+
 def test_batch():
     """Test batch processing at time of object initialization"""
     if "__file__" in globals():
