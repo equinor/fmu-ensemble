@@ -535,17 +535,22 @@ class ScratchRealization(object):
             if not jobrow["ENDTIME"]:  # A job that is not finished.
                 durations.append(numpy.nan)
             else:
-                hms = list(map(int, jobrow["STARTTIME"].split(":")))
-                start = datetime.combine(
-                    date.today(), time(hour=hms[0], minute=hms[1], second=hms[2])
-                )
-                hms = list(map(int, jobrow["ENDTIME"].split(":")))
-                end = datetime.combine(
-                    date.today(), time(hour=hms[0], minute=hms[1], second=hms[2])
-                )
-                # This works also when we have crossed 00:00:00.
-                # Jobs > 24 h will be wrong.
-                durations.append((end - start).seconds)
+                try:
+                    hms = list(map(int, jobrow["STARTTIME"].split(":")))
+                    start = datetime.combine(
+                        date.today(), time(hour=hms[0], minute=hms[1], second=hms[2])
+                    )
+                    hms = list(map(int, jobrow["ENDTIME"].split(":")))
+                    end = datetime.combine(
+                        date.today(), time(hour=hms[0], minute=hms[1], second=hms[2])
+                    )
+                    # This works also when we have crossed 00:00:00.
+                    # Jobs > 24 h will be wrong.
+                    durations.append((end - start).seconds)
+                except ValueError:
+                    # We get where if STARTIME.split(':') does not contain
+                    # integers only:
+                    durations.append(numpy.nan)
         status["DURATION"] = durations
 
         # Augment data from jobs.json if that file is available:
