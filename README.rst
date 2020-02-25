@@ -4,6 +4,9 @@
 .. image:: https://api.codacy.com/project/badge/Grade/33b0d3049b634ff2b4dfc6cc791d7da7
     :target: https://www.codacy.com/app/anders-kiaer/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade
 
+.. image:: https://img.shields.io/badge/python-2.7%20|%203.6%20|%203.7%20|%203.8-blue.svg
+    :target: https://www.python.org
+
 ==============================
 Introduction to *fmu.ensemble*
 ==============================
