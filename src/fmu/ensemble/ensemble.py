@@ -1341,26 +1341,32 @@ class ScratchEnsemble(object):
             raise ValueError("Name input is not a string")
 
     def __sub__(self, other):
+        """Substract another ensemble from this"""
         result = EnsembleCombination(ref=self, sub=other)
         return result
 
     def __add__(self, other):
+        """Add another ensemble to this"""
         result = EnsembleCombination(ref=self, add=other)
         return result
 
     def __mul__(self, other):
+        """Scale this ensemble with a scalar value"""
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
 
     def __rsub__(self, other):
+        """Substract another ensemble from this"""
         result = EnsembleCombination(ref=self, sub=other)
         return result
 
     def __radd__(self, other):
+        """Add another ensemble to this"""
         result = EnsembleCombination(ref=self, add=other)
         return result
 
     def __rmul__(self, other):
+        """Scale this ensemble with a scalar value"""
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
 

@@ -51,6 +51,10 @@ def test_ensemblecombination_basic():
         reekensemble.get_smry_dates(freq="monthly")
     )
 
+    # Test comb of virtualized ensembles.
+    vhalf = 0.5 * reekensemble.to_virtual()
+    assert vhalf["unsmry--yearly"]["FOPT"].sum() == 0.5 * foptsum
+
     # Test something long:
     # zero = (
     #    reekensemble
@@ -63,6 +67,13 @@ def test_ensemblecombination_basic():
     # We can test something cheaper:
     zero = reekensemble + reekensemble - 2 * reekensemble
     assert zero["parameters"]["KRW1"].sum() == 0
+
+    vzero = (
+        reekensemble.to_virtual()
+        + reekensemble.to_virtual()
+        - 2 * reekensemble.to_virtual()
+    )
+    assert vzero["parameters"]["KRW1"].sum() == 0
 
     assert len(diff.get_smry(column_keys=["FOPR", "FGPR", "FWCT"]).columns) == 5
 

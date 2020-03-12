@@ -17,6 +17,7 @@ import pandas as pd
 
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
+from .ensemblecombination import EnsembleCombination
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__, level="INFO")
@@ -945,6 +946,36 @@ file is picked up"""
             vol_rate_df["REAL"] = realidx
             vol_rates_dfs.append(vol_rate_df)
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
+
+    def __sub__(self, other):
+        """Substract another ensemble from this"""
+        result = EnsembleCombination(ref=self, sub=other)
+        return result
+
+    def __add__(self, other):
+        """Add another ensemble to this"""
+        result = EnsembleCombination(ref=self, add=other)
+        return result
+
+    def __mul__(self, other):
+        """Scale this ensemble with a scalar value"""
+        result = EnsembleCombination(ref=self, scale=float(other))
+        return result
+
+    def __rsub__(self, other):
+        """Substract another ensemble from this"""
+        result = EnsembleCombination(ref=self, sub=other)
+        return result
+
+    def __radd__(self, other):
+        """Add another ensemble to this"""
+        result = EnsembleCombination(ref=self, add=other)
+        return result
+
+    def __rmul__(self, other):
+        """Scale this ensemble with a scalar value"""
+        result = EnsembleCombination(ref=self, scale=float(other))
+        return result
 
     @property
     def files(self):
