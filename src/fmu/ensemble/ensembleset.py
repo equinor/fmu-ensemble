@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module for book-keeping and aggregation of ensembles
 """
 
@@ -212,7 +211,7 @@ class EnsembleSet(object):
                 and not batchregexp
             ):
                 logger.info(
-                    "Adding realization-*/iter-* " + "path pattern to case directory"
+                    "Adding realization-*/iter-* path pattern to case directory"
                 )
                 paths = paths + "/realization-*/iter-*"
             paths = [paths]
@@ -247,7 +246,7 @@ class EnsembleSet(object):
             return
 
         globbedpaths = [glob.glob(path) for path in paths]
-        globbedpaths = list(set([item for sublist in globbedpaths for item in sublist]))
+        globbedpaths = list({item for sublist in globbedpaths for item in sublist})
 
         # Build a temporary dataframe of globbed paths, and columns with
         # the realization index and the iter we found
@@ -414,8 +413,7 @@ class EnsembleSet(object):
                 pass
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
-        else:
-            raise ValueError("No data found for {}".format(localpath))
+        raise ValueError("No data found for {}".format(localpath))
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
@@ -657,6 +655,7 @@ class EnsembleSet(object):
             smrylist.append(smry)
         if smrylist:
             return pd.concat(smrylist, sort=False)
+        return pd.DataFrame()
 
     def get_smry_dates(
         self, freq="monthly", cache_eclsum=True, start_date=None, end_date=None
@@ -700,19 +699,16 @@ class EnsembleSet(object):
         rawdates.sort()
         if freq == "report":
             return rawdates
-        else:
-            # Later optimization: Wrap eclsum.start_date in the
-            # ensemble object.
-            start_date = min(rawdates)
-            end_date = max(rawdates)
-            pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
-            if freq not in pd_freq_mnenomics:
-                raise ValueError("Requested frequency %s not supported" % freq)
-            datetimes = pd.date_range(
-                start_date, end_date, freq=pd_freq_mnenomics[freq]
-            )
-            # Convert from Pandas' datetime64 to datetime.date:
-            return [x.date() for x in datetimes]
+        # Later optimization: Wrap eclsum.start_date in the
+        # ensemble object.
+        start_date = min(rawdates)
+        end_date = max(rawdates)
+        pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
+        if freq not in pd_freq_mnenomics:
+            raise ValueError("Requested frequency %s not supported" % freq)
+        datetimes = pd.date_range(start_date, end_date, freq=pd_freq_mnenomics[freq])
+        # Convert from Pandas' datetime64 to datetime.date:
+        return [x.date() for x in datetimes]
 
     def get_wellnames(self, well_match=None):
         """Return a union of all Eclipse summary well names in all ensembles

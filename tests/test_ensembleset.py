@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble, EnsembleSet class."""
 
 from __future__ import absolute_import
@@ -189,8 +188,7 @@ def test_ensembleset_reek001(tmp="TMP"):
         # The supplied callback should not fail too easy.
         if os.path.exists(fullpath):
             return volumetrics.rmsvolumetrics_txt2df(fullpath)
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame()
 
     if not SKIP_FMU_TOOLS:
         rmsvols_df = ensset3.apply(
@@ -244,7 +242,7 @@ def test_ensembleset_reek001(tmp="TMP"):
             {"load_scalar": {"localpath": "npv.txt"}},
             {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
             {"load_smry": {"column_keys": "*", "time_index": "daily"}},
-        ],
+        ]
     )
     assert len(ensset5.get_df("npv.txt")) == 10
     assert len(ensset5.get_df("unsmry--yearly")) == 50
@@ -520,7 +518,7 @@ def test_ertrunpathfile(tmp="TMP"):
     print(iter0runpath)
     enssetrunpathfile.write("".join(iter0runpath))
     for line in iter0runpath:
-        (real, path, eclname, iter) = line.split()
+        (real, path, eclname, _) = line.split()
         enssetrunpathfile.write(real + " ")  # CHECK THIS!
         # Could the first column just be the line number?
         # Iterate on the ERT official doc when determined.

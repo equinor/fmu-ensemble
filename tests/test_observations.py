@@ -8,11 +8,11 @@ from __future__ import print_function
 import os
 import glob
 import datetime
-import dateutil
 import yaml
 import pandas as pd
 import numpy as np
 import six
+import dateutil
 import pytest
 
 from fmu.ensemble import etc

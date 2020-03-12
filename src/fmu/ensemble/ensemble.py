@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module containing the ScratchEnsemble class
 """
 
@@ -10,9 +9,9 @@ import re
 import os
 import glob
 from datetime import datetime
+import six
 import dateutil
 
-import six
 import pandas as pd
 import numpy as np
 import yaml
@@ -116,9 +115,7 @@ class ScratchEnsemble(object):
             # Glob incoming paths to determine
             # paths for each realization (flatten and uniqify)
             globbedpaths = [glob.glob(path) for path in paths]
-            globbedpaths = list(
-                set([item for sublist in globbedpaths for item in sublist])
-            )
+            globbedpaths = list({item for sublist in globbedpaths for item in sublist})
         if not globbedpaths:
             if isinstance(runpathfile, str):
                 if not runpathfile:
@@ -237,9 +234,7 @@ class ScratchEnsemble(object):
         if isinstance(paths, list):
             globbedpaths = [glob.glob(path) for path in paths]
             # Flatten list and uniquify:
-            globbedpaths = list(
-                set([item for sublist in globbedpaths for item in sublist])
-            )
+            globbedpaths = list({item for sublist in globbedpaths for item in sublist})
         else:
             globbedpaths = glob.glob(paths)
 
@@ -253,7 +248,7 @@ class ScratchEnsemble(object):
             )
             if realization.index is None:
                 logger.critical(
-                    "Could not determine realization index " + "for path " + realdir
+                    "Could not determine realization index for path %s", realdir
                 )
                 if not realidxregexp:
                     logger.critical("Maybe you need to supply a regexp.")
@@ -538,7 +533,7 @@ class ScratchEnsemble(object):
                 # some realizations
                 logger.warning("Could not read %s for realization %d", localpath, index)
         if self.get_df(localpath).empty:
-            raise ValueError("No ensemble data found for %s", localpath)
+            raise ValueError("No ensemble data found for {}".format(localpath))
         return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None, metayaml=False):
@@ -661,8 +656,7 @@ class ScratchEnsemble(object):
             dframe.rename(columns={"level_0": "REAL"}, inplace=True)
             del dframe["level_1"]  # This is the indices from each real
             return dframe
-        else:
-            raise ValueError("No data found for " + localpath)
+        raise ValueError("No data found for " + localpath)
 
     def load_smry(
         self,
@@ -839,11 +833,10 @@ class ScratchEnsemble(object):
             if deletethese:
                 self.remove_realizations(deletethese)
             return self
-        else:
-            filtered = VirtualEnsemble(self.name + " filtered")
-            for realidx in keepthese:
-                filtered.add_realization(self._realizations[realidx])
-            return filtered
+        filtered = VirtualEnsemble(self.name + " filtered")
+        for realidx in keepthese:
+            filtered.add_realization(self._realizations[realidx])
+        return filtered
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
@@ -988,6 +981,7 @@ class ScratchEnsemble(object):
         in will have length 1, if not, it can be larger.
 
         """
+        # pylint: disable=import-outside-toplevel
         from .realization import normalize_dates
 
         if not eclsumsdates:
@@ -1009,7 +1003,7 @@ class ScratchEnsemble(object):
             else:
                 raise TypeError("end_date had unknown type")
 
-        if freq == "report" or freq == "raw":
+        if freq in ("report", "raw"):
             datetimes = set()
             for eclsumdatelist in eclsumsdates:
                 datetimes = datetimes.union(eclsumdatelist)
@@ -1025,48 +1019,47 @@ class ScratchEnsemble(object):
                 datetimes = [x for x in datetimes if x < end_date]
                 datetimes = datetimes + [end_date]
             return datetimes
-        elif freq == "last":
+        if freq == "last":
             end_date = max([max(x) for x in eclsumsdates]).date()
             return [end_date]
+        # These are datetime.datetime, not datetime.date
+        start_smry = min([min(x) for x in eclsumsdates])
+        end_smry = max([max(x) for x in eclsumsdates])
+
+        pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
+
+        (start_n, end_n) = normalize_dates(start_smry.date(), end_smry.date(), freq)
+
+        if not start_date and not normalize:
+            start_date_range = start_smry.date()
+        elif not start_date and normalize:
+            start_date_range = start_n
         else:
-            # These are datetime.datetime, not datetime.date
-            start_smry = min([min(x) for x in eclsumsdates])
-            end_smry = max([max(x) for x in eclsumsdates])
+            start_date_range = start_date
 
-            pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
+        if not end_date and not normalize:
+            end_date_range = end_smry.date()
+        elif not end_date and normalize:
+            end_date_range = end_n
+        else:
+            end_date_range = end_date
 
-            (start_n, end_n) = normalize_dates(start_smry.date(), end_smry.date(), freq)
+        if freq not in pd_freq_mnenomics:
+            raise ValueError("Requested frequency %s not supported" % freq)
+        datetimes = pd.date_range(
+            start_date_range, end_date_range, freq=pd_freq_mnenomics[freq]
+        )
+        # Convert from Pandas' datetime64 to datetime.date:
+        datetimes = [x.date() for x in datetimes]
 
-            if not start_date and not normalize:
-                start_date_range = start_smry.date()
-            elif not start_date and normalize:
-                start_date_range = start_n
-            else:
-                start_date_range = start_date
-
-            if not end_date and not normalize:
-                end_date_range = end_smry.date()
-            elif not end_date and normalize:
-                end_date_range = end_n
-            else:
-                end_date_range = end_date
-
-            if freq not in pd_freq_mnenomics:
-                raise ValueError("Requested frequency %s not supported" % freq)
-            datetimes = pd.date_range(
-                start_date_range, end_date_range, freq=pd_freq_mnenomics[freq]
-            )
-            # Convert from Pandas' datetime64 to datetime.date:
-            datetimes = [x.date() for x in datetimes]
-
-            # pd.date_range will not include random dates that do not
-            # fit on frequency boundary. Force include these if
-            # supplied as user arguments.
-            if start_date and start_date not in datetimes:
-                datetimes = [start_date] + datetimes
-            if end_date and end_date not in datetimes:
-                datetimes = datetimes + [end_date]
-            return datetimes
+        # pd.date_range will not include random dates that do not
+        # fit on frequency boundary. Force include these if
+        # supplied as user arguments.
+        if start_date and start_date not in datetimes:
+            datetimes = [start_date] + datetimes
+        if end_date and end_date not in datetimes:
+            datetimes = datetimes + [end_date]
+        return datetimes
 
     def get_smry_stats(
         self,
@@ -1586,18 +1579,16 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param report: Report step for unrst keywords
         """
+        mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
-            mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for real, realization in six.iteritems(self._realizations):
+            for _, realization in six.iteritems(self._realizations):
                 mean += realization.get_global_unrst_keyword(prop, report)
             mean.safe_div(global_active)
             return mean
-        else:
-            mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for _, realization in six.iteritems(self._realizations):
-                mean += realization.get_global_init_keyword(prop)
-            mean.safe_div(global_active)
-            return mean
+        for _, realization in six.iteritems(self._realizations):
+            mean += realization.get_global_init_keyword(prop)
+        mean.safe_div(global_active)
+        return mean
 
     def _keyword_std_dev(self, prop, global_active, mean, report=0):
         """
@@ -1608,21 +1599,18 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
+        std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
-            std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
             for _, realization in six.iteritems(self._realizations):
                 real_prop = realization.get_global_unrst_keyword(prop, report)
                 std_dev.add_squared(real_prop - mean)
             std_dev.safe_div(global_active)
             return std_dev.isqrt()
-
-        else:
-            std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
-            for real, realization in six.iteritems(self._realizations):
-                real_prop = realization.get_global_init_keyword(prop)
-                std_dev.add_squared(real_prop - mean)
-            std_dev.safe_div(global_active)
-            return std_dev.isqrt()
+        for _, realization in six.iteritems(self._realizations):
+            real_prop = realization.get_global_init_keyword(prop)
+            std_dev.add_squared(real_prop - mean)
+        std_dev.safe_div(global_active)
+        return std_dev.isqrt()
 
 
 def _convert_numeric_columns(dataframe):

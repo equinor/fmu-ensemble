@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble."""
+# pylint: disable=protected-access
 
 from __future__ import absolute_import
 from __future__ import division
