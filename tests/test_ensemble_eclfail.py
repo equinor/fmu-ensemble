@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble, how it works on ensembles with realizations where Eclipse
 has stopped preamturely
 

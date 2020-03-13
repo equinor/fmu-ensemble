@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module for basic interaction with user, including logging for debugging.
 
 This module is duplicated from another project called "fmu.config"

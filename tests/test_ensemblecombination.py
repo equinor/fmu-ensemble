@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble."""
 
 from __future__ import absolute_import
@@ -20,6 +19,7 @@ if not fmux.testsetup():
 
 
 def test_ensemblecombination_basic():
+    """Basic tests for linear combinations of ensemble objects"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))

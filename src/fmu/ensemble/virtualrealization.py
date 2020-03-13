@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Contains the VirtualRealization class"""
 from __future__ import absolute_import
 from __future__ import division
@@ -120,7 +119,7 @@ class VirtualRealization(object):
                     fhandle.write(str(data))
             else:
                 logger.warning(
-                    "Don't know how to dump %s " + "of type %s to disk", key, type(key)
+                    "Don't know how to dump %s of type %s to disk", key, type(key)
                 )
 
     def load_disk(self, filesystempath):
@@ -236,12 +235,11 @@ class VirtualRealization(object):
 
         if isinstance(data, pd.DataFrame):
             return data
-        elif isinstance(data, pd.Series):
+        if isinstance(data, pd.Series):
             return data.to_dict()
-        elif isinstance(data, (str, dict, int, float, np.integer, np.floating)):
+        if isinstance(data, (str, dict, int, float, np.integer, np.floating)):
             return data
-        else:
-            raise ValueError("BUG: Unknown datatype")
+        raise ValueError("BUG: Unknown datatype")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
@@ -387,7 +385,7 @@ class VirtualRealization(object):
                     chosen_smry = candidate
                     break
             if not chosen_smry:
-                logger.error("No internalized summary data " + "to interpolate from")
+                logger.error("No internalized summary data to interpolate from")
                 return pd.DataFrame()
         else:
             chosen_smry = time_index
