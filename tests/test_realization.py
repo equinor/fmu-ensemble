@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble."""
+# pylint: disable=protected-access
 
 from __future__ import absolute_import
 from __future__ import division
@@ -430,6 +430,7 @@ def test_volumetric_rates():
 def test_datenormalization():
     """Test normalization of dates, where
     dates can be ensured to be on dategrid boundaries"""
+    # pylint: disable=import-outside-toplevel
     from fmu.ensemble.realization import normalize_dates
     from datetime import date
 
@@ -617,6 +618,7 @@ def test_singlereal_ecl(tmp="TMP"):
     assert "FOPT" in real["unsmry--raw"]
     with pytest.raises(ValueError):
         # This does not exist before we have asked for it
+        # pylint: disable=pointless-statement
         "FOPT" in real["unsmry--yearly"]
 
 
@@ -784,11 +786,15 @@ def test_filesystem_changes():
     # the situation where there is one successful job.
     fhandle = open(realdir + "/STATUS", "w")
     fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
-LSF JOBID: not running LSF
-COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
-"""
-    )  # noqa
+        (
+            "Current host                    : st-rst16-02-03/x86_64  "
+            "file-server:10.14.10.238\n"
+            "LSF JOBID: not running LSF\n"
+            "COPY_FILE                       : 20:58:57 .... 20:59:00   "
+            "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
+            "Config/jobs/util/script/copy_file.py failed with exit code: 1\n"
+        )
+    )
     fhandle.close()
     real = ensemble.ScratchRealization(realdir)
     # When issue 37 is resolved, update this to 1 and check the
@@ -796,19 +802,23 @@ COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /
     assert len(real.get_df("STATUS")) == 1
     fhandle = open(realdir + "/STATUS", "w")
     fhandle.write(
-        """Current host                    : st-rst16-02-03/x86_64  file-server:10.14.10.238
-LSF JOBID: not running LSF
-COPY_FILE                       : 20:58:55 .... 20:58:57
-COPY_FILE                       : 20:58:57 .... 20:59:00   EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1
-"""
-    )  # noqa
+        (
+            "Current host                    : st-rst16-02-03/x86_64  "
+            "file-server:10.14.10.238\n"
+            "LSF JOBID: not running LSF\n"
+            "COPY_FILE                       : 20:58:55 .... 20:58:57\n"
+            "COPY_FILE                       : 20:58:57 .... 20:59:00  "
+            " EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
+            "Config/jobs/util/script/copy_file.py failed with exit code: 1 "
+        )
+    )
     fhandle.close()
     real = ensemble.ScratchRealization(realdir)
     assert len(real.get_df("STATUS")) == 2
     # Check that we have the error string picked up:
-    assert (
-        real.get_df("STATUS")["errorstring"].dropna().values[0]
-        == "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1"
+    assert real.get_df("STATUS")["errorstring"].dropna().values[0] == (
+        "EXIT: 1/Executable: /project/res/komodo/2018.02/root/"
+        "etc/ERT/Config/jobs/util/script/copy_file.py failed with exit code: 1"
     )  # noqa
 
     # Check that we can move the Eclipse files to another place
@@ -906,6 +916,7 @@ def test_apply():
     # realization's root directory with the relative path coming in:
 
     def rms_vol2df(kwargs):
+        """Small function that is to be supplied to .apply()"""
         return volumetrics.rmsvolumetrics_txt2df(
             os.path.join(kwargs["realization"].runpath(), kwargs["filename"])
         )

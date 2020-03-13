@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble."""
 
 from __future__ import absolute_import
@@ -20,6 +19,9 @@ if not fmux.testsetup():
 
 
 def test_ensemble_aggregations(tmp="TMP"):
+    """Test aggregations of ensembles, that
+    is taking means, medians, p10 and so on, producing
+    virtual realizations"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))

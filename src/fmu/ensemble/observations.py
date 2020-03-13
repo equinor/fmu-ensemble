@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Observations support and related calculations
 """
@@ -133,13 +132,13 @@ class Observations(object):
                     mismatches[(ensname, realidx)]["REAL"] = realidx
                     mismatches[(ensname, realidx)]["ENSEMBLE"] = ensname
             return pd.concat(mismatches, axis=0, ignore_index=True)
-        elif isinstance(ens_or_real, ScratchEnsemble):
+        if isinstance(ens_or_real, ScratchEnsemble):
             mismatches = {}
             for realidx, real in ens_or_real._realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
                 mismatches[realidx]["REAL"] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
-        elif isinstance(ens_or_real, VirtualEnsemble):
+        if isinstance(ens_or_real, VirtualEnsemble):
             logger.info("Calculating mismatch on ensemble %s", ens_or_real.name)
             mismatches = {}
             for realidx in ens_or_real.realindices:
@@ -148,13 +147,11 @@ class Observations(object):
                 )
                 mismatches[realidx]["REAL"] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
-        elif isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):
+        if isinstance(ens_or_real, (ScratchRealization, VirtualRealization)):
             return self._realization_mismatch(ens_or_real)
-        elif isinstance(ens_or_real, EnsembleSet):
-            pass
-        else:
-            raise ValueError("Unsupported object for mismatch calculation")
-        return None
+        if isinstance(ens_or_real, EnsembleSet):
+            raise NotImplementedError
+        raise ValueError("Unsupported object for mismatch calculation")
 
     def load_smry(self, realization, smryvector, time_index="yearly", smryerror=None):
         """Add an observation unit from a VirtualRealization or
@@ -469,7 +466,7 @@ class Observations(object):
                 continue
             if not isinstance(self.observations[key], list):
                 logger.error(
-                    "Observation category %s did not contain a " + "list, but %s",
+                    "Observation category %s did not contain a list, but %s",
                     key,
                     type(self.observations[key]),
                 )

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module containing a VirtualEnsemble class"""
 
 from __future__ import absolute_import
@@ -145,6 +144,7 @@ class VirtualEnsemble(object):
         of ambiguity, the shortpath will be returned.
 
         """
+        # pylint: disable=import-outside-toplevel
         from fmu.ensemble import ScratchEnsemble
 
         return ScratchEnsemble._shortcut2path(self.keys(), shortpath)
@@ -188,8 +188,7 @@ class VirtualEnsemble(object):
             vreal.append(key, realizationdata)
         if vreal.keys():
             return vreal
-        else:
-            raise ValueError("No data for realization %d" % realindex)
+        raise ValueError("No data for realization %d" % realindex)
 
     def add_realization(self, realization, realidx=None, overwrite=False):
         """Add a realization. A ScratchRealization will be effectively
@@ -443,7 +442,8 @@ class VirtualEnsemble(object):
             symlinks (boolean): If includefiles is True, setting this to True
                 means that only symlinking will take place, not full copy.
         """
-        import pyarrow  # Move to top of file eventually
+        # pylint: disable=import-outside-toplevel
+        import pyarrow  # Solve in Issue #102.
 
         # Trigger load of all lazy frames:
         for key in list(self.lazy_frames.keys()):
@@ -798,7 +798,7 @@ file is picked up"""
                     chosen_smry = candidate
                     break
             if not chosen_smry:
-                logger.error("No internalized summary data " + "to interpolate from")
+                logger.error("No internalized summary data to interpolate from")
                 return pd.DataFrame()
         else:
             chosen_smry = time_index

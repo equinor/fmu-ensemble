@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble."""
 
 from __future__ import absolute_import
@@ -337,6 +336,7 @@ def test_get_smry_interpolation():
     reekensemble.load_smry(time_index="monthly", column_keys=["F*"])
     # Create a vens that contains both monthly and yearly:
     vens_monthly = reekensemble.to_virtual()
+    assert "npv.txt" in vens_monthly.keys()
     reekensemble.load_smry(time_index="daily", column_keys=["F*"])
     _ = reekensemble.to_virtual()  # monthly, yearly *and* daily
 

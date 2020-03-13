@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Testing fmu-ensemble."""
+# pylint: disable=protected-access,duplicate-code
 
 from __future__ import absolute_import
 from __future__ import division
@@ -251,6 +251,7 @@ def test_get_smry_cumulative():
     with pytest.raises(TypeError):
         vreal._smry_cumulative({})
     with pytest.raises(TypeError):
+        # pylint: disable=no-value-for-parameter
         vreal._smry_cumulative()
     assert vreal._smry_cumulative(["FOPT"])[0]
     assert not vreal._smry_cumulative(["FOPR"])[0]

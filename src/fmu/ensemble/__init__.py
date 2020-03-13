@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Top-level package for fmu.ensemble"""
 
 from ._theversion import theversion

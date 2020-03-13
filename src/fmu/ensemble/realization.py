@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module for the ScratchRealization class
 
 A realization is a set of results from one subsurface model
@@ -18,6 +17,7 @@ import copy
 import glob
 import json
 from datetime import datetime, date, time
+import calendar
 import collections
 import dateutil
 
@@ -30,6 +30,10 @@ from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
 
+from .etc import Interaction
+from .virtualrealization import VirtualRealization
+from .realizationcombination import RealizationCombination
+
 HAVE_ECL2DF = False
 try:
     import ecl2df
@@ -37,10 +41,6 @@ try:
     HAVE_ECL2DF = True
 except ImportError:
     HAVE_ECL2DF = False
-
-from .etc import Interaction
-from .virtualrealization import VirtualRealization
-from .realizationcombination import RealizationCombination
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -294,42 +294,41 @@ class ScratchRealization(object):
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
-        else:
-            if fullpath in self.files["FULLPATH"].values and not force_reread:
-                # Return cached version
-                return self.data[localpath]
-            elif fullpath not in self.files["FULLPATH"].values:
-                filerow = {
-                    "LOCALPATH": localpath,
-                    "FILETYPE": localpath.split(".")[-1],
-                    "FULLPATH": fullpath,
-                    "BASENAME": os.path.split(localpath)[-1],
-                }
-                self.files = self.files.append(filerow, ignore_index=True)
-            try:
-                value = pd.read_csv(
-                    fullpath,
-                    header=None,
-                    sep="DONOTSEPARATEANYTHING *%magic%*",
-                    engine="python",
-                    skip_blank_lines=skip_blank_lines,
-                    skipinitialspace=skipinitialspace,
-                    comment=comment,
-                ).iloc[0, 0]
-            except pd.errors.EmptyDataError:
-                value = ""
-            if convert_numeric:
-                value = parse_number(value)
-                if not isinstance(value, str):
-                    self.data[localpath] = value
-                else:
-                    # In case we are re-reading, we must
-                    # ensure there is no value present now:
-                    if localpath in self.data:
-                        del self.data[localpath]
-            else:
+        if fullpath in self.files["FULLPATH"].values and not force_reread:
+            # Return cached version
+            return self.data[localpath]
+        if fullpath not in self.files["FULLPATH"].values:
+            filerow = {
+                "LOCALPATH": localpath,
+                "FILETYPE": localpath.split(".")[-1],
+                "FULLPATH": fullpath,
+                "BASENAME": os.path.split(localpath)[-1],
+            }
+            self.files = self.files.append(filerow, ignore_index=True)
+        try:
+            value = pd.read_csv(
+                fullpath,
+                header=None,
+                sep="DONOTSEPARATEANYTHING *%magic%*",
+                engine="python",
+                skip_blank_lines=skip_blank_lines,
+                skipinitialspace=skipinitialspace,
+                comment=comment,
+            ).iloc[0, 0]
+        except pd.errors.EmptyDataError:
+            value = ""
+        if convert_numeric:
+            value = parse_number(value)
+            if not isinstance(value, str):
                 self.data[localpath] = value
-            return value
+            else:
+                # In case we are re-reading, we must
+                # ensure there is no value present now:
+                if localpath in self.data:
+                    del self.data[localpath]
+        else:
+            self.data[localpath] = value
+        return value
 
     def load_txt(self, localpath, convert_numeric=True, force_reread=False):
         """Parse a txt file with
@@ -371,34 +370,33 @@ class ScratchRealization(object):
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
-        else:
-            if fullpath in self.files["FULLPATH"].values and not force_reread:
-                # Return cached version
-                return self.data[localpath]
-            elif fullpath not in self.files["FULLPATH"].values:
-                filerow = {
-                    "LOCALPATH": localpath,
-                    "FILETYPE": localpath.split(".")[-1],
-                    "FULLPATH": fullpath,
-                    "BASENAME": os.path.split(localpath)[-1],
-                }
-                self.files = self.files.append(filerow, ignore_index=True)
-            try:
-                keyvalues = pd.read_csv(
-                    fullpath,
-                    sep=r"\s+",
-                    index_col=0,
-                    dtype=str,
-                    usecols=[0, 1],
-                    header=None,
-                )[1].to_dict()
-            except pd.errors.EmptyDataError:
-                keyvalues = {}
-            if convert_numeric:
-                for key in keyvalues:
-                    keyvalues[key] = parse_number(keyvalues[key])
-            self.data[localpath] = keyvalues
-            return keyvalues
+        if fullpath in self.files["FULLPATH"].values and not force_reread:
+            # Return cached version
+            return self.data[localpath]
+        if fullpath not in self.files["FULLPATH"].values:
+            filerow = {
+                "LOCALPATH": localpath,
+                "FILETYPE": localpath.split(".")[-1],
+                "FULLPATH": fullpath,
+                "BASENAME": os.path.split(localpath)[-1],
+            }
+            self.files = self.files.append(filerow, ignore_index=True)
+        try:
+            keyvalues = pd.read_csv(
+                fullpath,
+                sep=r"\s+",
+                index_col=0,
+                dtype=str,
+                usecols=[0, 1],
+                header=None,
+            )[1].to_dict()
+        except pd.errors.EmptyDataError:
+            keyvalues = {}
+        if convert_numeric:
+            for key in keyvalues:
+                keyvalues[key] = parse_number(keyvalues[key])
+        self.data[localpath] = keyvalues
+        return keyvalues
 
     def load_csv(self, localpath, convert_numeric=True, force_reread=False):
         """Parse a CSV file as a DataFrame
@@ -424,42 +422,41 @@ class ScratchRealization(object):
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
             raise IOError("File not found: " + fullpath)
-        else:
-            # Look for cached version
-            if localpath in self.data and not force_reread:
-                return self.data[localpath]
-            # Check the file store, append if not there
-            if localpath not in self.files["LOCALPATH"].values:
-                filerow = {
-                    "LOCALPATH": localpath,
-                    "FILETYPE": localpath.split(".")[-1],
-                    "FULLPATH": fullpath,
-                    "BASENAME": os.path.split(localpath)[-1],
-                }
-                self.files = self.files.append(filerow, ignore_index=True)
-            try:
-                if convert_numeric:
-                    # Trust that Pandas will determine sensible datatypes
-                    # faster than the convert_numeric() function
-                    dtype = None
-                else:
-                    dtype = str
-                dframe = pd.read_csv(fullpath, dtype=dtype)
-                if "REAL" in dframe:
-                    dframe.rename(columns={"REAL": "REAL_ORIG"}, inplace=True)
-                    logger.warning(
-                        (
-                            "Loaded file %s already had the column REAL, "
-                            "this was renamed to REAL_ORIG"
-                        ),
-                        fullpath,
-                    )
-            except pd.errors.EmptyDataError:
-                dframe = None  # or empty dataframe?
+        # Look for cached version
+        if localpath in self.data and not force_reread:
+            return self.data[localpath]
+        # Check the file store, append if not there
+        if localpath not in self.files["LOCALPATH"].values:
+            filerow = {
+                "LOCALPATH": localpath,
+                "FILETYPE": localpath.split(".")[-1],
+                "FULLPATH": fullpath,
+                "BASENAME": os.path.split(localpath)[-1],
+            }
+            self.files = self.files.append(filerow, ignore_index=True)
+        try:
+            if convert_numeric:
+                # Trust that Pandas will determine sensible datatypes
+                # faster than the convert_numeric() function
+                dtype = None
+            else:
+                dtype = str
+            dframe = pd.read_csv(fullpath, dtype=dtype)
+            if "REAL" in dframe:
+                dframe.rename(columns={"REAL": "REAL_ORIG"}, inplace=True)
+                logger.warning(
+                    (
+                        "Loaded file %s already had the column REAL, "
+                        "this was renamed to REAL_ORIG"
+                    ),
+                    fullpath,
+                )
+        except pd.errors.EmptyDataError:
+            dframe = None  # or empty dataframe?
 
-            # Store parsed data:
-            self.data[localpath] = dframe
-            return dframe
+        # Store parsed data:
+        self.data[localpath] = dframe
+        return dframe
 
     def load_status(self):
         """Collects the contents of the STATUS files and return
@@ -916,8 +913,7 @@ class ScratchRealization(object):
                 return None  # No filename matches
             if len(unsmry_filenamelist) > 1:
                 logger.warning(
-                    "Multiple UNSMRY files found, "
-                    + "consider turning off auto-discovery"
+                    "Multiple UNSMRY files found, consider turning off auto-discovery"
                 )
             unsmry_filename = unsmry_filenamelist[0]
             self.find_files(unsmry_filename)
@@ -1101,8 +1097,7 @@ class ScratchRealization(object):
                 # Ensure EclSum object can be garbage collected
                 self._eclsum = None
             return dataframe
-        else:
-            return pd.DataFrame()
+        return pd.DataFrame()
 
     def _glob_smry_keys(self, column_keys):
         """Utility function for globbing column names
@@ -1165,8 +1160,6 @@ class ScratchRealization(object):
 
         This method is to be used by both ScratchRealization
         and VirtualRealization, and is documented there."""
-        import calendar
-        from dateutil.relativedelta import relativedelta
 
         if isinstance(time_unit, str):
             if time_unit not in ["days", "months", "years"]:
@@ -1182,9 +1175,7 @@ class ScratchRealization(object):
             x for x in column_keys if ScratchRealization._cum_smrycol2rate(x)
         ]
         if not column_keys:
-            logger.error(
-                "No valid cumulative columns given " + "to volumetric computation"
-            )
+            logger.error("No valid cumulative columns given to volumetric computation")
             return pd.DataFrame()
 
         cum_df = realization.get_smry(column_keys=column_keys, time_index=time_index)
@@ -1202,7 +1193,7 @@ class ScratchRealization(object):
             # of number of years and number of months, but it will
             # only give us integer months, and then leftover days.
             rel_deltas = [
-                relativedelta(t[1], t[0])
+                dateutil.relativedelta.relativedelta(t[1], t[0])
                 for t in zip(diff_cum.index, diff_cum.index[1:])
             ]
             whole_days = [
@@ -1340,6 +1331,7 @@ class ScratchRealization(object):
         Returns:
             list of datetimes. None if no summary data is available.
         """
+        # pylint: disable=import-outside-toplevel
         from .ensemble import ScratchEnsemble
 
         eclsum = self.get_eclsum(include_restart=include_restart)
@@ -1408,8 +1400,8 @@ class ScratchRealization(object):
                 if kwargs["key"] in self.data[localpath]:
                     return str(self.data[localpath][kwargs["key"]]) == kwargs["value"]
                 return False
-            else:  # non-string, then don't convert the internalized data
-                return self.data[localpath][kwargs["key"]] == kwargs["value"]
+            # non-string, then don't convert the internalized data
+            return self.data[localpath][kwargs["key"]] == kwargs["value"]
         raise ValueError("Wrong arguments to contains()")
 
     def drop(self, localpath, **kwargs):
@@ -1668,19 +1660,22 @@ def normalize_dates(start_date, end_date, freq):
     Return:
         Tuple of normalized (start_date, end_date)
     """
-    from dateutil.relativedelta import relativedelta
 
     if freq == "monthly":
         start_date = start_date.replace(day=1)
 
         # Avoid rolling forward if we are already at day 1 in a month
         if end_date != end_date.replace(day=1):
-            end_date = end_date.replace(day=1) + relativedelta(months=1)
+            end_date = end_date.replace(day=1) + dateutil.relativedelta.relativedelta(
+                months=1
+            )
     elif freq == "yearly":
         start_date = start_date.replace(day=1, month=1)
         # Avoid rolling forward if we are already at day 1 in a year
         if end_date != end_date.replace(day=1, month=1):
-            end_date = end_date.replace(day=1, month=1) + relativedelta(years=1)
+            end_date = end_date.replace(
+                day=1, month=1
+            ) + dateutil.relativedelta.relativedelta(years=1)
     elif freq == "daily":
         # This we don't need to normalize, but we should not give any warnings
         pass
@@ -1721,7 +1716,7 @@ def parse_number(value):
     """
     if isinstance(value, int):
         return value
-    elif isinstance(value, float):
+    if isinstance(value, float):
         # int(afloat) fails on some, e.g. NaN
         try:
             if int(value) == value:
