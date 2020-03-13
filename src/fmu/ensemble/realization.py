@@ -1464,26 +1464,32 @@ class ScratchRealization(object):
         return "<Realization, index={}, path=...{}>".format(indexstr, pathsummary)
 
     def __sub__(self, other):
+        """Substract another realization from this"""
         result = RealizationCombination(ref=self, sub=other)
         return result
 
     def __add__(self, other):
+        """Add another realization from this"""
         result = RealizationCombination(ref=self, add=other)
         return result
 
     def __mul__(self, other):
+        """Scale this realization by a scalar value"""
         result = RealizationCombination(ref=self, scale=float(other))
         return result
 
     def __rsub__(self, other):
+        """Add another realization from this"""
         result = RealizationCombination(ref=self, sub=other)
         return result
 
     def __radd__(self, other):
+        """Substract another realization from this"""
         result = RealizationCombination(ref=self, add=other)
         return result
 
     def __rmul__(self, other):
+        """Scale this realization by a scalar value"""
         result = RealizationCombination(ref=self, scale=float(other))
         return result
 

@@ -11,6 +11,8 @@ import numpy as np
 
 from .etc import Interaction
 
+from .realizationcombination import RealizationCombination
+
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
 
@@ -273,6 +275,7 @@ class VirtualRealization(object):
                 is compatible with the date index and the cumulative data.
 
         """
+        # pylint: disable=wrong-import-position
         from fmu.ensemble import ScratchRealization
 
         return ScratchRealization.static_get_volumetric_rates(
@@ -552,6 +555,36 @@ class VirtualRealization(object):
             or ("T:" in x and "CT:" not in x)
             for x in column_keys
         ]
+
+    def __sub__(self, other):
+        """Substract another realization from this"""
+        result = RealizationCombination(ref=self, sub=other)
+        return result
+
+    def __add__(self, other):
+        """Add another realization from this"""
+        result = RealizationCombination(ref=self, add=other)
+        return result
+
+    def __mul__(self, other):
+        """Scale this realization by a scalar value"""
+        result = RealizationCombination(ref=self, scale=float(other))
+        return result
+
+    def __rsub__(self, other):
+        """Add another realization from this"""
+        result = RealizationCombination(ref=self, sub=other)
+        return result
+
+    def __radd__(self, other):
+        """Substract another realization from this"""
+        result = RealizationCombination(ref=self, add=other)
+        return result
+
+    def __rmul__(self, other):
+        """Scale this realization by a scalar value"""
+        result = RealizationCombination(ref=self, scale=float(other))
+        return result
 
     @property
     def parameters(self):

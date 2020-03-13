@@ -8,7 +8,6 @@ from __future__ import print_function
 import pandas as pd
 
 from .etc import Interaction
-from fmu.ensemble.virtualrealization import VirtualRealization
 
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -123,6 +122,9 @@ class RealizationCombination(object):
         """Evaluate the current linear combination and return as
         a virtualrealizatione.
         """
+        # pylint: disable=import-outside-toplevel
+        from .virtualrealization import VirtualRealization
+
         vreal = VirtualRealization(description=str(self))
         for key in self.keys():
             vreal.append(key, self.get_df(key))
@@ -178,7 +180,20 @@ class RealizationCombination(object):
             result = result.sub(otherdf)
         return result.reset_index()
 
+    @property
+    def parameters(self):
+        """Access the data obtained from parameters.txt
+
+        Returns:
+            dict with data from parameters.txt
+        """
+        return self.get_df("parameters.txt")
+
     def __getitem__(self, localpath):
+        """Direct access to the realization data structure
+
+        Calls get_df(localpath).
+        """
         return self.get_df(localpath)
 
     def __repr__(self):

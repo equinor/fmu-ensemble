@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import pandas as pd
 
-from fmu.ensemble.virtualensemble import VirtualEnsemble
 from .etc import Interaction
 
 xfmu = Interaction()
@@ -41,7 +40,6 @@ class EnsembleCombination(object):
             sub: ensemble or ensemblecombination with a negative sign.
 
         """
-
         self.ref = ref
         if scale:
             self.scale = scale
@@ -106,6 +104,9 @@ class EnsembleCombination(object):
         """Evaluate the current linear combination and return as
         a virtual ensemble.
         """
+        # pylint: disable=import-outside-toplevel
+        from .virtualensemble import VirtualEnsemble
+
         vens = VirtualEnsemble(name=str(self))
         for key in self.keys():
             logger.info("Calculating ensemblecombination on %s", key)
@@ -233,19 +234,25 @@ class EnsembleCombination(object):
         return scalestring + str(self.ref) + addstring + substring
 
     def __sub__(self, other):
+        """Substract another ensemble from this combination"""
         return EnsembleCombination(self, sub=other)
 
     def __add__(self, other):
+        """Add another ensemble from this combination"""
         return EnsembleCombination(self, add=other)
 
     def __radd__(self, other):
+        """Add another ensemble from this combination"""
         return EnsembleCombination(self, add=other)
 
     def __rsub__(self, other):
+        """Substract another ensemble from this combination"""
         return EnsembleCombination(self, sub=other)
 
     def __mul__(self, other):
+        """Scale this EnsembleCombination by a scalar value"""
         return EnsembleCombination(self, scale=float(other))
 
     def __rmul__(self, other):
+        """Scale this EnsembleCombination by a scalar value"""
         return EnsembleCombination(self, scale=float(other))

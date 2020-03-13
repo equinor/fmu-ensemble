@@ -19,6 +19,9 @@ if not fmux.testsetup():
 
 
 def test_realizationcombination_basic():
+    """Basic testing of combination of two realizations
+    to a RealizationCombination"""
+
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
@@ -40,8 +43,25 @@ def test_realizationcombination_basic():
     assert "FWPR" in realdiff["unsmry--yearly"]
     assert "FWL" in realdiff["parameters"]
 
+    # Combination of the same when virtualized:
+    vreal0 = real0.to_virtual()
+    vreal1 = real1.to_virtual()
+
+    scaled_vreal0 = 3 * vreal0
+    assert "FWPR" in scaled_vreal0["unsmry--yearly"]
+    assert "FWL" in scaled_vreal0["parameters"]
+    assert "FWL" in scaled_vreal0.parameters
+    assert scaled_vreal0.parameters["FWL"] == real0.parameters["FWL"] * 3
+
+    vdiff = vreal1 - vreal0
+    assert "FWPR" in vdiff["unsmry--yearly"]
+    assert "FWL" in vdiff["parameters"]
+
 
 def test_manual_aggregation():
+    """Test that aggregating an ensemble using
+    RealizationCombination is the same as calling agg() on the
+    ensemble"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))
