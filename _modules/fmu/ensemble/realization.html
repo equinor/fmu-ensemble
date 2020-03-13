@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.2.1.2 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.2.1.3 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.2
+                v1.2.1.3
               </div>
             
           
@@ -158,8 +158,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for fmu.ensemble.realization</h1><div class="highlight"><pre>
-<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;Module for the ScratchRealization class</span>
+<span></span><span class="sd">&quot;&quot;&quot;Module for the ScratchRealization class</span>
 
 <span class="sd">A realization is a set of results from one subsurface model</span>
 <span class="sd">realization. A realization can be either defined from</span>
@@ -178,6 +177,7 @@
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span>
+<span class="kn">import</span> <span class="nn">calendar</span>
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">dateutil</span>
 
@@ -190,6 +190,10 @@
 <span class="kn">from</span> <span class="nn">ecl.grid</span> <span class="kn">import</span> <span class="n">EclGrid</span>
 <span class="kn">from</span> <span class="nn">ecl</span> <span class="kn">import</span> <span class="n">EclFileFlagEnum</span>
 
+<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
+<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
+<span class="kn">from</span> <span class="nn">.realizationcombination</span> <span class="kn">import</span> <span class="n">RealizationCombination</span>
+
 <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">ecl2df</span>
@@ -197,10 +201,6 @@
     <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">False</span>
-
-<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
-<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
-<span class="kn">from</span> <span class="nn">.realizationcombination</span> <span class="kn">import</span> <span class="n">RealizationCombination</span>
 
 <span class="n">fmux</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -454,42 +454,41 @@
         <span class="n">fullpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">,</span> <span class="n">localpath</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fullpath</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;File not found: &quot;</span> <span class="o">+</span> <span class="n">fullpath</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_reread</span><span class="p">:</span>
-                <span class="c1"># Return cached version</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">fullpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-                <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;LOCALPATH&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="p">,</span>
-                    <span class="s2">&quot;FILETYPE&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="s2">&quot;FULLPATH&quot;</span><span class="p">:</span> <span class="n">fullpath</span><span class="p">,</span>
-                    <span class="s2">&quot;BASENAME&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">localpath</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="p">}</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
-                    <span class="n">fullpath</span><span class="p">,</span>
-                    <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;DONOTSEPARATEANYTHING *%magic%*&quot;</span><span class="p">,</span>
-                    <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">,</span>
-                    <span class="n">skip_blank_lines</span><span class="o">=</span><span class="n">skip_blank_lines</span><span class="p">,</span>
-                    <span class="n">skipinitialspace</span><span class="o">=</span><span class="n">skipinitialspace</span><span class="p">,</span>
-                    <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">,</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">convert_numeric</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">parse_number</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># In case we are re-reading, we must</span>
-                    <span class="c1"># ensure there is no value present now:</span>
-                    <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_reread</span><span class="p">:</span>
+            <span class="c1"># Return cached version</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;LOCALPATH&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="p">,</span>
+                <span class="s2">&quot;FILETYPE&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;FULLPATH&quot;</span><span class="p">:</span> <span class="n">fullpath</span><span class="p">,</span>
+                <span class="s2">&quot;BASENAME&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">localpath</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+                <span class="n">fullpath</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;DONOTSEPARATEANYTHING *%magic%*&quot;</span><span class="p">,</span>
+                <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">,</span>
+                <span class="n">skip_blank_lines</span><span class="o">=</span><span class="n">skip_blank_lines</span><span class="p">,</span>
+                <span class="n">skipinitialspace</span><span class="o">=</span><span class="n">skipinitialspace</span><span class="p">,</span>
+                <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">convert_numeric</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">parse_number</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-            <span class="k">return</span> <span class="n">value</span></div>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># In case we are re-reading, we must</span>
+                <span class="c1"># ensure there is no value present now:</span>
+                <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">value</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.load_txt"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.load_txt">[docs]</a>    <span class="k">def</span> <span class="nf">load_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Parse a txt file with</span>
@@ -531,34 +530,33 @@
         <span class="n">fullpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">,</span> <span class="n">localpath</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fullpath</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;File not found: &quot;</span> <span class="o">+</span> <span class="n">fullpath</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_reread</span><span class="p">:</span>
-                <span class="c1"># Return cached version</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">fullpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-                <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;LOCALPATH&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="p">,</span>
-                    <span class="s2">&quot;FILETYPE&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="s2">&quot;FULLPATH&quot;</span><span class="p">:</span> <span class="n">fullpath</span><span class="p">,</span>
-                    <span class="s2">&quot;BASENAME&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">localpath</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="p">}</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">keyvalues</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
-                    <span class="n">fullpath</span><span class="p">,</span>
-                    <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span>
-                    <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                    <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-                    <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-                    <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-            <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
-                <span class="n">keyvalues</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="n">convert_numeric</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keyvalues</span><span class="p">:</span>
-                    <span class="n">keyvalues</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_number</span><span class="p">(</span><span class="n">keyvalues</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">keyvalues</span>
-            <span class="k">return</span> <span class="n">keyvalues</span></div>
+        <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_reread</span><span class="p">:</span>
+            <span class="c1"># Return cached version</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;FULLPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;LOCALPATH&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="p">,</span>
+                <span class="s2">&quot;FILETYPE&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;FULLPATH&quot;</span><span class="p">:</span> <span class="n">fullpath</span><span class="p">,</span>
+                <span class="s2">&quot;BASENAME&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">localpath</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">keyvalues</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+                <span class="n">fullpath</span><span class="p">,</span>
+                <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span>
+                <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
+            <span class="n">keyvalues</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">convert_numeric</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keyvalues</span><span class="p">:</span>
+                <span class="n">keyvalues</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_number</span><span class="p">(</span><span class="n">keyvalues</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">keyvalues</span>
+        <span class="k">return</span> <span class="n">keyvalues</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.load_csv"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.load_csv">[docs]</a>    <span class="k">def</span> <span class="nf">load_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Parse a CSV file as a DataFrame</span>
@@ -584,42 +582,41 @@
         <span class="n">fullpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">,</span> <span class="n">localpath</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fullpath</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;File not found: &quot;</span> <span class="o">+</span> <span class="n">fullpath</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Look for cached version</span>
-            <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_reread</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
-            <span class="c1"># Check the file store, append if not there</span>
-            <span class="k">if</span> <span class="n">localpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;LOCALPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
-                <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;LOCALPATH&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="p">,</span>
-                    <span class="s2">&quot;FILETYPE&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                    <span class="s2">&quot;FULLPATH&quot;</span><span class="p">:</span> <span class="n">fullpath</span><span class="p">,</span>
-                    <span class="s2">&quot;BASENAME&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">localpath</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="p">}</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">convert_numeric</span><span class="p">:</span>
-                    <span class="c1"># Trust that Pandas will determine sensible datatypes</span>
-                    <span class="c1"># faster than the convert_numeric() function</span>
-                    <span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">dtype</span> <span class="o">=</span> <span class="nb">str</span>
-                <span class="n">dframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fullpath</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-                <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">in</span> <span class="n">dframe</span><span class="p">:</span>
-                    <span class="n">dframe</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;REAL&quot;</span><span class="p">:</span> <span class="s2">&quot;REAL_ORIG&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="p">(</span>
-                            <span class="s2">&quot;Loaded file </span><span class="si">%s</span><span class="s2"> already had the column REAL, &quot;</span>
-                            <span class="s2">&quot;this was renamed to REAL_ORIG&quot;</span>
-                        <span class="p">),</span>
-                        <span class="n">fullpath</span><span class="p">,</span>
-                    <span class="p">)</span>
-            <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
-                <span class="n">dframe</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># or empty dataframe?</span>
+        <span class="c1"># Look for cached version</span>
+        <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_reread</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+        <span class="c1"># Check the file store, append if not there</span>
+        <span class="k">if</span> <span class="n">localpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s2">&quot;LOCALPATH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="n">filerow</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;LOCALPATH&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="p">,</span>
+                <span class="s2">&quot;FILETYPE&quot;</span><span class="p">:</span> <span class="n">localpath</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;FULLPATH&quot;</span><span class="p">:</span> <span class="n">fullpath</span><span class="p">,</span>
+                <span class="s2">&quot;BASENAME&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">localpath</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filerow</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">convert_numeric</span><span class="p">:</span>
+                <span class="c1"># Trust that Pandas will determine sensible datatypes</span>
+                <span class="c1"># faster than the convert_numeric() function</span>
+                <span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dtype</span> <span class="o">=</span> <span class="nb">str</span>
+            <span class="n">dframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fullpath</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">in</span> <span class="n">dframe</span><span class="p">:</span>
+                <span class="n">dframe</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;REAL&quot;</span><span class="p">:</span> <span class="s2">&quot;REAL_ORIG&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="s2">&quot;Loaded file </span><span class="si">%s</span><span class="s2"> already had the column REAL, &quot;</span>
+                        <span class="s2">&quot;this was renamed to REAL_ORIG&quot;</span>
+                    <span class="p">),</span>
+                    <span class="n">fullpath</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">EmptyDataError</span><span class="p">:</span>
+            <span class="n">dframe</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># or empty dataframe?</span>
 
-            <span class="c1"># Store parsed data:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span>
-            <span class="k">return</span> <span class="n">dframe</span></div>
+        <span class="c1"># Store parsed data:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span> <span class="o">=</span> <span class="n">dframe</span>
+        <span class="k">return</span> <span class="n">dframe</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.load_status"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.load_status">[docs]</a>    <span class="k">def</span> <span class="nf">load_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Collects the contents of the STATUS files and return</span>
@@ -1076,8 +1073,7 @@
                 <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># No filename matches</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unsmry_filenamelist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;Multiple UNSMRY files found, &quot;</span>
-                    <span class="o">+</span> <span class="s2">&quot;consider turning off auto-discovery&quot;</span>
+                    <span class="s2">&quot;Multiple UNSMRY files found, consider turning off auto-discovery&quot;</span>
                 <span class="p">)</span>
             <span class="n">unsmry_filename</span> <span class="o">=</span> <span class="n">unsmry_filenamelist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="n">unsmry_filename</span><span class="p">)</span>
@@ -1261,8 +1257,7 @@
                 <span class="c1"># Ensure EclSum object can be garbage collected</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_eclsum</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">return</span> <span class="n">dataframe</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_glob_smry_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Utility function for globbing column names</span>
@@ -1325,8 +1320,6 @@
 
 <span class="sd">        This method is to be used by both ScratchRealization</span>
 <span class="sd">        and VirtualRealization, and is documented there.&quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">calendar</span>
-        <span class="kn">from</span> <span class="nn">dateutil.relativedelta</span> <span class="kn">import</span> <span class="n">relativedelta</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">time_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;days&quot;</span><span class="p">,</span> <span class="s2">&quot;months&quot;</span><span class="p">,</span> <span class="s2">&quot;years&quot;</span><span class="p">]:</span>
@@ -1342,9 +1335,7 @@
             <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_keys</span> <span class="k">if</span> <span class="n">ScratchRealization</span><span class="o">.</span><span class="n">_cum_smrycol2rate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">column_keys</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;No valid cumulative columns given &quot;</span> <span class="o">+</span> <span class="s2">&quot;to volumetric computation&quot;</span>
-            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No valid cumulative columns given to volumetric computation&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
 
         <span class="n">cum_df</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">)</span>
@@ -1362,7 +1353,7 @@
             <span class="c1"># of number of years and number of months, but it will</span>
             <span class="c1"># only give us integer months, and then leftover days.</span>
             <span class="n">rel_deltas</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">relativedelta</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
             <span class="p">]</span>
             <span class="n">whole_days</span> <span class="o">=</span> <span class="p">[</span>
@@ -1500,6 +1491,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetimes. None if no summary data is available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-outside-toplevel</span>
         <span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
 
         <span class="n">eclsum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span><span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">)</span>
@@ -1568,8 +1560,8 @@
                 <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]:</span>
                     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]])</span> <span class="o">==</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
                 <span class="k">return</span> <span class="kc">False</span>
-            <span class="k">else</span><span class="p">:</span>  <span class="c1"># non-string, then don&#39;t convert the internalized data</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span> <span class="o">==</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+            <span class="c1"># non-string, then don&#39;t convert the internalized data</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">][</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]]</span> <span class="o">==</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong arguments to contains()&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.drop"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1828,19 +1820,22 @@
 <span class="sd">    Return:</span>
 <span class="sd">        Tuple of normalized (start_date, end_date)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">dateutil.relativedelta</span> <span class="kn">import</span> <span class="n">relativedelta</span>
 
     <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;monthly&quot;</span><span class="p">:</span>
         <span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Avoid rolling forward if we are already at day 1 in a month</span>
         <span class="k">if</span> <span class="n">end_date</span> <span class="o">!=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span>
+                <span class="n">months</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
     <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;yearly&quot;</span><span class="p">:</span>
         <span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="c1"># Avoid rolling forward if we are already at day 1 in a year</span>
         <span class="k">if</span> <span class="n">end_date</span> <span class="o">!=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span> <span class="o">+</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span>
         <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
         <span class="k">pass</span>
@@ -1881,7 +1876,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">value</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
         <span class="c1"># int(afloat) fails on some, e.g. NaN</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>

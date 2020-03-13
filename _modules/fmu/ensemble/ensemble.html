@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.2 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.3 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.2
+                v1.2.1.3
               </div>
             
           
@@ -158,8 +158,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for fmu.ensemble.ensemble</h1><div class="highlight"><pre>
-<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;Module containing the ScratchEnsemble class</span>
+<span></span><span class="sd">&quot;&quot;&quot;Module containing the ScratchEnsemble class</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
@@ -170,9 +169,9 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">dateutil</span>
 
-<span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
@@ -276,9 +275,7 @@
             <span class="c1"># Glob incoming paths to determine</span>
             <span class="c1"># paths for each realization (flatten and uniqify)</span>
             <span class="n">globbedpaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
-            <span class="n">globbedpaths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                <span class="nb">set</span><span class="p">([</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">globbedpaths</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">])</span>
-            <span class="p">)</span>
+            <span class="n">globbedpaths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">({</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">globbedpaths</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">})</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">globbedpaths</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">runpathfile</span><span class="p">:</span>
@@ -397,9 +394,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">globbedpaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
             <span class="c1"># Flatten list and uniquify:</span>
-            <span class="n">globbedpaths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                <span class="nb">set</span><span class="p">([</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">globbedpaths</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">])</span>
-            <span class="p">)</span>
+            <span class="n">globbedpaths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">({</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">globbedpaths</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">})</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">globbedpaths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
 
@@ -413,7 +408,7 @@
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">realization</span><span class="o">.</span><span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
-                    <span class="s2">&quot;Could not determine realization index &quot;</span> <span class="o">+</span> <span class="s2">&quot;for path &quot;</span> <span class="o">+</span> <span class="n">realdir</span>
+                    <span class="s2">&quot;Could not determine realization index for path </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">realdir</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">realidxregexp</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Maybe you need to supply a regexp.&quot;</span><span class="p">)</span>
@@ -698,7 +693,7 @@
                 <span class="c1"># some realizations</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not read </span><span class="si">%s</span><span class="s2"> for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No ensemble data found for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No ensemble data found for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">localpath</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.find_files"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.find_files">[docs]</a>    <span class="k">def</span> <span class="nf">find_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metayaml</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -821,8 +816,7 @@
             <span class="n">dframe</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;level_0&quot;</span><span class="p">:</span> <span class="s2">&quot;REAL&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">del</span> <span class="n">dframe</span><span class="p">[</span><span class="s2">&quot;level_1&quot;</span><span class="p">]</span>  <span class="c1"># This is the indices from each real</span>
             <span class="k">return</span> <span class="n">dframe</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data found for &quot;</span> <span class="o">+</span> <span class="n">localpath</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data found for &quot;</span> <span class="o">+</span> <span class="n">localpath</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.load_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.load_smry">[docs]</a>    <span class="k">def</span> <span class="nf">load_smry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -999,11 +993,10 @@
             <span class="k">if</span> <span class="n">deletethese</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">remove_realizations</span><span class="p">(</span><span class="n">deletethese</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">filtered</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; filtered&quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">keepthese</span><span class="p">:</span>
-                <span class="n">filtered</span><span class="o">.</span><span class="n">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">[</span><span class="n">realidx</span><span class="p">])</span>
-            <span class="k">return</span> <span class="n">filtered</span></div>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; filtered&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">keepthese</span><span class="p">:</span>
+            <span class="n">filtered</span><span class="o">.</span><span class="n">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">[</span><span class="n">realidx</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">filtered</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.drop"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Delete elements from internalized data.</span>
@@ -1148,6 +1141,7 @@
 <span class="sd">        in will have length 1, if not, it can be larger.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-outside-toplevel</span>
         <span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">normalize_dates</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">eclsumsdates</span><span class="p">:</span>
@@ -1169,7 +1163,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;end_date had unknown type&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;report&quot;</span> <span class="ow">or</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;report&quot;</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">):</span>
             <span class="n">datetimes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">eclsumdatelist</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">:</span>
                 <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">eclsumdatelist</span><span class="p">)</span>
@@ -1185,48 +1179,47 @@
                 <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">end_date</span><span class="p">]</span>
                 <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span> <span class="o">+</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">datetimes</span>
-        <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
             <span class="n">end_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
+        <span class="c1"># These are datetime.datetime, not datetime.date</span>
+        <span class="n">start_smry</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
+        <span class="n">end_smry</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
+
+        <span class="n">pd_freq_mnenomics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;monthly&quot;</span><span class="p">:</span> <span class="s2">&quot;MS&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">:</span> <span class="s2">&quot;YS&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span><span class="p">}</span>
+
+        <span class="p">(</span><span class="n">start_n</span><span class="p">,</span> <span class="n">end_n</span><span class="p">)</span> <span class="o">=</span> <span class="n">normalize_dates</span><span class="p">(</span><span class="n">start_smry</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">end_smry</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">freq</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_smry</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_n</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># These are datetime.datetime, not datetime.date</span>
-            <span class="n">start_smry</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
-            <span class="n">end_smry</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
+            <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_date</span>
 
-            <span class="n">pd_freq_mnenomics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;monthly&quot;</span><span class="p">:</span> <span class="s2">&quot;MS&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">:</span> <span class="s2">&quot;YS&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_smry</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="n">normalize</span><span class="p">:</span>
+            <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_n</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_date</span>
 
-            <span class="p">(</span><span class="n">start_n</span><span class="p">,</span> <span class="n">end_n</span><span class="p">)</span> <span class="o">=</span> <span class="n">normalize_dates</span><span class="p">(</span><span class="n">start_smry</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">end_smry</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">freq</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pd_freq_mnenomics</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Requested frequency </span><span class="si">%s</span><span class="s2"> not supported&quot;</span> <span class="o">%</span> <span class="n">freq</span><span class="p">)</span>
+        <span class="n">datetimes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
+            <span class="n">start_date_range</span><span class="p">,</span> <span class="n">end_date_range</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">pd_freq_mnenomics</span><span class="p">[</span><span class="n">freq</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Convert from Pandas&#39; datetime64 to datetime.date:</span>
+        <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">normalize</span><span class="p">:</span>
-                <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_smry</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="ow">not</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="n">normalize</span><span class="p">:</span>
-                <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_n</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_date</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">normalize</span><span class="p">:</span>
-                <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_smry</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="ow">not</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="n">normalize</span><span class="p">:</span>
-                <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_n</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_date</span>
-
-            <span class="k">if</span> <span class="n">freq</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pd_freq_mnenomics</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Requested frequency </span><span class="si">%s</span><span class="s2"> not supported&quot;</span> <span class="o">%</span> <span class="n">freq</span><span class="p">)</span>
-            <span class="n">datetimes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
-                <span class="n">start_date_range</span><span class="p">,</span> <span class="n">end_date_range</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">pd_freq_mnenomics</span><span class="p">[</span><span class="n">freq</span><span class="p">]</span>
-            <span class="p">)</span>
-            <span class="c1"># Convert from Pandas&#39; datetime64 to datetime.date:</span>
-            <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span>
-
-            <span class="c1"># pd.date_range will not include random dates that do not</span>
-            <span class="c1"># fit on frequency boundary. Force include these if</span>
-            <span class="c1"># supplied as user arguments.</span>
-            <span class="k">if</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="n">start_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">:</span>
-                <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">+</span> <span class="n">datetimes</span>
-            <span class="k">if</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="n">end_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">:</span>
-                <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span> <span class="o">+</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">datetimes</span>
+        <span class="c1"># pd.date_range will not include random dates that do not</span>
+        <span class="c1"># fit on frequency boundary. Force include these if</span>
+        <span class="c1"># supplied as user arguments.</span>
+        <span class="k">if</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="n">start_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">:</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">+</span> <span class="n">datetimes</span>
+        <span class="k">if</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="n">end_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">:</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span> <span class="o">+</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">datetimes</span>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_smry_stats"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_smry_stats">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_stats</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1746,18 +1739,16 @@
 <span class="sd">            realizations where the cell is active.</span>
 <span class="sd">        :param report: Report step for unrst keywords</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">report</span><span class="p">:</span>
-            <span class="n">mean</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">real</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
                 <span class="n">mean</span> <span class="o">+=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_unrst_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
             <span class="n">mean</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">mean</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">mean</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
-                <span class="n">mean</span> <span class="o">+=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_init_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
-            <span class="n">mean</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">mean</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+            <span class="n">mean</span> <span class="o">+=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_init_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+        <span class="n">mean</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mean</span>
 
     <span class="k">def</span> <span class="nf">_keyword_std_dev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">global_active</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1768,21 +1759,18 @@
 <span class="sd">            realizations where the cell is active.</span>
 <span class="sd">        :param mean: Mean of keywords.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">std_dev</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">report</span><span class="p">:</span>
-            <span class="n">std_dev</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
                 <span class="n">real_prop</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_unrst_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
                 <span class="n">std_dev</span><span class="o">.</span><span class="n">add_squared</span><span class="p">(</span><span class="n">real_prop</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
             <span class="n">std_dev</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">std_dev</span><span class="o">.</span><span class="n">isqrt</span><span class="p">()</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">std_dev</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">real</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
-                <span class="n">real_prop</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_init_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
-                <span class="n">std_dev</span><span class="o">.</span><span class="n">add_squared</span><span class="p">(</span><span class="n">real_prop</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
-            <span class="n">std_dev</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">std_dev</span><span class="o">.</span><span class="n">isqrt</span><span class="p">()</span></div>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+            <span class="n">real_prop</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_init_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+            <span class="n">std_dev</span><span class="o">.</span><span class="n">add_squared</span><span class="p">(</span><span class="n">real_prop</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
+        <span class="n">std_dev</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">std_dev</span><span class="o">.</span><span class="n">isqrt</span><span class="p">()</span></div>
 
 
 <span class="k">def</span> <span class="nf">_convert_numeric_columns</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>
