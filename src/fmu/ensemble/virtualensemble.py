@@ -146,9 +146,9 @@ class VirtualEnsemble(object):
 
         """
         # pylint: disable=import-outside-toplevel
-        from fmu.ensemble import ScratchEnsemble
+        from .ensemble import shortcut2path
 
-        return ScratchEnsemble._shortcut2path(self.keys(), shortpath)
+        return shortcut2path(self.keys(), shortpath)
 
     def __getitem__(self, localpath):
         """Shorthand for .get_df()

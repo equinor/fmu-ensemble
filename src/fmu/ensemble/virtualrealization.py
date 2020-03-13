@@ -412,7 +412,7 @@ class VirtualRealization(object):
         smry.sort_index(inplace=True)
         smry = smry.apply(pd.to_numeric)
 
-        cummask = self._smry_cumulative(column_keys)
+        cummask = smry_cumulative(column_keys)
         cum_columns = [column_keys[i] for i in range(len(column_keys)) if cummask[i]]
         noncum_columns = [
             column_keys[i] for i in range(len(column_keys)) if not cummask[i]
@@ -520,42 +520,6 @@ class VirtualRealization(object):
             matches.remove("DATE")
         return list(matches)
 
-    def _smry_cumulative(self, column_keys):
-        """Determine whether smry vectors are cumulative
-
-        Returns list of booleans, indicating whether a certain
-        column_key in summary dataframes corresponds to a cumulative
-        column.
-
-        The current implementation checks for the letter 'T' in the
-        column key, but this behaviour is not guaranteed in the
-        future, in case the cumulative information gets internalized
-
-        Since the current implementation might not be reliable (but
-        sufficient for use in the interpolation code), it is not
-        exposed as a public API.
-
-        Warning: This code is duplicated in realization.py, even though
-        a ScratchRealization has access to the EclSum object which can
-        give the true answer
-
-        Args:
-            column_keys: str or list of strings with summary vector
-                names
-        Returns:
-            list of booleans, corresponding to each inputted
-                summary vector name.
-        """
-        if isinstance(column_keys, str):
-            column_keys = [column_keys]
-        if not isinstance(column_keys, list):
-            raise TypeError("column_keys must be str or list of str")
-        return [
-            (x.endswith("T") and ":" not in x and "CT" not in x)
-            or ("T:" in x and "CT:" not in x)
-            for x in column_keys
-        ]
-
     def __sub__(self, other):
         """Substract another realization from this"""
         result = RealizationCombination(ref=self, sub=other)
@@ -595,3 +559,36 @@ class VirtualRealization(object):
     def name(self):
         """Return name of ensemble"""
         return self._description
+
+
+def smry_cumulative(column_keys):
+    """Determine whether smry vectors are cumulative
+
+    Returns list of booleans, indicating whether a certain
+    column_key in summary dataframes corresponds to a cumulative
+    column.
+
+    The current implementation checks for the letter 'T' in the
+    column key, but this behaviour is not guaranteed in the
+    future, in case the cumulative information gets internalized
+
+    Warning: This code is duplicated in realization.py, even though
+    a ScratchRealization has access to the EclSum object which can
+    give the true answer
+
+    Args:
+        column_keys: str or list of strings with summary vector
+            names
+    Returns:
+        list of booleans, corresponding to each inputted
+            summary vector name.
+    """
+    if isinstance(column_keys, str):
+        column_keys = [column_keys]
+    if not isinstance(column_keys, list):
+        raise TypeError("column_keys must be str or list of str")
+    return [
+        (x.endswith("T") and ":" not in x and "CT" not in x)
+        or ("T:" in x and "CT:" not in x)
+        for x in column_keys
+    ]

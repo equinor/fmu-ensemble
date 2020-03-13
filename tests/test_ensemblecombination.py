@@ -1,4 +1,4 @@
-"""Testing fmu-ensemble."""
+"""Testing linear combinations of ensemble."""
 
 from __future__ import absolute_import
 from __future__ import division

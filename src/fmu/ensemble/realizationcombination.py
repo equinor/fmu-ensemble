@@ -1,5 +1,4 @@
-"""Module for handling linear combinations of realizations.
-"""
+"""Module for handling linear combinations of realizations. """
 
 from __future__ import absolute_import
 from __future__ import division

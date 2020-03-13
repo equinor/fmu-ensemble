@@ -1,4 +1,4 @@
-"""Testing fmu-ensemble."""
+"""Testing fmu-ensemble, virtual realizations"""
 # pylint: disable=protected-access,duplicate-code
 
 from __future__ import absolute_import
@@ -245,20 +245,20 @@ def test_get_smry2():
 def test_get_smry_cumulative():
     """Test the cumulative boolean function"""
 
-    vreal = ensemble.VirtualRealization()
+    from fmu.ensemble.virtualrealization import smry_cumulative
 
-    assert isinstance(vreal._smry_cumulative([]), list)
+    assert isinstance(smry_cumulative([]), list)
     with pytest.raises(TypeError):
-        vreal._smry_cumulative({})
+        smry_cumulative({})
     with pytest.raises(TypeError):
         # pylint: disable=no-value-for-parameter
-        vreal._smry_cumulative()
-    assert vreal._smry_cumulative(["FOPT"])[0]
-    assert not vreal._smry_cumulative(["FOPR"])[0]
+        smry_cumulative()
+    assert smry_cumulative(["FOPT"])[0]
+    assert not smry_cumulative(["FOPR"])[0]
 
-    assert not vreal._smry_cumulative(["FWCT"])[0]
-    assert vreal._smry_cumulative(["WOPT:A-1"])[0]
-    assert not vreal._smry_cumulative(["WOPR:A-1T"])[0]
+    assert not smry_cumulative(["FWCT"])[0]
+    assert smry_cumulative(["WOPT:A-1"])[0]
+    assert not smry_cumulative(["WOPR:A-1T"])[0]
 
 
 def test_get_smry_dates():

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Testing fmu-ensemble."""
+"""Testing observations in fmu-ensemble."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -9,9 +9,9 @@ import os
 import glob
 import datetime
 import yaml
+import six
 import pandas as pd
 import numpy as np
-import six
 import dateutil
 import pytest
 
