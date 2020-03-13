@@ -519,18 +519,18 @@ class ScratchEnsemble(object):
             distuinguishes each realizations data.
         """
         self.process_batch(
-                batch=[
-                    {
-                        "load_file": {
-                            "localpath": localpath,
-                            "fformat": fformat,
-                            "convert_numeric": convert_numeric,
-                            "force_reread": force_reread,
-                            }
-                        }
-                    ]
-                )
-        #for index, realization in self.realizations.items():
+            batch=[
+                {
+                    "load_file": {
+                        "localpath": localpath,
+                        "fformat": fformat,
+                        "convert_numeric": convert_numeric,
+                        "force_reread": force_reread,
+                    }
+                }
+            ]
+        )
+        # for index, realization in self._realizations.items():
         #    try:
         #        realization.load_file(localpath, fformat, convert_numeric, force_reread)
         #    except ValueError:

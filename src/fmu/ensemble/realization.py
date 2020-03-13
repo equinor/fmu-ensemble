@@ -1392,7 +1392,8 @@ class ScratchRealization(object):
             }
         else:  # get_values() is deprecated in newer libecl
             data = {
-                prop: self.get_eclsum().get_values(prop, report_only=False) for prop in props
+                prop: self.get_eclsum().get_values(prop, report_only=False)
+                for prop in props
             }
         dates = self.get_eclsum().get_dates(report_only=False)
         return pd.DataFrame(data=data, index=dates)
