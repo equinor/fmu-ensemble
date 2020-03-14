@@ -27,6 +27,8 @@ install:
 script:
   - pytest -s
   - make docsrun
+  - pip install pyarrow
+  - pytest -s tests/test_virtualensemble.py
 
 deploy:
   - provider: pages

@@ -10,11 +10,12 @@ from os.path import splitext
 from setuptools import setup, find_packages
 import versioneer
 
-with open('README.rst') as readme_file:
+with open("README.rst") as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open("HISTORY.rst") as history_file:
     history = history_file.read()
+
 
 def relpath(*args):
     """Return path of args relative to this file"""
@@ -26,22 +27,24 @@ def relpath(*args):
 
 def requirements():
     reqs = []
-    with open(relpath('requirements.txt'), 'r') as f:
+    with open(relpath("requirements.txt"), "r") as f:
         reqs = [req.strip() for req in f]
     return reqs
+
 
 requirements = requirements()
 
 setup_requirements = [
-    'pytest-runner',
+    "pytest-runner",
 ]
 
 test_requirements = [
-    'pytest',
+    "pytest",
 ]
 
-fmuensemble_function = ('fmuensemble='
-                        'fmu.ensemble.unknowrunner:main')
+extras_require = {"Parquet": ["pyarrow"]}
+
+fmuensemble_function = "fmuensemble=" "fmu.ensemble.unknowrunner:main"
 
 # -----------------------------------------------------------------------------
 # Explaining versions:
@@ -70,56 +73,56 @@ def the_version():
     """
 
     version = versioneer.get_version()
-    sver = version.split('.')
-    print('\nFrom TAG description: {}'.format(sver))
+    sver = version.split(".")
+    print("\nFrom TAG description: {}".format(sver))
 
-    useversion = 'UNSET'
+    useversion = "UNSET"
     if len(sver) == 3:
         useversion = version
     else:
-        bugv = sver[2].replace('+', '.')
+        bugv = sver[2].replace("+", ".")
 
-        if 'dirty' in version:
-            ext = '.dev0'
+        if "dirty" in version:
+            ext = ".dev0"
         else:
-            ext = ''
-        useversion = '{}.{}.{}{}'.format(sver[0], sver[1], bugv, ext)
+            ext = ""
+        useversion = "{}.{}.{}{}".format(sver[0], sver[1], bugv, ext)
 
-    print('Using version {}\n'.format(useversion))
+    print("Using version {}\n".format(useversion))
     return useversion
 
+
 setup(
-    name='fmu-ensemble',
+    name="fmu-ensemble",
     version=the_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Python API to ensembles produced by ERT",
-    long_description=readme + '\n\n' + history,
+    long_description=readme + "\n\n" + history,
     author="Håvard Berland",
-    author_email='havb@equinor.com',
-    url='https://git.equinor.com/equinor/fmu-ensemble',
+    author_email="havb@equinor.com",
+    url="https://git.equinor.com/equinor/fmu-ensemble",
     license="GPLv3",
-    packages=find_packages('src'),
-#    namespace_packages=['fmu'],
-    package_dir={'': 'src'},
-    py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
-    entry_points={
-        'console_scripts': [fmuensemble_function]
-    },
+    packages=find_packages("src"),
+    #    namespace_packages=['fmu'],
+    package_dir={"": "src"},
+    py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
+    entry_points={"console_scripts": [fmuensemble_function]},
     include_package_data=True,
     install_requires=requirements,
     zip_safe=False,
-    keywords='fmu, ensemble',
+    keywords="fmu, ensemble",
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
         "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.6',
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.6",
     ],
-    test_suite='tests',
+    test_suite="tests",
     tests_require=test_requirements,
     setup_requires=setup_requirements,
+    extras_require=extras_require,
 )
