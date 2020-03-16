@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.4 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.4
+                v1.2.1.5
               </div>
             
           
@@ -306,9 +306,9 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
+        <span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">shortcut2path</span>
 
-        <span class="k">return</span> <span class="n">ScratchEnsemble</span><span class="o">.</span><span class="n">_shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">shortpath</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">shortpath</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Shorthand for .get_df()</span>

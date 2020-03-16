@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.4 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.4
+                v1.2.1.5
               </div>
             
           
@@ -158,8 +158,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for fmu.ensemble.ensemble</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Module containing the ScratchEnsemble class</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Module containing the ScratchEnsemble class&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
@@ -252,7 +251,7 @@
         <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">ensemble_name</span>  <span class="c1"># ensemble name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict of ScratchRealization objects,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict of ScratchRealization objects,</span>
         <span class="c1"># indexed by realization indices as integers.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ens_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span> <span class="o">=</span> <span class="p">{}</span>
@@ -314,7 +313,7 @@
         <span class="sd">&quot;&quot;&quot;Get one of the ScratchRealization objects.</span>
 
 <span class="sd">        Indexed by integers.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">[</span><span class="n">realizationindex</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">[</span><span class="n">realizationindex</span><span class="p">]</span>
 
 <div class="viewcode-block" id="ScratchEnsemble.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -326,48 +325,9 @@
 <span class="sd">        `STATUS`, `share/results/tables/unsmry--monthly.csv`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">allkeys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">allkeys</span> <span class="o">=</span> <span class="n">allkeys</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">realization</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">allkeys</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="ScratchEnsemble.shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.shortcut2path">[docs]</a>    <span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert short pathnames to fully qualified pathnames</span>
-<span class="sd">        within the datastore.</span>
-
-<span class="sd">        If the fully qualified localpath is</span>
-
-<span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
-
-<span class="sd">        then you can also access this with these alternatives:</span>
-
-<span class="sd">         * simulator_volume_fipnum</span>
-<span class="sd">         * simulator_volume_fipnum.csv</span>
-<span class="sd">         * share/results/volumes/simulator_volume_fipnum</span>
-
-<span class="sd">        but only as long as there is no ambiguity. In case</span>
-<span class="sd">        of ambiguity, the shortpath will be returned.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">shortpath</span><span class="p">)</span></div>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_shortcut2path</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
-        <span class="n">basenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="n">keys</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">basenames</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
-            <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">noexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
-            <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">basenamenoexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
-            <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="c1"># If we get here, we did not find anything that</span>
-        <span class="c1"># this shorthand could point to. Return as is, and let the</span>
-        <span class="c1"># calling function handle further errors.</span>
-        <span class="k">return</span> <span class="n">shortpath</span>
 
 <div class="viewcode-block" id="ScratchEnsemble.add_realizations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.add_realizations">[docs]</a>    <span class="k">def</span> <span class="nf">add_realizations</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">realidxregexp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span>
@@ -416,8 +376,8 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Your regular expression is maybe wrong.&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">[</span><span class="n">realization</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">realization</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;add_realizations() found </span><span class="si">%d</span><span class="s2"> realizations&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">[</span><span class="n">realization</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">realization</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;add_realizations() found </span><span class="si">%d</span><span class="s2"> realizations&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">count</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.add_from_runpathfile"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.add_from_runpathfile">[docs]</a>    <span class="k">def</span> <span class="nf">add_from_runpathfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runpath</span><span class="p">,</span> <span class="n">runpathfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -477,7 +437,7 @@
             <span class="c1"># ensure we recognize the correct UNSMRY file</span>
             <span class="n">realization</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;eclbase&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.DATA&quot;</span><span class="p">)</span>
             <span class="n">realization</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;eclbase&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.UNSMRY&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">realization</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">realization</span>
 
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="n">prelength</span></div>
 
@@ -497,7 +457,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">localpaths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">localpaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">localpaths</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="n">localpaths</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">del</span> <span class="n">real</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.remove_realizations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.remove_realizations">[docs]</a>    <span class="k">def</span> <span class="nf">remove_realizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realindices</span><span class="p">):</span>
@@ -511,7 +471,7 @@
             <span class="n">realindices</span> <span class="o">=</span> <span class="p">[</span><span class="n">realindices</span><span class="p">]</span>
         <span class="n">popped</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">realindices</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">popped</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;removed </span><span class="si">%d</span><span class="s2"> realization(s)&quot;</span><span class="p">,</span> <span class="n">popped</span><span class="p">)</span></div>
 
@@ -680,7 +640,7 @@
 <span class="sd">            pd.Dataframe: with loaded data aggregated. Column &#39;REAL&#39;</span>
 <span class="sd">            distuinguishes each realizations data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">realization</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">fformat</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -732,7 +692,7 @@
 <span class="sd">                Empty dataframe if no files found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df_list</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">df_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span>
                 <span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">metayaml</span><span class="o">=</span><span class="n">metayaml</span>
             <span class="p">)</span>
@@ -749,7 +709,7 @@
         <span class="k">return</span> <span class="s2">&quot;&lt;ScratchEnsemble </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> realizations&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_smrykeys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_smrykeys">[docs]</a>    <span class="k">def</span> <span class="nf">get_smrykeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector_match</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -766,7 +726,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vector_match</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">vector_match</span> <span class="o">=</span> <span class="p">[</span><span class="n">vector_match</span><span class="p">]</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">eclsum</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">eclsum</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">vector_match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -794,7 +754,7 @@
 <span class="sd">           Empty dataframe if no data is found</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dflist</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -888,7 +848,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stacked</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="c1"># Future: Multithread this!</span>
-        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="c1"># We do not store the returned DataFrames here,</span>
             <span class="c1"># instead we look them up afterwards using get_df()</span>
             <span class="c1"># Downside is that we have to compute the name of the</span>
@@ -930,7 +890,7 @@
 <span class="sd">            Empty dataframe if no data found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">vol_dfs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">vol_real</span> <span class="o">=</span> <span class="n">real</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span>
                 <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span>
             <span class="p">)</span>
@@ -980,7 +940,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">deletethese</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">keepthese</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">inplace</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">realization</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
                     <span class="n">deletethese</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">realidx</span><span class="p">)</span>
@@ -995,7 +955,7 @@
             <span class="k">return</span> <span class="bp">self</span>
         <span class="n">filtered</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; filtered&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">keepthese</span><span class="p">:</span>
-            <span class="n">filtered</span><span class="o">.</span><span class="n">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">[</span><span class="n">realidx</span><span class="p">])</span>
+            <span class="n">filtered</span><span class="o">.</span><span class="n">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">[</span><span class="n">realidx</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">filtered</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.drop"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1020,9 +980,9 @@
 <span class="sd">                dataframes</span>
 <span class="sd">            keys: list of strings of keys to delete from a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">localpath</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found&quot;</span> <span class="o">%</span> <span class="n">localpath</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">realization</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -1044,7 +1004,7 @@
 <span class="sd">            ScratchEnsemble: This ensemble object (self), for it</span>
 <span class="sd">                to be picked up by ProcessPoolExecutor and pickling.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">realization</span><span class="o">.</span><span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -1071,7 +1031,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Ensemble </span><span class="si">%s</span><span class="s2"> is running callback </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="c1"># (we took a copy since we are modifying it here:)</span>
             <span class="c1"># Todo: Avoid copy by concatenatint a dict of dataframes</span>
@@ -1119,7 +1079,7 @@
 
         <span class="c1"># Build list of list of eclsum dates</span>
         <span class="n">eclsumsdates</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span>
                 <span class="n">cache</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span>
             <span class="p">):</span>
@@ -1320,7 +1280,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">well_match</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">well_match</span> <span class="o">=</span> <span class="p">[</span><span class="n">well_match</span><span class="p">]</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">eclsum</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">eclsum</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">well_match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1351,7 +1311,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group_match</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">group_match</span> <span class="o">=</span> <span class="p">[</span><span class="n">group_match</span><span class="p">]</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">eclsum</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">eclsum</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">group_match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1406,7 +1366,7 @@
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
             <span class="c1"># Aggregate over this ensemble:</span>
             <span class="c1"># Ensure we operate on fully qualified localpath&#39;s</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
             <span class="c1"># This column should never appear in aggregated data</span>
@@ -1475,7 +1435,7 @@
     <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a concatenation of files in each realization&quot;&quot;&quot;</span>
         <span class="n">filedflist</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">realfiles</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">realfiles</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;REAL&quot;</span><span class="p">,</span> <span class="n">realidx</span><span class="p">)</span>
             <span class="n">filedflist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">realfiles</span><span class="p">)</span>
@@ -1578,7 +1538,7 @@
                     <span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="n">dflist</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dframe</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
                 <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span>
                 <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span>
@@ -1609,7 +1569,7 @@
 <span class="sd">            A dictionary. Index by grid attribute, and contains a list</span>
 <span class="sd">            corresponding to a set of values for each grid cells.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ref</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">grid_index</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">get_grid_index</span><span class="p">(</span><span class="n">active_only</span><span class="o">=</span><span class="n">active_only</span><span class="p">)</span>
         <span class="n">corners</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">get_grid_corners</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
         <span class="n">centre</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">get_grid_centre</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
@@ -1635,7 +1595,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_global_active</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span>
                 <span class="s2">&quot;eactive&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_size</span><span class="p">,</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_INT</span>
             <span class="p">)</span>
-            <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_global_active</span> <span class="o">+=</span> <span class="n">realization</span><span class="o">.</span><span class="n">actnum</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_active</span>
@@ -1646,10 +1606,10 @@
 <span class="sd">        :returns: global size of the realizations in the Ensemble.  see</span>
 <span class="sd">            :func:`fmu_postprocessing.modelling.Realization.global_size()`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_global_size</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">global_size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_global_size</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">global_size</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_size</span>
 
     <span class="k">def</span> <span class="nf">_get_grid_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1657,19 +1617,19 @@
 <span class="sd">        :returns: The grid of the ensemble, see</span>
 <span class="sd">            :func:`fmu.ensemble.Realization.get_grid()`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_grid_index</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="n">active</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_grid_index</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="n">active</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">init_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Keys availible in the eclipse init file &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">all_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
             <span class="o">*</span><span class="p">[</span>
                 <span class="nb">set</span><span class="p">(</span><span class="n">realization</span><span class="o">.</span><span class="n">get_init</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">all_keys</span>
@@ -1677,24 +1637,24 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">unrst_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Keys availaible in the eclipse unrst file &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">all_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
             <span class="o">*</span><span class="p">[</span>
                 <span class="nb">set</span><span class="p">(</span><span class="n">realization</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">all_keys</span>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_unrst_report_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_unrst_report_dates">[docs]</a>    <span class="k">def</span> <span class="nf">get_unrst_report_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; returns unrst report step and the corresponding date &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">all_report_dates</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
             <span class="o">*</span><span class="p">[</span>
                 <span class="nb">set</span><span class="p">(</span><span class="n">realization</span><span class="o">.</span><span class="n">report_dates</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="p">)</span>
         <span class="n">all_report_dates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_report_dates</span><span class="p">)</span>
@@ -1747,11 +1707,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mean</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">report</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
                 <span class="n">mean</span> <span class="o">+=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_unrst_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
             <span class="n">mean</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">mean</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
             <span class="n">mean</span> <span class="o">+=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_init_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
         <span class="n">mean</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mean</span>
@@ -1767,16 +1727,52 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">std_dev</span> <span class="o">=</span> <span class="n">EclKW</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">global_active</span><span class="p">),</span> <span class="n">EclDataType</span><span class="o">.</span><span class="n">ECL_FLOAT</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">report</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
                 <span class="n">real_prop</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_unrst_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
                 <span class="n">std_dev</span><span class="o">.</span><span class="n">add_squared</span><span class="p">(</span><span class="n">real_prop</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
             <span class="n">std_dev</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">std_dev</span><span class="o">.</span><span class="n">isqrt</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_realizations</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="n">six</span><span class="o">.</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">):</span>
             <span class="n">real_prop</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_global_init_keyword</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
             <span class="n">std_dev</span><span class="o">.</span><span class="n">add_squared</span><span class="p">(</span><span class="n">real_prop</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
         <span class="n">std_dev</span><span class="o">.</span><span class="n">safe_div</span><span class="p">(</span><span class="n">global_active</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">std_dev</span><span class="o">.</span><span class="n">isqrt</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.shortcut2path">[docs]</a><span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert short pathnames to fully qualified pathnames</span>
+<span class="sd">    within the datastore.</span>
+
+<span class="sd">    If the fully qualified localpath is</span>
+
+<span class="sd">        &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+
+<span class="sd">    then you can also access this with these alternatives:</span>
+
+<span class="sd">     * simulator_volume_fipnum</span>
+<span class="sd">     * simulator_volume_fipnum.csv</span>
+<span class="sd">     * share/results/volumes/simulator_volume_fipnum</span>
+
+<span class="sd">    but only as long as there is no ambiguity. In case</span>
+<span class="sd">    of ambiguity, the shortpath will be returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">basenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="n">keys</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">basenames</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
+    <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">noexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
+    <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">basenamenoexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
+    <span class="c1"># If we get here, we did not find anything that</span>
+    <span class="c1"># this shorthand could point to. Return as is, and let the</span>
+    <span class="c1"># calling function handle further errors.</span>
+    <span class="k">return</span> <span class="n">shortpath</span></div>
 
 
 <span class="k">def</span> <span class="nf">_convert_numeric_columns</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>

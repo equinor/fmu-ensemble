@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble v1.2.1.4 documentation</title>
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble v1.2.1.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.4
+                v1.2.1.5
               </div>
             
           
@@ -572,7 +572,7 @@
         <span class="n">smry</span><span class="o">.</span><span class="n">sort_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">smry</span> <span class="o">=</span> <span class="n">smry</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">)</span>
 
-        <span class="n">cummask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_smry_cumulative</span><span class="p">(</span><span class="n">column_keys</span><span class="p">)</span>
+        <span class="n">cummask</span> <span class="o">=</span> <span class="n">smry_cumulative</span><span class="p">(</span><span class="n">column_keys</span><span class="p">)</span>
         <span class="n">cum_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">column_keys</span><span class="p">))</span> <span class="k">if</span> <span class="n">cummask</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
         <span class="n">noncum_columns</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">column_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">column_keys</span><span class="p">))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cummask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -680,42 +680,6 @@
             <span class="n">matches</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;DATE&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_smry_cumulative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Determine whether smry vectors are cumulative</span>
-
-<span class="sd">        Returns list of booleans, indicating whether a certain</span>
-<span class="sd">        column_key in summary dataframes corresponds to a cumulative</span>
-<span class="sd">        column.</span>
-
-<span class="sd">        The current implementation checks for the letter &#39;T&#39; in the</span>
-<span class="sd">        column key, but this behaviour is not guaranteed in the</span>
-<span class="sd">        future, in case the cumulative information gets internalized</span>
-
-<span class="sd">        Since the current implementation might not be reliable (but</span>
-<span class="sd">        sufficient for use in the interpolation code), it is not</span>
-<span class="sd">        exposed as a public API.</span>
-
-<span class="sd">        Warning: This code is duplicated in realization.py, even though</span>
-<span class="sd">        a ScratchRealization has access to the EclSum object which can</span>
-<span class="sd">        give the true answer</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            column_keys: str or list of strings with summary vector</span>
-<span class="sd">                names</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            list of booleans, corresponding to each inputted</span>
-<span class="sd">                summary vector name.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_keys</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;column_keys must be str or list of str&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> <span class="s2">&quot;CT&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="p">(</span><span class="s2">&quot;T:&quot;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> <span class="s2">&quot;CT:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_keys</span>
-        <span class="p">]</span>
-
     <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Substract another realization from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
@@ -755,6 +719,39 @@
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return name of ensemble&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description</span></div>
+
+
+<div class="viewcode-block" id="smry_cumulative"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.smry_cumulative">[docs]</a><span class="k">def</span> <span class="nf">smry_cumulative</span><span class="p">(</span><span class="n">column_keys</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determine whether smry vectors are cumulative</span>
+
+<span class="sd">    Returns list of booleans, indicating whether a certain</span>
+<span class="sd">    column_key in summary dataframes corresponds to a cumulative</span>
+<span class="sd">    column.</span>
+
+<span class="sd">    The current implementation checks for the letter &#39;T&#39; in the</span>
+<span class="sd">    column key, but this behaviour is not guaranteed in the</span>
+<span class="sd">    future, in case the cumulative information gets internalized</span>
+
+<span class="sd">    Warning: This code is duplicated in realization.py, even though</span>
+<span class="sd">    a ScratchRealization has access to the EclSum object which can</span>
+<span class="sd">    give the true answer</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        column_keys: str or list of strings with summary vector</span>
+<span class="sd">            names</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        list of booleans, corresponding to each inputted</span>
+<span class="sd">            summary vector name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_keys</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;column_keys must be str or list of str&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> <span class="s2">&quot;CT&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="p">(</span><span class="s2">&quot;T:&quot;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> <span class="s2">&quot;CT:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_keys</span>
+    <span class="p">]</span></div>
 </pre></div>
 
            </div>
