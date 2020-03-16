@@ -12,6 +12,13 @@ import pytest
 from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
+try:
+    # pylint: disable=unused-import
+    import pyarrow
+    HAVE_PYARROW = True
+except ImportError:
+    HAVE_PYARROW = False
+
 fmux = etc.Interaction()
 logger = fmux.basiclogger(__name__, level="INFO")
 
@@ -184,7 +191,6 @@ def test_todisk():
         testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
         manifest={"foo": "bar.com"},
     )
-
     reekensemble.load_smry(time_index="monthly", column_keys="*")
     reekensemble.load_smry(time_index="daily", column_keys="*")
     reekensemble.load_smry(time_index="yearly", column_keys="F*")
@@ -228,7 +234,7 @@ def test_todisk():
                     virtframe[column].astype(str).equals(diskframe[column].astype(str))
                 )
             else:
-                assert virtframe[column].equals(diskframe[column])
+                pd.testing.assert_series_equal(virtframe[column], diskframe[column])
 
     fromdisk.to_disk("vens_double_dumped", delete=True)
     # Here we could check filesystem equivalence if we want.
@@ -248,22 +254,23 @@ def test_todisk():
         lazyfromdisk.get_df("unsmry--yearly")
     )
 
-    vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
-    fromparquetdisk = VirtualEnsemble()
-    fromparquetdisk.from_disk("vens_dumped_parquet")
-    assert set(vens.keys()) == set(fromparquetdisk.keys())
+    if HAVE_PYARROW:
+        vens.to_disk("vens_dumped_parquet", delete=True, dumpcsv=False)
+        fromparquetdisk = VirtualEnsemble()
+        fromparquetdisk.from_disk("vens_dumped_parquet")
+        assert set(vens.keys()) == set(fromparquetdisk.keys())
 
-    fromparquetdisk2 = VirtualEnsemble()
-    fromparquetdisk2.from_disk("vens_dumped_parquet", fmt="csv")
-    # Here we will miss a lot of CSV files, because we only wrote parquet:
-    assert len(vens.keys()) > len(fromparquetdisk2.keys())
+        fromparquetdisk2 = VirtualEnsemble()
+        fromparquetdisk2.from_disk("vens_dumped_parquet", fmt="csv")
+        # Here we will miss a lot of CSV files, because we only wrote parquet:
+        assert len(vens.keys()) > len(fromparquetdisk2.keys())
 
-    fromcsvdisk2 = VirtualEnsemble()
-    fromcsvdisk2.from_disk("vens_dumped_csv", fmt="parquet")
-    # But even if we only try to load parquet files, when CSV
-    # files are found without corresponding parquet, the CSV file
-    # will be read.
-    assert set(vens.keys()) == set(fromcsvdisk2.keys())
+        fromcsvdisk2 = VirtualEnsemble()
+        fromcsvdisk2.from_disk("vens_dumped_csv", fmt="parquet")
+        # But even if we only try to load parquet files, when CSV
+        # files are found without corresponding parquet, the CSV file
+        # will be read.
+        assert set(vens.keys()) == set(fromcsvdisk2.keys())
 
     # Test manual intervention:
     fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["FOO", "BAR", "COM"])
