@@ -18,6 +18,13 @@ from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .ensemblecombination import EnsembleCombination
 
+try:
+    import pyarrow
+
+    HAVE_PYARROW = True
+except ImportError:
+    HAVE_PYARROW = False
+
 fmux = Interaction()
 logger = fmux.basiclogger(__name__, level="INFO")
 
@@ -443,8 +450,13 @@ class VirtualEnsemble(object):
             symlinks (boolean): If includefiles is True, setting this to True
                 means that only symlinking will take place, not full copy.
         """
-        # pylint: disable=import-outside-toplevel
-        import pyarrow  # Solve in Issue #102.
+        if not HAVE_PYARROW:
+            logger.warning(
+                (
+                    "Only exporting to CSV files. "
+                    "Install pyarrow to have parquet output"
+                )
+            )
 
         # Trigger load of all lazy frames:
         for key in list(self.lazy_frames.keys()):
@@ -573,15 +585,17 @@ file is picked up"""
             if not isinstance(data, pd.DataFrame):
                 raise ValueError("VirtualEnsembles should " + "only store DataFrames")
             parquetfailed = False
-            if dumpparquet:
+            if dumpparquet and HAVE_PYARROW:
                 try:
                     data.to_parquet(filebase + ".parquet", index=False, engine="auto")
                     logger.info("Wrote %s", filebase + ".parquet")
                 except (ValueError, pyarrow.ArrowTypeError, TypeError):
-                    # Accept that some dataframes cannot be written by parquet,
-                    # The CSV file will be there as backup.
+                    # Accept that some dataframes cannot be written to parquet,
+                    # the CSV file will there as backup always
                     logger.warning("Could not write %s as parquet file", key)
                     parquetfailed = True
+            else:
+                parquetfailed = True
 
             if dumpcsv or parquetfailed:
                 data.to_csv(filebase + ".csv", index=False)
