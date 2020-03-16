@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.5 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.6 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.5
+                v1.2.1.6
               </div>
             
           
@@ -177,6 +177,13 @@
 <span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
 <span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
 <span class="kn">from</span> <span class="nn">.ensemblecombination</span> <span class="kn">import</span> <span class="n">EnsembleCombination</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pyarrow</span>
+
+    <span class="n">HAVE_PYARROW</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAVE_PYARROW</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="n">fmux</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
@@ -603,8 +610,13 @@
 <span class="sd">            symlinks (boolean): If includefiles is True, setting this to True</span>
 <span class="sd">                means that only symlinking will take place, not full copy.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">import</span> <span class="nn">pyarrow</span>  <span class="c1"># Solve in Issue #102.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">HAVE_PYARROW</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Only exporting to CSV files. &quot;</span>
+                    <span class="s2">&quot;Install pyarrow to have parquet output&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="c1"># Trigger load of all lazy frames:</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
@@ -733,15 +745,17 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;VirtualEnsembles should &quot;</span> <span class="o">+</span> <span class="s2">&quot;only store DataFrames&quot;</span><span class="p">)</span>
             <span class="n">parquetfailed</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="n">dumpparquet</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dumpparquet</span> <span class="ow">and</span> <span class="n">HAVE_PYARROW</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">data</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.parquet&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Wrote </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.parquet&quot;</span><span class="p">)</span>
                 <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">pyarrow</span><span class="o">.</span><span class="n">ArrowTypeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                    <span class="c1"># Accept that some dataframes cannot be written by parquet,</span>
-                    <span class="c1"># The CSV file will be there as backup.</span>
+                    <span class="c1"># Accept that some dataframes cannot be written to parquet,</span>
+                    <span class="c1"># the CSV file will there as backup always</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not write </span><span class="si">%s</span><span class="s2"> as parquet file&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
                     <span class="n">parquetfailed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">parquetfailed</span> <span class="o">=</span> <span class="kc">True</span>
 
             <span class="k">if</span> <span class="n">dumpcsv</span> <span class="ow">or</span> <span class="n">parquetfailed</span><span class="p">:</span>
                 <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
