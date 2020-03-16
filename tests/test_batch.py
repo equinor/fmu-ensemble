@@ -1,4 +1,4 @@
-"""Testing fmu-ensemble."""
+"""Testing batch functions in fmu-ensemble."""
 
 from __future__ import absolute_import
 from __future__ import division

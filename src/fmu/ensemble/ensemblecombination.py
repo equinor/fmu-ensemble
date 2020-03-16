@@ -1,5 +1,4 @@
-"""Module for handling linear combinations of ensembles.
-"""
+"""Module for handling linear combinations of ensembles. """
 
 from __future__ import absolute_import
 from __future__ import division

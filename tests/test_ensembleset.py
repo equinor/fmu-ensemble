@@ -184,6 +184,7 @@ def test_ensembleset_reek001(tmp="TMP"):
     # volumetrics in each realization. First we need a
     # wrapper which is able to work on ScratchRealizations.
     def rms_vol2df(kwargs):
+        """Callback function to be sent to ensemble objects"""
         fullpath = os.path.join(kwargs["realization"].runpath(), kwargs["filename"])
         # The supplied callback should not fail too easy.
         if os.path.exists(fullpath):

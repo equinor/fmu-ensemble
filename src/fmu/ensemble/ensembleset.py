@@ -1,5 +1,4 @@
-"""Module for book-keeping and aggregation of ensembles
-"""
+"""Module for book-keeping and aggregation of ensembles"""
 
 from __future__ import absolute_import
 from __future__ import division

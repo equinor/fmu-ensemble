@@ -1,5 +1,4 @@
-"""Module containing the ScratchEnsemble class
-"""
+"""Module containing the ScratchEnsemble class"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -92,7 +91,7 @@ class ScratchEnsemble(object):
         batch=None,
     ):
         self._name = ensemble_name  # ensemble name
-        self._realizations = {}  # dict of ScratchRealization objects,
+        self.realizations = {}  # dict of ScratchRealization objects,
         # indexed by realization indices as integers.
         self._ens_df = pd.DataFrame()
         self._manifest = {}
@@ -154,7 +153,7 @@ class ScratchEnsemble(object):
         """Get one of the ScratchRealization objects.
 
         Indexed by integers."""
-        return self._realizations[realizationindex]
+        return self.realizations[realizationindex]
 
     def keys(self):
         """
@@ -166,48 +165,9 @@ class ScratchEnsemble(object):
         `STATUS`, `share/results/tables/unsmry--monthly.csv`
         """
         allkeys = set()
-        for realization in self._realizations.values():
+        for realization in self.realizations.values():
             allkeys = allkeys.union(realization.keys())
         return list(allkeys)
-
-    def shortcut2path(self, shortpath):
-        """
-        Convert short pathnames to fully qualified pathnames
-        within the datastore.
-
-        If the fully qualified localpath is
-
-            'share/results/volumes/simulator_volume_fipnum.csv'
-
-        then you can also access this with these alternatives:
-
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
-
-        but only as long as there is no ambiguity. In case
-        of ambiguity, the shortpath will be returned.
-        """
-        return self._shortcut2path(self.keys(), shortpath)
-
-    @staticmethod
-    def _shortcut2path(keys, shortpath):
-        basenames = list(map(os.path.basename, keys))
-        if basenames.count(shortpath) == 1:
-            short2path = {os.path.basename(x): x for x in keys}
-            return short2path[shortpath]
-        noexts = ["".join(x.split(".")[:-1]) for x in keys]
-        if noexts.count(shortpath) == 1:
-            short2path = {"".join(x.split(".")[:-1]): x for x in keys}
-            return short2path[shortpath]
-        basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in keys]
-        if basenamenoexts.count(shortpath) == 1:
-            short2path = {"".join(os.path.basename(x).split(".")[:-1]): x for x in keys}
-            return short2path[shortpath]
-        # If we get here, we did not find anything that
-        # this shorthand could point to. Return as is, and let the
-        # calling function handle further errors.
-        return shortpath
 
     def add_realizations(
         self, paths, realidxregexp=None, autodiscovery=True, batch=None
@@ -256,8 +216,8 @@ class ScratchEnsemble(object):
                     logger.critical("Your regular expression is maybe wrong.")
             else:
                 count += 1
-                self._realizations[realization.index] = realization
-        logger.info("add_realizations() found %d realizations", len(self._realizations))
+                self.realizations[realization.index] = realization
+        logger.info("add_realizations() found %d realizations", len(self.realizations))
         return count
 
     def add_from_runpathfile(self, runpath, runpathfilter=None, batch=None):
@@ -317,7 +277,7 @@ class ScratchEnsemble(object):
             # ensure we recognize the correct UNSMRY file
             realization.find_files(row["eclbase"] + ".DATA")
             realization.find_files(row["eclbase"] + ".UNSMRY")
-            self._realizations[int(row["index"])] = realization
+            self.realizations[int(row["index"])] = realization
 
         return len(self) - prelength
 
@@ -337,7 +297,7 @@ class ScratchEnsemble(object):
         if isinstance(localpaths, str):
             localpaths = [localpaths]
         for localpath in localpaths:
-            for _, real in self._realizations.items():
+            for _, real in self.realizations.items():
                 del real[localpath]
 
     def remove_realizations(self, realindices):
@@ -351,7 +311,7 @@ class ScratchEnsemble(object):
             realindices = [realindices]
         popped = 0
         for index in realindices:
-            self._realizations.pop(index, None)
+            self.realizations.pop(index, None)
             popped += 1
         logger.info("removed %d realization(s)", popped)
 
@@ -520,7 +480,7 @@ class ScratchEnsemble(object):
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
             distuinguishes each realizations data.
         """
-        for index, realization in self._realizations.items():
+        for index, realization in self.realizations.items():
             try:
                 realization.load_file(localpath, fformat, convert_numeric, force_reread)
             except ValueError:
@@ -572,7 +532,7 @@ class ScratchEnsemble(object):
                 Empty dataframe if no files found.
         """
         df_list = {}
-        for index, realization in self._realizations.items():
+        for index, realization in self.realizations.items():
             df_list[index] = realization.find_files(
                 paths, metadata=metadata, metayaml=metayaml
             )
@@ -589,7 +549,7 @@ class ScratchEnsemble(object):
         return "<ScratchEnsemble {}, {} realizations>".format(self.name, len(self))
 
     def __len__(self):
-        return len(self._realizations)
+        return len(self.realizations)
 
     def get_smrykeys(self, vector_match=None):
         """
@@ -606,7 +566,7 @@ class ScratchEnsemble(object):
         if isinstance(vector_match, str):
             vector_match = [vector_match]
         result = set()
-        for index, realization in self._realizations.items():
+        for index, realization in self.realizations.items():
             eclsum = realization.get_eclsum()
             if eclsum:
                 if vector_match is None:
@@ -634,7 +594,7 @@ class ScratchEnsemble(object):
            Empty dataframe if no data is found
         """
         dflist = {}
-        for index, realization in self._realizations.items():
+        for index, realization in self.realizations.items():
             try:
                 data = realization.get_df(localpath)
                 if isinstance(data, dict):
@@ -728,7 +688,7 @@ class ScratchEnsemble(object):
         if not stacked:
             raise NotImplementedError
         # Future: Multithread this!
-        for realidx, realization in self._realizations.items():
+        for realidx, realization in self.realizations.items():
             # We do not store the returned DataFrames here,
             # instead we look them up afterwards using get_df()
             # Downside is that we have to compute the name of the
@@ -770,7 +730,7 @@ class ScratchEnsemble(object):
             Empty dataframe if no data found.
         """
         vol_dfs = []
-        for realidx, real in self._realizations.items():
+        for realidx, real in self.realizations.items():
             vol_real = real.get_volumetric_rates(
                 column_keys=column_keys, time_index=time_index
             )
@@ -820,7 +780,7 @@ class ScratchEnsemble(object):
         """
         deletethese = []
         keepthese = []
-        for realidx, realization in self._realizations.items():
+        for realidx, realization in self.realizations.items():
             if inplace:
                 if not realization.contains(localpath, **kwargs):
                     deletethese.append(realidx)
@@ -835,7 +795,7 @@ class ScratchEnsemble(object):
             return self
         filtered = VirtualEnsemble(self.name + " filtered")
         for realidx in keepthese:
-            filtered.add_realization(self._realizations[realidx])
+            filtered.add_realization(self.realizations[realidx])
         return filtered
 
     def drop(self, localpath, **kwargs):
@@ -860,9 +820,9 @@ class ScratchEnsemble(object):
                 dataframes
             keys: list of strings of keys to delete from a dictionary
         """
-        if self.shortcut2path(localpath) not in self.keys():
+        if shortcut2path(self.keys(), localpath) not in self.keys():
             raise ValueError("%s not found" % localpath)
-        for _, realization in self._realizations.items():
+        for _, realization in self.realizations.items():
             try:
                 realization.drop(localpath, **kwargs)
             except ValueError:
@@ -884,7 +844,7 @@ class ScratchEnsemble(object):
             ScratchEnsemble: This ensemble object (self), for it
                 to be picked up by ProcessPoolExecutor and pickling.
         """
-        for realization in self._realizations.values():
+        for realization in self.realizations.values():
             realization.process_batch(batch)
         return self
 
@@ -911,7 +871,7 @@ class ScratchEnsemble(object):
         """
         results = []
         logger.info("Ensemble %s is running callback %s", self.name, str(callback))
-        for realidx, realization in self._realizations.items():
+        for realidx, realization in self.realizations.items():
             result = realization.apply(callback, **kwargs).copy()
             # (we took a copy since we are modifying it here:)
             # Todo: Avoid copy by concatenatint a dict of dataframes
@@ -959,7 +919,7 @@ class ScratchEnsemble(object):
 
         # Build list of list of eclsum dates
         eclsumsdates = []
-        for _, realization in self._realizations.items():
+        for _, realization in self.realizations.items():
             if realization.get_eclsum(
                 cache=cache_eclsum, include_restart=include_restart
             ):
@@ -1160,7 +1120,7 @@ class ScratchEnsemble(object):
         if isinstance(well_match, str):
             well_match = [well_match]
         result = set()
-        for _, realization in self._realizations.items():
+        for _, realization in self.realizations.items():
             eclsum = realization.get_eclsum()
             if eclsum:
                 if well_match is None:
@@ -1191,7 +1151,7 @@ class ScratchEnsemble(object):
         if isinstance(group_match, str):
             group_match = [group_match]
         result = set()
-        for _, realization in self._realizations.items():
+        for _, realization in self.realizations.items():
             eclsum = realization.get_eclsum()
             if eclsum:
                 if group_match is None:
@@ -1246,7 +1206,7 @@ class ScratchEnsemble(object):
         for key in keys:
             # Aggregate over this ensemble:
             # Ensure we operate on fully qualified localpath's
-            key = self.shortcut2path(key)
+            key = shortcut2path(self.keys(), key)
             data = self.get_df(key)
 
             # This column should never appear in aggregated data
@@ -1315,7 +1275,7 @@ class ScratchEnsemble(object):
     def files(self):
         """Return a concatenation of files in each realization"""
         filedflist = []
-        for realidx, realization in self._realizations.items():
+        for realidx, realization in self.realizations.items():
             realfiles = realization.files.copy()
             realfiles.insert(0, "REAL", realidx)
             filedflist.append(realfiles)
@@ -1418,7 +1378,7 @@ class ScratchEnsemble(object):
                     include_restart=include_restart,
                 )
         dflist = []
-        for index, realization in self._realizations.items():
+        for index, realization in self.realizations.items():
             dframe = realization.get_smry(
                 time_index=time_index,
                 column_keys=column_keys,
@@ -1449,7 +1409,7 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
-        ref = list(self._realizations.values())[0]
+        ref = list(self.realizations.values())[0]
         grid_index = ref.get_grid_index(active_only=active_only)
         corners = ref.get_grid_corners(grid_index)
         centre = ref.get_grid_centre(grid_index)
@@ -1475,7 +1435,7 @@ class ScratchEnsemble(object):
             self._global_active = EclKW(
                 "eactive", self.global_size, EclDataType.ECL_INT
             )
-            for realization in self._realizations.values():
+            for realization in self.realizations.values():
                 self._global_active += realization.actnum
 
         return self._global_active
@@ -1486,10 +1446,10 @@ class ScratchEnsemble(object):
         :returns: global size of the realizations in the Ensemble.  see
             :func:`fmu_postprocessing.modelling.Realization.global_size()`.
         """
-        if not self._realizations:
+        if not self.realizations:
             return 0
         if self._global_size is None:
-            self._global_size = list(self._realizations.values())[0].global_size
+            self._global_size = list(self.realizations.values())[0].global_size
         return self._global_size
 
     def _get_grid_index(self, active=True):
@@ -1497,19 +1457,19 @@ class ScratchEnsemble(object):
         :returns: The grid of the ensemble, see
             :func:`fmu.ensemble.Realization.get_grid()`.
         """
-        if not self._realizations:
+        if not self.realizations:
             return None
-        return list(self._realizations.values())[0].get_grid_index(active=active)
+        return list(self.realizations.values())[0].get_grid_index(active=active)
 
     @property
     def init_keys(self):
         """ Keys availible in the eclipse init file """
-        if not self._realizations:
+        if not self.realizations:
             return None
         all_keys = set.union(
             *[
                 set(realization.get_init().keys())
-                for _, realization in six.iteritems(self._realizations)
+                for _, realization in six.iteritems(self.realizations)
             ]
         )
         return all_keys
@@ -1517,24 +1477,24 @@ class ScratchEnsemble(object):
     @property
     def unrst_keys(self):
         """ Keys availaible in the eclipse unrst file """
-        if not self._realizations:
+        if not self.realizations:
             return None
         all_keys = set.union(
             *[
                 set(realization.get_unrst().keys())
-                for _, realization in six.iteritems(self._realizations)
+                for _, realization in six.iteritems(self.realizations)
             ]
         )
         return all_keys
 
     def get_unrst_report_dates(self):
         """ returns unrst report step and the corresponding date """
-        if not self._realizations:
+        if not self.realizations:
             return None
         all_report_dates = set.union(
             *[
                 set(realization.report_dates)
-                for _, realization in six.iteritems(self._realizations)
+                for _, realization in six.iteritems(self.realizations)
             ]
         )
         all_report_dates = list(all_report_dates)
@@ -1587,11 +1547,11 @@ class ScratchEnsemble(object):
         """
         mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
-            for _, realization in six.iteritems(self._realizations):
+            for _, realization in six.iteritems(self.realizations):
                 mean += realization.get_global_unrst_keyword(prop, report)
             mean.safe_div(global_active)
             return mean
-        for _, realization in six.iteritems(self._realizations):
+        for _, realization in six.iteritems(self.realizations):
             mean += realization.get_global_init_keyword(prop)
         mean.safe_div(global_active)
         return mean
@@ -1607,16 +1567,52 @@ class ScratchEnsemble(object):
         """
         std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
-            for _, realization in six.iteritems(self._realizations):
+            for _, realization in six.iteritems(self.realizations):
                 real_prop = realization.get_global_unrst_keyword(prop, report)
                 std_dev.add_squared(real_prop - mean)
             std_dev.safe_div(global_active)
             return std_dev.isqrt()
-        for _, realization in six.iteritems(self._realizations):
+        for _, realization in six.iteritems(self.realizations):
             real_prop = realization.get_global_init_keyword(prop)
             std_dev.add_squared(real_prop - mean)
         std_dev.safe_div(global_active)
         return std_dev.isqrt()
+
+
+def shortcut2path(keys, shortpath):
+    """
+    Convert short pathnames to fully qualified pathnames
+    within the datastore.
+
+    If the fully qualified localpath is
+
+        'share/results/volumes/simulator_volume_fipnum.csv'
+
+    then you can also access this with these alternatives:
+
+     * simulator_volume_fipnum
+     * simulator_volume_fipnum.csv
+     * share/results/volumes/simulator_volume_fipnum
+
+    but only as long as there is no ambiguity. In case
+    of ambiguity, the shortpath will be returned.
+    """
+    basenames = list(map(os.path.basename, keys))
+    if basenames.count(shortpath) == 1:
+        short2path = {os.path.basename(x): x for x in keys}
+        return short2path[shortpath]
+    noexts = ["".join(x.split(".")[:-1]) for x in keys]
+    if noexts.count(shortpath) == 1:
+        short2path = {"".join(x.split(".")[:-1]): x for x in keys}
+        return short2path[shortpath]
+    basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in keys]
+    if basenamenoexts.count(shortpath) == 1:
+        short2path = {"".join(os.path.basename(x).split(".")[:-1]): x for x in keys}
+        return short2path[shortpath]
+    # If we get here, we did not find anything that
+    # this shorthand could point to. Return as is, and let the
+    # calling function handle further errors.
+    return shortpath
 
 
 def _convert_numeric_columns(dataframe):

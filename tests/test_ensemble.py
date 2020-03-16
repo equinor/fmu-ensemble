@@ -82,7 +82,7 @@ def test_reek001(tmp="TMP"):
     paramsdf.to_csv(os.path.join(tmp, "params.csv"), index=False)
 
     # Check that the ensemble object has not tainted the realization dataframe:
-    assert "REAL" not in reekensemble._realizations[0].get_df("parameters.txt")
+    assert "REAL" not in reekensemble.realizations[0].get_df("parameters.txt")
 
     # The column FOO in parameters is only present in some, and
     # is present with NaN in real0:
@@ -128,14 +128,14 @@ def test_reek001(tmp="TMP"):
     assert all([os.path.isabs(x) for x in reekensemble.files["FULLPATH"]])
 
     # The metadata in the rediscovered files should have been removed
-    assert len(reekensemble.files[reekensemble.files["GRID"] == "simgrid"]) == 0
+    assert reekensemble.files[reekensemble.files["GRID"] == "simgrid"].empty
 
     # CSV files
     csvpath = "share/results/volumes/simulator_volume_fipnum.csv"
     vol_df = reekensemble.load_csv(csvpath)
 
     # Check that we have not tainted the realization dataframes:
-    assert "REAL" not in reekensemble._realizations[0].get_df(csvpath)
+    assert "REAL" not in reekensemble.realizations[0].get_df(csvpath)
 
     assert "REAL" in vol_df
     assert len(vol_df["REAL"].unique()) == 3  # missing in 2 reals
@@ -182,7 +182,7 @@ def test_reek001(tmp="TMP"):
 def test_emptyens():
     """Check that we can initialize an empty ensemble"""
     ens = ScratchEnsemble("emptyens")
-    assert len(ens) == 0
+    assert not ens
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -772,34 +772,34 @@ def test_eclsumcaching():
 
     ens.load_smry()
     # Default is to do caching, so these will not be None:
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
 
     # If we redo this operation, the same objects should all
     # be None afterwards:
     ens.load_smry(cache_eclsum=None)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
     ens.get_smry()
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
 
     ens.get_smry(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
     ens.get_smry_stats()
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
 
     ens.get_smry_stats(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
     ens.get_smry_dates()
-    assert all([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
 
     # Clear the cached objects because the statement above has cached it..
-    for _, realization in ens._realizations.items():
+    for _, realization in ens.realizations.items():
         realization._eclsum = None
 
     ens.get_smry_dates(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens._realizations.items()])
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
 
 def test_filedescriptors():

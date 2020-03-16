@@ -126,7 +126,7 @@ class Observations(object):
             mismatches = {}
             for ensname, ens in ens_or_real._ensembles.items():
                 logger.info("Calculating mismatch for ensemble %s", ensname)
-                for realidx, real in ens._realizations.items():
+                for realidx, real in ens.realizations.items():
                     logger.info("Calculating mismatch for realization %s", str(realidx))
                     mismatches[(ensname, realidx)] = self._realization_mismatch(real)
                     mismatches[(ensname, realidx)]["REAL"] = realidx
@@ -134,7 +134,7 @@ class Observations(object):
             return pd.concat(mismatches, axis=0, ignore_index=True)
         if isinstance(ens_or_real, ScratchEnsemble):
             mismatches = {}
-            for realidx, real in ens_or_real._realizations.items():
+            for realidx, real in ens_or_real.realizations.items():
                 mismatches[realidx] = self._realization_mismatch(real)
                 mismatches[realidx]["REAL"] = realidx
             return pd.concat(mismatches, axis=0, ignore_index=True, sort=False)
