@@ -591,7 +591,9 @@ class ScratchEnsemble(object):
         Returns:
            pd.dataframe: Merged data from each realization.
            Realizations with missing data are ignored.
-           Empty dataframe if no data is found
+
+        Raises:
+            ValueError if no data is found
         """
         dflist = {}
         for index, realization in self.realizations.items():
@@ -1322,6 +1324,14 @@ class ScratchEnsemble(object):
         """Scale this ensemble with a scalar value"""
         result = EnsembleCombination(ref=self, scale=float(other))
         return result
+
+    def get_realindices(self):
+        """Return the integer indices for realizations in this ensemble
+
+        Returns:
+            list of integers
+        """
+        return self.realizations.keys()
 
     def get_smry(
         self,
