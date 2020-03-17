@@ -52,7 +52,7 @@ def test_reek():
         testdir = os.path.abspath(".")
 
     reekens = ScratchEnsemble(
-        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
     )
     if not HAVE_ECL2DF:
         pytest.skip()
@@ -93,7 +93,7 @@ def test_smry_via_ecl2df():
         testdir = os.path.abspath(".")
 
     reekens = ScratchEnsemble(
-        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0",
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
     )
     if not HAVE_ECL2DF:
         pytest.skip()

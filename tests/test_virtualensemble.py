@@ -15,6 +15,7 @@ from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 try:
     # pylint: disable=unused-import
     import pyarrow
+
     HAVE_PYARROW = True
 except ImportError:
     HAVE_PYARROW = False

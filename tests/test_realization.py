@@ -1083,6 +1083,12 @@ def test_get_smry_meta():
     assert not meta["FOPT"]["is_historical"]
     assert meta["FOPTH"]["is_historical"]
 
+    assert meta["WOPR:OP_1"]["wgname"] == "OP_1"
+    assert meta["WOPR:OP_1"]["keyword"] == "WOPR"
+    if "wgname" in meta["FOPT"]:
+        # Not enforced yet to have None fields actually included
+        assert meta["FOPT"]["wgname"] == None
+
     # Can create dataframes like this:
     meta_df = pd.DataFrame.from_dict(meta, orient="index")
     hist_keys = meta_df[meta_df["is_historical"]].index

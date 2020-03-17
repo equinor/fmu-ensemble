@@ -340,3 +340,25 @@ def test_glob_smry_keys():
     assert all([x.startswith("WOPT:") for x in vreal._glob_smry_keys("WOPT:*")])
 
     assert not vreal._glob_smry_keys("FOOBAR")
+
+
+def test_get_smry_meta():
+    """Test that summary meta information is preserved through
+    virtualization
+    """
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+    fopt = real.load_smry(column_keys="*", time_index="yearly")
+    vreal = real.to_virtual()
+
+    meta = vreal.get_smry_meta()
+    assert "FOPT" in meta
+    assert "WOPR:OP_1" in meta
+
+    assert meta["FOPT"]["wgname"] == None

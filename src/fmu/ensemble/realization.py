@@ -1136,6 +1136,8 @@ class ScratchRealization(object):
             meta[col]["is_total"] = eclsum.is_total(col)
             meta[col]["is_rate"] = eclsum.is_rate(col)
             meta[col]["is_historical"] = eclsum.smspec_node(col).is_historical()
+            meta[col]["keyword"] = eclsum.smspec_node(col).keyword
+            meta[col]["wgname"] = eclsum.smspec_node(col).wgname
             num = eclsum.smspec_node(col).get_num()
             if num is not None:
                 meta[col]["get_num"] = num
