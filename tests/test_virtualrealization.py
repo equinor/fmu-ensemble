@@ -354,11 +354,11 @@ def test_get_smry_meta():
 
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
     real = ensemble.ScratchRealization(realdir)
-    fopt = real.load_smry(column_keys="*", time_index="yearly")
+    real.load_smry(column_keys="*", time_index="yearly")
     vreal = real.to_virtual()
 
     meta = vreal.get_smry_meta()
     assert "FOPT" in meta
     assert "WOPR:OP_1" in meta
 
-    assert meta["FOPT"]["wgname"] == None
+    assert meta["FOPT"]["wgname"] is None

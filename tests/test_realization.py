@@ -1087,7 +1087,7 @@ def test_get_smry_meta():
     assert meta["WOPR:OP_1"]["keyword"] == "WOPR"
     if "wgname" in meta["FOPT"]:
         # Not enforced yet to have None fields actually included
-        assert meta["FOPT"]["wgname"] == None
+        assert meta["FOPT"]["wgname"] is None
 
     # Can create dataframes like this:
     meta_df = pd.DataFrame.from_dict(meta, orient="index")
