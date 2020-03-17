@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.7 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.8 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.7
+                v1.2.1.8
               </div>
             
           
@@ -751,7 +751,9 @@
 <span class="sd">        Returns:</span>
 <span class="sd">           pd.dataframe: Merged data from each realization.</span>
 <span class="sd">           Realizations with missing data are ignored.</span>
-<span class="sd">           Empty dataframe if no data is found</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError if no data is found</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dflist</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1482,6 +1484,14 @@
         <span class="sd">&quot;&quot;&quot;Scale this ensemble with a scalar value&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="ScratchEnsemble.get_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">get_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the integer indices for realizations in this ensemble</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of integers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>

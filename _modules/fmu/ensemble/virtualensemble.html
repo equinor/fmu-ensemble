@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.7 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.8 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.7
+                v1.2.1.8
               </div>
             
           
@@ -263,6 +263,14 @@
         <span class="sd">&quot;&quot;&quot;Return the number of realizations (integer) included in the</span>
 <span class="sd">        ensemble&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">get_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the integer indices for realizations in this ensemble</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of integers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span></div>
 
 <div class="viewcode-block" id="VirtualEnsemble.update_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.update_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">update_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Update the internal list of known realization indices</span>

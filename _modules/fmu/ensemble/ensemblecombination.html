@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble v1.2.1.7 documentation</title>
+  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble v1.2.1.8 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.7
+                v1.2.1.8
               </div>
             
           
@@ -158,12 +158,15 @@
            <div itemprop="articleBody">
             
   <h1>Source code for fmu.ensemble.ensemblecombination</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Module for handling linear combinations of ensembles. &quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Module for handling linear combinations of ensembles&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
+<span class="kn">import</span> <span class="nn">fnmatch</span>
+
+<span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
@@ -259,17 +262,37 @@
         <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="EnsembleCombination.to_virtual"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.to_virtual">[docs]</a>    <span class="k">def</span> <span class="nf">to_virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="EnsembleCombination.to_virtual"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.to_virtual">[docs]</a>    <span class="k">def</span> <span class="nf">to_virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluate the current linear combination and return as</span>
 <span class="sd">        a virtual ensemble.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            keyfilter (list or str): If supplied, only keys matching wildcards</span>
+<span class="sd">                in this argument will be included. Use this for speed reasons</span>
+<span class="sd">                when only some data is needed. Default is to include everything.</span>
+<span class="sd">                If you supply &quot;unsmry&quot;, it will match every key that</span>
+<span class="sd">                includes this string by prepending and appending &#39;*&#39; to your pattern</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            VirtualEnsemble</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
         <span class="kn">from</span> <span class="nn">.virtualensemble</span> <span class="kn">import</span> <span class="n">VirtualEnsemble</span>
 
+        <span class="k">if</span> <span class="n">keyfilter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="p">[</span><span class="n">keyfilter</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;keyfilter in to_virtual() must be list or string&quot;</span><span class="p">)</span>
+
         <span class="n">vens</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating ensemblecombination on </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-            <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">pattern</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">keyfilter</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating ensemblecombination on </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
         <span class="n">vens</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">vens</span></div>
 
@@ -295,13 +318,22 @@
 <div class="viewcode-block" id="EnsembleCombination.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads the Eclipse summary data directly from the underlying</span>
-<span class="sd">        ensemble data, independent of whether you have issued</span>
-<span class="sd">        load_smry() first in the ensembles.</span>
+<span class="sd">        ensemble data. The ensembles can be ScratchEnsemble or</span>
+<span class="sd">        VirtualEnsemble, if scratch it will access binary</span>
+<span class="sd">        summary files directly, if virtual ensembles, summary</span>
+<span class="sd">        data must have been loaded earlier.</span>
 
-<span class="sd">        If you involve VirtualEnsembles in this operation, this</span>
-<span class="sd">        this will fail.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys (str or list): column key wildcards. Default</span>
+<span class="sd">                is &#39;*&#39;, which will match all vectors in the Eclipse</span>
+<span class="sd">                output.</span>
+<span class="sd">            time_index (str or list of DateTime): time_index mnemonic or</span>
+<span class="sd">                a list of explicit datetime at which the summary data</span>
+<span class="sd">                is requested (interpolated or extrapolated)</span>
 
-<span class="sd">        Later resampling of data in VirtualEnsembles might get implemented.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame. Indexed by rows, has at least the columns REAL</span>
+<span class="sd">                and DATE if not empty.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
@@ -373,6 +405,80 @@
 <span class="sd">        agg() in VirtualEnsemble.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="p">,</span> <span class="n">excludekeys</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EnsembleCombination.get_volumetric_rates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_volumetric_rates">[docs]</a>    <span class="k">def</span> <span class="nf">get_volumetric_rates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute volumetric rates from cumulative summary</span>
+<span class="sd">        vectors.</span>
+
+<span class="sd">        Column names that are not referring to cumulative summary</span>
+<span class="sd">        vectors are silently ignored.</span>
+
+<span class="sd">        A Dataframe is returned with volumetric rates, that is rate</span>
+<span class="sd">        values that can be summed up to the cumulative version. The</span>
+<span class="sd">        &#39;T&#39; in the column name is switched with &#39;R&#39;. If you ask for</span>
+<span class="sd">        FOPT, you will get FOPR in the returned dataframe.</span>
+
+<span class="sd">        Rates in the returned dataframe are valid **forwards** in time,</span>
+<span class="sd">        opposed to rates coming directly from the Eclipse simulator which</span>
+<span class="sd">        are valid backwards in time.</span>
+
+<span class="sd">        If time_unit is set, the rates will be scaled to represent</span>
+<span class="sd">        either daily, monthly or yearly rates. These will sum up to the</span>
+<span class="sd">        cumulative as long as you multiply with the correct number</span>
+<span class="sd">        of days, months or year between each consecutive date index.</span>
+<span class="sd">        Month lengths and leap years are correctly handled.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys: str or list of strings, cumulative summary vectors</span>
+<span class="sd">            time_index: str or list of datetimes</span>
+<span class="sd">            time_unit: str or None. If None, the rates returned will</span>
+<span class="sd">                be the difference in cumulative between each included</span>
+<span class="sd">                time step (where the time interval can vary arbitrarily)</span>
+<span class="sd">                If set to &#39;days&#39;, &#39;months&#39; or &#39;years&#39;, the rates will</span>
+<span class="sd">                be scaled to represent a daily, monthly or yearly rate that</span>
+<span class="sd">                is compatible with the date index and the cumulative data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">(</span><span class="n">keyfilter</span><span class="o">=</span><span class="s2">&quot;unsmry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span>
+            <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="n">time_unit</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return parameters from the ensemble as a class property&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate the number of realizations in this</span>
+<span class="sd">        ensemble combinations.</span>
+
+<span class="sd">        This is not always well defined in cases of strange</span>
+<span class="sd">        combinations of which data is available in which realization,</span>
+<span class="sd">        so after actual computation of a virtual ensemble, the number</span>
+<span class="sd">        of realizations can be less that what this estimate returns</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int, number of realizations (upper limit)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">())</span>
+
+<div class="viewcode-block" id="EnsembleCombination.get_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">get_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the integer indices for realizations in this ensemble</span>
+
+<span class="sd">        There is no guarantee that all realizations returned here</span>
+<span class="sd">        will be valid for all datatypes after computation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of integers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>

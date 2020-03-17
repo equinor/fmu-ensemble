@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realizationcombination &mdash; fmu-ensemble v1.2.1.7 documentation</title>
+  <title>fmu.ensemble.realizationcombination &mdash; fmu-ensemble v1.2.1.8 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.7
+                v1.2.1.8
               </div>
             
           
@@ -164,6 +164,9 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
+<span class="kn">import</span> <span class="nn">fnmatch</span>
+
+<span class="kn">import</span> <span class="nn">six</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
@@ -277,16 +280,36 @@
             <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="RealizationCombination.to_virtual"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.to_virtual">[docs]</a>    <span class="k">def</span> <span class="nf">to_virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RealizationCombination.to_virtual"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.to_virtual">[docs]</a>    <span class="k">def</span> <span class="nf">to_virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluate the current linear combination and return as</span>
-<span class="sd">        a virtualrealizatione.</span>
+<span class="sd">        a VirtualRealization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            keyfilter (list or str): If supplied, only keys matching wildcards</span>
+<span class="sd">                in this argument will be included. Use this for speed reasons</span>
+<span class="sd">                when only some data is needed. Default is to include everything.</span>
+<span class="sd">                If you supply &quot;unsmry&quot;, it will match every key that</span>
+<span class="sd">                includes this string by prepending and appending &#39;*&#39; to your pattern</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            VirtualRealization</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
         <span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
 
+        <span class="k">if</span> <span class="n">keyfilter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="p">[</span><span class="n">keyfilter</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;keyfilter in to_virtual() must be list or string&quot;</span><span class="p">)</span>
+
         <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">pattern</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">keyfilter</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">vreal</span></div>
 
 <div class="viewcode-block" id="RealizationCombination.get_smry_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.get_smry_dates">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_dates</span><span class="p">(</span>
@@ -311,14 +334,18 @@
 <div class="viewcode-block" id="RealizationCombination.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads the Eclipse summary data directly from the underlying</span>
-<span class="sd">        realization data, independent of whether you have issued</span>
-<span class="sd">        load_smry() first in the realization.</span>
+<span class="sd">        realization data.</span>
 
-<span class="sd">        If you involve VirtualRealization in this operation, this</span>
-<span class="sd">        this will fail. You have to use internalized data, that is</span>
-<span class="sd">        get_df().</span>
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys (str or list): column key wildcards. Default</span>
+<span class="sd">                is &#39;*&#39;, which will match all vectors in the Eclipse</span>
+<span class="sd">                output.</span>
+<span class="sd">            time_index (str or list of DateTime): time_index mnemonic or</span>
+<span class="sd">                a list of explicit datetime at which the summary data</span>
+<span class="sd">                is requested (interpolated or extrapolated)</span>
 
-<span class="sd">        Later, resampling of data in VirtualRealization might get implemented.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: Indexed rows, has at least the column DATE</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
