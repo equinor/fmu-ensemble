@@ -624,7 +624,7 @@ class ScratchEnsemble(object):
         missing_keys = set()
         needed_reals = 0
         # Loop over realizations until all requested keys are accounted for
-        for _, realization in self._realizations.items():
+        for _, realization in self.realizations.items():
             needed_reals += 1
             real_meta = realization.get_smry_meta(column_keys=ensemble_smry_keys)
             meta.update(real_meta)
