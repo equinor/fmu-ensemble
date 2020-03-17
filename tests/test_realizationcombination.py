@@ -6,6 +6,8 @@ from __future__ import print_function
 
 import os
 
+import pytest
+
 from fmu.ensemble import etc
 from fmu import ensemble
 
@@ -56,6 +58,15 @@ def test_realizationcombination_basic():
     vdiff = vreal1 - vreal0
     assert "FWPR" in vdiff["unsmry--yearly"]
     assert "FWL" in vdiff["parameters"]
+
+    vdiff_filtered = vdiff.to_virtual(keyfilter="parameters")
+    assert "parameters.txt" in vdiff_filtered.keys()
+    with pytest.raises(ValueError):
+        vdiff_filtered.get_df("unsmry--yearly")
+
+    vdiff_filtered2 = vdiff.to_virtual(keyfilter="unsmry--yearly")
+    assert "parameters.txt" not in vdiff_filtered2.keys()
+    assert "FWPR" in vdiff_filtered2.get_df("unsmry--yearly")
 
 
 def test_manual_aggregation():

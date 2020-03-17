@@ -4,6 +4,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import fnmatch
+
+import six
 import pandas as pd
 
 from .etc import Interaction
@@ -117,16 +120,36 @@ class RealizationCombination(object):
             return result.reset_index()
         return result.dropna().to_dict()
 
-    def to_virtual(self):
+    def to_virtual(self, keyfilter=None):
         """Evaluate the current linear combination and return as
-        a virtualrealizatione.
+        a VirtualRealization.
+
+        Args:
+            keyfilter (list or str): If supplied, only keys matching wildcards
+                in this argument will be included. Use this for speed reasons
+                when only some data is needed. Default is to include everything.
+                If you supply "unsmry", it will match every key that
+                includes this string by prepending and appending '*' to your pattern
+
+        Returns:
+            VirtualRealization
         """
         # pylint: disable=import-outside-toplevel
         from .virtualrealization import VirtualRealization
 
+        if keyfilter is None:
+            keyfilter = "*"
+        if isinstance(keyfilter, six.string_types):
+            keyfilter = [keyfilter]
+        if not isinstance(keyfilter, list):
+            raise TypeError("keyfilter in to_virtual() must be list or string")
+
         vreal = VirtualRealization(description=str(self))
         for key in self.keys():
-            vreal.append(key, self.get_df(key))
+            if sum(
+                [fnmatch.fnmatch(key, "*" + pattern + "*") for pattern in keyfilter]
+            ):
+                vreal.append(key, self.get_df(key))
         return vreal
 
     def get_smry_dates(
@@ -151,14 +174,18 @@ class RealizationCombination(object):
     def get_smry(self, column_keys=None, time_index=None):
         """
         Loads the Eclipse summary data directly from the underlying
-        realization data, independent of whether you have issued
-        load_smry() first in the realization.
+        realization data.
 
-        If you involve VirtualRealization in this operation, this
-        this will fail. You have to use internalized data, that is
-        get_df().
+        Args:
+            column_keys (str or list): column key wildcards. Default
+                is '*', which will match all vectors in the Eclipse
+                output.
+            time_index (str or list of DateTime): time_index mnemonic or
+                a list of explicit datetime at which the summary data
+                is requested (interpolated or extrapolated)
 
-        Later, resampling of data in VirtualRealization might get implemented.
+        Returns:
+            pd.DataFrame: Indexed rows, has at least the column DATE
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)

@@ -104,6 +104,14 @@ class VirtualEnsemble(object):
         ensemble"""
         return len(self.realindices)
 
+    def get_realindices(self):
+        """Return the integer indices for realizations in this ensemble
+
+        Returns:
+            list of integers
+        """
+        return self.realindices
+
     def update_realindices(self):
         """Update the internal list of known realization indices
 

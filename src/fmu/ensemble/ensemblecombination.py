@@ -1,9 +1,12 @@
-"""Module for handling linear combinations of ensembles. """
+"""Module for handling linear combinations of ensembles"""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import fnmatch
+
+import six
 import pandas as pd
 
 from .etc import Interaction
@@ -99,17 +102,37 @@ class EnsembleCombination(object):
         result.dropna(axis="columns", how="all", inplace=True)
         return result.reset_index()
 
-    def to_virtual(self):
+    def to_virtual(self, keyfilter=None):
         """Evaluate the current linear combination and return as
         a virtual ensemble.
+
+        Args:
+            keyfilter (list or str): If supplied, only keys matching wildcards
+                in this argument will be included. Use this for speed reasons
+                when only some data is needed. Default is to include everything.
+                If you supply "unsmry", it will match every key that
+                includes this string by prepending and appending '*' to your pattern
+
+        Returns:
+            VirtualEnsemble
         """
         # pylint: disable=import-outside-toplevel
         from .virtualensemble import VirtualEnsemble
 
+        if keyfilter is None:
+            keyfilter = "*"
+        if isinstance(keyfilter, six.string_types):
+            keyfilter = [keyfilter]
+        if not isinstance(keyfilter, list):
+            raise TypeError("keyfilter in to_virtual() must be list or string")
+
         vens = VirtualEnsemble(name=str(self))
         for key in self.keys():
-            logger.info("Calculating ensemblecombination on %s", key)
-            vens.append(key, self.get_df(key))
+            if sum(
+                [fnmatch.fnmatch(key, "*" + pattern + "*") for pattern in keyfilter]
+            ):
+                logger.info("Calculating ensemblecombination on %s", key)
+                vens.append(key, self.get_df(key))
         vens.update_realindices()
         return vens
 
@@ -135,13 +158,22 @@ class EnsembleCombination(object):
     def get_smry(self, column_keys=None, time_index=None):
         """
         Loads the Eclipse summary data directly from the underlying
-        ensemble data, independent of whether you have issued
-        load_smry() first in the ensembles.
+        ensemble data. The ensembles can be ScratchEnsemble or
+        VirtualEnsemble, if scratch it will access binary
+        summary files directly, if virtual ensembles, summary
+        data must have been loaded earlier.
 
-        If you involve VirtualEnsembles in this operation, this
-        this will fail.
+        Args:
+            column_keys (str or list): column key wildcards. Default
+                is '*', which will match all vectors in the Eclipse
+                output.
+            time_index (str or list of DateTime): time_index mnemonic or
+                a list of explicit datetime at which the summary data
+                is requested (interpolated or extrapolated)
 
-        Later resampling of data in VirtualEnsembles might get implemented.
+        Returns:
+            pd.DataFrame. Indexed by rows, has at least the columns REAL
+                and DATE if not empty.
         """
         if isinstance(time_index, str):
             time_index = self.get_smry_dates(time_index)
@@ -213,6 +245,80 @@ class EnsembleCombination(object):
         agg() in VirtualEnsemble.
         """
         return self.to_virtual().agg(aggregation, keylist, excludekeys)
+
+    def get_volumetric_rates(
+        self, column_keys=None, time_index="monthly", time_unit=None
+    ):
+        """Compute volumetric rates from cumulative summary
+        vectors.
+
+        Column names that are not referring to cumulative summary
+        vectors are silently ignored.
+
+        A Dataframe is returned with volumetric rates, that is rate
+        values that can be summed up to the cumulative version. The
+        'T' in the column name is switched with 'R'. If you ask for
+        FOPT, you will get FOPR in the returned dataframe.
+
+        Rates in the returned dataframe are valid **forwards** in time,
+        opposed to rates coming directly from the Eclipse simulator which
+        are valid backwards in time.
+
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
+        Args:
+            column_keys: str or list of strings, cumulative summary vectors
+            time_index: str or list of datetimes
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
+
+        """
+        return self.to_virtual(keyfilter="unsmry").get_volumetric_rates(
+            column_keys=column_keys, time_index=time_index, time_unit=time_unit
+        )
+
+    @property
+    def parameters(self):
+        """Return parameters from the ensemble as a class property"""
+        return self.get_df("parameters.txt")
+
+    def __len__(self):
+        """Estimate the number of realizations in this
+        ensemble combinations.
+
+        This is not always well defined in cases of strange
+        combinations of which data is available in which realization,
+        so after actual computation of a virtual ensemble, the number
+        of realizations can be less that what this estimate returns
+
+        Returns:
+            int, number of realizations (upper limit)
+        """
+        return len(self.get_realindices())
+
+    def get_realindices(self):
+        """Return the integer indices for realizations in this ensemble
+
+        There is no guarantee that all realizations returned here
+        will be valid for all datatypes after computation.
+
+        Returns:
+            list of integers
+        """
+        indices = set(self.ref.get_realindices())
+        if self.add:
+            indices = indices.intersection(set(self.add.get_realindices()))
+        if self.sub:
+            indices = indices.intersection(set(self.sub.get_realindices()))
+        return list(indices)
 
     def __getitem__(self, localpath):
         return self.get_df(localpath)

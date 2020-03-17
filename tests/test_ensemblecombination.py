@@ -8,6 +8,8 @@ import os
 
 import pandas as pd
 
+import pytest
+
 from fmu.ensemble import etc
 from fmu import ensemble
 
@@ -34,17 +36,30 @@ def test_ensemblecombination_basic():
 
     # Difference with itself should give zero..
     diff = ensemble.EnsembleCombination(ref=reekensemble, sub=reekensemble)
+    assert len(diff) == 5
     # Implicit virtualization and aggregation
     assert diff.agg("mean")["parameters"]["KRW1"] == 0
 
+    assert diff.parameters["KRW1"].sum() == 0
     assert diff["parameters"]["KRW1"].sum() == 0
     assert diff["unsmry--yearly"]["FOPT"].sum() == 0
     assert diff["npv.txt"]["npv.txt"].sum() == 0
+
+    assert (
+        diff.get_volumetric_rates(column_keys="FOPT", time_index="yearly")["FOPR"].sum()
+        == 0
+    )
 
     foptsum = reekensemble.get_df("unsmry--yearly")["FOPT"].sum()
     half = 0.5 * reekensemble
     assert half["unsmry--yearly"]["FOPT"].sum() == 0.5 * foptsum
     assert half["npv.txt"].sort_values("REAL")["npv.txt"].iloc[0] == 1722
+    assert (
+        half.get_smry(column_keys="FOPT", time_index="last")["FOPT"].sum()
+        == half.get_volumetric_rates(column_keys="FOPT", time_index="yearly")[
+            "FOPR"
+        ].sum()
+    )
 
     # This is only true since we only juggle one ensemble here:
     assert len(half.get_smry_dates(freq="monthly")) == len(
@@ -54,6 +69,18 @@ def test_ensemblecombination_basic():
     # Test comb of virtualized ensembles.
     vhalf = 0.5 * reekensemble.to_virtual()
     assert vhalf["unsmry--yearly"]["FOPT"].sum() == 0.5 * foptsum
+
+    vhalf_filtered = (0.5 * reekensemble).to_virtual(keyfilter="parameters")
+
+    # This means that unsmry--yearly is not found:
+    assert vhalf_filtered.shortcut2path("unsmry--yearly") == "unsmry--yearly"
+
+    # Ask to include summary data:
+    vhalf_filtered2 = (0.5 * reekensemble).to_virtual(keyfilter="unsmry")
+    assert not vhalf_filtered2.get_df("unsmry--yearly").empty
+    with pytest.raises(ValueError):
+        # pylint: disable=pointless-statement
+        vhalf_filtered2.parameters
 
     # Test something long:
     # zero = (
@@ -153,6 +180,10 @@ def test_ensemblecombination_sparse():
     )
     ior.load_smry(time_index="yearly", column_keys=["F*"])
     ior.remove_realizations(3)
+
+    assert len(ref) == 5
+    assert len(ior) == 4
+    assert len(ior - ref) == 4
 
     assert 3 not in (ior - ref)["parameters"].REAL.unique()
     assert 3 not in (ior - ref)["unsmry--yearly"].REAL.unique()
