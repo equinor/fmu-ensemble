@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble v1.2.1.8 documentation</title>
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble v1.2.1.9 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.8
+                v1.2.1.9
               </div>
             
           
@@ -332,22 +332,13 @@
 <span class="sd">            smryvector: string with a name of a specific summary vector</span>
 <span class="sd">                to be used</span>
 <span class="sd">            time_index: string with timeresolution, typically &#39;yearly&#39;</span>
-<span class="sd">                or &#39;monthly&#39;. The Realization must already have data</span>
-<span class="sd">                loaded at this time resolution.</span>
+<span class="sd">                or &#39;monthly&#39;.</span>
 <span class="sd">            smryerror: float, constant value to be used as the measurement</span>
 <span class="sd">                error for every date.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># We can only assume VirtualRealizations coming in, not</span>
-        <span class="c1"># ScratchRealizations. VirtualRealization currenly lack a</span>
-        <span class="c1"># get_smry() API that will interpolate its known data.</span>
-        <span class="c1"># That means we have to guess which dataset to load for</span>
-        <span class="c1"># smry data, and we cannot support arbitrary time indices</span>
-        <span class="n">data_name</span> <span class="o">=</span> <span class="s2">&quot;unsmry--&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
-
-        <span class="c1"># A ValueError will be thrown if the realization does not have</span>
-        <span class="c1"># the smry data loaded, and a KeyError if incorrect summary vector name</span>
-        <span class="n">dataseries</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">data_name</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;DATE&quot;</span><span class="p">)[</span><span class="n">smryvector</span><span class="p">]</span>
+        <span class="n">dataseries</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+            <span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="n">smryvector</span><span class="p">],</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span>
+        <span class="p">)[</span><span class="n">smryvector</span><span class="p">]</span>
 
         <span class="c1"># In the context of this function, datetimes are not supported. Ensure dates:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataseries</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
