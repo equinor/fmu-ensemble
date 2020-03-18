@@ -608,6 +608,8 @@ class ScratchEnsemble(object):
         * is_rate (bool)
         * is_historical (bool)
         * get_num (int) (only provided if not None)
+        * keyword (str)
+        * wgname (str or None)
 
         The requested columns are asked for over the entire ensemble, and if necessary
         all realizations will be checked to obtain the metadata for a specific key.
