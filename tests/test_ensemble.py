@@ -894,6 +894,38 @@ def test_read_eclgrid():
     assert len(grid_df["i"]) == 35840
 
 
+def test_get_df():
+    """Test the data retrieval functionality
+
+    get_df() in the ensemble context is an aggregator, that will aggregate
+    data from individual realaizations to the ensemble level, with
+    optional merging capabilities performed on realization level."""
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    ens = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    smry = ens.load_smry(column_keys="FO*", time_index="yearly")
+    assert not ens.get_df("unsmry--yearly").empty
+    assert not ens.get_df("unsmry--yearly.csv").empty
+    assert not ens.get_df("share/results/tables/unsmry--yearly").empty
+    assert not ens.get_df("share/results/tables/unsmry--yearly.csv").empty
+    with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
+        ens.get_df("unsmry--monthly")
+    ens.load_smry(column_keys="FO*", time_index="monthly")
+    assert not ens.get_df("unsmry--monthly").empty
+    with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
+        ens.get_df("unsmry-monthly")
+
+    # Tests that we can do merges directly:
+    smrycount = len(smry.columns)
+    paramcount = len(ens.get_df("parameters.txt").columns)
+    smryparams = ens.get_df("unsmry--yearly", merge="parameters")
+    # One extra for the REAL column:
+    assert len(smryparams.columns) == smrycount + paramcount + 1
+
+
 def test_apply():
     """
     Test the callback functionality

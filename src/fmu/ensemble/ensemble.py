@@ -639,7 +639,7 @@ class ScratchEnsemble(object):
             )
         return meta
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Load data from each realization and aggregate (vertically)
 
         Data must be already have been internalized using
@@ -647,11 +647,17 @@ class ScratchEnsemble(object):
 
         Each row is tagged by the realization index in the column 'REAL'
 
+        The localpath argument can be shortened, as it will be
+        looked up using the function shortcut2path()
+
         Args:
             localpath (str): refers to the internalized name.
+            merge (str): refer to additional localpath which
+                will be merged into the dataframe for every realization
+
         Returns:
            pd.dataframe: Merged data from each realization.
-           Realizations with missing data are ignored.
+               Realizations with missing data are ignored.
 
         Raises:
             ValueError if no data is found
@@ -659,7 +665,7 @@ class ScratchEnsemble(object):
         dflist = {}
         for index, realization in self.realizations.items():
             try:
-                data = realization.get_df(localpath)
+                data = realization.get_df(localpath, merge=merge)
                 if isinstance(data, dict):
                     data = pd.DataFrame(index=[1], data=data)
                 elif isinstance(data, (str, int, float, np.integer, np.floating)):

@@ -675,8 +675,8 @@ class ScratchRealization(object):
           * simulator_volume_fipnum.csv
           * share/results/volumes/simulator_volume_fipnum
 
-        but only as long as there is no ambiguity. In case of ambiguity, a
-        ValueError will be raised.
+        but only as long as there is no ambiguity. In case of ambiguity,
+        you will get localpath as is if it exists, if not, a KeyError.
 
         Args:
             localpath (str): the idenfier of the data requested
@@ -740,7 +740,7 @@ class ScratchRealization(object):
           * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
-        of ambiguity, the shortpath will be returned.
+        of ambiguity, the shortpath will be returned as is.
         """
         basenames = list(map(os.path.basename, self.data.keys()))
         if basenames.count(shortpath) == 1:
