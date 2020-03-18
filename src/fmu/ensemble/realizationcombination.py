@@ -7,6 +7,7 @@ from __future__ import print_function
 import fnmatch
 
 import six
+import numpy as np
 import pandas as pd
 
 from .etc import Interaction
@@ -75,41 +76,79 @@ class RealizationCombination(object):
             combkeys = combkeys.intersection(self.sub.keys())
         return combkeys
 
-    def get_df(self, localpath):
-        """Evaluate the realization combination on a specific dataset
+    def get_df(self, localpath, merge=None):
+        """Obtain given data from the realizationcombination,
+        doing the actual computation of realizationdata on the fly.
 
-        On realizations, some datatypes can be dictionaries!
+        Warning: In order to add dataframes together with meaning,
+        using pandas.add, the index of the frames must be correctly set,
+        and this can be tricky for some datatypes (f.ex. volumetrics table
+        where you want to add together volumes for correct zone
+        and fault segment).
+
+        If you have the columns "DATE", "ZONE" and/or "REGION", it
+        will be regarded as an index column.
+
+        Args:
+            localpath (str): refers to the internalized name of the
+                data wanted in the realizations.
+            merge (list or str): Optional data to be merged in for the data
+                The merge will happen before combination. Be careful
+                with index guessing and merged data.
+
+        Returns:
+            pd.DataFrame, str, float, int or dict. None if datatype is
+                a string which we cannot combine.
+
+        Raises:
+            KeyError if data is not found. This can also happen
+            for the requested data to merge in. TypeError if scalar values
+            are strings and they are multiplied with scalar.
         """
         # We can pandas.add when the index is set correct.
         # WE MUST GUESS!
         indexlist = []
         indexcandidates = ["DATE", "ZONE", "REGION"]
-        refdf = self.ref.get_df(localpath)
+        refdf = self.ref.get_df(localpath, merge=merge)
         if isinstance(refdf, pd.DataFrame):
             for index in indexcandidates:
                 if index in refdf.columns:
                     indexlist.append(index)
             refdf = refdf.set_index(indexlist)
             refdf = refdf.select_dtypes(include="number")
-        else:  # Convert from dict to Series
+        elif isinstance(refdf, dict):
+            # Convert from dicts to Series, for linear algebra to be defined
             refdf = pd.Series(refdf)
-        result = refdf.mul(self.scale)
+        if isinstance(refdf, (int, float, np.number)):
+            result = self.scale * refdf
+        elif isinstance(refdf, six.string_types):
+            logger.warning("String data %s ignored", localpath)
+            return None
+        else:
+            # Pandas dataframe or series:
+            result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add.get_df(localpath)
+            otherdf = self.add.get_df(localpath, merge=merge)
             if isinstance(otherdf, pd.DataFrame):
                 otherdf = otherdf.set_index(indexlist)
                 otherdf = otherdf.select_dtypes(include="number")
-            else:
+            elif isinstance(otherdf, dict):
                 otherdf = pd.Series(otherdf)
-            result = result.add(otherdf)
+            if isinstance(otherdf, (int, float, np.number)):
+                result = result + otherdf
+            else:
+                result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub.get_df(localpath)
+            otherdf = self.sub.get_df(localpath, merge=merge)
             if isinstance(otherdf, pd.DataFrame):
                 otherdf = otherdf.set_index(indexlist)
                 otherdf = otherdf.select_dtypes(include="number")
-            else:
+            elif isinstance(otherdf, dict):
                 otherdf = pd.Series(otherdf)
-            result = result.sub(otherdf)
+            if isinstance(otherdf, (int, float, np.number)):
+                result = result - otherdf
+            else:
+                result = result.sub(otherdf)
         if isinstance(result, pd.DataFrame):
             # Delete rows where everything is NaN, which will be case when
             # some data row does not exist in all realizations.
@@ -118,7 +157,10 @@ class RealizationCombination(object):
             # column data are not similar
             result.dropna(axis="columns", how="all", inplace=True)
             return result.reset_index()
-        return result.dropna().to_dict()
+        elif isinstance(result, pd.Series):
+            return result.dropna().to_dict()
+        else:
+            return result
 
     def to_virtual(self, keyfilter=None):
         """Evaluate the current linear combination and return as

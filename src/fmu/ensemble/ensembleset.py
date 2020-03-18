@@ -379,7 +379,7 @@ class EnsembleSet(object):
         for ensname, ensemble in self._ensembles.items():
             try:
                 ensemble.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError:
+            except (KeyError, ValueError):
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
@@ -388,31 +388,28 @@ class EnsembleSet(object):
                 )
         return self.get_df(localpath)
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Collect contents of dataframes from each ensemble
 
         Args:
-            localpath: path to the text file, relative to each realization
-            convert_numeric: If set to True, numerical columns
-                will be searched for and have their dtype set
-                to integers or floats.
-            force_reread: Force reread from file system. If
-                False, repeated calls to this function will
-                returned cached results.
+            localpath (str): path to the text file, relative to each realization
+            merge (list or str): refer to additional localpath(s) which will
+                be merged into the dataframe for every ensemble/realization.
+                Merging happens before aggregation.
         """
         ensdflist = []
         for _, ensemble in self._ensembles.items():
             try:
-                ensdf = ensemble.get_df(localpath)
+                ensdf = ensemble.get_df(localpath, merge=merge)
                 ensdf.insert(0, "ENSEMBLE", ensemble.name)
                 ensdflist.append(ensdf)
-            except ValueError:
+            except (KeyError, ValueError):
                 # Happens if an ensemble is missing some data
                 # Warning has already been issued at initialization
                 pass
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
-        raise ValueError("No data found for {}".format(localpath))
+        raise KeyError("No data found for {} or merge failed".format(localpath))
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

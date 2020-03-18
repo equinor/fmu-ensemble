@@ -639,7 +639,7 @@ class ScratchEnsemble(object):
             )
         return meta
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Load data from each realization and aggregate (vertically)
 
         Data must be already have been internalized using
@@ -647,28 +647,34 @@ class ScratchEnsemble(object):
 
         Each row is tagged by the realization index in the column 'REAL'
 
+        The localpath argument can be shortened, as it will be
+        looked up using the function shortcut2path()
+
         Args:
             localpath (str): refers to the internalized name.
+            merge (list or str): refer to additional localpath which
+                will be merged into the dataframe for every realization
+
         Returns:
            pd.dataframe: Merged data from each realization.
-           Realizations with missing data are ignored.
+               Realizations with missing data are ignored.
 
         Raises:
-            ValueError if no data is found
+            KeyError if no data is found in no realizations.
         """
         dflist = {}
         for index, realization in self.realizations.items():
             try:
-                data = realization.get_df(localpath)
+                data = realization.get_df(localpath, merge=merge)
                 if isinstance(data, dict):
                     data = pd.DataFrame(index=[1], data=data)
-                elif isinstance(data, (str, int, float, np.integer, np.floating)):
+                elif isinstance(data, (str, int, float, np.number)):
                     data = pd.DataFrame(index=[1], columns=[localpath], data=data)
                 if isinstance(data, pd.DataFrame):
                     dflist[index] = data
                 else:
                     raise ValueError("Unkown datatype returned " + "from realization")
-            except ValueError:
+            except (KeyError, ValueError):
                 # No logging here, those error messages
                 # should have appeared at construction using load_*()
                 pass
@@ -679,7 +685,7 @@ class ScratchEnsemble(object):
             dframe.rename(columns={"level_0": "REAL"}, inplace=True)
             del dframe["level_1"]  # This is the indices from each real
             return dframe
-        raise ValueError("No data found for " + localpath)
+        raise KeyError("No data found for " + localpath)
 
     def load_smry(
         self,

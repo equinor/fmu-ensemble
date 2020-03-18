@@ -285,12 +285,12 @@ def test_reek001_scalars():
 
     # If we try to read the empty files as numerical values, we should get
     # nothing back:
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         reekensemble.load_scalar(
             "emptyscalarfile", force_reread=True, convert_numeric=True
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         reekensemble.load_scalar("nonexistingfile")
 
 
@@ -892,6 +892,79 @@ def test_read_eclgrid():
 
     assert len(grid_df.columns) == 35
     assert len(grid_df["i"]) == 35840
+
+
+def test_get_df():
+    """Test the data retrieval functionality
+
+    get_df() in the ensemble context is an aggregator, that will aggregate
+    data from individual realaizations to the ensemble level, with
+    optional merging capabilities performed on realization level."""
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    ens = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    smry = ens.load_smry(column_keys="FO*", time_index="yearly")
+    assert not ens.get_df("unsmry--yearly").empty
+    assert not ens.get_df("unsmry--yearly.csv").empty
+    assert not ens.get_df("share/results/tables/unsmry--yearly").empty
+    assert not ens.get_df("share/results/tables/unsmry--yearly.csv").empty
+    with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
+        ens.get_df("unsmry--monthly")
+    ens.load_smry(column_keys="FO*", time_index="monthly")
+    assert not ens.get_df("unsmry--monthly").empty
+    with pytest.raises(KeyError):
+        # pylint: disable=pointless-statement
+        ens.get_df("unsmry-monthly")
+
+    # Tests that we can do merges directly:
+    params = ens.get_df("parameters.txt")
+    smryparams = ens.get_df("unsmry--yearly", merge="parameters")
+    # The set union is to handle the REAL column present in both smry and params:
+    assert len(smryparams.columns) == len(set(smry.columns).union(params.columns))
+
+    # Test multiple merges:
+    outputs = ens.load_txt("outputs.txt")
+    assert len(
+        ens.get_df("unsmry--yearly", merge=["parameters", "outputs.txt"]).columns
+    ) == len(set(smry.columns).union(params.columns).union(outputs.columns))
+
+    # Try merging dataframes:
+    ens.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+
+    # Inject a mocked dataframe to the realization, there is
+    # no "add_data" API for ensembles, but we can use the apply()
+    # functionality
+    def fipnum2zone():
+        """Helper function for injecting mocked frame into
+        each realization"""
+        return pd.DataFrame(
+            columns=["FIPNUM", "ZONE"],
+            data=[
+                [1, "UpperReek"],
+                [2, "MidReek"],
+                [3, "LowerReek"],
+                [4, "UpperReek"],
+                [5, "MidReek"],
+                [6, "LowerReek"],
+            ],
+        )
+
+    ens.apply(fipnum2zone, localpath="fipnum2zone")
+    volframe = ens.get_df("simulator_volume_fipnum", merge="fipnum2zone")
+
+    assert "ZONE" in volframe
+    assert "FIPNUM" in volframe
+    assert "STOIIP_OIL" in volframe
+    assert len(volframe["ZONE"].unique()) == 3
+
+    # Merge with scalar data:
+    ens.load_scalar("npv.txt")
+    vol_npv = ens.get_df("simulator_volume_fipnum", merge="npv.txt")
+    # (this particular data combination does not really make sense)
+    assert "STOIIP_OIL" in vol_npv
+    assert "npv.txt" in vol_npv
 
 
 def test_apply():

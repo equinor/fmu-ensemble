@@ -72,8 +72,27 @@ class EnsembleCombination(object):
             combkeys = combkeys.intersection(self.sub.keys())
         return combkeys
 
-    def get_df(self, localpath):
-        """Evaluate the ensemble combination on a specific dataset
+    def get_df(self, localpath, merge=None):
+        """Obtain given data from the ensemblecombination,
+        doing the actual computation of ensemble on the fly.
+
+        Warning: In order to add dataframes together with meaning,
+        using pandas.add, the index of the frames must be correctly set,
+        and this can be tricky for some datatypes (f.ex. volumetrics table
+        where you want to add together volumes for correct zone
+        and fault segment).
+
+        If you have the columns "REAL", "DATE", "ZONE" and/or "REGION", it
+        will be regarded as an index column.
+
+        Args:
+            localpath (str): refers to the internalized name of the
+                data wanted in each ensemble.
+            merge (list or str): Optional data to be merged in for the data
+                The merge will happen as deep as possible (in realization
+                objects in case of ScratchEnsembles), and all ensemble
+                combination computations happen after merging. Be careful
+                with index guessing and merged data.
         """
         # We can pandas.add when the index is set correct.
         # WE MUST GUESS!
@@ -83,15 +102,15 @@ class EnsembleCombination(object):
             if index in self.ref.get_df(localpath).columns:
                 indexlist.append(index)
         logger.debug("get_df() inferred index columns to %s", str(indexlist))
-        refdf = self.ref.get_df(localpath).set_index(indexlist)
+        refdf = self.ref.get_df(localpath, merge=merge).set_index(indexlist)
         refdf = refdf.select_dtypes(include="number")
         result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add.get_df(localpath).set_index(indexlist)
+            otherdf = self.add.get_df(localpath, merge=merge).set_index(indexlist)
             otherdf = otherdf.select_dtypes(include="number")
             result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub.get_df(localpath).set_index(indexlist)
+            otherdf = self.sub.get_df(localpath, merge=merge).set_index(indexlist)
             otherdf = otherdf.select_dtypes(include="number")
             result = result.sub(otherdf)
         # Delete rows where everything is NaN, which will be case when
