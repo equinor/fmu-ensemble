@@ -172,22 +172,13 @@ class Observations(object):
             smryvector: string with a name of a specific summary vector
                 to be used
             time_index: string with timeresolution, typically 'yearly'
-                or 'monthly'. The Realization must already have data
-                loaded at this time resolution.
+                or 'monthly'.
             smryerror: float, constant value to be used as the measurement
                 error for every date.
         """
-
-        # We can only assume VirtualRealizations coming in, not
-        # ScratchRealizations. VirtualRealization currenly lack a
-        # get_smry() API that will interpolate its known data.
-        # That means we have to guess which dataset to load for
-        # smry data, and we cannot support arbitrary time indices
-        data_name = "unsmry--" + str(time_index)
-
-        # A ValueError will be thrown if the realization does not have
-        # the smry data loaded, and a KeyError if incorrect summary vector name
-        dataseries = realization.get_df(data_name).set_index("DATE")[smryvector]
+        dataseries = realization.get_smry(
+            column_keys=[smryvector], time_index=time_index
+        )[smryvector]
 
         # In the context of this function, datetimes are not supported. Ensure dates:
         if isinstance(dataseries.index, pd.DatetimeIndex):

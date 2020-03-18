@@ -668,3 +668,31 @@ def test_virtual_observations():
     assert representative_realizations["meanrealization"] == 4
     assert representative_realizations["p90realization"] == 2
     assert representative_realizations["p10realization"] == 1
+
+    # Test again with the ensemble virtualized:
+    vens = ens.to_virtual()
+
+    # And we need some VirtualRealizations
+    vvirtreals = {
+        "p90realization": vens.agg("p90"),
+        "meanrealization": vens.agg("mean"),
+        "p10realization": vens.agg("p10"),
+    }
+
+    summaryvector = "FOPT"
+    vrepresentative_realizations = {}
+    for virtrealname, virtreal in six.iteritems(vvirtreals):
+        # Create empty observation object
+        obs = Observations({})
+        obs.load_smry(virtreal, summaryvector, time_index="yearly")
+
+        mis = obs.mismatch(ens)
+
+        closest_realization = (
+            mis.groupby("REAL").sum()["L2"].sort_values().index.values[0]
+        )
+        vrepresentative_realizations[virtrealname] = closest_realization
+
+    assert vrepresentative_realizations["meanrealization"] == 4
+    assert vrepresentative_realizations["p90realization"] == 2
+    assert vrepresentative_realizations["p10realization"] == 1
