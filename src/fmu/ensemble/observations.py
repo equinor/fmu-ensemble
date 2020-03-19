@@ -267,7 +267,7 @@ class Observations(object):
                             obsunit["localpath"],
                         )
                         continue
-                    except ValueError:
+                    except (KeyError, ValueError):
                         logger.warning("%s not found, ignored", obsunit["localpath"])
                         continue
                     mismatch = float(sim_value - obsunit["value"])
@@ -291,7 +291,7 @@ class Observations(object):
                 if obstype == "scalar":
                     try:
                         sim_value = real.get_df(obsunit["key"])
-                    except ValueError:
+                    except (KeyError, ValueError):
                         logger.warning(
                             "No data found for scalar: %s, ignored", obsunit["key"]
                         )

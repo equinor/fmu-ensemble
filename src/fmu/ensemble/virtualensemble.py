@@ -744,7 +744,7 @@ file is picked up"""
         """Textual representation of the object"""
         return "<VirtualEnsemble, {}>".format(self._name)
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Access the internal datastore which contains dataframes or dicts
 
         Shorthand is allowed, if the fully qualified localpath is
@@ -756,15 +756,21 @@ file is picked up"""
           * simulator_volume_fipnum.csv
           * share/results/volumes/simulator_volume_fipnum
 
-        but only as long as there is no ambiguity. In case of ambiguity, a
-        ValueError will be raised.
+        but only as long as there is no ambiguity. In case of ambiguity,
+        you will get localpath as is if it exists, if not, a KeyError.
 
         Args:
             localpath: the idenfier of the data requested
+            merge (list or str): refer to an additional localpath which
+                will be merged into the dataframe for every realization
 
         Returns:
             dataframe or dictionary
+
+        Raises:
+            KeyError if no data is found
         """
+        print("virtualensemble.get_df()")
         inconsistent_lazy_frames = set(self.data.keys()).intersection(
             set(self.lazy_frames.keys())
         )
@@ -773,30 +779,41 @@ file is picked up"""
                 "Internal error, inconsistent lazy frames:\n %s",
                 str(inconsistent_lazy_frames),
             )
-        if localpath in self.lazy_frames.keys():
-            logger.warning("Loading %s from disk, was lazy", localpath)
-            self._load_frame_fromdisk(localpath, self.lazy_frames[localpath])
-            self.lazy_frames.pop(localpath)
-
+        if not isinstance(merge, list):
+            merge = [merge]  # Can still be None
+        # Ensure all needed data is loaded from disk, in case it has
+        # been postponed through from_disk()
+        for l_path in [localpath] + merge:
+            if l_path is not None and l_path in self.lazy_frames.keys():
+                logger.warning("Loading %s from disk, was lazy", l_path)
+                self._load_frame_fromdisk(l_path, self.lazy_frames[l_path])
+                self.lazy_frames.pop(l_path)
+        print("done lazy")
+        print(localpath)
+        data = None
         if localpath in self.data.keys():
-            return self.data[localpath]
+            data = self.data[localpath]
+        else:
+            # shortcut2path() has been reimplemented here in order to support
+            # lazy frames.
+            allkeys = list(self.data.keys()) + list(self.lazy_frames.keys())
+            basenames = [os.path.basename(x) for x in allkeys]
+            noexts = ["".join(x.split(".")[:-1]) for x in allkeys]
+            basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in allkeys]
+            if basenames.count(localpath) == 1:
+                shortcut2path = {os.path.basename(x): x for x in allkeys}
+                data = self.get_df(shortcut2path[localpath])
+            elif noexts.count(localpath) == 1:
+                shortcut2path = {"".join(x.split(".")[:-1]): x for x in allkeys}
+                data = self.get_df(shortcut2path[localpath])
+            elif basenamenoexts.count(localpath) == 1:
+                shortcut2path = {
+                    "".join(os.path.basename(x).split(".")[:-1]): x for x in allkeys
+                }
+                data = self.get_df(shortcut2path[localpath])
 
-        # Allow shorthand, but check ambiguity
-        allkeys = list(self.data.keys()) + list(self.lazy_frames.keys())
-        basenames = [os.path.basename(x) for x in allkeys]
-        if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in allkeys}
-            return self.get_df(shortcut2path[localpath])
-        noexts = ["".join(x.split(".")[:-1]) for x in allkeys]
-        if noexts.count(localpath) == 1:
-            shortcut2path = {"".join(x.split(".")[:-1]): x for x in allkeys}
-            return self.get_df(shortcut2path[localpath])
-        basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in allkeys]
-        if basenamenoexts.count(localpath) == 1:
-            shortcut2path = {
-                "".join(os.path.basename(x).split(".")[:-1]): x for x in allkeys
-            }
-            return self.get_df(shortcut2path[localpath])
+        if data is not None:
+            return data
         raise ValueError(localpath)
 
     def get_smry(self, column_keys=None, time_index="monthly"):

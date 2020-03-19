@@ -379,7 +379,7 @@ class EnsembleSet(object):
         for ensname, ensemble in self._ensembles.items():
             try:
                 ensemble.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError:
+            except (KeyError, ValueError):
                 # This will occur if an ensemble is missing the file.
                 # At ensemble level that is an Error, but at EnsembleSet level
                 # it is only a warning.
@@ -406,13 +406,13 @@ class EnsembleSet(object):
                 ensdf = ensemble.get_df(localpath)
                 ensdf.insert(0, "ENSEMBLE", ensemble.name)
                 ensdflist.append(ensdf)
-            except ValueError:
+            except (KeyError, ValueError):
                 # Happens if an ensemble is missing some data
                 # Warning has already been issued at initialization
                 pass
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
-        raise ValueError("No data found for {}".format(localpath))
+        raise KeyError("No data found for {}".format(localpath))
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

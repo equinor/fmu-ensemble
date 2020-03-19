@@ -285,12 +285,12 @@ def test_reek001_scalars():
 
     # If we try to read the empty files as numerical values, we should get
     # nothing back:
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         reekensemble.load_scalar(
             "emptyscalarfile", force_reread=True, convert_numeric=True
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         reekensemble.load_scalar("nonexistingfile")
 
 
@@ -919,11 +919,10 @@ def test_get_df():
         ens.get_df("unsmry-monthly")
 
     # Tests that we can do merges directly:
-    smrycount = len(smry.columns)
-    paramcount = len(ens.get_df("parameters.txt").columns)
+    params = ens.get_df("parameters.txt")
     smryparams = ens.get_df("unsmry--yearly", merge="parameters")
-    # One extra for the REAL column:
-    assert len(smryparams.columns) == smrycount + paramcount + 1
+    # The set union is to handle the REAL column present in both smry and params:
+    assert len(smryparams.columns) == len(set(smry.columns).union(params.columns))
 
 
 def test_apply():
