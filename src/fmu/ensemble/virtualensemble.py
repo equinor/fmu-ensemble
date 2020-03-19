@@ -797,10 +797,9 @@ file is picked up"""
 
         # Load all frames to be merged, we call ourselves for this
         # for the handling of lazy frames.
-        for mergepath in merge:
-            if mergepath is None:
-                continue
+        for mergepath in filter(None, merge):
             mergedata = self.get_df(mergepath)
+            data = pd.merge(data, mergedata)
 
         if data is not None:
             return data

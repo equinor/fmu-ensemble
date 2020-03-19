@@ -477,3 +477,25 @@ def test_volumetric_rates():
     assert "DATE" in vol_rates
     assert "FOPR" in vol_rates
     assert len(vol_rates) == 25
+
+
+def test_get_df_merge():
+    """Testing merge support in get_df()"""
+
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
+    reekensemble.load_scalar("npv.txt")
+    vens = reekensemble.to_virtual()
+
+    params = vens.get_df("parameters.txt")
+    smrycount = len(vens.get_df("unsmry--yearly").columns)
+    smryparams = vens.get_df("unsmry--yearly", merge="parameters")
+    assert len(smryparams.columns) == len(params.columns) + smrycount - 1
