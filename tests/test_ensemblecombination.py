@@ -81,7 +81,7 @@ def test_ensemblecombination_basic():
     # Ask to include summary data:
     vhalf_filtered2 = (0.5 * reekensemble).to_virtual(keyfilter="unsmry")
     assert not vhalf_filtered2.get_df("unsmry--yearly").empty
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         # pylint: disable=pointless-statement
         vhalf_filtered2.parameters
 

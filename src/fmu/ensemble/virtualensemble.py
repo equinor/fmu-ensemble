@@ -145,7 +145,7 @@ class VirtualEnsemble(object):
         be loaded on demand"""
         return list(self.lazy_frames.keys())
 
-    def shortcut2path(self, shortpath):
+    def shortcut2path(self, shortpath, keys=None):
         """
         Convert short pathnames to fully qualified pathnames
         within the datastore.
@@ -165,7 +165,10 @@ class VirtualEnsemble(object):
         # pylint: disable=import-outside-toplevel
         from .ensemble import shortcut2path
 
-        return shortcut2path(self.keys(), shortpath)
+        if keys is None:
+            return shortcut2path(self.keys(), shortpath)
+        else:
+            return shortcut2path(keys, shortpath)
 
     def __getitem__(self, localpath):
         """Shorthand for .get_df()
@@ -770,47 +773,34 @@ file is picked up"""
         Raises:
             KeyError if no data is found
         """
-        print("virtualensemble.get_df()")
         inconsistent_lazy_frames = set(self.data.keys()).intersection(
             set(self.lazy_frames.keys())
         )
         if inconsistent_lazy_frames:
+            # See comments in __init__ on lazy frames.
             logger.critical(
                 "Internal error, inconsistent lazy frames:\n %s",
                 str(inconsistent_lazy_frames),
             )
+        allfullpaths = list(self.data.keys()) + list(self.lazy_frames.keys())
+        fullpath = self.shortcut2path(localpath, keys=allfullpaths)
+        if fullpath not in self.data.keys():
+            # Need to lazy load it:
+            logger.warning("Loading %s from disk, was lazy", fullpath)
+            self._load_frame_fromdisk(fullpath, self.lazy_frames[fullpath])
+            self.lazy_frames.pop(fullpath)
+        data = None
+        data = self.data[fullpath]
+
         if not isinstance(merge, list):
             merge = [merge]  # Can still be None
-        # Ensure all needed data is loaded from disk, in case it has
-        # been postponed through from_disk()
-        for l_path in [localpath] + merge:
-            if l_path is not None and l_path in self.lazy_frames.keys():
-                logger.warning("Loading %s from disk, was lazy", l_path)
-                self._load_frame_fromdisk(l_path, self.lazy_frames[l_path])
-                self.lazy_frames.pop(l_path)
-        print("done lazy")
-        print(localpath)
-        data = None
-        if localpath in self.data.keys():
-            data = self.data[localpath]
-        else:
-            # shortcut2path() has been reimplemented here in order to support
-            # lazy frames.
-            allkeys = list(self.data.keys()) + list(self.lazy_frames.keys())
-            basenames = [os.path.basename(x) for x in allkeys]
-            noexts = ["".join(x.split(".")[:-1]) for x in allkeys]
-            basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in allkeys]
-            if basenames.count(localpath) == 1:
-                shortcut2path = {os.path.basename(x): x for x in allkeys}
-                data = self.get_df(shortcut2path[localpath])
-            elif noexts.count(localpath) == 1:
-                shortcut2path = {"".join(x.split(".")[:-1]): x for x in allkeys}
-                data = self.get_df(shortcut2path[localpath])
-            elif basenamenoexts.count(localpath) == 1:
-                shortcut2path = {
-                    "".join(os.path.basename(x).split(".")[:-1]): x for x in allkeys
-                }
-                data = self.get_df(shortcut2path[localpath])
+
+        # Load all frames to be merged, we call ourselves for this
+        # for the handling of lazy frames.
+        for mergepath in merge:
+            if mergepath is None:
+                continue
+            mergedata = self.get_df(mergepath)
 
         if data is not None:
             return data
