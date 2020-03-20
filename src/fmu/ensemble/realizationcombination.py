@@ -75,16 +75,40 @@ class RealizationCombination(object):
             combkeys = combkeys.intersection(self.sub.keys())
         return combkeys
 
-    def get_df(self, localpath):
-        """Evaluate the realization combination on a specific dataset
+    def get_df(self, localpath, merge=None):
+        """Obtain given data from the realizationcombination,
+        doing the actual computation of realizationdata on the fly.
 
-        On realizations, some datatypes can be dictionaries!
+        Warning: In order to add dataframes together with meaning,
+        using pandas.add, the index of the frames must be correctly set,
+        and this can be tricky for some datatypes (f.ex. volumetrics table
+        where you want to add together volumes for correct zone
+        and fault segment).
+
+        If you have the columns "DATE", "ZONE" and/or "REGION", it
+        will be regarded as an index column.
+
+        Args:
+            localpath (str): refers to the internalized name of the
+                data wanted in the realizations..
+            merge (list or str): Optional data to be merged in for the data
+                The merge will happen before combination. Be careful
+                with index guessing and merged data.
+
+        TODO: Merge may not make sense for every datatype.
+
+        Returns:
+            pd.DataFrame, str, float, int or dict
+
+            Raises:
+                KeyError if data is not found. This can also happen
+                    for the requested data to merge in.
         """
         # We can pandas.add when the index is set correct.
         # WE MUST GUESS!
         indexlist = []
         indexcandidates = ["DATE", "ZONE", "REGION"]
-        refdf = self.ref.get_df(localpath)
+        refdf = self.ref.get_df(localpath, merge=merge)
         if isinstance(refdf, pd.DataFrame):
             for index in indexcandidates:
                 if index in refdf.columns:
@@ -95,7 +119,7 @@ class RealizationCombination(object):
             refdf = pd.Series(refdf)
         result = refdf.mul(self.scale)
         if self.add:
-            otherdf = self.add.get_df(localpath)
+            otherdf = self.add.get_df(localpath, merge=merge)
             if isinstance(otherdf, pd.DataFrame):
                 otherdf = otherdf.set_index(indexlist)
                 otherdf = otherdf.select_dtypes(include="number")
@@ -103,7 +127,7 @@ class RealizationCombination(object):
                 otherdf = pd.Series(otherdf)
             result = result.add(otherdf)
         if self.sub:
-            otherdf = self.sub.get_df(localpath)
+            otherdf = self.sub.get_df(localpath, merge=merge)
             if isinstance(otherdf, pd.DataFrame):
                 otherdf = otherdf.set_index(indexlist)
                 otherdf = otherdf.select_dtypes(include="number")

@@ -499,3 +499,7 @@ def test_get_df_merge():
     smrycount = len(vens.get_df("unsmry--yearly").columns)
     smryparams = vens.get_df("unsmry--yearly", merge="parameters")
     assert len(smryparams.columns) == len(params.columns) + smrycount - 1
+
+    # TODO: Merge with multiiple files
+    # Merge with scalar data
+    # Merge with zone data

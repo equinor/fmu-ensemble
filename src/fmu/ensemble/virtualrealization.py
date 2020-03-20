@@ -204,7 +204,7 @@ class VirtualRealization(object):
         """
         raise NotImplementedError
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Access the internal datastore which contains dataframes, dicts
         or scalars.
 
@@ -219,7 +219,11 @@ class VirtualRealization(object):
         ValueError will be raised.
 
         Args:
-            localpath: the idenfier of the data requested
+            localpath (str): the identifier of the data requested
+            merge (list or str): refer to additional localpath(s) which
+                will be merged into the dataframe.
+
+        TODO: Does this make sense when localpath refers to a dict???
 
         Returns:
             dataframe or dictionary
@@ -233,8 +237,13 @@ class VirtualRealization(object):
             data = self.data[fullpath]
         else:
             raise ValueError("Could not find {}".format(localpath))
-
+        if merge is None:
+            merge = []
+        if not isinstance(merge, list):
+            merge = [merge]
         if isinstance(data, pd.DataFrame):
+            for mergekey in merge:
+                data = data.merge(self.get_df(mergekey))
             return data
         if isinstance(data, pd.Series):
             return data.to_dict()

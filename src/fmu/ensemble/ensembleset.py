@@ -388,22 +388,19 @@ class EnsembleSet(object):
                 )
         return self.get_df(localpath)
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Collect contents of dataframes from each ensemble
 
         Args:
-            localpath: path to the text file, relative to each realization
-            convert_numeric: If set to True, numerical columns
-                will be searched for and have their dtype set
-                to integers or floats.
-            force_reread: Force reread from file system. If
-                False, repeated calls to this function will
-                returned cached results.
+            localpath (str): path to the text file, relative to each realization
+            merge (list or str): refer to additional localpath(s) which will
+                be merged into the dataframe for every ensemble/realization.
+                Merging happens before aggregation.
         """
         ensdflist = []
         for _, ensemble in self._ensembles.items():
             try:
-                ensdf = ensemble.get_df(localpath)
+                ensdf = ensemble.get_df(localpath, merge=merge)
                 ensdf.insert(0, "ENSEMBLE", ensemble.name)
                 ensdflist.append(ensdf)
             except (KeyError, ValueError):
