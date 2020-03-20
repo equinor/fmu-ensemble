@@ -125,10 +125,11 @@ def test_virtual_fromdisk(tmp="TMP"):
     vreal.load_disk(os.path.join(tmp, "virtreal2"))
 
     for key in vreal.keys():
-        if isinstance(real.get_df(key), (pd.DataFrame, dict)):
-            assert len(real.get_df(key)) == len(vreal.get_df(key))
-        else:  # Scalars:
-            assert real.get_df(key) == vreal.get_df(key)
+        if key != "__smry_metadata":
+            if isinstance(real.get_df(key), (pd.DataFrame, dict)):
+                assert len(real.get_df(key)) == len(vreal.get_df(key))
+            else:  # Scalars:
+                assert real.get_df(key) == vreal.get_df(key)
     assert real.get_df("parameters")["FWL"] == vreal.get_df("parameters")["FWL"]
     assert (
         real.get_df("unsmry--yearly").iloc[-1]["FGIP"]
@@ -339,3 +340,25 @@ def test_glob_smry_keys():
     assert all([x.startswith("WOPT:") for x in vreal._glob_smry_keys("WOPT:*")])
 
     assert not vreal._glob_smry_keys("FOOBAR")
+
+
+def test_get_smry_meta():
+    """Test that summary meta information is preserved through
+    virtualization
+    """
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+    real.load_smry(column_keys="*", time_index="yearly")
+    vreal = real.to_virtual()
+
+    meta = vreal.get_smry_meta()
+    assert "FOPT" in meta
+    assert "WOPR:OP_1" in meta
+
+    assert meta["FOPT"]["wgname"] is None

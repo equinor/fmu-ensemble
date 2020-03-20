@@ -68,6 +68,41 @@ def test_realizationcombination_basic():
     assert "parameters.txt" not in vdiff_filtered2.keys()
     assert "FWPR" in vdiff_filtered2.get_df("unsmry--yearly")
 
+    smrymeta = realdiff.get_smry_meta(["FO*"])
+    assert "FOPT" in smrymeta
+
+
+def test_realizationcomb_virt_meta():
+    """Test metadata aggregation of combinations
+    of virtualized realizations"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    real0dir = os.path.join(
+        testdir, "data/testensemble-reek001", "realization-0/iter-0"
+    )
+    real0 = ensemble.ScratchRealization(real0dir)
+    real0.load_smry(time_index="yearly", column_keys=["F*"])
+    real1dir = os.path.join(
+        testdir, "data/testensemble-reek001", "realization-1/iter-0"
+    )
+    real1 = ensemble.ScratchRealization(real1dir)
+    real1.load_smry(time_index="yearly", column_keys=["FOPT", "WOPT*"])
+
+    # Virtualized based on the loades summary vectors, which
+    # differ between the two realizations.
+    vreal0 = real0.to_virtual()
+    vreal1 = real1.to_virtual()
+
+    assert "WOPT" not in vreal0.get_smry_meta(column_keys="*")
+    assert "FOPT" in vreal0.get_smry_meta(column_keys="*")
+    assert "WOPT:OP_3" in vreal1.get_smry_meta(column_keys="*")
+    assert "WOPT:OP_3" not in vreal0.get_smry_meta(column_keys="*")
+    assert "FOPT" in vreal1.get_smry_meta(column_keys="*")
+
 
 def test_manual_aggregation():
     """Test that aggregating an ensemble using

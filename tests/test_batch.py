@@ -48,7 +48,7 @@ def test_batch():
             {"load_scalar": {"localpath": "npv.txt"}},
             {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
             {"load_smry": {"column_keys": "*", "time_index": "daily"}},
-        ],
+        ]
     )
     assert len(ens.get_df("npv.txt")) == 5
     assert len(ens.get_df("unsmry--daily")["FOPR"]) == 5490

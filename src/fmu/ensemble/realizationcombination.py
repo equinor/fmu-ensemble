@@ -206,6 +206,30 @@ class RealizationCombination(object):
             result = result.sub(otherdf)
         return result.reset_index()
 
+    def get_smry_meta(self, column_keys=None):
+        """
+        Provide metadata for summary data vectors.
+
+        A dictionary indexed by summary vector names is returned, and each
+        value is another dictionary with potentially the metadata types:
+        * unit (string)
+        * is_total (bool)
+        * is_rate (bool)
+        * is_historical (bool)
+        * get_num (int) (only provided if not None)
+        * keyword (str)
+        * wgname (str og None)
+
+        Args:
+            column_keys: List or str of column key wildcards
+        """
+        meta = self.ref.get_smry_meta(column_keys=column_keys)
+        if self.add:
+            meta.update(self.add.get_smry_meta(column_keys=column_keys))
+        if self.sub:
+            meta.update(self.sub.get_smry_meta(column_keys=column_keys))
+        return meta
+
     @property
     def parameters(self):
         """Access the data obtained from parameters.txt

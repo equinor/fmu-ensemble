@@ -24,7 +24,7 @@ except ImportError:
     SKIP_FMU_TOOLS = True
 
 fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
+logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():
     raise SystemExit()
@@ -217,6 +217,22 @@ def test_emptyens():
     emptygroups = ens.get_groupnames()
     assert isinstance(emptygroups, list)
     assert not emptygroups
+
+    emptymeta = ens.get_smry_meta()
+    assert isinstance(emptymeta, dict)
+    assert not emptymeta
+
+    emptymeta = ens.get_smry_meta("*")
+    assert isinstance(emptymeta, dict)
+    assert not emptymeta
+
+    emptymeta = ens.get_smry_meta("FOPT")
+    assert isinstance(emptymeta, dict)
+    assert not emptymeta
+
+    emptymeta = ens.get_smry_meta(["FOPT"])
+    assert isinstance(emptymeta, dict)
+    assert not emptymeta
 
     # Add a realization manually:
     ens.add_realizations(
@@ -414,6 +430,26 @@ def test_ensemble_ecl():
     assert (
         len(reekensemble.get_smry(column_keys=["FOPR"], time_index="2001-01-02")) == 5
     )
+
+    # Summary metadata:
+    meta = reekensemble.get_smry_meta()
+    assert len(meta) == len(reekensemble.get_smrykeys())
+    assert "FOPT" in meta
+    assert not meta["FOPT"]["is_rate"]
+    assert meta["FOPT"]["is_total"]
+
+    meta = reekensemble.get_smry_meta("FOPT")
+    assert meta["FOPT"]["is_total"]
+
+    meta = reekensemble.get_smry_meta("*")
+    assert meta["FOPT"]["is_total"]
+
+    meta = reekensemble.get_smry_meta(["*"])
+    assert meta["FOPT"]["is_total"]
+
+    meta = reekensemble.get_smry_meta(["FOPT", "BOGUS"])
+    assert meta["FOPT"]["is_total"]
+    assert "BOGUS" not in meta
 
     # Eclipse well names list
     assert len(reekensemble.get_wellnames("OP*")) == 5

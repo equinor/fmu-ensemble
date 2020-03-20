@@ -91,9 +91,10 @@ class VirtualRealization(object):
         else:
             os.mkdir(filesystempath)
 
-        with open(os.path.join(filesystempath, "_description"), "w") as fhandle:
-            fhandle.write(self._description)
-        if self._longdescription:
+        if self._description is not None:
+            with open(os.path.join(filesystempath, "_description"), "w") as fhandle:
+                fhandle.write(self._description)
+        if self._longdescription is not None:
             with open(os.path.join(filesystempath, "_longdescription"), "w") as fhandle:
                 fhandle.write(str(self._longdescription))
         with open(os.path.join(filesystempath, "__repr__"), "w") as fhandle:
@@ -394,7 +395,7 @@ class VirtualRealization(object):
             "Using %s for interpolation of %s in REAL %s",
             chosen_smry,
             time_index,
-            self.name,
+            self.__repr__,
         )
 
         smry = self.get_df("unsmry--" + chosen_smry)[["DATE"] + column_keys]
@@ -478,6 +479,45 @@ class VirtualRealization(object):
         datetimes = pd.date_range(start_date, end_date, freq=pd_freq_mnenomics[freq])
         # Convert from Pandas' datetime64 to datetime.date:
         return [x.date() for x in datetimes]
+
+    def get_smry_meta(self, column_keys=None):
+        """
+        Provide metadata for summary data vectors.
+
+        A dictionary indexed by summary vector names is returned, and each
+        value is another dictionary with potentially the following metadata types:
+        * unit (string)
+        * is_total (bool)
+        * is_rate (bool)
+        * is_historical (bool)
+        * get_num (int) (only provided if not None)
+        * keyword (str)
+        * wgname (str or None)
+
+        Args:
+            column_keys (list or str): Column key wildcards.
+
+        Returns:
+            dict of dict with metadata information
+        """
+        # Warning: Code is identical the same function in virtualensemble.py
+        if column_keys is None:
+            column_keys = ["*"]
+        if not isinstance(column_keys, list):
+            column_keys = [column_keys]
+
+        available_smrynames = self.get_df("__smry_metadata")["SMRYCOLUMN"].values
+        matches = set()
+        for key in column_keys:
+            matches = matches.union(
+                [name for name in available_smrynames if fnmatch.fnmatch(name, key)]
+            )
+        return (
+            self.get_df("__smry_metadata")
+            .set_index("SMRYCOLUMN")
+            .loc[matches, :]
+            .to_dict(orient="index")
+        )
 
     def _glob_smry_keys(self, column_keys):
         """Glob a list of column keys
