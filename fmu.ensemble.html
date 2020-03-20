@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble v1.2.1.9 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble v1.2.1.10 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                v1.2.1.9
+                v1.2.1.10
               </div>
             
           
@@ -532,17 +532,48 @@ Empty dataframe if no files found.</p>
 <code class="sig-name descname">get_smrykeys</code><span class="sig-paren">(</span><em class="sig-param">vector_match=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.get_smrykeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.get_smrykeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a union of all Eclipse Summary vector names
 in all realizations (union).</p>
+<p>If any requested key/pattern does not match anything, it is
+silently ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>vector_match</strong> (<em>str</em><em> or </em><em>list of str</em>) – Wildcards for vectors
 to obtain. If None, all vectors are returned</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Matched summary vectors. Empty list if no
-summary file or no matched summary file vectors</p>
+<dd class="field-even"><p><dl class="simple">
+<dt>Matched summary vectors. Empty list if no</dt><dd><p>summary file or no matched summary file vectors</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.ensemble.ScratchEnsemble.get_smry_meta">
+<code class="sig-name descname">get_smry_meta</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#ScratchEnsemble.get_smry_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.get_smry_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide metadata for summary data vectors.</p>
+<p>A dictionary indexed by summary vector names is returned, and each
+value is another dictionary with potentially the following metadata types:
+* unit (string)
+* is_total (bool)
+* is_rate (bool)
+* is_historical (bool)
+* get_num (int) (only provided if not None)
+* keyword (str)
+* wgname (str or None)</p>
+<p>The requested columns are asked for over the entire ensemble, and if necessary
+all realizations will be checked to obtain the metadata for a specific key.
+If metadata differ between realization, behaviour is <em>undefined</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>column_keys</strong> (<em>list</em><em> or </em><em>str</em>) – Column key wildcards.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict of dict with metadata information</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1211,6 +1242,26 @@ standard, opposite to the oil industry standard.</p>
 </dd>
 </dl>
 <p>TODO: add warning message when failed realizations are removed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry_meta">
+<code class="sig-name descname">get_smry_meta</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemblecombination.html#EnsembleCombination.get_smry_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide metadata for summary data vectors.</p>
+<p>A dictionary indexed by summary vector names is returned, and each
+value is another dictionary with potentially the metadata types:
+* unit (string)
+* is_total (bool)
+* is_rate (bool)
+* is_historical (bool)
+* get_num (int) (only provided if not None)
+* keyword (str)
+* wgname (str or None)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>column_keys</strong> – List or str of column key wildcards</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -2508,6 +2559,26 @@ column_keys are not existing.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="fmu.ensemble.realization.ScratchRealization.get_smry_meta">
+<code class="sig-name descname">get_smry_meta</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.get_smry_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.get_smry_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide metadata for summary data vectors.</p>
+<p>A dictionary indexed by summary vector names is returned, and each
+value is another dictionary with potentially the metadata types:
+* unit (string)
+* is_total (bool)
+* is_rate (bool)
+* is_historical (bool)
+* get_num (int) (only provided if not None)
+* keyword (str)
+* wgname (str or None)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>column_keys</strong> – List or str of column key wildcards</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="fmu.ensemble.realization.ScratchRealization.get_volumetric_rates">
 <code class="sig-name descname">get_volumetric_rates</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em>, <em class="sig-param">time_index=None</em>, <em class="sig-param">time_unit=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.get_volumetric_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.get_volumetric_rates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute volumetric rates from cumulative summary vectors</p>
@@ -2897,6 +2968,26 @@ is requested (interpolated or extrapolated)</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="fmu.ensemble.realizationcombination.RealizationCombination.get_smry_meta">
+<code class="sig-name descname">get_smry_meta</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realizationcombination.html#RealizationCombination.get_smry_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realizationcombination.RealizationCombination.get_smry_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide metadata for summary data vectors.</p>
+<p>A dictionary indexed by summary vector names is returned, and each
+value is another dictionary with potentially the metadata types:
+* unit (string)
+* is_total (bool)
+* is_rate (bool)
+* is_historical (bool)
+* get_num (int) (only provided if not None)
+* keyword (str)
+* wgname (str og None)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>column_keys</strong> – List or str of column key wildcards</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="fmu.ensemble.realizationcombination.RealizationCombination.parameters">
 <em class="property">property </em><code class="sig-name descname">parameters</code><a class="headerlink" href="#fmu.ensemble.realizationcombination.RealizationCombination.parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Access the data obtained from parameters.txt</p>
@@ -3275,6 +3366,31 @@ is compatible with the date index and the cumulative data.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_meta">
+<code class="sig-name descname">get_smry_meta</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualensemble.html#VirtualEnsemble.get_smry_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide metadata for summary data vectors.</p>
+<p>A dictionary indexed by summary vector names is returned, and each
+value is another dictionary with potentially the following metadata types:
+* unit (string)
+* is_total (bool)
+* is_rate (bool)
+* is_historical (bool)
+* get_num (int) (only provided if not None)
+* keyword (str)
+* wgname (str or None)</p>
+<p>This data is produced from loaded summary dataframes upon ensemble
+virtualization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>column_keys</strong> (<em>list</em><em> or </em><em>str</em>) – Column key wildcards.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict of dict with metadata.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="fmu.ensemble.virtualensemble.VirtualEnsemble.files">
 <em class="property">property </em><code class="sig-name descname">files</code><a class="headerlink" href="#fmu.ensemble.virtualensemble.VirtualEnsemble.files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Access the list of internalized files as they came from
@@ -3518,6 +3634,29 @@ date range is covered.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>list of datetimes. Empty if no summary data is available.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="fmu.ensemble.virtualrealization.VirtualRealization.get_smry_meta">
+<code class="sig-name descname">get_smry_meta</code><span class="sig-paren">(</span><em class="sig-param">column_keys=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualrealization.html#VirtualRealization.get_smry_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide metadata for summary data vectors.</p>
+<p>A dictionary indexed by summary vector names is returned, and each
+value is another dictionary with potentially the following metadata types:
+* unit (string)
+* is_total (bool)
+* is_rate (bool)
+* is_historical (bool)
+* get_num (int) (only provided if not None)
+* keyword (str)
+* wgname (str or None)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>column_keys</strong> (<em>list</em><em> or </em><em>str</em>) – Column key wildcards.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dict of dict with metadata information</p>
 </dd>
 </dl>
 </dd></dl>

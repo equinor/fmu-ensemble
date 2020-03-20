@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.2.1.9 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble v1.2.1.10 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.9
+                v1.2.1.10
               </div>
             
           
@@ -402,8 +402,22 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span>
         <span class="k">if</span> <span class="n">deepcopy</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+            <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Conserve metadata for smry vectors. Build metadata dict for all</span>
+        <span class="c1"># loaded summary vectors.</span>
+        <span class="n">smrycolumns</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;unsmry&quot;</span> <span class="ow">in</span> <span class="n">key</span>
+        <span class="p">]</span>
+        <span class="n">smrycolumns</span> <span class="o">=</span> <span class="p">{</span><span class="n">smrykey</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">smrycolumns</span> <span class="k">for</span> <span class="n">smrykey</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">}</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">smrycolumns</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">meta</span><span class="p">:</span>
+            <span class="n">meta_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+            <span class="n">meta_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;SMRYCOLUMN&quot;</span>
+            <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">,</span> <span class="n">meta_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">vreal</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.load_file"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.load_file">[docs]</a>    <span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">fformat</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1258,6 +1272,39 @@
             <span class="k">return</span> <span class="n">dataframe</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span></div>
 
+<div class="viewcode-block" id="ScratchRealization.get_smry_meta"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_smry_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide metadata for summary data vectors.</span>
+
+<span class="sd">        A dictionary indexed by summary vector names is returned, and each</span>
+<span class="sd">        value is another dictionary with potentially the metadata types:</span>
+<span class="sd">        * unit (string)</span>
+<span class="sd">        * is_total (bool)</span>
+<span class="sd">        * is_rate (bool)</span>
+<span class="sd">        * is_historical (bool)</span>
+<span class="sd">        * get_num (int) (only provided if not None)</span>
+<span class="sd">        * keyword (str)</span>
+<span class="sd">        * wgname (str or None)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys: List or str of column key wildcards</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">column_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_glob_smry_keys</span><span class="p">(</span><span class="n">column_keys</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">eclsum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">column_keys</span><span class="p">:</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;is_total&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">is_total</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;is_rate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">is_rate</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;is_historical&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">smspec_node</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">is_historical</span><span class="p">()</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;keyword&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">smspec_node</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">keyword</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;wgname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">smspec_node</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">wgname</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="n">eclsum</span><span class="o">.</span><span class="n">smspec_node</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">get_num</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">meta</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s2">&quot;get_num&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num</span>
+        <span class="k">return</span> <span class="n">meta</span></div>
+
     <span class="k">def</span> <span class="nf">_glob_smry_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Utility function for globbing column names</span>
 
@@ -1266,7 +1313,18 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            column_keys: str or list of strings with patterns</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of strings. Empty list if no summary loaded.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Calling _glob_smry_keys without loaded or found summary file &quot;</span>
+                    <span class="s2">&quot;returns empty list&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_keys</span><span class="p">]</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>

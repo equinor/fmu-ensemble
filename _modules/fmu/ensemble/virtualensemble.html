@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.9 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble v1.2.1.10 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.9
+                v1.2.1.10
               </div>
             
           
@@ -167,6 +167,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">fnmatch</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 
 <span class="kn">import</span> <span class="nn">six</span>
@@ -285,7 +286,8 @@
         <span class="c1"># Check all dataframes:</span>
         <span class="n">idxset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">idxset</span> <span class="o">=</span> <span class="n">idxset</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;__smry_metadata&quot;</span><span class="p">:</span>
+                <span class="n">idxset</span> <span class="o">=</span> <span class="n">idxset</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxset</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="VirtualEnsemble.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -351,7 +353,10 @@
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="n">realizationdata</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">realindex</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;__smry_metadata&quot;</span><span class="p">:</span>
+                <span class="c1"># Special treatment of the internal special frame</span>
+                <span class="c1"># that is constant over all realizations</span>
+                <span class="n">realizationdata</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">realindex</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">realizationdata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="c1"># Convert scalar values to dictionaries, avoiding</span>
                 <span class="c1"># getting length-one-series returned later on access.</span>
@@ -360,9 +365,13 @@
                 <span class="n">realizationdata</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="k">del</span> <span class="n">realizationdata</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">in</span> <span class="n">realizationdata</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">realizationdata</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span>
             <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">realizationdata</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">vreal</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Add the smry metadata to the realization</span>
+            <span class="k">if</span> <span class="s2">&quot;__smry_metadata&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">vreal</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data for realization </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">realindex</span><span class="p">)</span></div>
 
@@ -439,7 +448,8 @@
         <span class="c1"># There might be Pandas tricks to avoid this outer loop.</span>
         <span class="k">for</span> <span class="n">realindex</span> <span class="ow">in</span> <span class="n">indicestodelete</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">realindex</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;__smry_metadata&quot;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">realindex</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="s2">&quot;Removed </span><span class="si">%s</span><span class="s2"> realization(s) from VirtualEnsemble&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">indicestodelete</span><span class="p">)</span>
@@ -516,6 +526,8 @@
             <span class="c1"># Aggregate over this ensemble:</span>
             <span class="c1"># Ensure we operate on fully qualified localpath&#39;s</span>
             <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;__smry_metadata&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;REAL&quot;</span><span class="p">)</span>
 
             <span class="c1"># Look for data we should group by. This would be beneficial</span>
@@ -579,7 +591,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can only append dataframes&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;REAL column not in incoming dataframe&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ignoring </span><span class="si">%s</span><span class="s2"> data already exists&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
@@ -858,6 +870,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">lazy_load</span><span class="p">:</span>
             <span class="c1"># Load all found dataframes from disk:</span>
             <span class="k">for</span> <span class="n">internalizedkey</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_load_frame_fromdisk</span><span class="p">(</span><span class="n">internalizedkey</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -1003,7 +1016,8 @@
         <span class="n">smry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">smry_path</span><span class="p">)</span>
         <span class="n">smry_interpolated</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">realidx</span> <span class="ow">in</span> <span class="n">smry</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
-            <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating VirtualRealization index </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">realidx</span><span class="p">))</span>
+            <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">realidx</span><span class="p">))</span>
             <span class="c1"># Inject the summary data for that specific realization</span>
             <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">smry_path</span><span class="p">,</span> <span class="n">smry</span><span class="p">[</span><span class="n">smry</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">realidx</span><span class="p">])</span>
 
@@ -1129,6 +1143,47 @@
             <span class="n">vol_rates_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vol_rate_df</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">vol_rates_dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="VirtualEnsemble.get_smry_meta"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide metadata for summary data vectors.</span>
+
+<span class="sd">        A dictionary indexed by summary vector names is returned, and each</span>
+<span class="sd">        value is another dictionary with potentially the following metadata types:</span>
+<span class="sd">        * unit (string)</span>
+<span class="sd">        * is_total (bool)</span>
+<span class="sd">        * is_rate (bool)</span>
+<span class="sd">        * is_historical (bool)</span>
+<span class="sd">        * get_num (int) (only provided if not None)</span>
+<span class="sd">        * keyword (str)</span>
+<span class="sd">        * wgname (str or None)</span>
+
+<span class="sd">        This data is produced from loaded summary dataframes upon ensemble</span>
+<span class="sd">        virtualization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys (list or str): Column key wildcards.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict of dict with metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">column_keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_keys</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_keys</span><span class="p">]</span>
+
+        <span class="n">available_smrynames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">)[</span><span class="s2">&quot;SMRYCOLUMN&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">column_keys</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">matches</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">available_smrynames</span> <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;SMRYCOLUMN&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">matches</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
     <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Substract another ensemble from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
@@ -1223,8 +1278,11 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_isvalidframe</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Validate that a DataFrame we read from disk is acceptable</span>
-<span class="sd">       as ensemble data. It must for example contain a column called</span>
-<span class="sd">       REAL with numerical data&quot;&quot;&quot;</span>
+<span class="sd">        as ensemble data. It must for example contain a column called</span>
+<span class="sd">        REAL with numerical data&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;__smry_metadata&quot;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+            <span class="c1"># This frame does not have the REAL column</span>
+            <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="s2">&quot;REAL&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;The column &#39;REAL&#39; was not found in file </span><span class="si">%s</span><span class="s2"> - ignored&quot;</span><span class="p">,</span> <span class="n">filename</span>

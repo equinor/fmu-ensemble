@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.9 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble v1.2.1.10 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                v1.2.1.9
+                v1.2.1.10
               </div>
             
           
@@ -500,6 +500,22 @@
         <span class="c1"># __files is the magic name for the dataframe of</span>
         <span class="c1"># loaded files.</span>
         <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;__files&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span>
+
+        <span class="c1"># Conserve metadata for smry vectors. Build metadata dict for all</span>
+        <span class="c1"># loaded summary vectors.</span>
+        <span class="n">smrycolumns</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">vens</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;unsmry&quot;</span> <span class="ow">in</span> <span class="n">key</span>
+        <span class="p">]</span>
+        <span class="n">smrycolumns</span> <span class="o">=</span> <span class="p">{</span><span class="n">smrykey</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">smrycolumns</span> <span class="k">for</span> <span class="n">smrykey</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">}</span>
+        <span class="c1"># flatten</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">smrycolumns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">meta</span><span class="p">:</span>
+            <span class="n">meta_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+            <span class="n">meta_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;SMRYCOLUMN&quot;</span>
+            <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">,</span> <span class="n">meta_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">())</span>
+            <span class="c1"># The metadata dictionary is stored as a Dataframe, with one row pr</span>
+            <span class="c1"># summary key (the index is reset due to code simplifications</span>
+            <span class="c1"># in to/from_disk)</span>
         <span class="k">return</span> <span class="n">vens</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dumpcsv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dumpparquet</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -716,12 +732,15 @@
 <span class="sd">        Return a union of all Eclipse Summary vector names</span>
 <span class="sd">        in all realizations (union).</span>
 
+<span class="sd">        If any requested key/pattern does not match anything, it is</span>
+<span class="sd">        silently ignored.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            vector_match (str or list of str): Wildcards for vectors</span>
 <span class="sd">               to obtain. If None, all vectors are returned</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            list of str: Matched summary vectors. Empty list if no</span>
-<span class="sd">            summary file or no matched summary file vectors</span>
+<span class="sd">                summary file or no matched summary file vectors</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vector_match</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">vector_match</span> <span class="o">=</span> <span class="p">[</span><span class="n">vector_match</span><span class="p">]</span>
@@ -737,6 +756,48 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No EclSum available for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ScratchEnsemble.get_smry_meta"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_smry_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide metadata for summary data vectors.</span>
+
+<span class="sd">        A dictionary indexed by summary vector names is returned, and each</span>
+<span class="sd">        value is another dictionary with potentially the following metadata types:</span>
+<span class="sd">        * unit (string)</span>
+<span class="sd">        * is_total (bool)</span>
+<span class="sd">        * is_rate (bool)</span>
+<span class="sd">        * is_historical (bool)</span>
+<span class="sd">        * get_num (int) (only provided if not None)</span>
+<span class="sd">        * keyword (str)</span>
+<span class="sd">        * wgname (str or None)</span>
+
+<span class="sd">        The requested columns are asked for over the entire ensemble, and if necessary</span>
+<span class="sd">        all realizations will be checked to obtain the metadata for a specific key.</span>
+<span class="sd">        If metadata differ between realization, behaviour is *undefined*.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys (list or str): Column key wildcards.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict of dict with metadata information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ensemble_smry_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smrykeys</span><span class="p">(</span><span class="n">vector_match</span><span class="o">=</span><span class="n">column_keys</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">missing_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">needed_reals</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Loop over realizations until all requested keys are accounted for</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">needed_reals</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">real_meta</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">ensemble_smry_keys</span><span class="p">)</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">real_meta</span><span class="p">)</span>
+            <span class="n">missing_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ensemble_smry_keys</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">missing_keys</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">needed_reals</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Searched </span><span class="si">%s</span><span class="s2"> realization(s) to get summary metadata&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">needed_reals</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">meta</span></div>
 
 <div class="viewcode-block" id="ScratchEnsemble.get_df"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.get_df">[docs]</a>    <span class="k">def</span> <span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load data from each realization and aggregate (vertically)</span>
