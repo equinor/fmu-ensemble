@@ -722,7 +722,7 @@ class ScratchRealization(object):
                 # pd.MergeError will be raised here when this fails,
                 # there must be common columns for this operation.
             else:
-                raise ValueError("Don't know how to merge data %s", mergekey)
+                raise ValueError("Don't know how to merge data {}".format(mergekey))
         return data
 
     def shortcut2path(self, shortpath):

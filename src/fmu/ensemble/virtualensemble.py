@@ -167,8 +167,7 @@ class VirtualEnsemble(object):
 
         if keys is None:
             return shortcut2path(self.keys(), shortpath)
-        else:
-            return shortcut2path(keys, shortpath)
+        return shortcut2path(keys, shortpath)
 
     def __getitem__(self, localpath):
         """Shorthand for .get_df()

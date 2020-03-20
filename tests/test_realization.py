@@ -1136,7 +1136,7 @@ def test_get_df_merge():
     assert len(smry.columns) == paramcount + smrycount + len(outputs)
 
     # Merge with scalar data, and combination of scalar and dict data:
-    npv = real.load_scalar("npv.txt")
+    real.load_scalar("npv.txt")
     smry = real.get_df("unsmry--monthly", merge="npv.txt")
     assert len(smry.columns) == smrycount + 1
     smry = real.get_df("unsmry--monthly", merge=["parameters.txt", "npv.txt"])

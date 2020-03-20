@@ -260,15 +260,12 @@ class Observations(object):
                 if obstype == "txt":
                     try:
                         sim_value = real.get_df(obsunit["localpath"])[obsunit["key"]]
-                    except KeyError:
+                    except (KeyError, ValueError):
                         logger.warning(
                             "%s in %s not found, ignored",
                             obsunit["key"],
                             obsunit["localpath"],
                         )
-                        continue
-                    except (KeyError, ValueError):
-                        logger.warning("%s not found, ignored", obsunit["localpath"])
                         continue
                     mismatch = float(sim_value - obsunit["value"])
                     measerror = 1
