@@ -217,6 +217,8 @@ class RealizationCombination(object):
         * is_rate (bool)
         * is_historical (bool)
         * get_num (int) (only provided if not None)
+        * keyword (str)
+        * wgname (str og None)
 
         Args:
             column_keys: List or str of column key wildcards

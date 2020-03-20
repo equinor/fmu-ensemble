@@ -994,6 +994,8 @@ file is picked up"""
         * is_rate (bool)
         * is_historical (bool)
         * get_num (int) (only provided if not None)
+        * keyword (str)
+        * wgname (str or None)
 
         This data is produced from loaded summary dataframes upon ensemble
         virtualization.
