@@ -1163,3 +1163,25 @@ def test_get_df_merge():
     assert "FIPNUM" in volframe
     assert "STOIIP_OIL" in volframe
     assert len(volframe["ZONE"].unique()) == 3
+
+    scalar_dict = real.get_df("npv.txt", merge="outputs")
+    assert "npv.txt" in scalar_dict
+    assert "top_structure" in scalar_dict
+
+    # Inject a random dict and merge with:
+    real.data["foodict"] = dict(BAR="COM")
+    dframe = real.get_df("parameters", merge="foodict")
+    assert "BAR" in dframe
+    assert "SORG1" in dframe
+
+    # Merge something that is not mergeable
+    real.data["randtable"] = pd.DataFrame(
+        columns=["BARF", "ARBF"], data=[[1, 3], [2, 4],]
+    )
+    with pytest.raises(TypeError):
+        # pylint: disable=pointless-statement
+        real.get_df("parameters", merge="randtable")
+
+    with pytest.raises(pd.errors.MergeError):
+        # pylint: disable=pointless-statement
+        real.get_df("unsmry--monthly", merge="randtable")

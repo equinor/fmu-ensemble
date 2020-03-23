@@ -493,13 +493,49 @@ def test_get_df_merge():
     )
     reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
     reekensemble.load_scalar("npv.txt")
+    reekensemble.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+    outputs = reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()
 
     params = vens.get_df("parameters.txt")
     smrycount = len(vens.get_df("unsmry--yearly").columns)
     smryparams = vens.get_df("unsmry--yearly", merge="parameters")
+
+    # The "minus 1" is due to the REAL column being present in both tables.
     assert len(smryparams.columns) == len(params.columns) + smrycount - 1
 
-    # TODO: Merge with multiiple files
-    # Merge with scalar data
-    # Merge with zone data
+    paramsoutputs = vens.get_df("parameters", merge=["outputs"])
+    assert len(paramsoutputs.columns) == len(params.columns) + len(outputs.columns) - 1
+
+    assert (
+        len(vens.get_df("unsmry--yearly", merge=["parameters", "outputs"]).columns)
+        == smrycount + len(params.columns) + len(outputs.columns) - 2
+    )
+
+    assert (
+        len(vens.get_df("parameters", merge="npv.txt").columns)
+        == len(params.columns) + 1
+    )
+    # Symmetry:
+    assert (
+        len(vens.get_df("npv.txt", merge="parameters.txt").columns)
+        == len(params.columns) + 1
+    )
+
+    # Merge with zone data, inject a mocked dataframe to the realization:
+    vens.data["fipnum2zone"] = pd.DataFrame(
+        columns=["FIPNUM", "ZONE"],
+        data=[
+            [1, "UpperReek"],
+            [2, "MidReek"],
+            [3, "LowerReek"],
+            [4, "UpperReek"],
+            [5, "MidReek"],
+            [6, "LowerReek"],
+        ],
+    )
+    volframe = vens.get_df("simulator_volume_fipnum", merge="fipnum2zone")
+    assert "ZONE" in volframe
+    assert "FIPNUM" in volframe
+    assert "STOIIP_OIL" in volframe
+    assert len(volframe["ZONE"].unique()) == 3

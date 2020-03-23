@@ -705,6 +705,12 @@ class ScratchRealization(object):
                 data = data.copy()
             elif isinstance(data, dict):
                 data = data.copy()
+            elif isinstance(data, (str, int, float, np.integer, np.floating)):
+                # Convert scalar data into something mergeable
+                value = data
+                data = {localpath: value}
+            else:
+                raise TypeError
         for mergekey in merge:
             if mergekey is None:
                 continue
@@ -714,7 +720,7 @@ class ScratchRealization(object):
                     # Add a column to the data for each dictionary
                     # key:
                     data[key] = mergedata[key]
-            elif isinstance(mergedata, (str, int, float, np.integer, np.floating)):
+            elif isinstance(mergedata, (str, int, float, np.number)):
                 # Scalar data, use the mergekey as column
                 data[mergekey] = mergedata
             elif isinstance(mergedata, pd.DataFrame):

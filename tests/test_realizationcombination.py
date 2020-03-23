@@ -71,6 +71,10 @@ def test_realizationcombination_basic():
     smrymeta = realdiff.get_smry_meta(["FO*"])
     assert "FOPT" in smrymeta
 
+    smry_params = realdiff.get_df("unsmry--yearly", merge="parameters.txt")
+    assert "SORG1" in smry_params
+    assert "FWCT" in smry_params
+
 
 def test_realizationcomb_virt_meta():
     """Test metadata aggregation of combinations

@@ -409,7 +409,7 @@ class EnsembleSet(object):
                 pass
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
-        raise KeyError("No data found for {}".format(localpath))
+        raise KeyError("No data found for {} or merge failed".format(localpath))
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.

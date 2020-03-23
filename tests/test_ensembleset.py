@@ -127,6 +127,19 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert len(ensset3.get_df("unsmry--yearly")) == 50
     monthly.to_csv(os.path.join(tmp, "ensset-monthly.csv"), index=False)
 
+    # Test merging in get_df()
+    param_output = ensset3.get_df("parameters.txt", merge="outputs")
+    assert "top_structure" in param_output
+    assert "SORG1" in param_output
+
+    smry_params = ensset3.get_df("unsmry--monthly", merge="parameters")
+    assert "SORG1" in smry_params
+    assert "FWCT" in smry_params
+
+    # Merging with something that does not exist:
+    with pytest.raises(KeyError):
+        ensset3.get_df("unsmry--monthly", merge="barrFF")
+
     with pytest.raises((KeyError, ValueError)):
         ensset3.get_df("unsmry--weekly")
 

@@ -85,6 +85,14 @@ def test_ensemblecombination_basic():
         # pylint: disable=pointless-statement
         vhalf_filtered2.parameters
 
+    # Get summary data with parameters:
+    smry_params = vhalf.get_df("unsmry--yearly", merge="parameters.txt")
+    assert "SORG1" in smry_params
+    assert "FWCT" in smry_params
+    # Data is merged before ensemble computations:
+    assert smry_params["T_1OG"].min() == reekensemble.parameters["T_1OG"].min() * 0.5
+    print(smry_params)
+
     # Test something long:
     # zero = (
     #    reekensemble

@@ -229,10 +229,7 @@ class VirtualRealization(object):
             dataframe or dictionary
         """
         data = None
-        if localpath in self.keys():
-            data = self.data[localpath]
         fullpath = self.shortcut2path(localpath)
-
         if fullpath in self.keys():
             data = self.data[fullpath]
         else:
@@ -240,14 +237,33 @@ class VirtualRealization(object):
         if merge is None:
             merge = []
         if not isinstance(merge, list):
-            merge = [merge]
-        if isinstance(data, pd.DataFrame):
-            for mergekey in merge:
-                data = data.merge(self.get_df(mergekey))
-            return data
-        if isinstance(data, pd.Series):
-            return data.to_dict()
-        if isinstance(data, (str, dict, int, float, np.integer, np.floating)):
+            merge = [merge]  # can still be None
+        if merge and merge[0] is not None:
+            # Make a copy of the primary data to ensure we don't edit it during merge
+            if isinstance(data, (pd.DataFrame, dict)):
+                data = data.copy()
+            elif isinstance(data, (str, int, float, np.number)):
+                # Convert scalar data into something mergeable
+                value = data
+                data = {localpath: value}
+                #data = data  # This is ok for immutable types.
+            else:
+                raise TypeError
+        for mergekey in merge:
+            if mergekey is None:
+                continue
+            mergedata = self.get_df(mergekey)
+            if isinstance(mergedata, dict):
+                for key in mergedata:
+                    data[key] = mergedata[key]
+            elif isinstance(mergedata, (str, int, float, np.number)):
+                # Scalar data, use the mergekey as column
+                data[mergekey] = mergedata
+            elif isinstance(mergedata, pd.DataFrame):
+                data = pd.merge(data, mergedata)
+            else:
+                raise ValueError("Don't know how to merge data {}".format(mergekey))
+        if data is not None:
             return data
         raise ValueError("BUG: Unknown datatype")
 

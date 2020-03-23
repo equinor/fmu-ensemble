@@ -924,6 +924,48 @@ def test_get_df():
     # The set union is to handle the REAL column present in both smry and params:
     assert len(smryparams.columns) == len(set(smry.columns).union(params.columns))
 
+    # Test multiple merges:
+    outputs = ens.load_txt("outputs.txt")
+    assert len(
+        ens.get_df("unsmry--yearly", merge=["parameters", "outputs.txt"]).columns
+    ) == len(set(smry.columns).union(params.columns).union(outputs.columns))
+
+    # Try merging dataframes:
+    ens.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+
+    # Inject a mocked dataframe to the realization, there is
+    # no "add_data" API for ensembles, but we can use the apply()
+    # functionality
+    def fipnum2zone():
+        """Helper function for injecting mocked frame into
+        each realization"""
+        return pd.DataFrame(
+            columns=["FIPNUM", "ZONE"],
+            data=[
+                [1, "UpperReek"],
+                [2, "MidReek"],
+                [3, "LowerReek"],
+                [4, "UpperReek"],
+                [5, "MidReek"],
+                [6, "LowerReek"],
+            ],
+        )
+
+    ens.apply(fipnum2zone, localpath="fipnum2zone")
+    volframe = ens.get_df("simulator_volume_fipnum", merge="fipnum2zone")
+
+    assert "ZONE" in volframe
+    assert "FIPNUM" in volframe
+    assert "STOIIP_OIL" in volframe
+    assert len(volframe["ZONE"].unique()) == 3
+
+    # Merge with scalar data:
+    ens.load_scalar("npv.txt")
+    vol_npv = ens.get_df("simulator_volume_fipnum", merge="npv.txt")
+    # (this particular data combination does not really make sense)
+    assert "STOIIP_OIL" in vol_npv
+    assert "npv.txt" in vol_npv
+
 
 def test_apply():
     """
