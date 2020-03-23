@@ -246,7 +246,6 @@ class VirtualRealization(object):
                 # Convert scalar data into something mergeable
                 value = data
                 data = {localpath: value}
-                #data = data  # This is ok for immutable types.
             else:
                 raise TypeError
         for mergekey in merge:

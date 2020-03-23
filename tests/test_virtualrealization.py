@@ -376,9 +376,9 @@ def test_get_df_merge():
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
     real = ensemble.ScratchRealization(realdir)
     unsmry = real.load_smry(column_keys="*", time_index="yearly")
-    volumes = real.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
-    outputs = real.load_txt("outputs.txt")
-    npv = real.load_scalar("npv.txt")
+    real.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+    real.load_txt("outputs.txt")
+    real.load_scalar("npv.txt")
     vreal = real.to_virtual()
 
     assert len(vreal.get_df("unsmry--yearly", merge="parameters").columns) == len(
