@@ -176,6 +176,7 @@ def test_virtualensemble():
     assert "REAL" not in vens.agg("min")["STATUS"].columns
 
     # Betterdata should be returned as a dictionary
+    # (it is returned from a virtualrealization object)
     assert isinstance(vens.agg("min").get_df("betterdata"), dict)
 
 

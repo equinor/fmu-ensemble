@@ -263,6 +263,8 @@ class VirtualRealization(object):
                 data = pd.merge(data, mergedata)
             else:
                 raise ValueError("Don't know how to merge data {}".format(mergekey))
+        if isinstance(data, pd.Series):
+            data = data.to_dict()
         if data is not None:
             return data
         raise ValueError("BUG: Unknown datatype")
