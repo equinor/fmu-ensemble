@@ -18,8 +18,10 @@ from ecl import EclDataType
 from ecl.eclfile import EclKW
 
 try:
+    # We always try to import concurrent.futures, but
+    # whether it is used depend on common.use_concurrent
     from concurrent.futures import ProcessPoolExecutor
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     pass
 
 from .etc import Interaction
@@ -944,7 +946,9 @@ class ScratchEnsemble(object):
             with ProcessPoolExecutor() as executor:
                 real_indices = self.realizations.keys()
                 futures_reals = [
-                    executor.submit(real.process_batch, batch, excepts=(OSError))
+                    executor.submit(
+                        real.process_batch, batch, excepts=(OSError, IOError)
+                    )
                     for real in self.realizations.values()
                 ]
                 # Reassemble the realization dictionary from
@@ -957,7 +961,7 @@ class ScratchEnsemble(object):
                 }
         else:
             for realization in self.realizations.values():
-                realization.process_batch(batch, excepts=(OSError))
+                realization.process_batch(batch, excepts=(OSError, IOError))
 
         return self
 

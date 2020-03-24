@@ -9,6 +9,15 @@ python:
   - "3.7"
   - "3.8"
 
+env:
+  - FMU_CONCURRENCY=True
+  - FMU_CONCURRENCY=False
+
+jobs:
+  exclude:
+    - python: "2.7"
+      env: FMU_CONCURRENCY=True
+
 addons:
   apt:
     packages:
@@ -22,6 +31,7 @@ before_install:
 install:
   - ls
   - pip install -r requirements_dev.txt
+  - pip install concurrent || echo  # Supposed to fail on Py27
   - pip install .
 
 script:
