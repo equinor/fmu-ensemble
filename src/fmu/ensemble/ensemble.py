@@ -533,18 +533,6 @@ class ScratchEnsemble(object):
                 }
             ]
         )
-        # for index, realization in self._realizations.items():
-        #    try:
-        #        realization.load_file(localpath, fformat, convert_numeric, force_reread)
-        #    except ValueError:
-        #        # This would at least occur for unsupported fileformat,
-        #        # and that we should not skip.
-        #        logger.critical("load_file() failed in realization %d", index)
-        #        raise ValueError
-        #    except IOError:
-        #        # At ensemble level, we allow files to be missing in
-        #        # some realizations
-        #        logger.warning("Could not read %s for realization %d", localpath, index)
         if self.get_df(localpath).empty:
             raise ValueError("No ensemble data found for {}".format(localpath))
         return self.get_df(localpath)

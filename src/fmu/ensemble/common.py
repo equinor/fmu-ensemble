@@ -17,12 +17,13 @@ def use_concurrent():
     if "concurrent.futures" in sys.modules:
         if env_name not in os.environ:
             return True
-        else:
-            env_var = os.environ[env_name]
-            if str(env_var) == "0" or str(env_var).lower() == "false":
-                return False
-            else:
-                return True
-    else:
-        # If concurrent.futures is not available, we end here.
-        return False
+        env_var = os.environ[env_name]
+        if (
+            str(env_var) == "0"
+            or str(env_var).lower() == "false"
+            or str(env_var).lower() == "no"
+        ):
+            return False
+        return True
+    # If concurrent.futures is not available to import, we end here.
+    return False

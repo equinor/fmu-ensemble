@@ -228,7 +228,6 @@ class ScratchRealization(object):
                     logger.info(
                         "Ignoring exception in real %d: %s", self.index, str(exception)
                     )
-                    pass
         return self
 
     def runpath(self):
