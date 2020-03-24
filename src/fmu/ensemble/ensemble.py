@@ -333,8 +333,11 @@ class ScratchEnsemble(object):
             realindices = [realindices]
         popped = 0
         for index in realindices:
-            self.realizations.pop(index, None)
-            popped += 1
+            if index in self.realizations.keys():
+                self.realizations.pop(index, None)
+                popped += 1
+            else:
+                logger.warning("Can't remove realization %d, it is not there", index)
         logger.info("removed %d realization(s)", popped)
 
     def to_virtual(self, name=None):
@@ -790,23 +793,6 @@ class ScratchEnsemble(object):
         """
         if not stacked:
             raise NotImplementedError
-#<<<<<<< HEAD
-#        # Future: Multithread this!
-#        for realidx, realization in self.realizations.items():
-#            # We do not store the returned DataFrames here,
-#            # instead we look them up afterwards using get_df()
-#            # Downside is that we have to compute the name of the
-#            # cached object as it is not returned.
-#            logger.info("Loading smry from realization %s", realidx)
-#            realization.load_smry(
-#                time_index=time_index,
-#                column_keys=column_keys,
-#                cache_eclsum=cache_eclsum,
-#                start_date=start_date,
-#                end_date=end_date,
-#                include_restart=include_restart,
-#            )
-#=======
         self.process_batch(
             batch=[
                 {
@@ -822,7 +808,6 @@ class ScratchEnsemble(object):
             ]
         )
 
-#>>>>>>> Forward batch command from ensembles and ensemblesets
         if isinstance(time_index, list):
             time_index = "custom"
         # Note the dependency that the load_smry() function in
@@ -971,8 +956,8 @@ class ScratchEnsemble(object):
             with ProcessPoolExecutor() as executor:
                 real_indices = self.realizations.keys()
                 futures_reals = [
-                    executor.submit(real.process_batch, batch)
-                    for real in self._realizations.values()
+                    executor.submit(real.process_batch, batch, excepts=(OSError))
+                    for real in self.realizations.values()
                 ]
                 # Reassemble the realization dictionary from
                 # the pickled results of the ProcessPool:
@@ -984,7 +969,8 @@ class ScratchEnsemble(object):
                 }
         else:
             for realization in self.realizations.values():
-                realization.process_batch(batch)
+                realization.process_batch(batch, excepts=(OSError))
+
         return self
 
     def apply(self, callback, **kwargs):

@@ -176,7 +176,7 @@ class ScratchRealization(object):
 
         logger.info("Initialized %s", abspath)
 
-    def process_batch(self, batch):
+    def process_batch(self, batch, excepts=None):
         """Process a list of functions to run/apply
 
         This is equivalent to calling each function individually
@@ -188,6 +188,8 @@ class ScratchRealization(object):
             batch (list): Each list element is a dictionary with one key,
                 being a function names, value pr key is a dict with keyword
                 arguments to be supplied to each function.
+            excepts (tuple): Tuple of exceptions that are to be ignored in
+                each individual realization.
         Returns:
             ScratchRealization: This realization object (self), for it
                 to be picked up by ProcessPoolExecutor and pickling.
@@ -217,7 +219,16 @@ class ScratchRealization(object):
                 logger.warning("process_batch skips illegal function: %s", fn_name)
                 continue
             assert isinstance(cmd[fn_name], dict)
-            getattr(self, fn_name)(**cmd[fn_name])
+            if excepts is None:
+                getattr(self, fn_name)(**cmd[fn_name])
+            else:
+                try:
+                    getattr(self, fn_name)(**cmd[fn_name])
+                except excepts as exception:
+                    logger.info(
+                        "Ignoring exception in real %d: %s", self.index, str(exception)
+                    )
+                    pass
         return self
 
     def runpath(self):
