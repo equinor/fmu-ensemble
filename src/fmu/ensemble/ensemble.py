@@ -689,22 +689,48 @@ class ScratchEnsemble(object):
         Raises:
             KeyError if no data is found in no realizations.
         """
+        realization_results = {}
         dflist = {}
-        for index, realization in self.realizations.items():
-            try:
-                data = realization.get_df(localpath, merge=merge)
-                if isinstance(data, dict):
-                    data = pd.DataFrame(index=[1], data=data)
-                elif isinstance(data, (str, int, float, np.integer, np.floating)):
-                    data = pd.DataFrame(index=[1], columns=[localpath], data=data)
-                if isinstance(data, pd.DataFrame):
-                    dflist[index] = data
-                else:
-                    raise ValueError("Unkown datatype returned " + "from realization")
-            except (KeyError, ValueError):
-                # No logging here, those error messages
-                # should have appeared at construction using load_*()
-                pass
+        # First obtain the raw result from each realization object:
+        if use_concurrent:
+            with ProcessPoolExecutor() as executor:
+                real_indices = self.realizations.keys()
+                futures_reals = [
+                    executor.submit(
+                        real.get_df,
+                            localpath, merge=merge#, excepts=(KeyError, ValueError, TypeError)
+                    )
+                    for real in self.realizations.values()
+                ]
+                realization_results = {
+                    r_idx: dframe
+                    for (r_idx, dframe) in zip(
+                        real_indices,
+                        [x.result() for x in futures_reals if x.exception() is None],
+                    )
+                }
+        else:
+            for index, realization in self.realizations.items():
+                try:
+                    realization_results[index] = realization.get_df(
+                        localpath, merge=merge
+                    )
+                except (KeyError, ValueError):
+                    # No logging here, those error messages
+                    # should have appeared at construction using load_*()
+                    pass
+        # Convert all results to dataframes so we can aggregate:
+        dflist = {}
+        for index, data in realization_results.items():
+            if isinstance(data, dict):
+                data = pd.DataFrame(index=[1], data=data)
+            elif isinstance(data, (str, int, float, np.integer, np.floating)):
+                data = pd.DataFrame(index=[1], columns=[localpath], data=data)
+            if isinstance(data, pd.DataFrame):
+                dflist[index] = data
+            else:
+                print(type(data))
+                raise ValueError("Unkown datatype returned " + "from realization")
         if dflist:
             # Merge a dictionary of dataframes. The dict key is
             # the realization index, and end up in a MultiIndex

@@ -58,7 +58,7 @@ def test_webviz_subsurface_testdata():
     assert len(ens.keys()) == 11
 
 
-def test_webviz_subsurface_testdata_batch():
+def test_webviz_subsurface_testdata_batch(tmpdir):
     """Check that we can load the webviz subsurface testdata in batch
 
     Also display timings, this should reveal that concurrent operations
@@ -86,6 +86,10 @@ def test_webviz_subsurface_testdata_batch():
     ]
     ens = ScratchEnsemble(
         "reek_fullmatrix", ensdir + "realization-*/iter-0", batch=batch_cmds
+    )
+    tmpdir.chdir()
+    ens.get_df("unsmry--daily", merge="parameters").to_csv(
+        "unsmry-params.csv", index=False
     )
     end_time = datetime.datetime.now()
     elapsed = (end_time - start_time).total_seconds()

@@ -53,6 +53,8 @@ def test_ensemblecombination_basic():
     foptsum = reekensemble.get_df("unsmry--yearly")["FOPT"].sum()
     half = 0.5 * reekensemble
     assert half["unsmry--yearly"]["FOPT"].sum() == 0.5 * foptsum
+    print(reekensemble.get_df("npv.txt"))
+    print(half["npv.txt"].sort_values("REAL"))
     assert half["npv.txt"].sort_values("REAL")["npv.txt"].iloc[0] == 1722
     assert (
         half.get_smry(column_keys="FOPT", time_index="last")["FOPT"].sum()

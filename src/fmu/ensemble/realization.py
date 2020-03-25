@@ -673,7 +673,7 @@ class ScratchRealization(object):
         """
         return self.data.keys()
 
-    def get_df(self, localpath, merge=None):
+    def get_df(self, localpath, merge=None, excepts=None):
         """Access the internal datastore which contains dataframes or dicts
         or scalars.
 
@@ -703,7 +703,10 @@ class ScratchRealization(object):
         """
         fullpath = self.shortcut2path(localpath)
         if fullpath not in self.data.keys():
-            raise KeyError("Could not find {}".format(localpath))
+            if KeyError not in excepts:
+                raise KeyError("Could not find {}".format(localpath))
+            else:
+                return pd.DataFrame()
         data = self.data[self.shortcut2path(localpath)]
         if not isinstance(merge, list):
             merge = [merge]  # can still be None
@@ -721,7 +724,14 @@ class ScratchRealization(object):
                 value = data
                 data = {localpath: value}
             else:
-                raise TypeError
+                if TypeError not in excepts:
+                    print("WE ENDED IN TYPEERROR")
+                    print(merge)
+                    print(data)
+                    raise TypeError
+                else:
+                    print("Bypassing typeerror")
+                    return pd.DataFrame()
         for mergekey in merge:
             if mergekey is None:
                 continue
@@ -739,7 +749,10 @@ class ScratchRealization(object):
                 # pd.MergeError will be raised here when this fails,
                 # there must be common columns for this operation.
             else:
-                raise ValueError("Don't know how to merge data {}".format(mergekey))
+                if ValueError not in excepts:
+                    raise ValueError("Don't know how to merge data {}".format(mergekey))
+                else:
+                    return pd.DataFrame()
         return data
 
     def shortcut2path(self, shortpath):
