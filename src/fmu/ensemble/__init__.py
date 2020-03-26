@@ -1,10 +1,11 @@
 """Top-level package for fmu.ensemble"""
 
-from ._theversion import theversion
+try:
+    from .version import version
 
-__version__ = theversion()
-
-del theversion
+    __version__ = version
+except ImportError:
+    __version__ = "0.0.0"
 
 from .ensemble import ScratchEnsemble  # noqa
 from .realization import ScratchRealization  # noqa
