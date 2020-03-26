@@ -8,8 +8,9 @@ import os
 import re
 import glob
 import shutil
-import pandas as pd
+import six
 
+import pandas as pd
 import pytest
 
 from fmu.ensemble import etc
@@ -28,7 +29,30 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_ensembleset_reek001(tmp="TMP"):
+def symlink_iter(origensdir, newitername):
+    """Symlink iter-0 to a new iter-set, creating an identical ensemble
+
+    Each individual file is symlinked, directories are copied.
+    """
+    for fullpathrealizationdir in glob.glob(origensdir + "/realization-*"):
+        realizationdir = fullpathrealizationdir.split("/")[-1]
+        if not os.path.exists(realizationdir):
+            os.mkdir(realizationdir)
+        if not six.PY2:
+            shutil.copytree(
+                fullpathrealizationdir + "/iter-0",
+                realizationdir + "/" + newitername,
+                copy_function=os.symlink,
+            )
+        else:
+            # On Python2, we do full tree copies as copy_function
+            # is not supported there.
+            shutil.copytree(
+                fullpathrealizationdir + "/iter-0", realizationdir + "/" + newitername
+            )
+
+
+def test_ensembleset_reek001(tmpdir):
     """Test import of a stripped 5 realization ensemble,
     manually doubled to two identical ensembles
     """
@@ -40,20 +64,15 @@ def test_ensembleset_reek001(tmp="TMP"):
         testdir = os.path.abspath(".")
     ensdir = os.path.join(testdir, "data/testensemble-reek001/")
 
-    # Copy iter-0 to iter-1, creating an identical ensemble
-    # we can load for testing.
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        if os.path.exists(realizationdir + "/iter-1"):
-            if os.path.islink(realizationdir + "/iter-1"):
-                os.remove(realizationdir + "/iter-1")
-            else:
-                shutil.rmtree(realizationdir + "/iter-1")
-        os.symlink(realizationdir + "/iter-0", realizationdir + "/iter-1")
+    tmpdir.chdir()
+    symlink_iter(ensdir, "iter-0")
+    symlink_iter(ensdir, "iter-1")
 
-    iter0 = ScratchEnsemble("iter-0", ensdir + "/realization-*/iter-0")
-    iter1 = ScratchEnsemble("iter-1", ensdir + "/realization-*/iter-1")
+    iter0 = ScratchEnsemble("iter-0", str(tmpdir.join("realization-*/iter-0")))
+    iter1 = ScratchEnsemble("iter-1", str(tmpdir.join("realization-*/iter-1")))
 
     ensset = EnsembleSet("reek001", [iter0, iter1])
+
     assert len(ensset) == 2
     assert len(ensset["iter-0"].get_df("STATUS")) == 250
     assert len(ensset["iter-1"].get_df("STATUS")) == 250
@@ -86,18 +105,16 @@ def test_ensembleset_reek001(tmp="TMP"):
     # Initialize directly from path with globbing:
     ensset3 = EnsembleSet("reek001direct", [])
     assert ensset3.name == "reek001direct"
-    ensset3.add_ensembles_frompath(ensdir)
+    ensset3.add_ensembles_frompath(".")
     assert len(ensset3) == 2
 
     # Alternative globbing:
-    ensset4 = EnsembleSet("reek001direct2", frompath=ensdir)
+    ensset4 = EnsembleSet("reek001direct2", frompath=".")
     assert len(ensset4) == 2
 
     # Testing aggregation of parameters
     paramsdf = ensset3.parameters
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    paramsdf.to_csv(os.path.join(tmp, "enssetparams.csv"), index=False)
+    paramsdf.to_csv("enssetparams.csv", index=False)
     assert isinstance(paramsdf, pd.DataFrame)
     assert len(ensset3.parameters) == 10
     assert len(ensset3.parameters.columns) == 27
@@ -125,7 +142,7 @@ def test_ensembleset_reek001(tmp="TMP"):
     # Check that we can retrieve cached versions
     assert len(ensset3.get_df("unsmry--monthly")) == 380
     assert len(ensset3.get_df("unsmry--yearly")) == 50
-    monthly.to_csv(os.path.join(tmp, "ensset-monthly.csv"), index=False)
+    monthly.to_csv("ensset-monthly.csv", index=False)
 
     # Test merging in get_df()
     param_output = ensset3.get_df("parameters.txt", merge="outputs")
@@ -222,15 +239,10 @@ def test_ensembleset_reek001(tmp="TMP"):
         geogrid_oil = ensset3.load_csv("share/results/volumes/geogrid--oil.csv")
         assert len(geogrid_oil["REAL"].unique()) == 4
         assert len(geogrid_oil["ENSEMBLE"].unique()) == 2
-        # Clean up what we just dumped:
-        for real_dir in glob.glob(ensdir + "/realization-*"):
-            csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
-            if os.path.exists(csvfile):
-                os.remove(csvfile)
 
     # Initialize differently, using only the root path containing
     # realization-*
-    ensset4 = EnsembleSet("foo", frompath=ensdir)
+    ensset4 = EnsembleSet("foo", frompath=".")
     assert len(ensset4) == 2
     assert isinstance(ensset4["iter-0"], ScratchEnsemble)
     assert isinstance(ensset4["iter-1"], ScratchEnsemble)
@@ -238,7 +250,7 @@ def test_ensembleset_reek001(tmp="TMP"):
     # Try the batch command feature:
     ensset5 = EnsembleSet(
         "reek001",
-        frompath=ensdir,
+        frompath=".",
         batch=[
             {"load_scalar": {"localpath": "npv.txt"}},
             {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
@@ -250,7 +262,7 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert len(ensset5.get_df("unsmry--daily")) == 10980
 
     # Try batch processing after initialization:
-    ensset6 = EnsembleSet("reek001", frompath=ensdir)
+    ensset6 = EnsembleSet("reek001", frompath=".")
     ensset6.process_batch(
         batch=[
             {"load_scalar": {"localpath": "npv.txt"}},
@@ -262,17 +274,8 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert len(ensset5.get_df("unsmry--yearly")) == 50
     assert len(ensset5.get_df("unsmry--daily")) == 10980
 
-    # Delete the symlink and leftover from apply-testing when we are done.
-    for real_dir in glob.glob(ensdir + "/realization-*"):
-        if not SKIP_FMU_TOOLS:
-            csvfile = real_dir + "/iter-0/share/results/volumes/geogrid--oil.csv"
-            if os.path.exists(csvfile):
-                os.remove(csvfile)
-        if os.path.exists(real_dir + "/iter-1"):
-            os.remove(real_dir + "/iter-1")
 
-
-def test_pred_dir():
+def test_pred_dir(tmpdir):
     """Test import of a stripped 5 realization ensemble,
     manually doubled to two identical ensembles,
     plus a prediction ensemble
@@ -285,26 +288,21 @@ def test_pred_dir():
         testdir = os.path.abspath(".")
     ensdir = os.path.join(testdir, "data/testensemble-reek001/")
 
-    # Copy iter-0 to iter-1, creating an identical ensemble
-    # we can load for testing. Delete in case it exists
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        if os.path.exists(realizationdir + "/iter-1"):
-            os.remove(realizationdir + "/iter-1")
-        os.symlink(realizationdir + "/iter-0", realizationdir + "/iter-1")
-        if os.path.exists(realizationdir + "/pred-dg3"):
-            os.remove(realizationdir + "/pred-dg3")
-        os.symlink(realizationdir + "/iter-0", realizationdir + "/pred-dg3")
+    tmpdir.chdir()
+    symlink_iter(ensdir, "iter-0")
+    symlink_iter(ensdir, "iter-1")
+    symlink_iter(ensdir, "pred-dg3")
 
     # Initialize differently, using only the root path containing
     # realization-*. The frompath argument does not support
     # anything but iter-* naming convention for ensembles (yet?)
-    ensset = EnsembleSet("foo", frompath=ensdir)
+    ensset = EnsembleSet("foo", frompath=".")
     assert len(ensset) == 2
     assert isinstance(ensset["iter-0"], ScratchEnsemble)
     assert isinstance(ensset["iter-1"], ScratchEnsemble)
 
     # We need to be more explicit to include the pred-dg3 directory:
-    pred_ens = ScratchEnsemble("pred-dg3", ensdir + "realization-*/pred-dg3")
+    pred_ens = ScratchEnsemble("pred-dg3", "realization-*/pred-dg3")
     ensset.add_ensemble(pred_ens)
     assert isinstance(ensset["pred-dg3"], ScratchEnsemble)
     assert len(ensset) == 3
@@ -320,18 +318,13 @@ def test_pred_dir():
     assert "iter-1" in ens_list
 
     # Try to add a new ensemble with a similar name to an existing:
-    foo_ens = ScratchEnsemble("pred-dg3", ensdir + "realization-*/iter-1")
+    foo_ens = ScratchEnsemble("pred-dg3", "realization-*/iter-1")
     with pytest.raises(ValueError):
         ensset.add_ensemble(foo_ens)
     assert len(ensset) == 3
 
-    # Delete the symlinks when we are done.
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        os.remove(realizationdir + "/iter-1")
-        os.remove(realizationdir + "/pred-dg3")
 
-
-def test_mangling_data():
+def test_mangling_data(tmpdir):
     """Test import of a stripped 5 realization ensemble,
     manually doubled to two identical ensembles,
     and then with some data removed
@@ -344,14 +337,12 @@ def test_mangling_data():
         testdir = os.path.abspath(".")
     ensdir = os.path.join(testdir, "data/testensemble-reek001/")
 
+    tmpdir.chdir()
+
+    symlink_iter(ensdir, "iter-0")
     # Copy iter-0 to iter-1, creating an identical ensemble<
     # we can load for testing. Delete in case it exists
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        if os.path.exists(realizationdir + "/iter-1"):
-            if os.path.islink(realizationdir + "/iter-1"):
-                os.remove(realizationdir + "/iter-1")
-            else:
-                shutil.rmtree(realizationdir + "/iter-1")
+    for realizationdir in glob.glob("realization-*"):
         # Symlink each file/dir individually (so we can remove some)
         os.mkdir(realizationdir + "/iter-1")
         for realizationcomponent in glob.glob(realizationdir + "/iter-0/*"):
@@ -369,7 +360,7 @@ def test_mangling_data():
     assert not EnsembleSet("bar")  # No warning, just empty
     EnsembleSet("foobar", frompath="foobarth")  # trigger warning
 
-    ensset = EnsembleSet("foo", frompath=ensdir)
+    ensset = EnsembleSet("foo", frompath=".")
     assert len(ensset) == 2
     assert isinstance(ensset["iter-0"], ScratchEnsemble)
     assert isinstance(ensset["iter-1"], ScratchEnsemble)
@@ -390,12 +381,8 @@ def test_mangling_data():
     with pytest.raises((KeyError, ValueError)):
         ensset.get_df("foobar")
 
-    # Delete the symlinks when we are done.
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        shutil.rmtree(realizationdir + "/iter-1")
 
-
-def test_filestructures(tmp="TMP"):
+def test_filestructures(tmpdir):
     """Generate filepath structures that we want to be able to initialize
     as ensemblesets.
 
@@ -406,9 +393,10 @@ def test_filestructures(tmp="TMP"):
         testdir = os.path.dirname(os.path.abspath(__file__))
     else:
         testdir = os.path.abspath(".")
-    ensdir = os.path.join(testdir, tmp, "data/dummycase/")
-    if os.path.exists(ensdir):
-        shutil.rmtree(ensdir)
+
+    tmpdir.chdir()
+
+    ensdir = os.path.join("dummycase/")
     os.makedirs(ensdir)
     no_reals = 5
     no_iters = 4

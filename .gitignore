@@ -46,7 +46,6 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
-TMP/
 
 # Translations
 *.mo
@@ -65,6 +64,7 @@ target/
 
 # pyenv python configuration file
 .python-version
+src/fmu/ensemble/version.py
 
 # other
 .idea/

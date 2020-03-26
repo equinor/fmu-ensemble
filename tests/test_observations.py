@@ -25,7 +25,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_observation_import(tmp="TMP"):
+def test_observation_import(tmpdir):
     """Test import of observations from yaml"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -47,9 +47,8 @@ def test_observation_import(tmp="TMP"):
     assert isinstance(obs["rft"], list)
 
     # Dump back to disk
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    exportedfile = os.path.join(tmp, "share/observations/observations_copy.yml")
+    tmpdir.chdir()
+    exportedfile = "share/observations/observations_copy.yml"
     obs.to_disk(exportedfile)
     assert os.path.exists(exportedfile)
 

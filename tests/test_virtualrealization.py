@@ -69,7 +69,7 @@ def test_virtual_realization():
         vreal.get_df("bogusdataname")
 
 
-def test_virtual_todisk(tmp="TMP"):
+def test_virtual_todisk(tmpdir):
     """Test writing a virtual realization to disk (as a directory with files)"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -85,22 +85,20 @@ def test_virtual_todisk(tmp="TMP"):
     vreal = real.to_virtual()
     assert "npv.txt" in vreal.keys()
 
+    tmpdir.chdir()
+
     with pytest.raises(IOError):
-        vreal.to_disk(".")
+        vreal.to_disk("/")
 
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    print(os.path.join(tmp, "virtreal1"))
-    vreal.to_disk(os.path.join(tmp, "virtreal1"), delete=True)
-    assert os.path.exists(os.path.join(tmp, "virtreal1/parameters.txt"))
-    assert os.path.exists(os.path.join(tmp, "virtreal1/STATUS"))
-    assert os.path.exists(
-        os.path.join(tmp, "virtreal1/share/results/" + "tables/unsmry--yearly.csv")
-    )
-    assert os.path.exists(os.path.join(tmp, "virtreal1/npv.txt"))
+    print("virtreal1")
+    vreal.to_disk("virtreal1", delete=True)
+    assert os.path.exists("virtreal1/parameters.txt")
+    assert os.path.exists("virtreal1/STATUS")
+    assert os.path.exists("virtreal1/share/results/tables/unsmry--yearly.csv")
+    assert os.path.exists("virtreal1/npv.txt")
 
 
-def test_virtual_fromdisk(tmp="TMP"):
+def test_virtual_fromdisk(tmpdir):
     """Test retrieval of a virtualrealization that
     has been dumped to disk"""
     if "__file__" in globals():
@@ -115,14 +113,15 @@ def test_virtual_fromdisk(tmp="TMP"):
     # Internalize some data that we can test for afterwards
     real.load_smry(time_index="yearly", column_keys=["F*"])
     real.load_scalar("npv.txt")
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
+
+    tmpdir.chdir()
+
     # Virtualize and dump to disk:
-    real.to_virtual().to_disk(os.path.join(tmp, "virtreal2"), delete=True)
+    real.to_virtual().to_disk("virtreal2", delete=True)
 
     # Reload the virtualized realization back from disk:
     vreal = ensemble.VirtualRealization("foo")
-    vreal.load_disk(os.path.join(tmp, "virtreal2"))
+    vreal.load_disk("virtreal2")
 
     for key in vreal.keys():
         if key != "__smry_metadata":
