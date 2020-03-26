@@ -8,7 +8,6 @@ from os.path import basename
 from os.path import splitext
 
 from setuptools import setup, find_packages
-from setuptools_scm import get_version
 from sphinx.setup_command import BuildDoc
 
 with open("README.rst") as readme_file:
