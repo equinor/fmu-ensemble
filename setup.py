@@ -8,7 +8,8 @@ from os.path import basename
 from os.path import splitext
 
 from setuptools import setup, find_packages
-import versioneer
+from setuptools_scm import get_version
+from sphinx.setup_command import BuildDoc
 
 with open("README.rst") as readme_file:
     readme = readme_file.read()
@@ -25,77 +26,27 @@ def relpath(*args):
     return os.path.join(root, *args)
 
 
-def requirements():
-    reqs = []
-    with open(relpath("requirements.txt"), "r") as f:
-        reqs = [req.strip() for req in f]
-    return reqs
+def parse_requirements(filename):
+    """Load requirements from a pip requirements file"""
+    try:
+        lineiter = (line.strip() for line in open(filename))
+        return [line for line in lineiter if line and not line.startswith("#")]
+    except IOError:
+        return []
 
 
-requirements = requirements()
+REQUIREMENTS = parse_requirements("requirements.txt")
 
-setup_requirements = [
-    "pytest-runner",
-]
+SETUP_REQUIREMENTS = ["pytest-runner", "setuptools>=28", "setuptools_scm"]
 
-test_requirements = [
-    "pytest",
-]
+TEST_REQUIREMENTS = parse_requirements("requirements_dev.txt")
 
-extras_require = {"Parquet": ["pyarrow"]}
-
-fmuensemble_function = "fmuensemble=" "fmu.ensemble.unknowrunner:main"
-
-# -----------------------------------------------------------------------------
-# Explaining versions:
-# As system the PEP 440 major.minor.micro is used:
-# - major: API or any very larger changes
-# - minor: Functionality added, mostly backward compatibility but some
-#          functions may change. Also includes larger refactoring of code.
-# - micro: Added functionality and bug fixes with no expected side effects
-# - Provide a tag on the form 3.4.0 for each release!
-#
-# Also, a verymicro may _sometimes_ exist (allowed in PEP440); which can be:
-# - One single, very easy to understand, bugfixes
-# - Additions in documentations (not affecting code)
-# - These may not be tagged explicity!
-#
-# Hence, use major.minor.micro or major.minor.micro.verymicro scheme.
-# -----------------------------------------------------------------------------
-
-
-def the_version():
-    """Process the version, to avoid non-pythonic version schemes.
-
-    Means that e.g. 1.5.12+2.g191571d.dirty is turned to 1.5.12.2.dev0
-
-    This function must be ~identical to fmu-tools._theversion.py
-    """
-
-    version = versioneer.get_version()
-    sver = version.split(".")
-    print("\nFrom TAG description: {}".format(sver))
-
-    useversion = "UNSET"
-    if len(sver) == 3:
-        useversion = version
-    else:
-        bugv = sver[2].replace("+", ".")
-
-        if "dirty" in version:
-            ext = ".dev0"
-        else:
-            ext = ""
-        useversion = "{}.{}.{}{}".format(sver[0], sver[1], bugv, ext)
-
-    print("Using version {}\n".format(useversion))
-    return useversion
-
+EXTRAS_REQUIRE = {"Parquet": ["pyarrow"]}
 
 setup(
     name="fmu-ensemble",
-    version=the_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    use_scm_version={"write_to": "src/fmu/ensemble/version.py"},
+    cmdclass={"build_sphinx": BuildDoc},
     description="Python API to ensembles produced by ERT",
     long_description=readme + "\n\n" + history,
     author="Håvard Berland",
@@ -103,12 +54,10 @@ setup(
     url="https://git.equinor.com/equinor/fmu-ensemble",
     license="GPLv3",
     packages=find_packages("src"),
-    #    namespace_packages=['fmu'],
     package_dir={"": "src"},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
-    entry_points={"console_scripts": [fmuensemble_function]},
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=REQUIREMENTS,
     zip_safe=False,
     keywords="fmu, ensemble",
     classifiers=[
@@ -122,7 +71,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    tests_require=test_requirements,
-    setup_requires=setup_requirements,
-    extras_require=extras_require,
+    tests_require=TEST_REQUIREMENTS,
+    setup_requires=SETUP_REQUIREMENTS,
+    extras_require=EXTRAS_REQUIRE,
 )
