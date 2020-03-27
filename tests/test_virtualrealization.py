@@ -65,7 +65,7 @@ def test_virtual_realization():
     vreal.append("betteroutput", {"NPV": -300, "BREAKEVEN": 300}, overwrite=True)
     assert vreal.get_df("betteroutput")["NPV"] < 0
 
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         vreal.get_df("bogusdataname")
 
 
@@ -362,3 +362,62 @@ def test_get_smry_meta():
     assert "WOPR:OP_1" in meta
 
     assert meta["FOPT"]["wgname"] is None
+
+
+def test_get_df_merge():
+    """Test the merge support in get_df. Could be tricky for virtualrealizations
+    since not everything is dataframes"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+    unsmry = real.load_smry(column_keys="*", time_index="yearly")
+    real.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+    real.load_txt("outputs.txt")
+    real.load_scalar("npv.txt")
+    vreal = real.to_virtual()
+
+    assert len(vreal.get_df("unsmry--yearly", merge="parameters").columns) == len(
+        unsmry.columns
+    ) + len(real.parameters)
+
+    smryoutput = vreal.get_df("unsmry--yearly", merge="outputs")
+    assert "top_structure" in smryoutput.columns
+
+    paramoutput = vreal.get_df("parameters", merge="outputs")
+    assert "SORG1" in paramoutput
+    assert "top_structure" in paramoutput
+
+    output_scalar = vreal.get_df("outputs", merge="npv.txt")
+    assert "npv.txt" in output_scalar
+    assert "top_structure" in output_scalar
+
+    output_scalar = vreal.get_df("npv.txt", merge="outputs")
+    assert "npv.txt" in output_scalar
+    assert "top_structure" in output_scalar
+
+    # Try merging dataframes:
+    real.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+
+    # Inject a mocked dataframe to the realization:
+    real.data["fipnum2zone"] = pd.DataFrame(
+        columns=["FIPNUM", "ZONE"],
+        data=[
+            [1, "UpperReek"],
+            [2, "MidReek"],
+            [3, "LowerReek"],
+            [4, "UpperReek"],
+            [5, "MidReek"],
+            [6, "LowerReek"],
+        ],
+    )
+    volframe = real.get_df("simulator_volume_fipnum", merge="fipnum2zone")
+
+    assert "ZONE" in volframe
+    assert "FIPNUM" in volframe
+    assert "STOIIP_OIL" in volframe
+    assert len(volframe["ZONE"].unique()) == 3

@@ -35,16 +35,21 @@ def test_realizationcombination_basic():
     )
     real0 = ensemble.ScratchRealization(real0dir)
     real0.load_smry(time_index="yearly", column_keys=["F*"])
+    real0.load_scalar("npv.txt")
     real1dir = os.path.join(
         testdir, "data/testensemble-reek001", "realization-1/iter-0"
     )
     real1 = ensemble.ScratchRealization(real1dir)
     real1.load_smry(time_index="yearly", column_keys=["F*"])
-
+    real1.load_scalar("npv.txt")
     realdiff = real0 - real1
+    real0.data["a_string"] = "foo_in_real_0"
+    real1.data["a_string"] = "foo_in_real_1"
     assert "FWPR" in realdiff["unsmry--yearly"]
     assert "FWL" in realdiff["parameters"]
 
+    assert realdiff["npv.txt"] == real0["npv.txt"] - real1["npv.txt"]
+    assert realdiff["a_string"] is None
     # Combination of the same when virtualized:
     vreal0 = real0.to_virtual()
     vreal1 = real1.to_virtual()
@@ -58,10 +63,10 @@ def test_realizationcombination_basic():
     vdiff = vreal1 - vreal0
     assert "FWPR" in vdiff["unsmry--yearly"]
     assert "FWL" in vdiff["parameters"]
-
+    assert vdiff["npv.txt"] == real1["npv.txt"] - real0["npv.txt"]
     vdiff_filtered = vdiff.to_virtual(keyfilter="parameters")
     assert "parameters.txt" in vdiff_filtered.keys()
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         vdiff_filtered.get_df("unsmry--yearly")
 
     vdiff_filtered2 = vdiff.to_virtual(keyfilter="unsmry--yearly")
@@ -70,6 +75,10 @@ def test_realizationcombination_basic():
 
     smrymeta = realdiff.get_smry_meta(["FO*"])
     assert "FOPT" in smrymeta
+
+    smry_params = realdiff.get_df("unsmry--yearly", merge="parameters.txt")
+    assert "SORG1" in smry_params
+    assert "FWCT" in smry_params
 
 
 def test_realizationcomb_virt_meta():

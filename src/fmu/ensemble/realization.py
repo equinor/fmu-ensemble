@@ -21,7 +21,7 @@ import calendar
 import dateutil
 
 import yaml
-import numpy
+import numpy as np
 import pandas as pd
 
 import ecl.summary
@@ -543,7 +543,7 @@ class ScratchRealization(object):
         durations = []
         for _, jobrow in status.iterrows():
             if not jobrow["ENDTIME"]:  # A job that is not finished.
-                durations.append(numpy.nan)
+                durations.append(np.nan)
             else:
                 try:
                     hms = list(map(int, jobrow["STARTTIME"].split(":")))
@@ -560,7 +560,7 @@ class ScratchRealization(object):
                 except ValueError:
                     # We get where if STARTIME.split(':') does not contain
                     # integers only:
-                    durations.append(numpy.nan)
+                    durations.append(np.nan)
         status["DURATION"] = durations
 
         # Augment data from jobs.json if that file is available:
@@ -662,38 +662,72 @@ class ScratchRealization(object):
         """
         return self.data.keys()
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Access the internal datastore which contains dataframes or dicts
         or scalars.
 
-        Shorthand is allowed, if the fully qualified localpath is
-
-          'share/results/volumes/simulator_volume_fipnum.csv'
-        then you can also get this dataframe returned with these alternatives:
-
-          * simulator_volume_fipnum
-          * simulator_volume_fipnum.csv
-          * share/results/volumes/simulator_volume_fipnum
-
-        but only as long as there is no ambiguity. In case of ambiguity, a
-        ValueError will be raised.
+        The localpath argument can be shortened, as it will be
+        looked up using the function shortcut2path()
 
         Args:
             localpath (str): the idenfier of the data requested
+            merge (list or str): identifier/localpath of some data to be merged in,
+                typically 'parameters.txt'. Will only work when return type is a
+                dataframe. If list is supplied, order can matter.
 
         Returns:
-            dataframe or dictionary
+            dataframe or dictionary.
 
         Raises:
-            ValueError if data is not found.
+            KeyError if data is not found.
+            TypeError if data in localpath or merge is not of a mergeable type
         """
-        if localpath in self.data.keys():
-            return self.data[localpath]
         fullpath = self.shortcut2path(localpath)
-        if fullpath in self.data.keys():
-            return self.data[self.shortcut2path(localpath)]
-        # KeyError would also be valid or better here.
-        raise ValueError("Could not find {}".format(localpath))
+        if fullpath not in self.data.keys():
+            raise KeyError("Could not find {}".format(localpath))
+        data = self.data[self.shortcut2path(localpath)]
+        if not isinstance(merge, list):
+            merge = [merge]  # can still be None
+        if merge and merge[0] is not None:
+            # Strange things can happen when we do merges since
+            # this function happily returns references to the internal
+            # dataframes in the realization object. So ensure
+            # we copy dataframes if any merging is about to happen.
+            if isinstance(data, pd.DataFrame):
+                data = data.copy()
+            elif isinstance(data, dict):
+                data = data.copy()
+            elif isinstance(data, (str, int, float, np.number)):
+                # Convert scalar data into something mergeable
+                value = data
+                data = {localpath: value}
+            else:
+                raise TypeError(
+                    "Don't know how to merge data "
+                    + "from {} of type {}".format(localpath, type(data))
+                )
+        for mergekey in merge:
+            if mergekey is None:
+                continue
+            mergedata = self.get_df(mergekey)
+            if isinstance(mergedata, dict):
+                for key in mergedata:
+                    # Add a column to the data for each dictionary
+                    # key:
+                    data[key] = mergedata[key]
+            elif isinstance(mergedata, (str, int, float, np.number)):
+                # Scalar data, use the mergekey as column
+                data[mergekey] = mergedata
+            elif isinstance(mergedata, pd.DataFrame):
+                data = pd.merge(data, mergedata)
+                # pd.MergeError will be raised here when this fails,
+                # there must be common columns for this operation.
+            else:
+                raise TypeError(
+                    "Don't know how to merge data "
+                    + "from {} of type {}".format(mergekey, type(data))
+                )
+        return data
 
     def shortcut2path(self, shortpath):
         """
@@ -703,6 +737,7 @@ class ScratchRealization(object):
         If the fully qualified localpath is
 
           'share/results/volumes/simulator_volume_fipnum.csv'
+
         then you can also access this with these alternatives:
 
           * simulator_volume_fipnum
@@ -710,7 +745,7 @@ class ScratchRealization(object):
           * share/results/volumes/simulator_volume_fipnum
 
         but only as long as there is no ambiguity. In case
-        of ambiguity, the shortpath will be returned.
+        of ambiguity, the shortpath will be returned as is.
         """
         basenames = list(map(os.path.basename, self.data.keys()))
         if basenames.count(shortpath) == 1:
@@ -846,7 +881,7 @@ class ScratchRealization(object):
         Return an ecl2df.EclFiles object to connect to the ecl2df package
 
         If autodiscovery, it will search for a DATA file in
-        the standard location eclipse/model/*DATA.
+        the standard location eclipse/model/...DATA.
 
         If you have multiple DATA files, you must discover
         the one you need explicitly before calling this function, example:

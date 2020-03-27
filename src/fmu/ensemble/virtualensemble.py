@@ -1,5 +1,6 @@
 """Module containing a VirtualEnsemble class"""
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -145,7 +146,7 @@ class VirtualEnsemble(object):
         be loaded on demand"""
         return list(self.lazy_frames.keys())
 
-    def shortcut2path(self, shortpath):
+    def shortcut2path(self, shortpath, keys=None):
         """
         Convert short pathnames to fully qualified pathnames
         within the datastore.
@@ -153,6 +154,7 @@ class VirtualEnsemble(object):
         If the fully qualified localpath is
 
             'share/results/volumes/simulator_volume_fipnum.csv'
+
         then you can also access this with these alternatives:
           * simulator_volume_fipnum
           * simulator_volume_fipnum.csv
@@ -165,7 +167,9 @@ class VirtualEnsemble(object):
         # pylint: disable=import-outside-toplevel
         from .ensemble import shortcut2path
 
-        return shortcut2path(self.keys(), shortpath)
+        if keys is None:
+            return shortcut2path(self.keys(), shortpath)
+        return shortcut2path(keys, shortpath)
 
     def __getitem__(self, localpath):
         """Shorthand for .get_df()
@@ -744,60 +748,54 @@ file is picked up"""
         """Textual representation of the object"""
         return "<VirtualEnsemble, {}>".format(self._name)
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Access the internal datastore which contains dataframes or dicts
 
-        Shorthand is allowed, if the fully qualified localpath is
-
-            'share/results/volumes/simulator_volume_fipnum.csv'
-        then you can also get this dataframe returned with these alternatives:
-
-          * simulator_volume_fipnum
-          * simulator_volume_fipnum.csv
-          * share/results/volumes/simulator_volume_fipnum
-
-        but only as long as there is no ambiguity. In case of ambiguity, a
-        ValueError will be raised.
+        The localpath argument can be shortened, as it will be
+        looked up using the function shortcut2path()
 
         Args:
             localpath: the idenfier of the data requested
+            merge (list or str): refer to an additional localpath which
+                will be merged into the dataframe for every realization
 
         Returns:
             dataframe or dictionary
+
+        Raises:
+            KeyError if no data is found
         """
         inconsistent_lazy_frames = set(self.data.keys()).intersection(
             set(self.lazy_frames.keys())
         )
         if inconsistent_lazy_frames:
+            # See comments in __init__ on lazy frames.
             logger.critical(
                 "Internal error, inconsistent lazy frames:\n %s",
                 str(inconsistent_lazy_frames),
             )
-        if localpath in self.lazy_frames.keys():
-            logger.warning("Loading %s from disk, was lazy", localpath)
-            self._load_frame_fromdisk(localpath, self.lazy_frames[localpath])
-            self.lazy_frames.pop(localpath)
+        allfullpaths = list(self.data.keys()) + list(self.lazy_frames.keys())
+        fullpath = self.shortcut2path(localpath, keys=allfullpaths)
+        if fullpath not in self.data.keys():
+            # Need to lazy load it:
+            logger.warning("Loading %s from disk, was lazy", fullpath)
+            self._load_frame_fromdisk(fullpath, self.lazy_frames[fullpath])
+            self.lazy_frames.pop(fullpath)
+        data = None
+        data = self.data[fullpath]
 
-        if localpath in self.data.keys():
-            return self.data[localpath]
+        if not isinstance(merge, list):
+            merge = [merge]  # Can still be None
 
-        # Allow shorthand, but check ambiguity
-        allkeys = list(self.data.keys()) + list(self.lazy_frames.keys())
-        basenames = [os.path.basename(x) for x in allkeys]
-        if basenames.count(localpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in allkeys}
-            return self.get_df(shortcut2path[localpath])
-        noexts = ["".join(x.split(".")[:-1]) for x in allkeys]
-        if noexts.count(localpath) == 1:
-            shortcut2path = {"".join(x.split(".")[:-1]): x for x in allkeys}
-            return self.get_df(shortcut2path[localpath])
-        basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in allkeys]
-        if basenamenoexts.count(localpath) == 1:
-            shortcut2path = {
-                "".join(os.path.basename(x).split(".")[:-1]): x for x in allkeys
-            }
-            return self.get_df(shortcut2path[localpath])
-        raise ValueError(localpath)
+        # Load all frames to be merged, we call ourselves for this
+        # for the handling of lazy frames.
+        for mergepath in filter(None, merge):
+            mergedata = self.get_df(mergepath)
+            data = pd.merge(data, mergedata)
+
+        if data is not None:
+            return data
+        raise KeyError(localpath)
 
     def get_smry(self, column_keys=None, time_index="monthly"):
         """

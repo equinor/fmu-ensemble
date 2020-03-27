@@ -146,7 +146,7 @@ def test_single_realization():
     assert "REAL" not in real.get_df("foo-real")
     assert "FOOBAR" in real.get_df("foo-real")
 
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, KeyError)):
         real.get_df("notexisting.csv")
 
     # Test __delitem__()
@@ -616,7 +616,7 @@ def test_singlereal_ecl(tmp="TMP"):
     assert "unsmry--raw.csv" not in real.keys()
     assert "share/results/tables/unsmry--raw.csv" in real.keys()
     assert "FOPT" in real["unsmry--raw"]
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, KeyError)):
         # This does not exist before we have asked for it
         # pylint: disable=pointless-statement
         "FOPT" in real["unsmry--yearly"]
@@ -1101,3 +1101,87 @@ def test_get_smry_meta():
     vmeta = vreal.get_smry_meta()
     assert "FOPT" in vmeta
     assert vmeta["FOPR"]["unit"] == "SM3/DAY"
+
+
+def test_get_df_merge():
+    """Test that we can merge on the fly using get_df()"""
+    if "__file__" in globals():
+        # Easen up copying test code into interactive sessions
+        testdir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        testdir = os.path.abspath(".")
+
+    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    real = ensemble.ScratchRealization(realdir)
+    onlysmry = real.load_smry(column_keys="F*", time_index="monthly")
+    assert "parameters.txt" in real.data
+
+    paramcount = len(real.parameters)
+    smrycount = len(onlysmry.columns)
+    smry = real.get_df("unsmry--monthly", merge="parameters.txt")
+    assert len(smry.columns) == paramcount + smrycount
+    assert len(smry["SORG1"].unique()) == 1
+
+    # Merge with list should also work:
+    smry = real.get_df("unsmry--monthly", merge=["parameters.txt"])
+    assert len(smry.columns) == paramcount + smrycount
+
+    # Merge with empty list:
+    smry = real.get_df("unsmry--monthly", merge=[])
+    assert len(smry.columns) == smrycount
+
+    # Merge with multiple output sets:
+    outputs = real.load_txt("outputs.txt")
+    smry = real.get_df("unsmry--monthly", merge=["parameters", "outputs"])
+    assert len(smry.columns) == paramcount + smrycount + len(outputs)
+
+    # Merge with scalar data, and combination of scalar and dict data:
+    real.load_scalar("npv.txt")
+    smry = real.get_df("unsmry--monthly", merge="npv.txt")
+    assert len(smry.columns) == smrycount + 1
+    smry = real.get_df("unsmry--monthly", merge=["parameters.txt", "npv.txt"])
+    assert len(smry.columns) == smrycount + paramcount + 1
+
+    # Try merging dataframes:
+    real.load_csv("share/results/volumes/simulator_volume_fipnum.csv")
+
+    # Inject a mocked dataframe to the realization:
+    real.data["fipnum2zone"] = pd.DataFrame(
+        columns=["FIPNUM", "ZONE"],
+        data=[
+            [1, "UpperReek"],
+            [2, "MidReek"],
+            [3, "LowerReek"],
+            [4, "UpperReek"],
+            [5, "MidReek"],
+            [6, "LowerReek"],
+        ],
+    )
+    volframe = real.get_df("simulator_volume_fipnum", merge="fipnum2zone")
+
+    assert "ZONE" in volframe
+    assert "FIPNUM" in volframe
+    assert "STOIIP_OIL" in volframe
+    assert len(volframe["ZONE"].unique()) == 3
+
+    scalar_dict = real.get_df("npv.txt", merge="outputs")
+    assert "npv.txt" in scalar_dict
+    assert "top_structure" in scalar_dict
+
+    # Inject a random dict and merge with:
+    real.data["foodict"] = dict(BAR="COM")
+    dframe = real.get_df("parameters", merge="foodict")
+    assert "BAR" in dframe
+    assert "SORG1" in dframe
+
+    # Merge something that is not mergeable
+    real.data["randtable"] = pd.DataFrame(
+        columns=["BARF", "ARBF"], data=[[1, 3], [2, 4],]
+    )
+    with pytest.raises(TypeError):
+        # pylint: disable=pointless-statement
+        real.get_df("parameters", merge="randtable")
+
+    with pytest.raises(pd.errors.MergeError):
+        # pylint: disable=pointless-statement
+        real.get_df("unsmry--monthly", merge="randtable")

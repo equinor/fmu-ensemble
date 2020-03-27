@@ -127,13 +127,26 @@ def test_ensembleset_reek001(tmp="TMP"):
     assert len(ensset3.get_df("unsmry--yearly")) == 50
     monthly.to_csv(os.path.join(tmp, "ensset-monthly.csv"), index=False)
 
-    with pytest.raises(ValueError):
+    # Test merging in get_df()
+    param_output = ensset3.get_df("parameters.txt", merge="outputs")
+    assert "top_structure" in param_output
+    assert "SORG1" in param_output
+
+    smry_params = ensset3.get_df("unsmry--monthly", merge="parameters")
+    assert "SORG1" in smry_params
+    assert "FWCT" in smry_params
+
+    # Merging with something that does not exist:
+    with pytest.raises(KeyError):
+        ensset3.get_df("unsmry--monthly", merge="barrFF")
+
+    with pytest.raises((KeyError, ValueError)):
         ensset3.get_df("unsmry--weekly")
 
     # Check errors when we ask for stupid stuff
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         ensset3.load_csv("bogus.csv")
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         ensset3.get_df("bogus.csv")
 
     # Check get_smry()
@@ -374,7 +387,7 @@ def test_mangling_data():
 
     # When it does not exist in any of the ensembles, we
     # should error
-    with pytest.raises(ValueError):
+    with pytest.raises((KeyError, ValueError)):
         ensset.get_df("foobar")
 
     # Delete the symlinks when we are done.

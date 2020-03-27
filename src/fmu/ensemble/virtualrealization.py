@@ -115,7 +115,7 @@ class VirtualRealization(object):
                 with open(filename, "w") as fhandle:
                     for paramkey in data.keys():
                         fhandle.write(paramkey + " " + str(data[paramkey]) + "\n")
-            elif isinstance(data, (str, float, int, np.integer, np.floating)):
+            elif isinstance(data, (str, float, int, np.number)):
                 with open(filename, "w") as fhandle:
                     fhandle.write(str(data))
             else:
@@ -204,43 +204,63 @@ class VirtualRealization(object):
         """
         raise NotImplementedError
 
-    def get_df(self, localpath):
+    def get_df(self, localpath, merge=None):
         """Access the internal datastore which contains dataframes, dicts
         or scalars.
 
-        Shorthand is allowed, if the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
-        then you can also get this dataframe returned with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
-
-        but only as long as there is no ambiguity. In case of ambiguity, a
-        ValueError will be raised.
+        The localpath argument can be shortened, as it will be
+        looked up using the function shortcut2path()
 
         Args:
-            localpath: the idenfier of the data requested
+            localpath (str): the identifier of the data requested
+            merge (list or str): refer to additional localpath(s) which
+                will be merged into the dataframe.
 
         Returns:
-            dataframe or dictionary
+            dataframe, dictionary, float, str or integer
+
+        Raises:
+            KeyError if data is not found.
         """
         data = None
-        if localpath in self.keys():
-            data = self.data[localpath]
         fullpath = self.shortcut2path(localpath)
-
         if fullpath in self.keys():
             data = self.data[fullpath]
         else:
-            raise ValueError("Could not find {}".format(localpath))
-
-        if isinstance(data, pd.DataFrame):
-            return data
+            raise KeyError("Could not find {}".format(localpath))
+        if merge is None:
+            merge = []
+        if not isinstance(merge, list):
+            merge = [merge]  # can still be None
+        if merge and merge[0] is not None:
+            # Make a copy of the primary data to ensure we don't edit it during merge
+            if isinstance(data, (pd.DataFrame, dict)):
+                data = data.copy()
+            elif isinstance(data, (str, int, float, np.number)):
+                # Convert scalar data into something mergeable
+                value = data
+                data = {localpath: value}
+            else:
+                raise TypeError
+        for mergekey in merge:
+            if mergekey is None:
+                continue
+            mergedata = self.get_df(mergekey)
+            if isinstance(mergedata, dict):
+                for key in mergedata:
+                    data[key] = mergedata[key]
+            elif isinstance(mergedata, (str, int, float, np.number)):
+                # Scalar data, use the mergekey as column
+                data[mergekey] = mergedata
+            elif isinstance(mergedata, pd.DataFrame):
+                data = pd.merge(data, mergedata)
+            else:
+                raise ValueError("Don't know how to merge data {}".format(mergekey))
         if isinstance(data, pd.Series):
-            return data.to_dict()
-        if isinstance(data, (str, dict, int, float, np.integer, np.floating)):
+            data = data.to_dict()
+        if data is not None:
             return data
-        raise ValueError("BUG: Unknown datatype")
+        raise ValueError("Data ended up being None")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
@@ -290,6 +310,7 @@ class VirtualRealization(object):
 
         If the fully qualified localpath is
             'share/results/volumes/simulator_volume_fipnum.csv'
+
         then you can also access this with these alternatives:
          * simulator_volume_fipnum
          * simulator_volume_fipnum.csv
