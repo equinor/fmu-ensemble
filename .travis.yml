@@ -21,15 +21,17 @@ before_install:
 
 install:
   - ls
-  - pip install -r requirements_dev.txt
   - pip install .
+  - pip install .[tests]
 
 script:
   - python -c "import fmu.ensemble"
-  - python setup.py test
-  - pip install pyarrow
-  - pytest -s tests/test_virtualensemble.py
+  - pytest tests/
+  - pip install .[parquet] 
+  - pytest tests/test_virtualensemble.py
+  - sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
   - python setup.py build_sphinx
+  - touch build/sphinx/html/.nojekyll
 
 deploy:
   - provider: pages
