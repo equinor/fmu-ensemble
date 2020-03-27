@@ -18,7 +18,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_ensemble_aggregations(tmp="TMP"):
+def test_ensemble_aggregations(tmpdir):
     """Test aggregations of ensembles, that
     is taking means, medians, p10 and so on, producing
     virtual realizations"""
@@ -47,11 +47,10 @@ def test_ensemble_aggregations(tmp="TMP"):
         "p90": reekensemble.agg("p90"),  # high estimate
     }
 
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    stats["min"].to_disk(os.path.join(tmp, "virtreal_min"), delete=True)
-    stats["max"].to_disk(os.path.join(tmp, "virtreal_max"), delete=True)
-    stats["mean"].to_disk(os.path.join(tmp, "virtreal_mean"), delete=True)
+    tmpdir.chdir()
+    stats["min"].to_disk("virtreal_min", delete=True)
+    stats["max"].to_disk("virtreal_max", delete=True)
+    stats["mean"].to_disk("virtreal_mean", delete=True)
 
     assert (
         stats["min"]["parameters.txt"]["RMS_SEED"]

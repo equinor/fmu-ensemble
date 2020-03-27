@@ -180,7 +180,7 @@ def test_virtualensemble():
     assert isinstance(vens.agg("min").get_df("betterdata"), dict)
 
 
-def test_todisk():
+def test_todisk(tmpdir):
     """Test that we can write VirtualEnsembles to the filesystem in a
     retrievable manner"""
     if "__file__" in globals():
@@ -200,6 +200,8 @@ def test_todisk():
     reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()
     assert "foo" in vens.manifest
+
+    tmpdir.chdir()
 
     vens.to_disk("vens_dumped", delete=True)
     assert len(vens) == len(reekensemble)
@@ -297,7 +299,7 @@ def test_todisk():
     assert "share/results/tables/randomdata.csv" in manualens.keys()
 
 
-def test_todisk_includefile():
+def test_todisk_includefile(tmpdir):
     """Test that we can write VirtualEnsembles to the filesystem in a
     retrievable manner with discovered files included"""
     if "__file__" in globals():
@@ -308,6 +310,8 @@ def test_todisk_includefile():
     reekensemble = ScratchEnsemble(
         "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
     )
+
+    tmpdir.chdir()
 
     reekensemble.load_smry(time_index="monthly", column_keys="*")
     reekensemble.load_smry(time_index="daily", column_keys="*")

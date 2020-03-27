@@ -17,6 +17,8 @@ import pytest
 from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
+from test_ensembleset import symlink_iter
+
 try:
     SKIP_FMU_TOOLS = False
     from fmu.tools import volumetrics
@@ -30,7 +32,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_reek001(tmp="TMP"):
+def test_reek001(tmpdir):
     """Test import of a stripped 5 realization ensemble"""
 
     if "__file__" in globals():
@@ -68,9 +70,8 @@ def test_reek001(tmp="TMP"):
     # STATUS in real4 is modified to simulate that Eclipse never finished:
     assert numpy.isnan(statusdf.loc[4, "ECLIPSE100_2014.2"]["DURATION"].values[0])
 
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    statusdf.to_csv(os.path.join(tmp, "status.csv"), index=False)
+    tmpdir.chdir()
+    statusdf.to_csv("status.csv", index=False)
 
     # Parameters.txt
     paramsdf = reekensemble.load_txt("parameters.txt")
@@ -79,7 +80,7 @@ def test_reek001(tmp="TMP"):
     paramsdf = reekensemble.get_df("parameters.txt")
     assert len(paramsdf) == 5
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
-    paramsdf.to_csv(os.path.join(tmp, "params.csv"), index=False)
+    paramsdf.to_csv("params.csv", index=False)
 
     # Check that the ensemble object has not tainted the realization dataframe:
     assert "REAL" not in reekensemble.realizations[0].get_df("parameters.txt")
@@ -110,7 +111,7 @@ def test_reek001(tmp="TMP"):
     assert "GRID" in csvvolfiles
     assert csvvolfiles["GRID"].unique() == ["simgrid"]
 
-    reekensemble.files.to_csv(os.path.join(tmp, "files.csv"), index=False)
+    reekensemble.files.to_csv("files.csv", index=False)
 
     # Check that rediscovery does not mess things up:
 
@@ -139,7 +140,7 @@ def test_reek001(tmp="TMP"):
 
     assert "REAL" in vol_df
     assert len(vol_df["REAL"].unique()) == 3  # missing in 2 reals
-    vol_df.to_csv(os.path.join(tmp, "simulatorvolumes.csv"), index=False)
+    vol_df.to_csv("simulatorvolumes.csv", index=False)
 
     # Test retrival of cached data
     vol_df2 = reekensemble.get_df(csvpath)
@@ -159,6 +160,7 @@ def test_reek001(tmp="TMP"):
         ]
     )
     assert len(reekensemble) == 5
+    print(reekensemble.files)
     assert len(reekensemble.files) == 24
 
     # File discovery must be repeated for the newly added realizations
@@ -516,13 +518,14 @@ def test_ensemble_ecl():
     assert len(noquantiles.index.levels[0]) == 3
 
 
-def test_nonstandard_dirs(tmp="TMP"):
+def test_nonstandard_dirs(tmpdir):
     """Test that we can initialize ensembles from some
     non-standard directories."""
-    ensdir = tmp + "/foo-ens-bar/"
 
-    if os.path.exists(ensdir):
-        shutil.rmtree(ensdir)
+    tmpdir.chdir()
+
+    ensdir = "foo-ens-bar/"
+
     os.makedirs(ensdir)
     os.makedirs(ensdir + "/bar_001/iter_003")
     os.makedirs(ensdir + "/bar_002/iter_003")
@@ -967,7 +970,7 @@ def test_get_df():
     assert "npv.txt" in vol_npv
 
 
-def test_apply():
+def test_apply(tmpdir):
     """
     Test the callback functionality
     """
@@ -977,9 +980,11 @@ def test_apply():
     else:
         testdir = os.path.abspath(".")
 
-    ens = ScratchEnsemble(
-        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
-    )
+    tmpdir.chdir()
+
+    symlink_iter(os.path.join(testdir, "data/testensemble-reek001"), "iter-0")
+
+    ens = ScratchEnsemble("reektest", "realization-*/iter-0")
 
     def ex_func1():
         """Example function that will return a constant dataframe"""

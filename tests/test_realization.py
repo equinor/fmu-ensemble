@@ -20,6 +20,8 @@ import numpy as np
 from fmu.ensemble import etc
 from fmu import ensemble
 
+from test_ensembleset import symlink_iter
+
 try:
     SKIP_FMU_TOOLS = False
     from fmu.tools import volumetrics
@@ -33,7 +35,7 @@ if not fmux.testsetup():
     raise SystemExit()
 
 
-def test_single_realization():
+def test_single_realization(tmpdir):
     """Test internalization of properties pertaining
     to single realizations"""
     if "__file__" in globals():
@@ -41,6 +43,8 @@ def test_single_realization():
         testdir = os.path.dirname(os.path.abspath(__file__))
     else:
         testdir = os.path.abspath(".")
+
+    tmpdir.chdir()
 
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
     real = ensemble.ScratchRealization(realdir)
@@ -853,12 +857,15 @@ def test_filesystem_changes():
     shutil.rmtree(datadir + "/" + tmpensname, ignore_errors=True)
 
 
-def test_apply():
+def test_apply(tmpdir):
     """
     Test the callback functionality
     """
     testdir = os.path.dirname(os.path.abspath(__file__))
-    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    tmpdir.chdir()
+
+    symlink_iter(os.path.join(testdir, "data/testensemble-reek001"), "iter-0")
+    realdir = "realization-0/iter-0"
     real = ensemble.ScratchRealization(realdir)
 
     def ex_func1():
