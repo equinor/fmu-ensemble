@@ -902,7 +902,6 @@ class ScratchRealization(object):
         elif self._autodiscovery:
             data_fileguess = os.path.join(self._origpath, "eclipse/model", "*.DATA")
             data_filenamelist = glob.glob(data_fileguess)
-            print(data_filenamelist)
             if not data_filenamelist:
                 return None  # No filename matches *DATA
             if len(data_filenamelist) > 1:
