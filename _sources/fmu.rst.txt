@@ -1,0 +1,17 @@
+fmu package
+===========
+
+Subpackages
+-----------
+
+.. toctree::
+
+   fmu.ensemble
+
+Module contents
+---------------
+
+.. automodule:: fmu
+   :members:
+   :undoc-members:
+   :show-inheritance:

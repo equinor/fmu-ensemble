@@ -1,0 +1,536 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fmu.ensemble.realizationcombination &mdash; fmu-ensemble 1.2.2.dev18+g0619f09 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> fmu-ensemble
+          
+
+          
+            
+            <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.2.dev18+g0619f09
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>fmu.ensemble.realizationcombination</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for fmu.ensemble.realizationcombination</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module for handling linear combinations of realizations. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">fnmatch</span>
+
+<span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
+
+<span class="n">xfmu</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">xfmu</span><span class="o">.</span><span class="n">functionlogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RealizationCombination"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination">[docs]</a><span class="k">class</span> <span class="nc">RealizationCombination</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The class is used to perform linear operations on realizations.</span>
+
+<span class="sd">    When instantiated, the linear combination will not actually be</span>
+<span class="sd">    computed before the results are actually asked for - lazy</span>
+<span class="sd">    evaluation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set up an object for a linear combination of realizations.</span>
+
+<span class="sd">        Each instance of this object can only hold one operation,</span>
+<span class="sd">        either addition/substraction of two</span>
+<span class="sd">        ensembles/ensemblecombinations or a scaling of one.</span>
+
+<span class="sd">        ScratchRealization and VirtualRealization can be combined freely.</span>
+
+<span class="sd">        A long expression of ensembles will lead to an evaluation tree</span>
+<span class="sd">        consisting of instances of this class with actual realizations</span>
+<span class="sd">        at the leaf nodes.</span>
+
+<span class="sd">        See https://en.wikipedia.org/wiki/Binary_expression_tree</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scale: float for scaling the realization(combination)</span>
+<span class="sd">            add: something to add</span>
+<span class="sd">            sub: something to substract</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span>
+        <span class="k">if</span> <span class="n">scale</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">add</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span> <span class="o">=</span> <span class="n">add</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Alternatively, substraction could be implemented as a combination</span>
+        <span class="c1"># of __mult__ and __add__</span>
+        <span class="k">if</span> <span class="n">sub</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sub</span> <span class="o">=</span> <span class="n">sub</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sub</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="RealizationCombination.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the intersection of all keys available in reference</span>
+<span class="sd">        realization(combination) and the other</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">combkeys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">combkeys</span> <span class="o">=</span> <span class="n">combkeys</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">combkeys</span> <span class="o">=</span> <span class="n">combkeys</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">combkeys</span> <span class="o">=</span> <span class="n">combkeys</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">combkeys</span></div>
+
+<div class="viewcode-block" id="RealizationCombination.get_df"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.get_df">[docs]</a>    <span class="k">def</span> <span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtain given data from the realizationcombination,</span>
+<span class="sd">        doing the actual computation of realizationdata on the fly.</span>
+
+<span class="sd">        Warning: In order to add dataframes together with meaning,</span>
+<span class="sd">        using pandas.add, the index of the frames must be correctly set,</span>
+<span class="sd">        and this can be tricky for some datatypes (f.ex. volumetrics table</span>
+<span class="sd">        where you want to add together volumes for correct zone</span>
+<span class="sd">        and fault segment).</span>
+
+<span class="sd">        If you have the columns &quot;DATE&quot;, &quot;ZONE&quot; and/or &quot;REGION&quot;, it</span>
+<span class="sd">        will be regarded as an index column.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            localpath (str): refers to the internalized name of the</span>
+<span class="sd">                data wanted in the realizations.</span>
+<span class="sd">            merge (list or str): Optional data to be merged in for the data</span>
+<span class="sd">                The merge will happen before combination. Be careful</span>
+<span class="sd">                with index guessing and merged data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame, str, float, int or dict. None if datatype is</span>
+<span class="sd">                a string which we cannot combine.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            KeyError if data is not found. This can also happen</span>
+<span class="sd">            for the requested data to merge in. TypeError if scalar values</span>
+<span class="sd">            are strings and they are multiplied with scalar.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We can pandas.add when the index is set correct.</span>
+        <span class="c1"># WE MUST GUESS!</span>
+        <span class="n">indexlist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">indexcandidates</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">,</span> <span class="s2">&quot;ZONE&quot;</span><span class="p">,</span> <span class="s2">&quot;REGION&quot;</span><span class="p">]</span>
+        <span class="n">refdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refdf</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indexcandidates</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">refdf</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">indexlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">refdf</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
+            <span class="n">refdf</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refdf</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Convert from dicts to Series, for linear algebra to be defined</span>
+            <span class="n">refdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">refdf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refdf</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">*</span> <span class="n">refdf</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refdf</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;String data </span><span class="si">%s</span><span class="s2"> ignored&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Pandas dataframe or series:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">otherdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">otherdf</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
+                <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">otherdf</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">otherdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">otherdf</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="n">otherdf</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">otherdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">otherdf</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
+                <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">otherdf</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">otherdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">otherdf</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">-</span> <span class="n">otherdf</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="c1"># Delete rows where everything is NaN, which will be case when</span>
+            <span class="c1"># some data row does not exist in all realizations.</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># Also delete columns where everything is NaN, happens when</span>
+            <span class="c1"># column data are not similar</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="RealizationCombination.to_virtual"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.to_virtual">[docs]</a>    <span class="k">def</span> <span class="nf">to_virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the current linear combination and return as</span>
+<span class="sd">        a VirtualRealization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            keyfilter (list or str): If supplied, only keys matching wildcards</span>
+<span class="sd">                in this argument will be included. Use this for speed reasons</span>
+<span class="sd">                when only some data is needed. Default is to include everything.</span>
+<span class="sd">                If you supply &quot;unsmry&quot;, it will match every key that</span>
+<span class="sd">                includes this string by prepending and appending &#39;*&#39; to your pattern</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            VirtualRealization</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=import-outside-toplevel</span>
+        <span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
+
+        <span class="k">if</span> <span class="n">keyfilter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">string_types</span><span class="p">):</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="p">[</span><span class="n">keyfilter</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;keyfilter in to_virtual() must be list or string&quot;</span><span class="p">)</span>
+
+        <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">pattern</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">keyfilter</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">vreal</span></div>
+
+<div class="viewcode-block" id="RealizationCombination.get_smry_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.get_smry_dates">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_dates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a union of dates available in the</span>
+<span class="sd">        involved ensembles</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">dates</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">dates</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+                <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+        <span class="n">dates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">dates</span></div>
+
+<div class="viewcode-block" id="RealizationCombination.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads the Eclipse summary data directly from the underlying</span>
+<span class="sd">        realization data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys (str or list): column key wildcards. Default</span>
+<span class="sd">                is &#39;*&#39;, which will match all vectors in the Eclipse</span>
+<span class="sd">                output.</span>
+<span class="sd">            time_index (str or list of DateTime): time_index mnemonic or</span>
+<span class="sd">                a list of explicit datetime at which the summary data</span>
+<span class="sd">                is requested (interpolated or extrapolated)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame: Indexed rows, has at least the column DATE</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">indexlist</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span>
+        <span class="n">refdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+            <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">otherdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+                <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">otherdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
+                <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RealizationCombination.get_smry_meta"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realizationcombination.RealizationCombination.get_smry_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide metadata for summary data vectors.</span>
+
+<span class="sd">        A dictionary indexed by summary vector names is returned, and each</span>
+<span class="sd">        value is another dictionary with potentially the metadata types:</span>
+<span class="sd">        * unit (string)</span>
+<span class="sd">        * is_total (bool)</span>
+<span class="sd">        * is_rate (bool)</span>
+<span class="sd">        * is_historical (bool)</span>
+<span class="sd">        * get_num (int) (only provided if not None)</span>
+<span class="sd">        * keyword (str)</span>
+<span class="sd">        * wgname (str og None)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            column_keys: List or str of column key wildcards</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">meta</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the data obtained from parameters.txt</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict with data from parameters.txt</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Direct access to the realization data structure</span>
+
+<span class="sd">        Calls get_df(localpath).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Try to give out a linear expression&quot;&quot;&quot;</span>
+        <span class="c1"># NB: Implementation in this method requires scaling not to happen</span>
+        <span class="c1"># simultaneously as adds or subs.</span>
+        <span class="n">scalestring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">addstring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">substring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">scalestring</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; * &quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
+            <span class="n">addstring</span> <span class="o">=</span> <span class="s2">&quot; + &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
+            <span class="n">substring</span> <span class="o">=</span> <span class="s2">&quot; - &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scalestring</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span> <span class="o">+</span> <span class="n">addstring</span> <span class="o">+</span> <span class="n">substring</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+  </style>
+
+
+</body>
+</html>
