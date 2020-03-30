@@ -219,19 +219,20 @@ def test_todisk(tmpdir):
     for frame in vens.keys():
         if frame == "STATUS":
             continue
+
+        assert (vens.get_df(frame).columns == fromdisk.get_df(frame).columns).all()
+
         # Columns that only contains NaN will not have their
         # type preserved, this is too much to ask for, especially
         # with CSV files. So we drop columns with NaN
         virtframe = vens.get_df(frame).dropna("columns")
         diskframe = fromdisk.get_df(frame).dropna("columns")
 
-        assert (virtframe.columns == diskframe.columns).all()
-
         # It would be nice to be able to use pd.Dataframe.equals,
         # but it is too strict, as columns with mixed type number/strings
         # will easily be wrong.
 
-        for column in virtframe.columns:
+        for column in set(virtframe.columns).intersection(set(diskframe.columns)):
             if object in (virtframe[column].dtype, diskframe[column].dtype):
                 # Ensure we only compare strings when working with object dtype
                 assert (
