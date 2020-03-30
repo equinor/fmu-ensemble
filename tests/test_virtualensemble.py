@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import math
 import numpy as np
 import pandas as pd
 import pytest
@@ -391,8 +392,20 @@ def test_get_smry_meta(tmpdir):
         vens.get_smry(time_index="yearly", column_keys="F*").columns
     )
 
-    assert origmeta["FOPT"] == metadict["FOPT"]
-    assert origmeta["FWPTH"] == metadict["FWPTH"]
+    def filter_null_nan(dictwithnull):
+        """
+        Filter away null and NaN values, which don't have
+        their exact types preserved through output formats
+        """
+        return {
+            key: value
+            for key, value in dictwithnull.items()
+            if value is not None
+            and (not isinstance(value, str) and not math.isnan(value))
+        }
+
+    assert filter_null_nan(origmeta["FOPT"]) == filter_null_nan(metadict["FOPT"])
+    assert filter_null_nan(origmeta["FWPTH"]) == filter_null_nan(metadict["FWPTH"])
 
 
 def test_get_smry_interpolation():
