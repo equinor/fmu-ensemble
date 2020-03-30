@@ -1015,10 +1015,13 @@ file is picked up"""
             matches = matches.union(
                 [name for name in available_smrynames if fnmatch.fnmatch(name, key)]
             )
+        # The .replace() in the chain below is to convert NaN's to None, to
+        # mimic the dataframes before they are exported to disk.
         return (
             self.get_df("__smry_metadata")
             .set_index("SMRYCOLUMN")
             .loc[matches, :]
+            .replace({pd.np.nan: None})
             .to_dict(orient="index")
         )
 
