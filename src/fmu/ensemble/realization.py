@@ -1548,7 +1548,7 @@ class ScratchRealization(object):
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]
-        if self.index:
+        if self.index is not None:
             indexstr = str(self.index)
         else:
             indexstr = "Error"
