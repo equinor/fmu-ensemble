@@ -68,7 +68,7 @@ p10 profile". Translate p10 to p90 if needed in your client code.
     print(mean['unsmry--monthly']['FOPT'].iloc[-1])
     # (.iloc[-1] is here Pandas functionality for accessing the last
     # row)
-  
+
 
 Comparing realizations or ensembles
 -----------------------------------
@@ -86,7 +86,7 @@ time-steps. It is therefore recommended to interpolate them to
 e.g. monthly time interval prior to combination.
 
 Ensembles can be linearly combined analogously to realizations, and
-will be matched on realization index ``REAL``. 
+will be matched on realization index ``REAL``.
 
 .. code-block:: python
 
@@ -170,7 +170,7 @@ For comparisons with single measured values (recommended for history
 matching), use the YAML syntax:
 
 .. code-block:: yaml
-                
+
     smry:
       # Mandatory elements per entry: key and observations
     - key: WBP4:OP_1
@@ -224,3 +224,113 @@ can pick the realization that is closest to your statistics of choice.
                                          .sort_values()\
                                          .index\
                                          .values[0]
+
+
+Custom compute functions for each realization
+---------------------------------------------
+
+If you have a custom Python function that works on Realization objects producing
+some dataframe, you can have the Ensemble object apply this function to each
+realization in turn (potentially in parallel).
+
+Note that the same can be accomplished if you are able to produce the same
+dataframe and export it to a CSV file in every realization, and then use
+``load_csv()`` on the ensemble object. But this requires the CSV file to be
+precomputed and dumped in every realization directory, which is not always
+practical.
+
+Assume first we have a function that is able to produce such a table when given
+a ``ScratchRealization`` object (the function can choose freely what information
+in the realization object to use, potentially only the directory).
+
+..
+   gr.groupby("ZONE").agg({'PORV':  'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'})\
+     .to_csv('apply_real_example.csv', float_format="%.1f")
+
+.. csv-table:: Example data from one realization.
+   :file: examples/apply_real_example.csv
+   :header-rows: 1
+
+where PORV and VOLUME are sums over each zone, Z is the minimum (thus apex pr.
+zone) and PERMX is an arithmetic mean. In the language of `ecl2df
+<https://equinor.github.io/ecl2df/>`_ this could be done with a code like this:
+
+.. code-block:: python
+
+   from ecl2df import grid, EclFiles
+
+   eclfiles = EclFiles('MYDATADECK.DATA')  # There is a file zones.lyr alongside this.
+   grid_df = grid.df(eclfiles)  # Produce a dataframe with one row pr. cell
+   my_aggregators = {'PORV': 'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'}
+   stats_df = grid_df.groupby("ZONE").agg(my_aggregators)
+   print(stats_df)
+
+
+``ScratchRealization`` objects contain the methods ``runpath()`` which will give
+the full path to the directory  the realization resides in, this can be used
+freely by your function.  For easier coupling with ecl2df, the function
+``get_eclfiles()`` is provided.
+
+To be able to inject the ecl2df lines above into the API of fmu.ensemble and the
+:py:meth:`apply() <fmu.ensemble.ensemble.ScratchEnsemble.apply>` function, we
+need to to put it into a wrapper function.  This wrapper function will always
+receive a Realization object as a named argument, and it must return a
+dataframe. The wrapper function can look like this:
+
+.. code-block:: python
+
+   from ecl2df import grid, EclFiles
+
+   def my_realization_stats(args):
+      """A custom function for performing a particular calculation
+      on every realization
+
+      Args:
+         args (dict): A dictionary with parameters to my custom function.
+             The keys 'realization' and 'localpath' are reserved for fmu.ensemble."""
+      realization = args["realization"]  # Provided by fmu.ensemble apply()
+      eclfiles = realization.get_eclfiles()
+      grid_df = grid.df(eclfiles)
+      my_aggregators = {'PORV': 'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'}
+      stats_df = grid_df.groupby("ZONE").agg(my_aggregators)
+      return stats_df.reset_index()  # Zone names are in the index, lost if not reset.
+
+You are free to code your wrapper function in a way that suits both usage in apply() and
+interactive usage. Your wrapper function can perform differently for example if the
+"realization" key is not existing in the args dictionary given as input.
+
+When this function is defined, and your ensemble is initialized, you can call
+this function on every realization as in the following (this would work on
+EnsembleSets also):
+
+.. code-block:: python
+
+    from fmu.ensemble import ScratchEnsemble
+
+    ensemble = ScratchEnsemble("test", "testcase/realization-*/iter-0")
+    ensemble.apply(my_realization_stats, localpath="zonestats.csv")
+
+For interactive test-runs on single realizations, you can run
+``my_realization_stats({"realization": ens[0])`` if ``ens`` is a ScratchEnsemble
+object.
+
+After the ``apply()`` operation is performed above, the data for each
+realization resides  in each realization object by the key *zonestats.csv*.  We
+can obtain all the data for all realizations (aggretated vertically by
+concatenation) by asking ``ensemble.get_df("zonestats.csv")``. Further
+aggregation to the ensemble level can be sone with the :meth:`agg()
+<fmu.ensemble.ensemble.ScratchEnsemble.agg>` function which returns a
+VirtualRealization object from an Ensemble object. If we want only the
+aggregated table for our particular custom function, we can aggregate the
+ensemble only for that particular datatype:
+
+.. code-block:: python
+
+   mean_realization = ensemble.agg("mean", keylist="zonestats.csv")
+   mean_realization.get_df("zonestats.csv")
+           ZONE        PERMX        VOLUME            Z         PORV
+   0  LowerReek  1105.552718  6.070259e+08  1599.113406  109885776.0
+   1    MidReek   966.315122  9.608399e+08  1586.559663  161875872.0
+   2  UpperReek   592.824625  1.028779e+09  1571.164775  148655376.0
+
+
