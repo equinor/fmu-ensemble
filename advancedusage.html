@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Advanced usage &mdash; fmu-ensemble 1.2.3.dev1+gd17e9ec documentation</title>
+  <title>Advanced usage &mdash; fmu-ensemble 1.2.3.dev2+g6436c04 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.2.3.dev1+gd17e9ec
+                1.2.3.dev2+g6436c04
               </div>
             
           
@@ -98,6 +98,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#comparing-realizations-or-ensembles">Comparing realizations or ensembles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#working-with-observations">Working with observations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#representative-realizations">Representative realizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-compute-functions-for-each-realization">Custom compute functions for each realization</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">API for fmu.ensemble</a></li>
@@ -358,6 +359,126 @@ can pick the realization that is closest to your statistics of choice.</p>
                                      <span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>\
                                      <span class="o">.</span><span class="n">index</span>\
                                      <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-compute-functions-for-each-realization">
+<h2>Custom compute functions for each realization<a class="headerlink" href="#custom-compute-functions-for-each-realization" title="Permalink to this headline">¶</a></h2>
+<p>If you have a custom Python function that works on Realization objects producing
+some dataframe, you can have the Ensemble object apply this function to each
+realization in turn (potentially in parallel).</p>
+<p>Note that the same can be accomplished if you are able to produce the same
+dataframe and export it to a CSV file in every realization, and then use
+<code class="docutils literal notranslate"><span class="pre">load_csv()</span></code> on the ensemble object. But this requires the CSV file to be
+precomputed and dumped in every realization directory, which is not always
+practical.</p>
+<p>Assume first we have a function that is able to produce such a table when given
+a <code class="docutils literal notranslate"><span class="pre">ScratchRealization</span></code> object (the function can choose freely what information
+in the realization object to use, potentially only the directory).</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Example data from one realization.</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ZONE</p></th>
+<th class="head"><p>PORV</p></th>
+<th class="head"><p>VOLUME</p></th>
+<th class="head"><p>Z</p></th>
+<th class="head"><p>PERMX</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>LowerReek</p></td>
+<td><p>91526392.0</p></td>
+<td><p>504504371.3</p></td>
+<td><p>1595.7</p></td>
+<td><p>1079.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>MidReek</p></td>
+<td><p>157574096.0</p></td>
+<td><p>938721683.9</p></td>
+<td><p>1585.9</p></td>
+<td><p>877.4</p></td>
+</tr>
+<tr class="row-even"><td><p>UpperReek</p></td>
+<td><p>142346336.0</p></td>
+<td><p>1036154565.6</p></td>
+<td><p>1570.7</p></td>
+<td><p>493.1</p></td>
+</tr>
+</tbody>
+</table>
+<p>where PORV and VOLUME are sums over each zone, Z is the minimum (thus apex pr.
+zone) and PERMX is an arithmetic mean. In the language of <a class="reference external" href="https://equinor.github.io/ecl2df/">ecl2df</a> this could be done with a code like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ecl2df</span> <span class="kn">import</span> <span class="n">grid</span><span class="p">,</span> <span class="n">EclFiles</span>
+
+<span class="n">eclfiles</span> <span class="o">=</span> <span class="n">EclFiles</span><span class="p">(</span><span class="s1">&#39;MYDATADECK.DATA&#39;</span><span class="p">)</span>  <span class="c1"># There is a file zones.lyr alongside this.</span>
+<span class="n">grid_df</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">df</span><span class="p">(</span><span class="n">eclfiles</span><span class="p">)</span>  <span class="c1"># Produce a dataframe with one row pr. cell</span>
+<span class="n">my_aggregators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PORV&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;VOLUME&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;PERMX&#39;</span><span class="p">:</span> <span class="s1">&#39;mean&#39;</span><span class="p">}</span>
+<span class="n">stats_df</span> <span class="o">=</span> <span class="n">grid_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;ZONE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">my_aggregators</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats_df</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ScratchRealization</span></code> objects contain the methods <code class="docutils literal notranslate"><span class="pre">runpath()</span></code> which will give
+the full path to the directory  the realization resides in, this can be used
+freely by your function.  For easier coupling with ecl2df, the function
+<code class="docutils literal notranslate"><span class="pre">get_eclfiles()</span></code> is provided.</p>
+<p>To be able to inject the ecl2df lines above into the API of fmu.ensemble and the
+<a class="reference internal" href="fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.apply" title="fmu.ensemble.ensemble.ScratchEnsemble.apply"><code class="xref py py-meth docutils literal notranslate"><span class="pre">apply()</span></code></a> function, we
+need to to put it into a wrapper function.  This wrapper function will always
+receive a Realization object as a named argument, and it must return a
+dataframe. The wrapper function can look like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ecl2df</span> <span class="kn">import</span> <span class="n">grid</span><span class="p">,</span> <span class="n">EclFiles</span>
+
+<span class="k">def</span> <span class="nf">my_realization_stats</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+   <span class="sd">&quot;&quot;&quot;A custom function for performing a particular calculation</span>
+<span class="sd">   on every realization</span>
+
+<span class="sd">   Args:</span>
+<span class="sd">      args (dict): A dictionary with parameters to my custom function.</span>
+<span class="sd">          The keys &#39;realization&#39; and &#39;localpath&#39; are reserved for fmu.ensemble.&quot;&quot;&quot;</span>
+   <span class="n">realization</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;realization&quot;</span><span class="p">]</span>  <span class="c1"># Provided by fmu.ensemble apply()</span>
+   <span class="n">eclfiles</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_eclfiles</span><span class="p">()</span>
+   <span class="n">grid_df</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">df</span><span class="p">(</span><span class="n">eclfiles</span><span class="p">)</span>
+   <span class="n">my_aggregators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PORV&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;VOLUME&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;PERMX&#39;</span><span class="p">:</span> <span class="s1">&#39;mean&#39;</span><span class="p">}</span>
+   <span class="n">stats_df</span> <span class="o">=</span> <span class="n">grid_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;ZONE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">my_aggregators</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>  <span class="c1"># Zone names are in the index, lost if not reset.</span>
+</pre></div>
+</div>
+<p>You are free to code your wrapper function in a way that suits both usage in apply() and
+interactive usage. Your wrapper function can perform differently for example if the
+“realization” key is not existing in the args dictionary given as input.</p>
+<p>When this function is defined, and your ensemble is initialized, you can call
+this function on every realization as in the following (this would work on
+EnsembleSets also):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
+
+<span class="n">ensemble</span> <span class="o">=</span> <span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;testcase/realization-*/iter-0&quot;</span><span class="p">)</span>
+<span class="n">ensemble</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">my_realization_stats</span><span class="p">,</span> <span class="n">localpath</span><span class="o">=</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For interactive test-runs on single realizations, you can run
+<code class="docutils literal notranslate"><span class="pre">my_realization_stats({&quot;realization&quot;:</span> <span class="pre">ens[0])</span></code> if <code class="docutils literal notranslate"><span class="pre">ens</span></code> is a ScratchEnsemble
+object.</p>
+<p>After the <code class="docutils literal notranslate"><span class="pre">apply()</span></code> operation is performed above, the data for each
+realization resides  in each realization object by the key <em>zonestats.csv</em>.  We
+can obtain all the data for all realizations (aggretated vertically by
+concatenation) by asking <code class="docutils literal notranslate"><span class="pre">ensemble.get_df(&quot;zonestats.csv&quot;)</span></code>. Further
+aggregation to the ensemble level can be sone with the <a class="reference internal" href="fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble.agg" title="fmu.ensemble.ensemble.ScratchEnsemble.agg"><code class="xref py py-meth docutils literal notranslate"><span class="pre">agg()</span></code></a> function which returns a
+VirtualRealization object from an Ensemble object. If we want only the
+aggregated table for our particular custom function, we can aggregate the
+ensemble only for that particular datatype:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mean_realization</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+<span class="n">mean_realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+        <span class="n">ZONE</span>        <span class="n">PERMX</span>        <span class="n">VOLUME</span>            <span class="n">Z</span>         <span class="n">PORV</span>
+<span class="mi">0</span>  <span class="n">LowerReek</span>  <span class="mf">1105.552718</span>  <span class="mf">6.070259e+08</span>  <span class="mf">1599.113406</span>  <span class="mf">109885776.0</span>
+<span class="mi">1</span>    <span class="n">MidReek</span>   <span class="mf">966.315122</span>  <span class="mf">9.608399e+08</span>  <span class="mf">1586.559663</span>  <span class="mf">161875872.0</span>
+<span class="mi">2</span>  <span class="n">UpperReek</span>   <span class="mf">592.824625</span>  <span class="mf">1.028779e+09</span>  <span class="mf">1571.164775</span>  <span class="mf">148655376.0</span>
 </pre></div>
 </div>
 </div>
