@@ -1,8 +1,14 @@
-.. image:: https://travis-ci.com/equinor/fmu-ensemble.svg?branch=master
-    :target: https://travis-ci.com/equinor/fmu-ensemble
+.. image:: https://badge.fury.io/py/fmu-ensemble.svg
+    :target: https://badge.fury.io/py/fmu-ensemble
 
-.. image:: https://api.codacy.com/project/badge/Grade/33b0d3049b634ff2b4dfc6cc791d7da7
-    :target: https://www.codacy.com/app/anders-kiaer/fmu-ensemble?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=equinor/fmu-ensemble&amp;utm_campaign=Badge_Grade
+.. image:: https://img.shields.io/github/workflow/status/equinor/fmu-ensemble/fmu-ensemble
+    :target: https://github.com/equinor/flownet/actions?query=workflow%3Afmu-ensemble
+
+.. image:: https://img.shields.io/lgtm/alerts/g/equinor/fmu-ensemble.svg?logo=lgtm&logoWidth=18
+    :target: https://lgtm.com/projects/g/equinor/fmu-ensemble/alerts/
+
+.. image:: https://img.shields.io/lgtm/grade/python/g/equinor/fmu-ensemble.svg?logo=lgtm&logoWidth=18
+    :target: https://lgtm.com/projects/g/equinor/fmu-ensemble/context:python
 
 .. image:: https://img.shields.io/badge/python-2.7%20|%203.6%20|%203.7%20|%203.8-blue.svg
     :target: https://www.python.org
