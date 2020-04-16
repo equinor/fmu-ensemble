@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 1.2.3.dev2+g6436c04 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 1.2.3.dev3+g89c814e documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.2.3.dev2+g6436c04
+                1.2.3.dev3+g89c814e
               </div>
             
           
@@ -1708,7 +1708,7 @@
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Represent the realization. Show only the last part of the path&quot;&quot;&quot;</span>
         <span class="n">pathsummary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">[</span><span class="o">-</span><span class="mi">50</span><span class="p">:]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">indexstr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">indexstr</span> <span class="o">=</span> <span class="s2">&quot;Error&quot;</span>
