@@ -2,7 +2,7 @@
     :target: https://badge.fury.io/py/fmu-ensemble
 
 .. image:: https://img.shields.io/github/workflow/status/equinor/fmu-ensemble/fmu-ensemble
-    :target: https://github.com/equinor/flownet/actions?query=workflow%3Afmu-ensemble
+    :target: https://github.com/equinor/fmu-ensemble/actions?query=workflow%3Afmu-ensemble
 
 .. image:: https://img.shields.io/lgtm/alerts/g/equinor/fmu-ensemble.svg?logo=lgtm&logoWidth=18
     :target: https://lgtm.com/projects/g/equinor/fmu-ensemble/alerts/
