@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.1.dev1+g490db64 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.1.dev1+ge18fd92 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.1.dev1+g490db64
+                0.1.dev1+ge18fd92
               </div>
             
           
@@ -771,7 +771,7 @@
         <span class="c1"># Allow for calling functions which cannot take any</span>
         <span class="c1"># arguments:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># lgtm [py/call/wrong-arguments]</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">callback</span><span class="p">()</span>
 
