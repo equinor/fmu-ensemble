@@ -623,7 +623,6 @@ class ScratchEnsemble(object):
         """
         ensemble_smry_keys = self.get_smrykeys(vector_match=column_keys)
         meta = {}
-        missing_keys = set()
         needed_reals = 0
         # Loop over realizations until all requested keys are accounted for
         for _, realization in self.realizations.items():

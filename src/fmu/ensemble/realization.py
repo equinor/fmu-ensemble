@@ -611,7 +611,7 @@ class ScratchRealization(object):
         # Allow for calling functions which cannot take any
         # arguments:
         try:
-            result = callback(kwargs)
+            result = callback(kwargs)  # lgtm [py/call/wrong-arguments]
         except TypeError:
             result = callback()
 
