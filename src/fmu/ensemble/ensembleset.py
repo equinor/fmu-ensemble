@@ -582,11 +582,12 @@ class EnsembleSet(object):
                 memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'.
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
 
         Returns:
             A DataFame of summary vectors for the ensembleset.
@@ -632,11 +633,12 @@ class EnsembleSet(object):
                 operations
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'.
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
         Returns:
             A DataFame of summary vectors for the EnsembleSet. The column
             ENSEMBLE will distinguish the different ensembles by their
@@ -672,11 +674,12 @@ class EnsembleSet(object):
                 memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'.
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
         Returns:
             list of datetime.date.
         """

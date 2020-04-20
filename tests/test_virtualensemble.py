@@ -92,6 +92,19 @@ def test_virtualensemble():
     assert "REAL" in fopt.columns
     assert "FGPT" not in fopt.columns
     assert len(fopt) == 25
+    monthly_smry = vens.get_smry(time_index="monthly")
+    pd.testing.assert_series_equal(
+        vens.get_smry(time_index="first")["FOIP"].reset_index(drop=True),
+        monthly_smry[monthly_smry["DATE"] == min(monthly_smry["DATE"])][
+            "FOIP"
+        ].reset_index(drop=True),
+    )
+    pd.testing.assert_series_equal(
+        vens.get_smry(time_index="last")["FOIP"].reset_index(drop=True),
+        monthly_smry[monthly_smry["DATE"] == max(monthly_smry["DATE"])][
+            "FOIP"
+        ].reset_index(drop=True),
+    )
 
     # Check that we can default get_smry()
     alldefaults = vens.get_smry()

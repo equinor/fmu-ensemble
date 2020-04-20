@@ -200,6 +200,23 @@ def test_get_smry():
         repeating
     )
 
+    # Test that time_index='first' and ='last' is supported on a virtual realization
+    real = ensemble.ScratchRealization(realdir)
+    monthly_smry = real.load_smry(time_index="monthly", column_keys=["FOIP"])
+    vreal = real.to_virtual()
+    pd.testing.assert_series_equal(
+        vreal.get_smry(time_index="first")["FOIP"].reset_index(drop=True),
+        monthly_smry[monthly_smry["DATE"] == min(monthly_smry["DATE"])][
+            "FOIP"
+        ].reset_index(drop=True),
+    )
+    pd.testing.assert_series_equal(
+        vreal.get_smry(time_index="last")["FOIP"].reset_index(drop=True),
+        monthly_smry[monthly_smry["DATE"] == max(monthly_smry["DATE"])][
+            "FOIP"
+        ].reset_index(drop=True),
+    )
+
 
 def test_get_smry2():
     """More tests for get_smry, with more choices in

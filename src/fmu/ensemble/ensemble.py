@@ -741,14 +741,15 @@ class ScratchEnsemble(object):
                 memory simultaneously
             start_date (str or date): First date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included. If string, use
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
                 ISO-format, YYYY-MM-DD.
             end_date (str or date): Last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'. If string, use ISO-format, YYYY-MM-DD.
-            include_restart (boolean): boolean sent to libecl for wheter restarts
-                files should be traversed
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
+            include_restart (boolean): boolean sent to libecl for whether restart
+                files should be traversed.
         Returns:
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
@@ -965,6 +966,7 @@ class ScratchEnsemble(object):
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
+               'first' will give out the first date (minimum).
                'last' will give out the last date (maximum).
             normalize:  Whether to normalize backwards at the start
                 and forwards at the end to ensure the raw
@@ -972,14 +974,15 @@ class ScratchEnsemble(object):
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overrides
-                normalized dates. If string, use ISO-format, YYYY-MM-DD.
+                normalized dates. Overridden if freq is 'first' or 'last'.
+                If string, use ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overrides
-                normalized dates. Overriden if freq is 'last'.
+                normalized dates. Overridden if freq is 'first' or 'last'.
                 If string, use ISO-format, YYYY-MM-DD.
-            include_restart: boolean sent to libecl for wheter restarts
-                files should be traversed
+            include_restart: boolean sent to libecl for whether restart
+                files should be traversed.
 
         Returns:
             list of datetimes. Empty list if no data found.
@@ -1050,6 +1053,9 @@ class ScratchEnsemble(object):
         if freq == "last":
             end_date = max([max(x) for x in eclsumsdates]).date()
             return [end_date]
+        if freq == "first":
+            start_date = min([min(x) for x in eclsumsdates]).date()
+            return [start_date]
         # These are datetime.datetime, not datetime.date
         start_smry = min([min(x) for x in eclsumsdates])
         end_smry = max([max(x) for x in eclsumsdates])
@@ -1121,12 +1127,12 @@ class ScratchEnsemble(object):
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included. If string,
-                use ISO-format, YYYY-MM-DD.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'. If string, use ISO-format, YYYY-MM-DD.
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
             'mean', 'p10', 'p90', inner index are the dates. Column names
@@ -1427,13 +1433,14 @@ class ScratchEnsemble(object):
                 not enough memory to keep all summary files in memory.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'.
-            include_restart: boolean sent to libecl for wheter restarts
-                files should be traversed
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
+            include_restart: boolean sent to libecl for whether restart
+                files should be traversed.
 
         Returns:
             A DataFame of summary vectors for the ensemble. The column

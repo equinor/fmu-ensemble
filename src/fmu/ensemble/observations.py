@@ -490,6 +490,7 @@ class Observations(object):
                         "report",
                         "yearly",
                         "daily",
+                        "first",
                         "last",
                         "monthly",
                     ] and not isinstance(unit["time_index"], datetime.datetime):
