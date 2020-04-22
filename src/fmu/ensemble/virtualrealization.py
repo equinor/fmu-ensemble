@@ -570,7 +570,10 @@ class VirtualRealization(object):
         available_smry = [x for x in self.keys() if "unsmry" in x]
 
         if not available_smry:
-            raise ValueError("No summary data to glob from")
+            raise ValueError(
+                "No summary data available. Use load_smry() "
+                "before making a virtual realization."
+            )
 
         # Merge all internalized columns:
         available_keys = set()
