@@ -938,8 +938,8 @@ class ScratchRealization(object):
             cache: boolean indicating whether we should keep an
                 object reference to the EclSum object. Set to
                 false if you need to conserve memory.
-            include_restart: boolean sent to libecl for whether restarts
-                files should be traversed
+            include_restart: boolean sent to libecl for whether restart
+                files should be traversed.
 
         Returns:
             EclSum: object representing the summary file. None if
@@ -1005,8 +1005,8 @@ class ScratchRealization(object):
 
           'share/results/tables/unsmry--<time_index>.csv'
 
-        where <time_index> is among 'yearly', 'monthly', 'daily', 'last' or
-        'raw' (meaning the raw dates in the SMRY file), depending
+        where <time_index> is among 'yearly', 'monthly', 'daily', 'first',
+        'last' or 'raw' (meaning the raw dates in the SMRY file), depending
         on the chosen time_index. If a custom time_index (list
         of datetime) was supplied, <time_index> will be called 'custom'.
 
@@ -1016,8 +1016,8 @@ class ScratchRealization(object):
 
         Args:
             time_index: string indicating a resampling frequency,
-               'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
-               return the simulated report steps (also default).
+               'yearly', 'monthly', 'daily', 'first', 'last' or 'raw', the
+               latter will return the simulated report steps (also default).
                If a list of DateTime is supplied, data will be resampled
                to these.
             column_keys: list of column key wildcards. None means everything.
@@ -1025,13 +1025,14 @@ class ScratchRealization(object):
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'.
-            include_restart: boolean sent to libecl for wheter restarts
-                files should be traversed
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
+            include_restart: boolean sent to libecl for whether restart
+                files should be traversed.
 
         Returns:
             DataFrame with summary keys as columns and dates as indices.
@@ -1094,8 +1095,8 @@ class ScratchRealization(object):
 
         Arguments:
             time_index: string indicating a resampling frequency,
-               'yearly', 'monthly', 'daily', 'last' or 'raw', the latter will
-               return the simulated report steps (also default).
+               'yearly', 'monthly', 'daily', 'first', 'last' or 'raw', the
+               latter will return the simulated report steps (also default).
                If a list of DateTime is supplied, data will be resampled
                to these. If a date in ISO-8601 format is supplied, that is
                used as a single date.
@@ -1104,11 +1105,12 @@ class ScratchRealization(object):
                 object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
-                start_date will always be included.
+                start_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
-                end_date will always be included. Overriden if time_index
-                is 'last'.
+                end_date will always be included. Overridden if time_index
+                is 'first' or 'last'.
 
         Returns empty dataframe if there is no summary file, or if the
         column_keys are not existing.
@@ -1406,19 +1408,22 @@ class ScratchRealization(object):
                 yield the sorted union of all valid timesteps for
                 all realizations. Other valid options are
                 'daily', 'monthly' and 'yearly'.
+                'first' will give out the first date (minimum) and
                 'last' will give out the last date (maximum),
-                as a list with one element.
+                both as lists with one element.
             normalize: Whether to normalize backwards at the start
                 and forwards at the end to ensure the raw
                 date range is covered.
             start_date: str or date with first date to include
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overrides
-                normalized dates.
+                normalized dates. Overridden if freq is 'first'
+                or 'last'.
             end_date: str or date with last date to be included.
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overrides
-                normalized dates. Overriden if freq is 'last'.
+                normalized dates. Overridden if freq is 'first'
+                or 'last'.
         Returns:
             list of datetimes. None if no summary data is available.
         """
@@ -1776,7 +1781,7 @@ def normalize_dates(start_date, end_date, freq):
     elif freq == "daily":
         # This we don't need to normalize, but we should not give any warnings
         pass
-    elif freq == "last":
+    elif freq == "first" or freq == "last":
         # This we don't need to normalize, but we should not give any warnings
         pass
     else:

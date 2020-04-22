@@ -386,9 +386,13 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_smry_dates(freq="yearly")) == 5
     assert len(reekensemble.get_smry_dates(freq="monthly")) == 38
     assert len(reekensemble.get_smry_dates(freq="daily")) == 1098
+    assert len(reekensemble.get_smry_dates(freq="first")) == 1
     assert len(reekensemble.get_smry_dates(freq="last")) == 1
+    assert reekensemble.get_smry_dates(freq="first") == reekensemble.get_smry_dates(
+        freq="first", start_date="1900-01-01", end_date="2050-02-01"
+    )
     assert reekensemble.get_smry_dates(freq="last") == reekensemble.get_smry_dates(
-        freq="last", end_date="2050-02-01"
+        freq="last", start_date="1900-01-01", end_date="2050-02-01"
     )
 
     assert str(reekensemble.get_smry_dates(freq="report")[-1]) == "2003-01-02 00:00:00"
@@ -396,6 +400,7 @@ def test_ensemble_ecl():
     assert str(reekensemble.get_smry_dates(freq="yearly")[-1]) == "2004-01-01"
     assert str(reekensemble.get_smry_dates(freq="monthly")[-1]) == "2003-02-01"
     assert str(reekensemble.get_smry_dates(freq="daily")[-1]) == "2003-01-02"
+    assert str(reekensemble.get_smry_dates(freq="first")[-1]) == "2000-01-01"
     assert str(reekensemble.get_smry_dates(freq="last")[-1]) == "2003-01-02"
 
     assert (
@@ -424,6 +429,9 @@ def test_ensemble_ecl():
 
     # Check that we can shortcut get_smry_dates:
     assert len(reekensemble.load_smry(column_keys=["FOPT"], time_index="yearly")) == 25
+
+    assert len(reekensemble.load_smry(column_keys=["FOPR"], time_index="first")) == 5
+    assert isinstance(reekensemble.get_df("unsmry--first.csv"), pd.DataFrame)
 
     assert len(reekensemble.load_smry(column_keys=["FOPR"], time_index="last")) == 5
     assert isinstance(reekensemble.get_df("unsmry--last.csv"), pd.DataFrame)

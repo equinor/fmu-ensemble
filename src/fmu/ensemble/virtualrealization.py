@@ -463,8 +463,9 @@ class VirtualRealization(object):
             freq: string denoting requested frequency for
                 the list of datetimes.
                 'daily', 'monthly' and 'yearly'.
+                'first' will give out the first date (minimum) and
                 'last' will give out the last date (maximum),
-                as a list with one element.
+                both as lists with one element.
             normalize: Whether to normalize backwards at the start
                 and forwards at the end to ensure the entire
                 date range is covered.
@@ -490,6 +491,10 @@ class VirtualRealization(object):
         available_dates = [pd.to_datetime(x) for x in list(available_dates)]
         start_date = min(available_dates)
         end_date = max(available_dates)
+        if freq == "first":
+            return [start_date.date()]
+        if freq == "last":
+            return [end_date.date()]
         pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
         if normalize:
             raise NotImplementedError

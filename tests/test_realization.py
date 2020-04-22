@@ -546,7 +546,7 @@ def test_singlereal_ecl(tmp="TMP"):
         )
         == 2
     )
-    # Date normalization should be overriden here:
+    # Date normalization should be overridden here:
     assert (
         len(
             real.get_smry_dates(
