@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble 0.1.dev1+g7e84938 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble 0.1.dev1+gc7fc5e2 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.1.dev1+g7e84938
+                0.1.dev1+gc7fc5e2
               </div>
             
           
@@ -652,14 +652,15 @@ objects. Set to False if you cannot keep all EclSum files in
 memory simultaneously</p></li>
 <li><p><strong>start_date</strong> (<em>str</em><em> or </em><em>date</em>) – First date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included. If string, use
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’. If string, use ISO-format, YYYY-MM-DD.
 ISO-format, YYYY-MM-DD.</p></li>
 <li><p><strong>end_date</strong> (<em>str</em><em> or </em><em>date</em>) – Last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’. If string, use ISO-format, YYYY-MM-DD.</p></li>
-<li><p><strong>include_restart</strong> (<em>boolean</em>) – boolean sent to libecl for wheter restarts
-files should be traversed</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’. If string, use ISO-format, YYYY-MM-DD.</p></li>
+<li><p><strong>include_restart</strong> (<em>boolean</em>) – boolean sent to libecl for whether restart
+files should be traversed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -826,6 +827,7 @@ on each realization.</p>
 yield the sorted union of all valid timesteps for
 all realizations. Other valid options are
 ‘daily’, ‘monthly’ and ‘yearly’.
+‘first’ will give out the first date (minimum).
 ‘last’ will give out the last date (maximum).</p>
 </dd>
 <dt>normalize:  Whether to normalize backwards at the start</dt><dd><p>and forwards at the end to ensure the raw
@@ -833,14 +835,15 @@ date range is covered.</p>
 </dd>
 <dt>start_date: str or date with first date to include.</dt><dd><p>Dates prior to this date will be dropped, supplied
 start_date will always be included. Overrides
-normalized dates. If string, use ISO-format, YYYY-MM-DD.</p>
+normalized dates. Overridden if freq is ‘first’ or ‘last’.
+If string, use ISO-format, YYYY-MM-DD.</p>
 </dd>
 <dt>end_date: str or date with last date to be included.</dt><dd><p>Dates past this date will be dropped, supplied
 end_date will always be included. Overrides
-normalized dates. Overriden if freq is ‘last’.
+normalized dates. Overridden if freq is ‘first’ or ‘last’.
 If string, use ISO-format, YYYY-MM-DD.</p>
 </dd>
-<dt>include_restart: boolean sent to libecl for wheter restarts</dt><dd><p>files should be traversed</p>
+<dt>include_restart: boolean sent to libecl for whether restart</dt><dd><p>files should be traversed.</p>
 </dd>
 </dl>
 </p>
@@ -876,12 +879,12 @@ Ask for p10 if you need the oil industry p90.</p></li>
 object in memory after data has been loaded.</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included. If string,
-use ISO-format, YYYY-MM-DD.</p></li>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’. If string, use ISO-format, YYYY-MM-DD.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’. If string, use ISO-format, YYYY-MM-DD.</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’. If string, use ISO-format, YYYY-MM-DD.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1003,13 +1006,14 @@ objects. Defaults to True. Set to False if
 not enough memory to keep all summary files in memory.</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included.</p></li>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’.</p></li>
-<li><p><strong>include_restart</strong> – boolean sent to libecl for wheter restarts
-files should be traversed</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
+<li><p><strong>include_restart</strong> – boolean sent to libecl for whether restart
+files should be traversed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1673,11 +1677,12 @@ objects. Set to False if you cannot keep all EclSum files in
 memory simultaneously</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included.</p></li>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’.</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1709,11 +1714,12 @@ files in memory at once. This will speed up subsequent
 operations</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included.</p></li>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’.</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1742,11 +1748,12 @@ all realizations. Other valid options are
 memory simultaneously</p>
 </dd>
 <dt>start_date: str or date with first date to include.</dt><dd><p>Dates prior to this date will be dropped, supplied
-start_date will always be included.</p>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p>
 </dd>
 <dt>end_date: str or date with last date to be included.</dt><dd><p>Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’.</p>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p>
 </dd>
 </dl>
 </p>
@@ -2479,8 +2486,8 @@ turning off autodiscovery is strongly recommended.</p>
 <li><p><strong>cache</strong> – boolean indicating whether we should keep an
 object reference to the EclSum object. Set to
 false if you need to conserve memory.</p></li>
-<li><p><strong>include_restart</strong> – boolean sent to libecl for whether restarts
-files should be traversed</p></li>
+<li><p><strong>include_restart</strong> – boolean sent to libecl for whether restart
+files should be traversed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2508,8 +2515,8 @@ will be called</p>
 <blockquote>
 <div><p>‘share/results/tables/unsmry–&lt;time_index&gt;.csv’</p>
 </div></blockquote>
-<p>where &lt;time_index&gt; is among ‘yearly’, ‘monthly’, ‘daily’, ‘last’ or
-‘raw’ (meaning the raw dates in the SMRY file), depending
+<p>where &lt;time_index&gt; is among ‘yearly’, ‘monthly’, ‘daily’, ‘first’,
+‘last’ or ‘raw’ (meaning the raw dates in the SMRY file), depending
 on the chosen time_index. If a custom time_index (list
 of datetime) was supplied, &lt;time_index&gt; will be called ‘custom’.</p>
 <p>Wraps ecl.summary.EclSum.pandas_frame()</p>
@@ -2518,8 +2525,8 @@ of datetime) was supplied, &lt;time_index&gt; will be called ‘custom’.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_index</strong> – string indicating a resampling frequency,
-‘yearly’, ‘monthly’, ‘daily’, ‘last’ or ‘raw’, the latter will
-return the simulated report steps (also default).
+‘yearly’, ‘monthly’, ‘daily’, ‘first’, ‘last’ or ‘raw’, the
+latter will return the simulated report steps (also default).
 If a list of DateTime is supplied, data will be resampled
 to these.</p></li>
 <li><p><strong>column_keys</strong> – list of column key wildcards. None means everything.</p></li>
@@ -2527,13 +2534,14 @@ to these.</p></li>
 object in memory after data has been loaded.</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included.</p></li>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’.</p></li>
-<li><p><strong>include_restart</strong> – boolean sent to libecl for wheter restarts
-files should be traversed</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
+<li><p><strong>include_restart</strong> – boolean sent to libecl for whether restart
+files should be traversed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2559,8 +2567,8 @@ touching internalized dataframes.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_index</strong> – string indicating a resampling frequency,
-‘yearly’, ‘monthly’, ‘daily’, ‘last’ or ‘raw’, the latter will
-return the simulated report steps (also default).
+‘yearly’, ‘monthly’, ‘daily’, ‘first’, ‘last’ or ‘raw’, the
+latter will return the simulated report steps (also default).
 If a list of DateTime is supplied, data will be resampled
 to these. If a date in ISO-8601 format is supplied, that is
 used as a single date.</p></li>
@@ -2569,11 +2577,12 @@ used as a single date.</p></li>
 object in memory after data has been loaded.</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include.
 Dates prior to this date will be dropped, supplied
-start_date will always be included.</p></li>
+start_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
-end_date will always be included. Overriden if time_index
-is ‘last’.</p></li>
+end_date will always be included. Overridden if time_index
+is ‘first’ or ‘last’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2672,19 +2681,22 @@ the returned list of datetime. ‘report’ will
 yield the sorted union of all valid timesteps for
 all realizations. Other valid options are
 ‘daily’, ‘monthly’ and ‘yearly’.
+‘first’ will give out the first date (minimum) and
 ‘last’ will give out the last date (maximum),
-as a list with one element.</p></li>
+both as lists with one element.</p></li>
 <li><p><strong>normalize</strong> – Whether to normalize backwards at the start
 and forwards at the end to ensure the raw
 date range is covered.</p></li>
 <li><p><strong>start_date</strong> – str or date with first date to include
 Dates prior to this date will be dropped, supplied
 start_date will always be included. Overrides
-normalized dates.</p></li>
+normalized dates. Overridden if freq is ‘first’
+or ‘last’.</p></li>
 <li><p><strong>end_date</strong> – str or date with last date to be included.
 Dates past this date will be dropped, supplied
 end_date will always be included. Overrides
-normalized dates. Overriden if freq is ‘last’.</p></li>
+normalized dates. Overridden if freq is ‘first’
+or ‘last’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -3672,8 +3684,9 @@ smry dataframes.</p>
 <li><p><strong>freq</strong> – string denoting requested frequency for
 the list of datetimes.
 ‘daily’, ‘monthly’ and ‘yearly’.
+‘first’ will give out the first date (minimum) and
 ‘last’ will give out the last date (maximum),
-as a list with one element.</p></li>
+both as lists with one element.</p></li>
 <li><p><strong>normalize</strong> – Whether to normalize backwards at the start
 and forwards at the end to ensure the entire
 date range is covered.</p></li>

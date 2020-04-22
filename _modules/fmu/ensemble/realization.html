@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.1.dev1+g7e84938 documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 0.1.dev1+gc7fc5e2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.1.dev1+g7e84938
+                0.1.dev1+gc7fc5e2
               </div>
             
           
@@ -1098,8 +1098,8 @@
 <span class="sd">            cache: boolean indicating whether we should keep an</span>
 <span class="sd">                object reference to the EclSum object. Set to</span>
 <span class="sd">                false if you need to conserve memory.</span>
-<span class="sd">            include_restart: boolean sent to libecl for whether restarts</span>
-<span class="sd">                files should be traversed</span>
+<span class="sd">            include_restart: boolean sent to libecl for whether restart</span>
+<span class="sd">                files should be traversed.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            EclSum: object representing the summary file. None if</span>
@@ -1165,8 +1165,8 @@
 
 <span class="sd">          &#39;share/results/tables/unsmry--&lt;time_index&gt;.csv&#39;</span>
 
-<span class="sd">        where &lt;time_index&gt; is among &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;last&#39; or</span>
-<span class="sd">        &#39;raw&#39; (meaning the raw dates in the SMRY file), depending</span>
+<span class="sd">        where &lt;time_index&gt; is among &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;first&#39;,</span>
+<span class="sd">        &#39;last&#39; or &#39;raw&#39; (meaning the raw dates in the SMRY file), depending</span>
 <span class="sd">        on the chosen time_index. If a custom time_index (list</span>
 <span class="sd">        of datetime) was supplied, &lt;time_index&gt; will be called &#39;custom&#39;.</span>
 
@@ -1176,8 +1176,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            time_index: string indicating a resampling frequency,</span>
-<span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;last&#39; or &#39;raw&#39;, the latter will</span>
-<span class="sd">               return the simulated report steps (also default).</span>
+<span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;first&#39;, &#39;last&#39; or &#39;raw&#39;, the</span>
+<span class="sd">               latter will return the simulated report steps (also default).</span>
 <span class="sd">               If a list of DateTime is supplied, data will be resampled</span>
 <span class="sd">               to these.</span>
 <span class="sd">            column_keys: list of column key wildcards. None means everything.</span>
@@ -1185,13 +1185,14 @@
 <span class="sd">                object in memory after data has been loaded.</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;.</span>
-<span class="sd">            include_restart: boolean sent to libecl for wheter restarts</span>
-<span class="sd">                files should be traversed</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">            include_restart: boolean sent to libecl for whether restart</span>
+<span class="sd">                files should be traversed.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame with summary keys as columns and dates as indices.</span>
@@ -1254,8 +1255,8 @@
 
 <span class="sd">        Arguments:</span>
 <span class="sd">            time_index: string indicating a resampling frequency,</span>
-<span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;last&#39; or &#39;raw&#39;, the latter will</span>
-<span class="sd">               return the simulated report steps (also default).</span>
+<span class="sd">               &#39;yearly&#39;, &#39;monthly&#39;, &#39;daily&#39;, &#39;first&#39;, &#39;last&#39; or &#39;raw&#39;, the</span>
+<span class="sd">               latter will return the simulated report steps (also default).</span>
 <span class="sd">               If a list of DateTime is supplied, data will be resampled</span>
 <span class="sd">               to these. If a date in ISO-8601 format is supplied, that is</span>
 <span class="sd">               used as a single date.</span>
@@ -1264,11 +1265,12 @@
 <span class="sd">                object in memory after data has been loaded.</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;.</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 
 <span class="sd">        Returns empty dataframe if there is no summary file, or if the</span>
 <span class="sd">        column_keys are not existing.</span>
@@ -1566,19 +1568,22 @@
 <span class="sd">                yield the sorted union of all valid timesteps for</span>
 <span class="sd">                all realizations. Other valid options are</span>
 <span class="sd">                &#39;daily&#39;, &#39;monthly&#39; and &#39;yearly&#39;.</span>
+<span class="sd">                &#39;first&#39; will give out the first date (minimum) and</span>
 <span class="sd">                &#39;last&#39; will give out the last date (maximum),</span>
-<span class="sd">                as a list with one element.</span>
+<span class="sd">                both as lists with one element.</span>
 <span class="sd">            normalize: Whether to normalize backwards at the start</span>
 <span class="sd">                and forwards at the end to ensure the raw</span>
 <span class="sd">                date range is covered.</span>
 <span class="sd">            start_date: str or date with first date to include</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
 <span class="sd">                start_date will always be included. Overrides</span>
-<span class="sd">                normalized dates.</span>
+<span class="sd">                normalized dates. Overridden if freq is &#39;first&#39;</span>
+<span class="sd">                or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
 <span class="sd">                end_date will always be included. Overrides</span>
-<span class="sd">                normalized dates. Overriden if freq is &#39;last&#39;.</span>
+<span class="sd">                normalized dates. Overridden if freq is &#39;first&#39;</span>
+<span class="sd">                or &#39;last&#39;.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetimes. None if no summary data is available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1936,7 +1941,7 @@
     <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span>
         <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
         <span class="k">pass</span>
-    <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span> <span class="ow">or</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
         <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
         <span class="k">pass</span>
     <span class="k">else</span><span class="p">:</span>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.1.dev1+g7e84938 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 0.1.dev1+gc7fc5e2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.1.dev1+g7e84938
+                0.1.dev1+gc7fc5e2
               </div>
             
           
@@ -901,14 +901,15 @@
 <span class="sd">                memory simultaneously</span>
 <span class="sd">            start_date (str or date): First date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included. If string, use</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
 <span class="sd">                ISO-format, YYYY-MM-DD.</span>
 <span class="sd">            end_date (str or date): Last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
-<span class="sd">            include_restart (boolean): boolean sent to libecl for wheter restarts</span>
-<span class="sd">                files should be traversed</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
+<span class="sd">            include_restart (boolean): boolean sent to libecl for whether restart</span>
+<span class="sd">                files should be traversed.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFame: Summary vectors for the ensemble, or</span>
 <span class="sd">            a dict of dataframes if stacked=False.</span>
@@ -1125,6 +1126,7 @@
 <span class="sd">               yield the sorted union of all valid timesteps for</span>
 <span class="sd">               all realizations. Other valid options are</span>
 <span class="sd">               &#39;daily&#39;, &#39;monthly&#39; and &#39;yearly&#39;.</span>
+<span class="sd">               &#39;first&#39; will give out the first date (minimum).</span>
 <span class="sd">               &#39;last&#39; will give out the last date (maximum).</span>
 <span class="sd">            normalize:  Whether to normalize backwards at the start</span>
 <span class="sd">                and forwards at the end to ensure the raw</span>
@@ -1132,14 +1134,15 @@
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
 <span class="sd">                start_date will always be included. Overrides</span>
-<span class="sd">                normalized dates. If string, use ISO-format, YYYY-MM-DD.</span>
+<span class="sd">                normalized dates. Overridden if freq is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                If string, use ISO-format, YYYY-MM-DD.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
 <span class="sd">                end_date will always be included. Overrides</span>
-<span class="sd">                normalized dates. Overriden if freq is &#39;last&#39;.</span>
+<span class="sd">                normalized dates. Overridden if freq is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">                If string, use ISO-format, YYYY-MM-DD.</span>
-<span class="sd">            include_restart: boolean sent to libecl for wheter restarts</span>
-<span class="sd">                files should be traversed</span>
+<span class="sd">            include_restart: boolean sent to libecl for whether restart</span>
+<span class="sd">                files should be traversed.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetimes. Empty list if no data found.</span>
@@ -1210,6 +1213,9 @@
         <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
             <span class="n">end_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span><span class="p">:</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">start_date</span><span class="p">]</span>
         <span class="c1"># These are datetime.datetime, not datetime.date</span>
         <span class="n">start_smry</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
         <span class="n">end_smry</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
@@ -1281,12 +1287,12 @@
 <span class="sd">                object in memory after data has been loaded.</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included. If string,</span>
-<span class="sd">                use ISO-format, YYYY-MM-DD.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;. If string, use ISO-format, YYYY-MM-DD.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            A MultiIndex dataframe. Outer index is &#39;minimum&#39;, &#39;maximum&#39;,</span>
 <span class="sd">            &#39;mean&#39;, &#39;p10&#39;, &#39;p90&#39;, inner index are the dates. Column names</span>
@@ -1587,13 +1593,14 @@
 <span class="sd">                not enough memory to keep all summary files in memory.</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;.</span>
-<span class="sd">            include_restart: boolean sent to libecl for wheter restarts</span>
-<span class="sd">                files should be traversed</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">            include_restart: boolean sent to libecl for whether restart</span>
+<span class="sd">                files should be traversed.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A DataFame of summary vectors for the ensemble. The column</span>

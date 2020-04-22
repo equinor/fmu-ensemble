@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 0.1.dev1+g7e84938 documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 0.1.dev1+gc7fc5e2 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.1.dev1+g7e84938
+                0.1.dev1+gc7fc5e2
               </div>
             
           
@@ -742,11 +742,12 @@
 <span class="sd">                memory simultaneously</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;.</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A DataFame of summary vectors for the ensembleset.</span>
@@ -792,11 +793,12 @@
 <span class="sd">                operations</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;.</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            A DataFame of summary vectors for the EnsembleSet. The column</span>
 <span class="sd">            ENSEMBLE will distinguish the different ensembles by their</span>
@@ -832,11 +834,12 @@
 <span class="sd">                memory simultaneously</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
-<span class="sd">                start_date will always be included.</span>
+<span class="sd">                start_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
-<span class="sd">                end_date will always be included. Overriden if time_index</span>
-<span class="sd">                is &#39;last&#39;.</span>
+<span class="sd">                end_date will always be included. Overridden if time_index</span>
+<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetime.date.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
