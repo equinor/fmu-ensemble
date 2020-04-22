@@ -20,7 +20,7 @@ with open("HISTORY.rst") as history_file:
     history = history_file.read()
 
 REQUIREMENTS = [
-    # "libecl",   # Temporarily removed from requirements to solve problems elsewhere
+    "libecl",
     "numpy",
     "pandas>0.23.0",
     "pyyaml>=5.1",
