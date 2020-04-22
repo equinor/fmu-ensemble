@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 0.1.dev1+gc7fc5e2 documentation</title>
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 0.1.dev1+gdd9989b documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.1.dev1+gc7fc5e2
+                0.1.dev1+gdd9989b
               </div>
             
           
@@ -730,7 +730,10 @@
         <span class="n">available_smry</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;unsmry&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">available_smry</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No summary data to glob from&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;No summary data available. Use load_smry() &quot;</span>
+                <span class="s2">&quot;before making a virtual realization.&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># Merge all internalized columns:</span>
         <span class="n">available_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
