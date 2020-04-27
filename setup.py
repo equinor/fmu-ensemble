@@ -16,8 +16,9 @@ except ImportError:
 with open("README.rst") as readme_file:
     readme = readme_file.read()
 
-with open("HISTORY.rst") as history_file:
-    history = history_file.read()
+with open("HISTORY.rst", "rb") as history_file:
+    # Norwegian characters in HISTORY.rst
+    history = history_file.read().decode("UTF-8")
 
 REQUIREMENTS = [
     "libecl",
