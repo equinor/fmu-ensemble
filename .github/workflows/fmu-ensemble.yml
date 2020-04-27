@@ -26,6 +26,11 @@ jobs:
       - name: Checkout commit locally
         uses: actions/checkout@v2
 
+      - name: Checkout tags
+        # This seems necessary for setuptools_scm to be able to infer
+        # the correct version.
+        run: git fetch --unshallow --tags
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -39,7 +44,7 @@ jobs:
 
       - name: Install test dependencies
         run: pip install .[tests]
-  
+
       - name: List all installed packages
         run: pip freeze
 
@@ -51,7 +56,7 @@ jobs:
         run: |
           python -c "import fmu.ensemble"
           pytest tests/
-          pip install .[parquet] 
+          pip install .[parquet]
           pytest tests/test_virtualensemble.py
           sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
           python setup.py build_sphinx
