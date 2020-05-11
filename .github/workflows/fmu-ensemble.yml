@@ -23,36 +23,36 @@ jobs:
         python-version: ['2.7', '3.6', '3.7', '3.8']
 
     steps:
-      - name: Checkout commit locally
+      - name: 📖 Checkout commit locally
         uses: actions/checkout@v2
 
-      - name: Checkout tags
+      - name: 📖 Checkout tags
         # This seems necessary for setuptools_scm to be able to infer
         # the correct version.
         run: git fetch --unshallow --tags
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install fmu-ensemble with dependencies
+      - name: 📦 Install fmu-ensemble with dependencies
         run: |
           pip install --upgrade pip
           pip install libecl
           pip install .
 
-      - name: Install test dependencies
+      - name: 📦 Install test dependencies
         run: pip install .[tests]
 
-      - name: List all installed packages
+      - name: 🧾 List all installed packages
         run: pip freeze
 
-      - name: Check code style
+      - name: 🕵️ Check code style
         if: matrix.python-version != '2.7'
         run: black --check src/ tests/test_*.py setup.py
 
-      - name: Run tests
+      - name: 🤖 Run tests
         run: |
           python -c "import fmu.ensemble"
           pytest tests/
@@ -62,7 +62,7 @@ jobs:
           python setup.py build_sphinx
           touch build/sphinx/html/.nojekyll
 
-      - name: Build and deploy Python package
+      - name: 🚢 Build and deploy Python package
         if: github.event_name == 'release' && matrix.python-version == '3.6'
         env:
           TWINE_USERNAME: __token__
@@ -72,8 +72,8 @@ jobs:
           python setup.py sdist bdist_wheel
           twine upload dist/*
 
-      - name: Update GitHub pages
-        if: github.ref == 'refs/heads/master' && matrix.python-version == '3.6'
+      - name: 📚 Update GitHub pages
+        if: github.event_name != 'schedule' && github.ref == 'refs/heads/master' && matrix.python-version == '3.6'
         run: |
           cp -R ./build/sphinx/html ../html
 
