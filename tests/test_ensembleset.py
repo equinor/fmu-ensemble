@@ -132,6 +132,12 @@ def test_ensembleset_reek001(tmpdir):
     assert monthly.columns[0] == "ENSEMBLE"
     assert monthly.columns[1] == "REAL"
     assert monthly.columns[2] == "DATE"
+    raw = ensset3.load_smry(column_keys=["F*PT"], time_index="raw")
+    assert ensset3.load_smry(column_keys=["F*PT"]).iloc[3, 4] == raw.iloc[3, 4]
+    assert (
+        ensset3.load_smry(column_keys=["F*PT"], time_index=None).iloc[3, 5]
+        == raw.iloc[3, 5]
+    )
 
     # Eclipse well names
     assert len(ensset3.get_wellnames("OP*")) == 5
@@ -192,7 +198,7 @@ def test_ensembleset_reek001(tmpdir):
     assert "ENSEMBLE" in vol_df
     assert len(vol_df["REAL"].unique()) == 3
     assert len(vol_df["ENSEMBLE"].unique()) == 2
-    assert len(ensset3.keys()) == 7
+    assert len(ensset3.keys()) == 8
 
     # Test scalar imports:
     ensset3.load_scalar("npv.txt")

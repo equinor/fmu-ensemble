@@ -771,8 +771,10 @@ class ScratchEnsemble(object):
                 end_date=end_date,
                 include_restart=include_restart,
             )
-        if isinstance(time_index, list):
+        if isinstance(time_index, (list, np.ndarray)):
             time_index = "custom"
+        elif time_index is None:
+            time_index = "raw"
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None):

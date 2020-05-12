@@ -340,7 +340,7 @@ class VirtualRealization(object):
         # calling function handle further errors.
         return shortpath
 
-    def get_smry(self, column_keys=None, time_index=None):
+    def get_smry(self, column_keys=None, time_index="monthly"):
         """Analog function to get_smry() in ScratchRealization
 
         Accesses the internalized summary data and performs
@@ -370,12 +370,13 @@ class VirtualRealization(object):
         if not column_keys:
             raise ValueError("No column keys found")
 
-        if not time_index:
-            time_index = "monthly"
+        # If time_index is None, load_smry in ScratchRealization stores as "raw"
+        if time_index is None:
+            time_index = "raw"
 
         if isinstance(time_index, str):
             time_index_dt = self.get_smry_dates(time_index)
-        elif isinstance(time_index, list):
+        elif isinstance(time_index, (list, np.ndarray)):
             time_index_dt = time_index
         else:
             raise TypeError
@@ -396,7 +397,7 @@ class VirtualRealization(object):
         ) or isinstance(time_index, list):
             # Suboptimal code, we always pick the finest available
             # time resolution:
-            priorities = ["raw", "daily", "monthly", "weekly", "yearly", "custom"]
+            priorities = ["raw", "daily", "weekly", "monthly", "yearly", "custom"]
             # (could also sort them by number of rows, or we could
             #  even merge them all)
             # (could have priorities as a dict, for example so we
@@ -495,6 +496,8 @@ class VirtualRealization(object):
             return [start_date.date()]
         if freq == "last":
             return [end_date.date()]
+        if freq in ("custom", "raw"):
+            return available_dates
         pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
         if normalize:
             raise NotImplementedError

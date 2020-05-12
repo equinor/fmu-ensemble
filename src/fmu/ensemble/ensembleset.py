@@ -7,6 +7,8 @@ from __future__ import print_function
 import re
 import os
 import glob
+
+import numpy as np
 import pandas as pd
 
 from .etc import Interaction
@@ -551,7 +553,7 @@ class EnsembleSet(object):
 
     def load_smry(
         self,
-        time_index=None,
+        time_index="raw",
         column_keys=None,
         cache_eclsum=True,
         start_date=None,
@@ -573,7 +575,7 @@ class EnsembleSet(object):
 
         Args:
             time_index: list of DateTime if interpolation is wanted
-               default is None, which returns the raw Eclipse report times
+               default is raw, which returns the raw Eclipse report times
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
@@ -602,8 +604,10 @@ class EnsembleSet(object):
                 start_date=start_date,
                 end_date=end_date,
             )
-        if isinstance(time_index, list):
+        if isinstance(time_index, (list, np.ndarray)):
             time_index = "custom"
+        elif time_index is None:
+            time_index = "raw"
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
     def get_smry(

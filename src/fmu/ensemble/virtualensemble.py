@@ -815,13 +815,15 @@ file is picked up"""
             for x in self.keys()
             if "unsmry" in x
         ]
-
+        # If time_index is None, load_smry in ScratchEnsemble stores as "raw"
+        if time_index is None:
+            time_index = "raw"
         if (
             isinstance(time_index, str) and time_index not in available_smry
-        ) or isinstance(time_index, list):
+        ) or isinstance(time_index, (list, np.ndarray)):
             # Suboptimal code, we always pick the finest available
             # time resolution:
-            priorities = ["raw", "daily", "monthly", "weekly", "yearly", "custom"]
+            priorities = ["raw", "daily", "weekly", "monthly", "yearly", "custom"]
             # (could also sort them by number of rows, or we could
             #  even merge them all)
             # (could have priorities as a dict, for example so we

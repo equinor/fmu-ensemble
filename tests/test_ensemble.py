@@ -436,6 +436,15 @@ def test_ensemble_ecl():
     assert len(reekensemble.load_smry(column_keys=["FOPR"], time_index="last")) == 5
     assert isinstance(reekensemble.get_df("unsmry--last.csv"), pd.DataFrame)
 
+    # Check that time_index=None and time_index="raw" behaves like default
+    raw = reekensemble.load_smry(column_keys=["F*PT"], time_index="raw")
+    print(raw)
+    assert reekensemble.load_smry(column_keys=["F*PT"]).iloc[3, 2] == raw.iloc[3, 2]
+    assert (
+        reekensemble.load_smry(column_keys=["F*PT"], time_index=None).iloc[3, 3]
+        == raw.iloc[3, 3]
+    )
+
     # Give ISO-dates directly:
     assert (
         len(reekensemble.get_smry(column_keys=["FOPR"], time_index="2001-01-02")) == 5
