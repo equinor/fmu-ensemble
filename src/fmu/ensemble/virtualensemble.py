@@ -28,7 +28,7 @@ except ImportError:
     HAVE_PYARROW = False
 
 fmux = Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
+logger = fmux.basiclogger(__name__)
 
 
 class VirtualEnsemble(object):
