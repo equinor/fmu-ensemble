@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble 1.2.5.dev2+g1b339a7 documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble 1.2.5.dev3+g4a6f4c8 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.2.5.dev2+g1b339a7
+                1.2.5.dev3+g4a6f4c8
               </div>
             
           
@@ -1654,7 +1654,7 @@ Empty dataframe if no data is found</p>
 
 <dl class="py method">
 <dt id="fmu.ensemble.ensembleset.EnsembleSet.load_smry">
-<code class="sig-name descname">load_smry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">column_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cache_eclsum</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.load_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.load_smry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load_smry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">'raw'</span></em>, <em class="sig-param"><span class="n">column_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cache_eclsum</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">end_date</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.load_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.load_smry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch summary data from all ensembles</p>
 <p>Wraps around Ensemble.load_smry() which wraps
 Realization.load_smry(), which wraps ecl.summary.EclSum.pandas_frame()</p>
@@ -1668,7 +1668,7 @@ realization object, and can be retrieved through get_df().</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>time_index</strong> – list of DateTime if interpolation is wanted
-default is None, which returns the raw Eclipse report times
+default is raw, which returns the raw Eclipse report times
 If a string is supplied, that string is attempted used
 via get_smry_dates() in order to obtain a time index.</p></li>
 <li><p><strong>column_keys</strong> – list of column key wildcards</p></li>
@@ -3650,7 +3650,7 @@ of ambiguity, the shortpath will be returned.</p>
 
 <dl class="py method">
 <dt id="fmu.ensemble.virtualrealization.VirtualRealization.get_smry">
-<code class="sig-name descname">get_smry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualrealization.html#VirtualRealization.get_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualrealization.VirtualRealization.get_smry" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_smry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">'monthly'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualrealization.html#VirtualRealization.get_smry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualrealization.VirtualRealization.get_smry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Analog function to get_smry() in ScratchRealization</p>
 <p>Accesses the internalized summary data and performs
 interpolation if needed.</p>

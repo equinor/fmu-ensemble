@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 1.2.5.dev2+g1b339a7 documentation</title>
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 1.2.5.dev3+g4a6f4c8 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                1.2.5.dev2+g1b339a7
+                1.2.5.dev3+g4a6f4c8
               </div>
             
           
@@ -500,7 +500,7 @@
         <span class="c1"># calling function handle further errors.</span>
         <span class="k">return</span> <span class="n">shortpath</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualRealization.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Analog function to get_smry() in ScratchRealization</span>
 
 <span class="sd">        Accesses the internalized summary data and performs</span>
@@ -530,12 +530,13 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">column_keys</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No column keys found&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">time_index</span><span class="p">:</span>
-            <span class="n">time_index</span> <span class="o">=</span> <span class="s2">&quot;monthly&quot;</span>
+        <span class="c1"># If time_index is None, load_smry in ScratchRealization stores as &quot;raw&quot;</span>
+        <span class="k">if</span> <span class="n">time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">time_index</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">time_index_dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
             <span class="n">time_index_dt</span> <span class="o">=</span> <span class="n">time_index</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span>
@@ -556,7 +557,7 @@
         <span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="c1"># Suboptimal code, we always pick the finest available</span>
             <span class="c1"># time resolution:</span>
-            <span class="n">priorities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;weekly&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">]</span>
+            <span class="n">priorities</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">,</span> <span class="s2">&quot;weekly&quot;</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">]</span>
             <span class="c1"># (could also sort them by number of rows, or we could</span>
             <span class="c1">#  even merge them all)</span>
             <span class="c1"># (could have priorities as a dict, for example so we</span>
@@ -655,6 +656,8 @@
             <span class="k">return</span> <span class="p">[</span><span class="n">start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()]</span>
         <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">available_dates</span>
         <span class="n">pd_freq_mnenomics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;monthly&quot;</span><span class="p">:</span> <span class="s2">&quot;MS&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">:</span> <span class="s2">&quot;YS&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
