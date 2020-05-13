@@ -462,6 +462,8 @@ def test_datenormalization():
     testdir = os.path.dirname(os.path.abspath(__file__))
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
     real = ensemble.ScratchRealization(realdir)
+    raw = real.get_smry(column_keys="FOPT", time_index="raw")
+    assert str(raw.index[-1]) == "2003-01-02 00:00:00"
     daily = real.get_smry(column_keys="FOPT", time_index="daily")
     assert str(daily.index[-1]) == "2003-01-02"
     monthly = real.get_smry(column_keys="FOPT", time_index="monthly")
@@ -469,14 +471,25 @@ def test_datenormalization():
     yearly = real.get_smry(column_keys="FOPT", time_index="yearly")
     assert str(yearly.index[-1]) == "2004-01-01"
 
+    # Check that time_index=None and time_index="raw" behaves like default
+    raw = real.load_smry(column_keys="FOPT", time_index="raw")
+    assert list(real.load_smry(column_keys="FOPT")["FOPT"].values) == list(
+        raw["FOPT"].values
+    )
+    assert list(
+        real.load_smry(column_keys="FOPT", time_index=None)["FOPT"].values
+    ) == list(raw["FOPT"].values)
+
     # Check that we get the same correct normalization
     # with load_smry()
+    real.load_smry(column_keys="FOPT", time_index="raw")
+    assert str(real.get_df("unsmry--raw")["DATE"].iloc[-1]) == "2003-01-02 00:00:00"
     real.load_smry(column_keys="FOPT", time_index="daily")
-    assert str(real.get_df("unsmry--daily")["DATE"].values[-1]) == "2003-01-02"
+    assert str(real.get_df("unsmry--daily")["DATE"].iloc[-1]) == "2003-01-02"
     real.load_smry(column_keys="FOPT", time_index="monthly")
-    assert str(real.get_df("unsmry--monthly")["DATE"].values[-1]) == "2003-02-01"
+    assert str(real.get_df("unsmry--monthly")["DATE"].iloc[-1]) == "2003-02-01"
     real.load_smry(column_keys="FOPT", time_index="yearly")
-    assert str(real.get_df("unsmry--yearly")["DATE"].values[-1]) == "2004-01-01"
+    assert str(real.get_df("unsmry--yearly")["DATE"].iloc[-1]) == "2004-01-01"
 
 
 def test_singlereal_ecl(tmp="TMP"):

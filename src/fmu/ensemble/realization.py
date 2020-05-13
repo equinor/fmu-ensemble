@@ -1055,9 +1055,14 @@ class ScratchRealization(object):
                 end_date=end_date,
                 include_restart=include_restart,
             )
-        if isinstance(time_index, list):
+        elif isinstance(time_index, (list, np.ndarray)):
             time_index_arg = time_index
             time_index_path = "custom"
+        elif time_index is None:
+            time_index_path = "raw"
+            time_index_arg = time_index
+        else:
+            raise TypeError("'time_index' has to be a string, a list or None")
 
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
@@ -1131,9 +1136,10 @@ class ScratchRealization(object):
                     end_date=end_date,
                     include_restart=include_restart,
                 )
-        else:
+        elif time_index is None or isinstance(time_index, (list, np.ndarray)):
             time_index_arg = time_index
-
+        else:
+            raise TypeError("'time_index' has to be a string, a list or None")
         if self.get_eclsum(cache=cache_eclsum, include_restart=include_restart):
             try:
                 dataframe = self.get_eclsum(

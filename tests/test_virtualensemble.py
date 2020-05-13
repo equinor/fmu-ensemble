@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
@@ -46,6 +47,14 @@ def test_virtualensemble():
         manifest=manifest,
     )
     reekensemble.load_smry(time_index="yearly", column_keys=["F*"])
+    reekensemble.load_smry(column_keys=["FOPT", "FOIP"])
+    reekensemble.load_smry(
+        column_keys=["FGPT"],
+        time_index=[
+            datetime.strptime(strdate, "%Y-%m-%d %H:%M:%S")
+            for strdate in ["2000-05-03 23:15:00", "2002-04-02 15:34:23"]
+        ],
+    )
     reekensemble.load_scalar("npv.txt")
     reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()
@@ -59,6 +68,8 @@ def test_virtualensemble():
 
     # Check that we have data for 5 realizations
     assert len(vens["unsmry--yearly"]["REAL"].unique()) == 5
+    assert len(vens["unsmry--raw"]["REAL"].unique()) == 5
+    assert len(vens["unsmry--custom"]["REAL"].unique()) == 5
     assert len(vens["parameters.txt"]) == 5
 
     assert not vens.lazy_keys()
@@ -92,25 +103,42 @@ def test_virtualensemble():
     assert "REAL" in fopt.columns
     assert "FGPT" not in fopt.columns
     assert len(fopt) == 25
-    monthly_smry = vens.get_smry(time_index="monthly")
+
+    # assert len(monthly_smry))==
+    raw_smry = vens.get_smry(time_index="raw")
     pd.testing.assert_series_equal(
         vens.get_smry(time_index="first")["FOIP"].reset_index(drop=True),
-        monthly_smry[monthly_smry["DATE"] == min(monthly_smry["DATE"])][
-            "FOIP"
-        ].reset_index(drop=True),
+        raw_smry[raw_smry["DATE"] == min(raw_smry["DATE"])]["FOIP"].reset_index(
+            drop=True
+        ),
     )
     pd.testing.assert_series_equal(
         vens.get_smry(time_index="last")["FOIP"].reset_index(drop=True),
-        monthly_smry[monthly_smry["DATE"] == max(monthly_smry["DATE"])][
-            "FOIP"
-        ].reset_index(drop=True),
+        raw_smry[raw_smry["DATE"] == max(raw_smry["DATE"])]["FOIP"].reset_index(
+            drop=True
+        ),
     )
 
     # Check that we can default get_smry()
     alldefaults = vens.get_smry()
     # This should glob to all columns, and monthly time frequency
-    assert len(alldefaults) == 245
-    assert len(alldefaults.columns) == 51
+    # The 'monthly' is interpolated from the 'raw', as it is most likely
+    # finer resolution than 'yearly'
+    assert len(alldefaults) == 185
+    assert len(alldefaults.columns) == 4
+    # Check that monthly behaves the same way as default
+    monthly_smry = vens.get_smry(time_index="monthly")
+    assert len(monthly_smry) == 185
+    assert len(monthly_smry.columns) == 4
+
+    # Check that get_smry(time_index='raw')==get_smry(time_index=None)
+    pd.testing.assert_series_equal(
+        vens.get_smry(time_index="raw")["FOPT"].reset_index(drop=True),
+        vens.get_smry(time_index=None)["FOPT"].reset_index(drop=True),
+    )
+
+    # Check that the custom smry has two dates
+    assert len(vens.get_smry(time_index="custom")["DATE"].unique()) == 2
 
     # Eclipse summary vector statistics for a given ensemble
     df_stats = vens.get_smry_stats(column_keys=["FOPR", "FGPR"], time_index="yearly")
@@ -330,6 +358,8 @@ def test_todisk_includefile(tmpdir):
     reekensemble.load_smry(time_index="monthly", column_keys="*")
     reekensemble.load_smry(time_index="daily", column_keys="*")
     reekensemble.load_smry(time_index="yearly", column_keys="F*")
+    reekensemble.load_smry(column_keys="FOPT")
+
     reekensemble.load_scalar("npv.txt")
     reekensemble.load_txt("outputs.txt")
     vens = reekensemble.to_virtual()

@@ -233,6 +233,7 @@ def test_get_smry2():
     real.load_smry(time_index="monthly", column_keys=["F*"])
     daily = real.load_smry(time_index="daily", column_keys=["F*"])
     real.load_smry(time_index="raw", column_keys=["F*"])
+    real.load_smry(time_index=None, column_keys=["F*"])
     vreal = real.to_virtual()
 
     assert len(vreal.get_smry(column_keys="FOPR", time_index="daily")["FOPR"]) == len(
@@ -241,6 +242,12 @@ def test_get_smry2():
 
     assert len(vreal.get_smry(column_keys="FOPT", time_index="daily")["FOPT"]) == len(
         daily
+    )
+
+    # Check that time_index=None and time_index='raw' are equal
+    pd.testing.assert_series_equal(
+        vreal.get_smry(time_index="raw")["FOPT"].reset_index(drop=True),
+        vreal.get_smry(time_index=None)["FOPT"].reset_index(drop=True),
     )
 
     daily_dt = vreal.get_smry_dates("daily")
