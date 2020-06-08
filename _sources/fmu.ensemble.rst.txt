@@ -60,14 +60,6 @@ fmu.ensemble.realizationcombination module
    :undoc-members:
    :show-inheritance:
 
-fmu.ensemble.version module
----------------------------
-
-.. automodule:: fmu.ensemble.version
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 fmu.ensemble.virtualensemble module
 -----------------------------------
 
