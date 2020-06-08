@@ -1196,7 +1196,7 @@ def test_get_df_merge():
 
     # Merge something that is not mergeable
     real.data["randtable"] = pd.DataFrame(
-        columns=["BARF", "ARBF"], data=[[1, 3], [2, 4],]
+        columns=["BARF", "ARBF"], data=[[1, 3], [2, 4]]
     )
     with pytest.raises(TypeError):
         # pylint: disable=pointless-statement
