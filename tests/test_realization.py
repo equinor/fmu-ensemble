@@ -856,15 +856,17 @@ def test_filesystem_changes():
     assert isinstance(unsmry_file, pd.DataFrame)
 
     # Test having values with spaces in parameters.txt
-    # Current "wanted" behaviour is to ignore the anything after
-    #  <key><whitespace><value><whitespace><ignoreremainder>
-    # which is similar to ERT CSV_EXPORT1
+    # Unquoted valued with spaces will be truncated,
+    # quoted valued will be correctly parsed
+    # (read_csv(sep='\s+') is the parser)
     param_file = open(realdir + "/parameters.txt", "a")
-    param_file.write("FOOBAR 1 2 3 4 5 6")
+    param_file.write("FOOBAR 1 2 3 4 5 6\n")
+    param_file.write('FOOSPACES "1 2 3 4 5 6"\n')
     param_file.close()
 
     real = ensemble.ScratchRealization(realdir)
     assert real.parameters["FOOBAR"] == 1
+    assert real.parameters["FOOSPACES"] == "1 2 3 4 5 6"
 
     # Clean up when finished. This often fails on network drives..
     shutil.rmtree(datadir + "/" + tmpensname, ignore_errors=True)
