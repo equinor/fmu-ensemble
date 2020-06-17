@@ -73,4 +73,5 @@ setup(
     tests_require=TEST_REQUIREMENTS,
     setup_requires=SETUP_REQUIREMENTS,
     extras_require=EXTRAS_REQUIRE,
+    python_requires=">=2.7",
 )
