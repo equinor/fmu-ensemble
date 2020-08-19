@@ -417,7 +417,7 @@ class VirtualRealization(object):
             "Using %s for interpolation of %s in REAL %s",
             chosen_smry,
             time_index,
-            self.__repr__,
+            str(self),
         )
 
         smry = self.get_df("unsmry--" + chosen_smry)[["DATE"] + column_keys]
@@ -440,15 +440,17 @@ class VirtualRealization(object):
         noncum_columns = [
             column_keys[i] for i in range(len(column_keys)) if not cummask[i]
         ]
-        smry[cum_columns] = (
-            smry[cum_columns]
-            .interpolate(method="time")
-            .fillna(method="ffill")
-            .fillna(method="bfill")
-        )
-        smry[noncum_columns] = (
-            smry[noncum_columns].fillna(method="bfill").fillna(value=0)
-        )
+        if cum_columns:
+            smry[cum_columns] = (
+                smry[cum_columns]
+                .interpolate(method="time")
+                .fillna(method="ffill")
+                .fillna(method="bfill")
+            )
+        if noncum_columns:
+            smry[noncum_columns] = (
+                smry[noncum_columns].fillna(method="bfill").fillna(value=0)
+            )
 
         smry.index = smry.index.set_names(["DATE"])
         return smry.loc[pd.to_datetime(time_index_dt)]
