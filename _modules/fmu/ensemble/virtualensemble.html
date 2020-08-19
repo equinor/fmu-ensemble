@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 1.2.6.dev3+g0079975 documentation</title>
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 1.2.6.dev4+g5318410 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                1.2.6.dev3+g0079975
+                1.2.6.dev4+g5318410
               </div>
             
           
@@ -1186,7 +1186,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;__smry_metadata&quot;</span><span class="p">)</span>
             <span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;SMRYCOLUMN&quot;</span><span class="p">)</span>
             <span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">matches</span><span class="p">,</span> <span class="p">:]</span>
-            <span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">pd</span><span class="o">.</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
             <span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
         <span class="p">)</span></div>
 

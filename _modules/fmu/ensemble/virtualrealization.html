@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 1.2.6.dev3+g0079975 documentation</title>
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 1.2.6.dev4+g5318410 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                1.2.6.dev3+g0079975
+                1.2.6.dev4+g5318410
               </div>
             
           
@@ -580,7 +580,7 @@
             <span class="s2">&quot;Using </span><span class="si">%s</span><span class="s2"> for interpolation of </span><span class="si">%s</span><span class="s2"> in REAL </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="n">chosen_smry</span><span class="p">,</span>
             <span class="n">time_index</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
         <span class="p">)</span>
 
         <span class="n">smry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;unsmry--&quot;</span> <span class="o">+</span> <span class="n">chosen_smry</span><span class="p">)[[</span><span class="s2">&quot;DATE&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">column_keys</span><span class="p">]</span>
@@ -603,15 +603,17 @@
         <span class="n">noncum_columns</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">column_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">column_keys</span><span class="p">))</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cummask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="p">]</span>
-        <span class="n">smry</span><span class="p">[</span><span class="n">cum_columns</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">smry</span><span class="p">[</span><span class="n">cum_columns</span><span class="p">]</span>
-            <span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;ffill&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;bfill&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">smry</span><span class="p">[</span><span class="n">noncum_columns</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">smry</span><span class="p">[</span><span class="n">noncum_columns</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;bfill&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">cum_columns</span><span class="p">:</span>
+            <span class="n">smry</span><span class="p">[</span><span class="n">cum_columns</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">smry</span><span class="p">[</span><span class="n">cum_columns</span><span class="p">]</span>
+                <span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;ffill&quot;</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;bfill&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">noncum_columns</span><span class="p">:</span>
+            <span class="n">smry</span><span class="p">[</span><span class="n">noncum_columns</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">smry</span><span class="p">[</span><span class="n">noncum_columns</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;bfill&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">smry</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">smry</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">set_names</span><span class="p">([</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">smry</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">time_index_dt</span><span class="p">)]</span></div>
