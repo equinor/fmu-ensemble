@@ -37,8 +37,6 @@ def test_ensemble_aggregations(tmpdir):
     reekensemble.load_scalar("npv.txt", convert_numeric=True)
 
     stats = {
-        # The ensemble class' agg function takes 'oil industry' quantile
-        # arguments, and translates them to numpys notion.
         "mean": reekensemble.agg("mean"),
         "median": reekensemble.agg("median"),
         "min": reekensemble.agg("min"),
