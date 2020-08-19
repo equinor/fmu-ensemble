@@ -1023,7 +1023,7 @@ file is picked up"""
             self.get_df("__smry_metadata")
             .set_index("SMRYCOLUMN")
             .loc[matches, :]
-            .replace({pd.np.nan: None})
+            .replace({np.nan: None})
             .to_dict(orient="index")
         )
 
