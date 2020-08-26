@@ -485,15 +485,19 @@ class Observations(object):
                 # If time_index is not a supported mnemonic,
                 # parse it to a date object
                 if "time_index" in unit:
-                    if unit["time_index"] not in [
-                        "raw",
-                        "report",
-                        "yearly",
-                        "daily",
-                        "first",
-                        "last",
-                        "monthly",
-                    ] and not isinstance(unit["time_index"], datetime.datetime):
+                    if (
+                        unit["time_index"]
+                        not in [
+                            "raw",
+                            "report",
+                            "yearly",
+                            "daily",
+                            "first",
+                            "last",
+                            "monthly",
+                        ]
+                        and not isinstance(unit["time_index"], datetime.datetime)
+                    ):
                         try:
                             unit["time_index"] = dateutil.parser.isoparse(
                                 unit["time_index"]

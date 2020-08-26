@@ -658,8 +658,7 @@ class ScratchRealization(object):
             del self.data[localpath]
 
     def keys(self):
-        """Access the keys of the internal data structure
-        """
+        """Access the keys of the internal data structure"""
         return self.data.keys()
 
     def get_df(self, localpath, merge=None):

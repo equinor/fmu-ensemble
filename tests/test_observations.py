@@ -514,8 +514,7 @@ def test_ens_failedreals():
 
 
 def test_ensset_mismatch():
-    """Test mismatch calculation on an EnsembleSet
-    """
+    """Test mismatch calculation on an EnsembleSet"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
         testdir = os.path.dirname(os.path.abspath(__file__))

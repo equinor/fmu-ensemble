@@ -563,8 +563,7 @@ def test_nonstandard_dirs(tmpdir):
 
 
 def test_volumetric_rates():
-    """Test computation of cumulative compatible rates
-    """
+    """Test computation of cumulative compatible rates"""
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
