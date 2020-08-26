@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.2.6.dev5+gaa84885 documentation</title>
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.2.6.dev6+g7dd07eb documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                1.2.6.dev5+gaa84885
+                1.2.6.dev6+g7dd07eb
               </div>
             
           
@@ -648,15 +648,19 @@
                 <span class="c1"># If time_index is not a supported mnemonic,</span>
                 <span class="c1"># parse it to a date object</span>
                 <span class="k">if</span> <span class="s2">&quot;time_index&quot;</span> <span class="ow">in</span> <span class="n">unit</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
-                        <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;report&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;yearly&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;daily&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;first&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;last&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;monthly&quot;</span><span class="p">,</span>
-                    <span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">]</span>
+                        <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                            <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;report&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;yearly&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;daily&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;first&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;last&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;monthly&quot;</span><span class="p">,</span>
+                        <span class="p">]</span>
+                        <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">],</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+                    <span class="p">):</span>
                         <span class="k">try</span><span class="p">:</span>
                             <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span>
                                 <span class="n">unit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">]</span>
