@@ -410,8 +410,7 @@ class ScratchEnsemble(object):
 
     @property
     def parameters(self):
-        """Getter for get_parameters(convert_numeric=True)
-        """
+        """Getter for get_parameters(convert_numeric=True)"""
         return self.load_txt("parameters.txt")
 
     def load_scalar(self, localpath, convert_numeric=False, force_reread=False):

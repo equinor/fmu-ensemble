@@ -30,7 +30,7 @@ REQUIREMENTS = [
 SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm"]
 
 TEST_REQUIREMENTS = [
-    "black; python_version >= '3'",
+    "black>=20.8b0; python_version >= '3'",
     "flake8>=2.6.0",
     "pylint",
     "pytest>=2.9.2",

@@ -58,7 +58,7 @@ class EnsembleSet(object):
             should be run at time of initialization for each realization.
             Each element is a length 1 dictionary with the function name to run as
             the key and each keys value should be the function arguments as a dict.
-        """
+    """
 
     def __init__(
         self,
@@ -340,8 +340,7 @@ class EnsembleSet(object):
 
     @property
     def parameters(self):
-        """Getter for ensemble.parameters(convert_numeric=True)
-        """
+        """Getter for ensemble.parameters(convert_numeric=True)"""
         return self.get_df("parameters.txt")
 
     def load_scalar(self, localpath, convert_numeric=False, force_reread=False):
