@@ -83,7 +83,7 @@ jobs:
           twine upload dist/*
 
       - name: 📚 Update GitHub pages
-        if: github.event_name != 'schedule' && github.ref == 'refs/heads/master' && matrix.python-version == '3.6'
+        if: github.event_name == 'release' && github.repository == 'equinor' && matrix.python-version == '3.6' && matrix.pandas-version == '1.*'
         run: |
           cp -R ./build/sphinx/html ../html
 
