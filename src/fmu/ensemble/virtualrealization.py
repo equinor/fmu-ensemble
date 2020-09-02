@@ -14,6 +14,7 @@ from .etc import Interaction
 from .realizationcombination import RealizationCombination
 from .util import shortcut2path
 from .util.rates import compute_volumetric_rates
+from .util.dates import date_range
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -396,7 +397,7 @@ class VirtualRealization(object):
         Args:
             freq: string denoting requested frequency for
                 the list of datetimes.
-                'daily', 'monthly' and 'yearly'.
+                'daily', 'monthly', 'yearly' or 'weekly'
                 'first' will give out the first date (minimum) and
                 'last' will give out the last date (maximum),
                 both as lists with one element.
@@ -431,14 +432,9 @@ class VirtualRealization(object):
             return [end_date.date()]
         if freq in ("custom", "raw"):
             return available_dates
-        pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
         if normalize:
             raise NotImplementedError
-            # (start_date, end_date) = normalize_dates(start_date, end_date,
-            #                                         freq)
-        if freq not in pd_freq_mnenomics:
-            raise ValueError("Requested frequency %s not supported" % freq)
-        datetimes = pd.date_range(start_date, end_date, freq=pd_freq_mnenomics[freq])
+        datetimes = date_range(start_date, end_date, freq=freq)
         # Convert from Pandas' datetime64 to datetime.date:
         return [x.date() for x in datetimes]
 

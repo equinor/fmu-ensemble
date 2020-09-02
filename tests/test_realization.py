@@ -277,12 +277,14 @@ def test_batch():
             {"load_scalar": {"localpath": "npv.txt"}},
             {"load_smry": {"column_keys": "FOPT", "time_index": "yearly"}},
             {"load_smry": {"column_keys": "*", "time_index": "daily"}},
+            {"load_smry": {"column_keys": "*", "time_index": "weekly"}},
             {"illegal-ignoreme": {}},
         ],
     )
     assert real.get_df("npv.txt") == 3444
     assert len(real.get_df("unsmry--daily")["FOPR"]) > 2
     assert len(real.get_df("unsmry--yearly")["FOPT"]) > 2
+    assert len(real.get_df("unsmry--weekly")["FOPT"]) > 2
 
 
 def test_volumetric_rates():
@@ -441,6 +443,14 @@ def test_datenormalization():
     assert str(monthly.index[-1]) == "2003-02-01"
     yearly = real.get_smry(column_keys="FOPT", time_index="yearly")
     assert str(yearly.index[-1]) == "2004-01-01"
+    weekly = real.get_smry(column_keys="FOPT", time_index="weekly")
+    assert str(weekly.index[-1]) == "2003-01-06"  # First Monday after 2003-01-02
+    weekly = real.get_smry(column_keys="FOPT", time_index="W-MON")
+    assert str(weekly.index[-1]) == "2003-01-06"  # First Monday after 2003-01-02
+    weekly = real.get_smry(column_keys="FOPT", time_index="W-TUE")
+    assert str(weekly.index[-1]) == "2003-01-07"  # First Tuesday after 2003-01-02
+    weekly = real.get_smry(column_keys="FOPT", time_index="W-THU")
+    assert str(weekly.index[-1]) == "2003-01-02"  # First Thursday after 2003-01-02
 
     # Check that time_index=None and time_index="raw" behaves like default
     raw = real.load_smry(column_keys="FOPT", time_index="raw")
@@ -461,6 +471,8 @@ def test_datenormalization():
     assert str(real.get_df("unsmry--monthly")["DATE"].iloc[-1]) == "2003-02-01"
     real.load_smry(column_keys="FOPT", time_index="yearly")
     assert str(real.get_df("unsmry--yearly")["DATE"].iloc[-1]) == "2004-01-01"
+    real.load_smry(column_keys="FOPT", time_index="weekly")
+    assert str(real.get_df("unsmry--weekly")["DATE"].iloc[-1]) == "2003-01-06"
 
 
 def test_singlereal_ecl(tmp="TMP"):
@@ -493,6 +505,7 @@ def test_singlereal_ecl(tmp="TMP"):
     assert "FOPT" in real.get_smry(column_keys=["F*"], time_index="monthly")
     assert "FOPT" in real.get_smry(column_keys="F*", time_index="yearly")
     assert "FOPT" in real.get_smry(column_keys="FOPT", time_index="daily")
+    assert "FOPT" in real.get_smry(column_keys="FOPT", time_index="weekly")
     assert "FOPT" in real.get_smry(column_keys="FOPT", time_index="raw")
 
     # Test date functionality

@@ -1230,7 +1230,7 @@ class ScratchRealization(object):
                 the returned list of datetime. 'report' will
                 yield the sorted union of all valid timesteps for
                 all realizations. Other valid options are
-                'daily', 'monthly' and 'yearly'.
+                'daily', 'weekly', 'monthly' and 'yearly'.
                 'first' will give out the first date (minimum) and
                 'last' will give out the last date (maximum),
                 both as lists with one element.
