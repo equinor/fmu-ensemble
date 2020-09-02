@@ -60,7 +60,9 @@ jobs:
 
       - name: 🕵️ Check code style
         if: matrix.python-version != '2.7'
-        run: black --check src/ tests/test_*.py setup.py
+        run: |
+          black --check src/ tests/test_*.py setup.py
+          flake8 src tests/*.py
 
       - name: 🤖 Run tests
         run: |

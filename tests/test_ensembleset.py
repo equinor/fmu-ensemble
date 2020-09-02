@@ -394,12 +394,6 @@ def test_filestructures(tmpdir):
 
     This function generatate dummy data
     """
-    if "__file__" in globals():
-        # Easen up copying test code into interactive sessions
-        testdir = os.path.dirname(os.path.abspath(__file__))
-    else:
-        testdir = os.path.abspath(".")
-
     tmpdir.chdir()
 
     ensdir = os.path.join("dummycase/")
@@ -448,7 +442,7 @@ def test_filestructures(tmpdir):
     dummy2 = EnsembleSet(
         "dummytest4",
         frompath=ensdir + "iter_*/real_*",
-        realidxregexp="real_(\d+)",
+        realidxregexp=r"real_(\d+)",
         iterregexp=re.compile(r"(iter_\d+)"),
     )
     # Different regexp for iter, so we get different ensemble names:
