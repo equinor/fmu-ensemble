@@ -22,7 +22,8 @@ from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .realization import parse_number
-from .util import shortcut2path, unionize_smry_dates
+from .util import shortcut2path
+from .util.dates import unionize_smry_dates
 
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)

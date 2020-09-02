@@ -31,13 +31,9 @@ from ecl import EclFileFlagEnum
 from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
-from .util import (
-    parse_number,
-    unionize_smry_dates,
-    flatten,
-    compute_volumetric_rates,
-    shortcut2path,
-)
+from .util import parse_number, flatten, shortcut2path
+from .util.rates import compute_volumetric_rates
+from .util.dates import unionize_smry_dates
 
 HAVE_ECL2DF = False
 try:

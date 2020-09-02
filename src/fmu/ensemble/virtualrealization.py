@@ -12,7 +12,8 @@ import numpy as np
 from .etc import Interaction
 
 from .realizationcombination import RealizationCombination
-from .util import compute_volumetric_rates, shortcut2path
+from .util import shortcut2path
+from .util.rates import compute_volumetric_rates
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -269,42 +270,6 @@ class VirtualRealization(object):
         See :meth:`fmu.ensemble.util.compute_volumetric_rates`
         """
         return compute_volumetric_rates(self, column_keys, time_index, time_unit)
-
-    def xxshortcut2path(self, shortpath):
-        """Convert short pathnames to fully qualified pathnames
-        within the datastore.
-
-        If the fully qualified localpath is
-            'share/results/volumes/simulator_volume_fipnum.csv'
-
-        then you can also access this with these alternatives:
-         * simulator_volume_fipnum
-         * simulator_volume_fipnum.csv
-         * share/results/volumes/simulator_volume_fipnum
-
-        but only as long as there is no ambiguity. In case
-        of ambiguity, the shortpath will be returned.
-        """
-        basenames = [os.path.basename(x) for x in self.keys()]
-        if basenames.count(shortpath) == 1:
-            shortcut2path = {os.path.basename(x): x for x in self.keys()}
-            return shortcut2path[shortpath]
-        noexts = ["".join(x.split(".")[:-1]) for x in self.keys()]
-        if noexts.count(shortpath) == 1:
-            shortcut2path = {"".join(x.split(".")[:-1]): x for x in self.keys()}
-            return shortcut2path[shortpath]
-        basenamenoexts = [
-            "".join(os.path.basename(x).split(".")[:-1]) for x in self.keys()
-        ]
-        if basenamenoexts.count(shortpath) == 1:
-            shortcut2path = {
-                "".join(os.path.basename(x).split(".")[:-1]): x for x in self.keys()
-            }
-            return shortcut2path[shortpath]
-        # If we get here, we did not find anything that
-        # this shorthand could point to. Return as is, and let the
-        # calling function handle further errors.
-        return shortpath
 
     def get_smry(self, column_keys=None, time_index="monthly"):
         """Analog function to get_smry() in ScratchRealization
