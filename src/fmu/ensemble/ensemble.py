@@ -7,7 +7,6 @@ from __future__ import print_function
 import re
 import os
 import glob
-from datetime import datetime
 import six
 import dateutil
 
@@ -23,6 +22,7 @@ from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
 from .realization import parse_number
+from .util import shortcut2path, unionize_smry_dates
 
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
@@ -1000,101 +1000,7 @@ class ScratchEnsemble(object):
                         cache=cache_eclsum, include_restart=include_restart
                     ).dates
                 )
-        return ScratchEnsemble._get_smry_dates(
-            eclsumsdates, freq, normalize, start_date, end_date
-        )
-
-    @staticmethod
-    def _get_smry_dates(eclsumsdates, freq, normalize, start_date, end_date):
-        """Internal static method to be used by ScratchEnsemble and
-        ScratchRealization.
-
-        If called from ScratchRealization, the list of eclsums passed
-        in will have length 1, if not, it can be larger.
-
-        """
-        # pylint: disable=import-outside-toplevel
-        from .realization import normalize_dates
-
-        if not eclsumsdates:
-            return []
-
-        if start_date:
-            if isinstance(start_date, str):
-                start_date = dateutil.parser.isoparse(start_date).date()
-            elif isinstance(start_date, datetime.date):
-                pass
-            else:
-                raise TypeError("start_date had unknown type")
-
-        if end_date:
-            if isinstance(end_date, str):
-                end_date = dateutil.parser.isoparse(end_date).date()
-            elif isinstance(end_date, datetime.date):
-                pass
-            else:
-                raise TypeError("end_date had unknown type")
-
-        if freq in ("report", "raw"):
-            datetimes = set()
-            for eclsumdatelist in eclsumsdates:
-                datetimes = datetimes.union(eclsumdatelist)
-            datetimes = list(datetimes)
-            datetimes.sort()
-            if start_date:
-                # Convert to datetime (at 00:00:00)
-                start_date = datetime.combine(start_date, datetime.min.time())
-                datetimes = [x for x in datetimes if x > start_date]
-                datetimes = [start_date] + datetimes
-            if end_date:
-                end_date = datetime.combine(end_date, datetime.min.time())
-                datetimes = [x for x in datetimes if x < end_date]
-                datetimes = datetimes + [end_date]
-            return datetimes
-        if freq == "last":
-            end_date = max([max(x) for x in eclsumsdates]).date()
-            return [end_date]
-        if freq == "first":
-            start_date = min([min(x) for x in eclsumsdates]).date()
-            return [start_date]
-        # These are datetime.datetime, not datetime.date
-        start_smry = min([min(x) for x in eclsumsdates])
-        end_smry = max([max(x) for x in eclsumsdates])
-
-        pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
-
-        (start_n, end_n) = normalize_dates(start_smry.date(), end_smry.date(), freq)
-
-        if not start_date and not normalize:
-            start_date_range = start_smry.date()
-        elif not start_date and normalize:
-            start_date_range = start_n
-        else:
-            start_date_range = start_date
-
-        if not end_date and not normalize:
-            end_date_range = end_smry.date()
-        elif not end_date and normalize:
-            end_date_range = end_n
-        else:
-            end_date_range = end_date
-
-        if freq not in pd_freq_mnenomics:
-            raise ValueError("Requested frequency %s not supported" % freq)
-        datetimes = pd.date_range(
-            start_date_range, end_date_range, freq=pd_freq_mnenomics[freq]
-        )
-        # Convert from Pandas' datetime64 to datetime.date:
-        datetimes = [x.date() for x in datetimes]
-
-        # pd.date_range will not include random dates that do not
-        # fit on frequency boundary. Force include these if
-        # supplied as user arguments.
-        if start_date and start_date not in datetimes:
-            datetimes = [start_date] + datetimes
-        if end_date and end_date not in datetimes:
-            datetimes = datetimes + [end_date]
-        return datetimes
+        return unionize_smry_dates(eclsumsdates, freq, normalize, start_date, end_date)
 
     def get_smry_stats(
         self,
@@ -1661,56 +1567,3 @@ class ScratchEnsemble(object):
             std_dev.add_squared(real_prop - mean)
         std_dev.safe_div(global_active)
         return std_dev.isqrt()
-
-
-def shortcut2path(keys, shortpath):
-    """
-    Convert short pathnames to fully qualified pathnames
-    within the datastore.
-
-    If the fully qualified localpath is
-
-        'share/results/volumes/simulator_volume_fipnum.csv'
-
-    then you can also access this with these alternatives:
-
-     * simulator_volume_fipnum
-     * simulator_volume_fipnum.csv
-     * share/results/volumes/simulator_volume_fipnum
-
-    but only as long as there is no ambiguity. In case
-    of ambiguity, the shortpath will be returned.
-    """
-    basenames = list(map(os.path.basename, keys))
-    if basenames.count(shortpath) == 1:
-        short2path = {os.path.basename(x): x for x in keys}
-        return short2path[shortpath]
-    noexts = ["".join(x.split(".")[:-1]) for x in keys]
-    if noexts.count(shortpath) == 1:
-        short2path = {"".join(x.split(".")[:-1]): x for x in keys}
-        return short2path[shortpath]
-    basenamenoexts = ["".join(os.path.basename(x).split(".")[:-1]) for x in keys]
-    if basenamenoexts.count(shortpath) == 1:
-        short2path = {"".join(os.path.basename(x).split(".")[:-1]): x for x in keys}
-        return short2path[shortpath]
-    # If we get here, we did not find anything that
-    # this shorthand could point to. Return as is, and let the
-    # calling function handle further errors.
-    return shortpath
-
-
-def _convert_numeric_columns(dataframe):
-    """Discovers and searches for numeric columns
-    among string columns in an incoming dataframe.
-    Columns with mostly integer
-
-    Args:
-        dataframe: any Pandas dataframe with strings as column datatypes
-
-    Returns:
-        A dataframe where some columns have had their datatypes
-        converted to numerical types (int/float). Some values
-        might contain numpy.nan.
-    """
-    logger.warning("_convert_numeric_columns() not implemented")
-    return dataframe

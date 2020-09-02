@@ -12,6 +12,7 @@ import numpy as np
 from .etc import Interaction
 
 from .realizationcombination import RealizationCombination
+from .util import compute_volumetric_rates, shortcut2path
 
 fmux = Interaction()
 logger = fmux.basiclogger(__name__)
@@ -223,7 +224,7 @@ class VirtualRealization(object):
             KeyError if data is not found.
         """
         data = None
-        fullpath = self.shortcut2path(localpath)
+        fullpath = shortcut2path(self.keys(), localpath)
         if fullpath in self.keys():
             data = self.data[fullpath]
         else:
@@ -265,47 +266,12 @@ class VirtualRealization(object):
     def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
 
-        Column names that are not referring to cumulative summary
-        vectors are silently ignored.
-
-        A Dataframe is returned with volumetric rates, that is rate
-        values that can be summed up to the cumulative version. The
-        'T' in the column name is switched with 'R'. If you ask for
-        FOPT, you will get FOPR in the returned dataframe.
-
-        Rates in the returned dataframe are valid **forwards** in time,
-        opposed to rates coming directly from the Eclipse simulator which
-        are valid backwards in time.
-
-        If time_unit is set, the rates will be scaled to represent
-        either daily, monthly or yearly rates. These will sum up to the
-        cumulative as long as you multiply with the correct number
-        of days, months or year between each consecutive date index.
-        Month lengths and leap years are correctly handled.
-
-        The returned dataframe is indexed by DATE.
-
-        Args:
-            column_keys: str or list of strings, cumulative summary vectors
-            time_index: str or list of datetimes
-            time_unit: str or None. If None, the rates returned will
-                be the difference in cumulative between each included
-                time step (where the time interval can vary arbitrarily)
-                If set to 'days', 'months' or 'years', the rates will
-                be scaled to represent a daily, monthly or yearly rate that
-                is compatible with the date index and the cumulative data.
-
+        See :meth:`fmu.ensemble.util.compute_volumetric_rates`
         """
-        # pylint: disable=wrong-import-position
-        from fmu.ensemble import ScratchRealization
+        return compute_volumetric_rates(self, column_keys, time_index, time_unit)
 
-        return ScratchRealization.static_get_volumetric_rates(
-            self, column_keys, time_index, time_unit
-        )
-
-    def shortcut2path(self, shortpath):
-        """
-        Convert short pathnames to fully qualified pathnames
+    def xxshortcut2path(self, shortpath):
+        """Convert short pathnames to fully qualified pathnames
         within the datastore.
 
         If the fully qualified localpath is
@@ -477,8 +443,8 @@ class VirtualRealization(object):
         """
         # Look for available smry, if we have one
         # at the requested frequency, use it directly:
-        if self.shortcut2path("unsmry--" + freq) in self.keys():
-            available_smry = [self.shortcut2path("unsmry--" + freq)]
+        if shortcut2path(self.keys(), "unsmry--" + freq) in self.keys():
+            available_smry = [shortcut2path(self.keys(), "unsmry--" + freq)]
         else:
             # Use all of them.
             available_smry = [x for x in self.keys() if "unsmry" in x]
