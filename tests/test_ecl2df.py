@@ -103,4 +103,4 @@ def test_smry_via_ecl2df():
 
     assert callback_smry["FOPT"].sum() == direct_smry["FOPT"].sum()
     assert callback_smry["REAL"].sum() == direct_smry["REAL"].sum()
-    ## BUG in ecl2df, dates are missing!!
+    # BUG in ecl2df, dates are missing!!

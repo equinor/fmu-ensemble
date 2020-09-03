@@ -6,7 +6,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import shutil
 
 import yaml
 import numpy
@@ -1021,9 +1020,11 @@ def test_apply(tmpdir):
 
     if SKIP_FMU_TOOLS:
         return
+
     # Test if we can wrap the volumetrics-parser in fmu.tools:
     # It cannot be applied directly, as we need to combine the
     # realization's root directory with the relative path coming in:
+
     def rms_vol2df(kwargs):
         """Example function for bridging with fmu.tools to parse volumetrics"""
         fullpath = os.path.join(kwargs["realization"].runpath(), kwargs["filename"])
