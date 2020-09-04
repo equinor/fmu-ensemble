@@ -307,15 +307,6 @@ def test_volumetric_rates():
     assert "FOPR" in vol_rate_df
     assert "FWPR" in vol_rate_df
 
-    # Also check the static method that is inside here directly
-    assert not real._cum_smrycol2rate("FOPR")
-    assert real._cum_smrycol2rate("FOPT") == "FOPR"
-    assert not real._cum_smrycol2rate("FWCT")
-    assert not real._cum_smrycol2rate("WOPR:A-H")
-    assert not real._cum_smrycol2rate("FOPT:FOPT:FOPT")
-    assert real._cum_smrycol2rate("WOPT:A-1H") == "WOPR:A-1H"
-    assert real._cum_smrycol2rate("WOPTH:A-2H") == "WOPRH:A-2H"
-
     # Test that computed rates can be summed up to cumulative at end:
     assert vol_rate_df["FOPR"].sum() == cum_df["FOPT"].iloc[-1]
     assert vol_rate_df["FGPR"].sum() == cum_df["FGPT"].iloc[-1]
@@ -434,28 +425,8 @@ def test_volumetric_rates():
 def test_datenormalization():
     """Test normalization of dates, where
     dates can be ensured to be on dategrid boundaries"""
-    # pylint: disable=import-outside-toplevel
-    from fmu.ensemble.realization import normalize_dates
-    from datetime import date
 
-    start = date(1997, 11, 5)
-    end = date(2020, 3, 2)
-
-    assert normalize_dates(start, end, "monthly") == (
-        date(1997, 11, 1),
-        date(2020, 4, 1),
-    )
-    assert normalize_dates(start, end, "yearly") == (date(1997, 1, 1), date(2021, 1, 1))
-
-    # Check it does not touch already aligned dates
-    assert normalize_dates(date(1997, 11, 1), date(2020, 4, 1), "monthly") == (
-        date(1997, 11, 1),
-        date(2020, 4, 1),
-    )
-    assert normalize_dates(date(1997, 1, 1), date(2021, 1, 1), "yearly") == (
-        date(1997, 1, 1),
-        date(2021, 1, 1),
-    )
+    # fmu.ensemble.util.normalized_dates is also tested in test_util.py
 
     # Check that we normalize correctly with get_smry():
     # realization-0 here has its last summary date at 2003-01-02
