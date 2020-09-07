@@ -10,6 +10,35 @@ from ..etc import Interaction
 xfmu = Interaction()
 logger = xfmu.functionlogger(__name__)
 
+"""Mapping from fmu-ensemble custom offset strings to Pandas DateOffset strings.
+See
+https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects
+"""
+PD_FREQ_MNEMONICS = {
+    "monthly": "MS",
+    "yearly": "YS",
+    "daily": "D",
+    "weekly": "W-MON",
+}
+
+
+def date_range(start_date, end_date, freq):
+    """Wrapper for pandas.date_range to allow for extra fmu-ensemble specific mnemonics
+    'yearly', 'daily', 'weekly', mapped over to pandas DateOffsets
+
+    Args:
+        start_date (datetime.date)
+        end_date (datetime.date)
+        freq (str): monthly, daily, weekly, yearly, or a Pandas date offset
+            frequency.
+
+    Returns:
+        list of datetimes
+    """
+    if freq in PD_FREQ_MNEMONICS:
+        freq = PD_FREQ_MNEMONICS[freq]
+    return pd.date_range(start_date, end_date, freq=freq)
+
 
 def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date=None):
     """
@@ -21,8 +50,8 @@ def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date
         eclsumsdates (list of lists of datetimes)
         freq (str): Requested frequency
         normalize (bool): Normalize daterange to frequency or not.
-        start_date (datetime.date or str):
-        end_date (datetime.date or str)
+        start_date (datetime.date or str): Overridden if freq=='first'
+        end_date (datetime.date or str): Overridden if freq=='last'
 
     Return:
         list of datetime.date
@@ -68,8 +97,6 @@ def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date
     start_smry = min([min(x) for x in eclsumsdates])
     end_smry = max([max(x) for x in eclsumsdates])
 
-    pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
-
     (start_n, end_n) = normalize_dates(start_smry.date(), end_smry.date(), freq)
 
     if not start_date and not normalize:
@@ -86,11 +113,8 @@ def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date
     else:
         end_date_range = end_date
 
-    if freq not in pd_freq_mnenomics:
-        raise ValueError("Requested frequency %s not supported" % freq)
-    datetimes = pd.date_range(
-        start_date_range, end_date_range, freq=pd_freq_mnenomics[freq]
-    )
+    datetimes = date_range(start_date_range, end_date_range, freq)
+
     # Convert from Pandas' datetime64 to datetime.date:
     datetimes = [x.date() for x in datetimes]
 
@@ -118,33 +142,13 @@ def normalize_dates(start_date, end_date, freq):
     Args:
         start_date: datetime.date
         end_date: datetime.date
-        freq: string with either 'monthly' or 'yearly'.
-            Anything else will return the input as is
+        freq: string with either 'monthly', 'yearly', 'weekly'
+            or any other frequency offset accepted by Pandas
+
     Return:
         Tuple of normalized (start_date, end_date)
     """
-
-    if freq == "monthly":
-        start_date = start_date.replace(day=1)
-
-        # Avoid rolling forward if we are already at day 1 in a month
-        if end_date != end_date.replace(day=1):
-            end_date = end_date.replace(day=1) + dateutil.relativedelta.relativedelta(
-                months=1
-            )
-    elif freq == "yearly":
-        start_date = start_date.replace(day=1, month=1)
-        # Avoid rolling forward if we are already at day 1 in a year
-        if end_date != end_date.replace(day=1, month=1):
-            end_date = end_date.replace(
-                day=1, month=1
-            ) + dateutil.relativedelta.relativedelta(years=1)
-    elif freq == "daily":
-        # This we don't need to normalize, but we should not give any warnings
-        pass
-    elif freq == "first" or freq == "last":
-        # This we don't need to normalize, but we should not give any warnings
-        pass
-    else:
-        logger.warning("Unrecognized frequency %s for date normalization", str(freq))
-    return (start_date, end_date)
+    if freq in PD_FREQ_MNEMONICS:
+        freq = PD_FREQ_MNEMONICS[freq]
+    offset = pd.tseries.frequencies.to_offset(freq)
+    return (offset.rollback(start_date).date(), offset.rollforward(end_date).date())
