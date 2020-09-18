@@ -397,7 +397,8 @@ class ScratchEnsemble(object):
                 self._manifest = manifest
         elif isinstance(manifest, six.string_types):
             if os.path.exists(manifest):
-                manifest_fromyaml = yaml.safe_load(open(manifest))
+                with open(manifest) as file_handle:
+                    manifest_fromyaml = yaml.safe_load(file_handle)
                 if not manifest_fromyaml:
                     logger.warning("Empty manifest")
                     self._manifest = {}

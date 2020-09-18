@@ -569,7 +569,8 @@ class ScratchRealization(object):
         jsonfilename = os.path.join(self._origpath, "jobs.json")
         if jsonfilename and os.path.exists(jsonfilename):
             try:
-                jobsinfo = json.load(open(jsonfilename))
+                with open(jsonfilename) as file_handle:
+                    jobsinfo = json.load(file_handle)
                 jobsinfodf = pd.DataFrame(jobsinfo["jobList"])
                 jobsinfodf["JOBINDEX"] = jobsinfodf.index.astype(int)
                 # Outer merge means that we will also have jobs from
@@ -806,7 +807,8 @@ class ScratchRealization(object):
                     # might be out of luck if you have multiple..
                     for cand in yaml_candidates:
                         if os.path.exists(os.path.join(dirname, cand)):
-                            metadict = yaml.full_load(open(os.path.join(dirname, cand)))
+                            with open(os.path.join(dirname, cand)) as file_handle:
+                                metadict = yaml.full_load(file_handle)
                         continue
 
                     # Flatten metadict:
