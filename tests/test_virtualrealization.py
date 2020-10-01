@@ -357,6 +357,7 @@ def test_glob_smry_keys():
     vreal = real.to_virtual()
 
     assert len(vreal._glob_smry_keys("FOP*")) == 9
+    assert len(vreal._glob_smry_keys("FOP?")) == 3
     assert len(vreal._glob_smry_keys(["FOP*"])) == 9
 
     assert len(vreal._glob_smry_keys("WOPT:*")) == 8
