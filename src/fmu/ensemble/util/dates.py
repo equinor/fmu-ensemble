@@ -1,8 +1,8 @@
 """Common utility functions used in fmu.ensemble"""
 
 
-import dateutil
 import datetime
+import dateutil
 import pandas as pd
 
 from ..etc import Interaction
@@ -35,8 +35,7 @@ def date_range(start_date, end_date, freq):
     Returns:
         list of datetimes
     """
-    if freq in PD_FREQ_MNEMONICS:
-        freq = PD_FREQ_MNEMONICS[freq]
+    freq = PD_FREQ_MNEMONICS.get(freq, freq)
     return pd.date_range(start_date, end_date, freq=freq)
 
 
@@ -148,7 +147,6 @@ def normalize_dates(start_date, end_date, freq):
     Return:
         Tuple of normalized (start_date, end_date)
     """
-    if freq in PD_FREQ_MNEMONICS:
-        freq = PD_FREQ_MNEMONICS[freq]
+    freq = PD_FREQ_MNEMONICS.get(freq, freq)
     offset = pd.tseries.frequencies.to_offset(freq)
     return (offset.rollback(start_date).date(), offset.rollforward(end_date).date())

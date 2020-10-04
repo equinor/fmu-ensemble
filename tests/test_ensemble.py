@@ -13,10 +13,10 @@ import pandas as pd
 
 import pytest
 
-from fmu.ensemble import etc
-from fmu.ensemble import ScratchEnsemble, ScratchRealization
-
 from test_ensembleset import symlink_iter
+
+from fmu.ensemble import etc, ScratchEnsemble, ScratchRealization
+
 
 try:
     SKIP_FMU_TOOLS = False

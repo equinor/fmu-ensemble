@@ -75,11 +75,7 @@ class EnsembleSet(object):
         self._name = name
         self._ensembles = {}  # Dictionary indexed by each ensemble's name.
 
-        if (
-            (ensembles and frompath)
-            or (ensembles and runpathfile)
-            or (runpathfile and ensembles)
-        ):
+        if (ensembles and frompath) or (ensembles and runpathfile):
             logger.error(
                 (
                     "EnsembleSet only supports one initialization mode,"

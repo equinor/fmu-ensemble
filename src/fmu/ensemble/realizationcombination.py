@@ -157,10 +157,9 @@ class RealizationCombination(object):
             # column data are not similar
             result.dropna(axis="columns", how="all", inplace=True)
             return result.reset_index()
-        elif isinstance(result, pd.Series):
+        if isinstance(result, pd.Series):
             return result.dropna().to_dict()
-        else:
-            return result
+        return result
 
     def to_virtual(self, keyfilter=None):
         """Evaluate the current linear combination and return as

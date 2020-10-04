@@ -124,6 +124,7 @@ class Observations(object):
             ens_or_real = ens_or_real.to_virtual()
         if isinstance(ens_or_real, EnsembleSet):
             mismatches = {}
+            # pylint: disable=protected-access
             for ensname, ens in ens_or_real._ensembles.items():
                 logger.info("Calculating mismatch for ensemble %s", ensname)
                 for realidx, real in ens.realizations.items():

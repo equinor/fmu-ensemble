@@ -14,6 +14,7 @@ import pandas as pd
 import pytest
 
 from fmu.ensemble import etc
+from fmu.ensemble.virtualrealization import smry_cumulative
 from fmu import ensemble
 
 fmux = etc.Interaction()
@@ -268,8 +269,6 @@ def test_get_smry2():
 
 def test_get_smry_cumulative():
     """Test the cumulative boolean function"""
-
-    from fmu.ensemble.virtualrealization import smry_cumulative
 
     assert isinstance(smry_cumulative([]), list)
     with pytest.raises(TypeError):
