@@ -17,10 +17,9 @@ import ecl.summary
 
 import numpy as np
 
-from fmu.ensemble import etc
+from test_ensembleset import symlink_iter
 from fmu import ensemble
 
-from test_ensembleset import symlink_iter
 
 try:
     SKIP_FMU_TOOLS = False
@@ -28,7 +27,7 @@ try:
 except ImportError:
     SKIP_FMU_TOOLS = True
 
-fmux = etc.Interaction()
+fmux = ensemble.etc.Interaction()
 logger = fmux.basiclogger(__name__, level="INFO")
 
 if not fmux.testsetup():

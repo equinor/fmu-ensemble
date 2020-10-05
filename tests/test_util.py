@@ -1,3 +1,4 @@
+"""Test general utility functions in use by fmu.ensemble"""
 import datetime
 
 import numpy as np
@@ -54,6 +55,7 @@ def test_datenormalization():
 
 
 def test_flatten():
+    """Test that a dictionary can be flattened with a key-separator"""
     assert flatten({}) == {}
     assert flatten({"foo": "bar"}) == {"foo": "bar"}
     assert flatten({"foo": {"bar": "com"}}) == {"foo_bar": "com"}
@@ -67,6 +69,7 @@ def test_flatten():
 
 
 def test_parse_number():
+    """Test number parsing, from strings to ints/floats"""
     assert parse_number("1") == 1
     assert parse_number("1e10") == 1e10
     assert parse_number("1.2") == 1.2
@@ -82,6 +85,8 @@ def test_parse_number():
 
 
 def test_shortcut2path():
+    """Test the shortcut-functionality used for looking up
+    internalized data in realizations or ensemble objects"""
     assert shortcut2path(["foo/bar/com"], "com") == "foo/bar/com"
     assert shortcut2path([], "foo") == "foo"
     assert shortcut2path(["bar"], "foo") == "foo"

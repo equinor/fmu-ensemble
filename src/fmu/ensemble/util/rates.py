@@ -1,8 +1,8 @@
 """Common utility functions for rates used in fmu.ensemble"""
 
 
-import dateutil
 import calendar
+import dateutil
 import pandas as pd
 
 from ..etc import Interaction
@@ -55,6 +55,7 @@ def compute_volumetric_rates(realization, column_keys, time_index, time_unit):
                 "Unsupported time_unit " + time_unit + " for volumetric rates"
             )
 
+    # pylint: disable=protected-access
     column_keys = realization._glob_smry_keys(column_keys)
 
     # Be strict and only include certain summary vectors that look
