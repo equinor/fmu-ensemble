@@ -336,8 +336,18 @@ class EnsembleSet(object):
 
     @property
     def parameters(self):
-        """Getter for ensemble.parameters(convert_numeric=True)"""
-        return self.get_df("parameters.txt")
+        """Build a dataframe of the information in each
+        realizations parameters.txt.
+
+        If no realizations have the file, an empty dataframe is returned.
+
+        Returns:
+            pd.DataFrame
+        """
+        try:
+            return self.get_df("parameters.txt")
+        except KeyError:
+            return pd.DataFrame()
 
     def load_scalar(self, localpath, convert_numeric=False, force_reread=False):
         """Parse a single value from a file
@@ -437,6 +447,22 @@ class EnsembleSet(object):
                 ensemble.drop(localpath, **kwargs)
             except ValueError:
                 pass  # Allow localpath to be missing in some ensembles.
+
+    def remove_data(self, localpaths):
+        """Remove certain datatypes from each ensembles/realizations
+        datastores. This modifies the underlying realization
+        objects, and is equivalent to
+
+            >>> del realization[localpath]
+
+        on each realization in each ensemble.
+
+        Args:
+            localpaths (string): Full localpath to
+                the data, or list of strings.
+        """
+        for _, ensemble in self._ensembles.items():
+            ensemble.remove_data(localpaths)
 
     def process_batch(self, batch=None):
         """Process a list of functions to run/apply

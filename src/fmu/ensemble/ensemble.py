@@ -292,7 +292,7 @@ class ScratchEnsemble(object):
         on each realization in the ensemble.
 
         Args:
-            localpath (string): Full localpath to
+            localpaths (string): Full localpaths to
                 the data, or list of strings.
         """
         if isinstance(localpaths, str):
@@ -412,8 +412,18 @@ class ScratchEnsemble(object):
 
     @property
     def parameters(self):
-        """Getter for get_parameters(convert_numeric=True)"""
-        return self.load_txt("parameters.txt")
+        """Build a dataframe of the information in each
+        realizations parameters.txt.
+
+        If no realizations have the file, an empty dataframe is returned.
+
+        Returns:
+            pd.DataFrame
+        """
+        try:
+            return self.load_txt("parameters.txt")
+        except KeyError:
+            return pd.DataFrame()
 
     def load_scalar(self, localpath, convert_numeric=False, force_reread=False):
         """Parse a single value from a file for each realization.
