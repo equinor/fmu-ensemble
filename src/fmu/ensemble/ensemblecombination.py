@@ -331,7 +331,10 @@ class EnsembleCombination(object):
     @property
     def parameters(self):
         """Return parameters from the ensemble as a class property"""
-        return self.get_df("parameters.txt")
+        try:
+            return self.get_df("parameters.txt")
+        except KeyError:
+            return pd.DataFrame()
 
     def __len__(self):
         """Estimate the number of realizations in this

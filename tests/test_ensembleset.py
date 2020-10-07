@@ -281,6 +281,35 @@ def test_ensembleset_reek001(tmpdir):
     assert len(ensset5.get_df("unsmry--daily")) == 10980
 
 
+def test_noparameters(tmpdir):
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    ensdir = os.path.join(testdir, "data/testensemble-reek001/")
+
+    tmpdir.chdir()
+    symlink_iter(ensdir, "iter-0")
+    symlink_iter(ensdir, "iter-1")
+
+    iter0 = ScratchEnsemble("iter-0", str(tmpdir.join("realization-*/iter-0")))
+    iter1 = ScratchEnsemble("iter-1", str(tmpdir.join("realization-*/iter-1")))
+
+    ensset = EnsembleSet("reek001", [iter0, iter1])
+    assert not ensset.parameters.empty
+
+    # Remove it each realization:
+    ensset.remove_data("parameters.txt")
+    assert ensset.parameters.empty
+
+    # However, when parameters.txt is excplicitly asked for,
+    # an exception should be raised:
+    with pytest.raises(KeyError):
+        ensset.get_df("parameters.txt")
+
+    ensset.load_smry(time_index="yearly", column_keys="FOPT")
+    assert not ensset.get_df("unsmry--yearly").empty
+    with pytest.raises(KeyError):
+        ensset.get_df("unsmry--yearly", merge="parameters.txt")
+
+
 def test_pred_dir(tmpdir):
     """Test import of a stripped 5 realization ensemble,
     manually doubled to two identical ensembles,

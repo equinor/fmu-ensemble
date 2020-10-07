@@ -180,6 +180,30 @@ def test_reek001(tmpdir):
     assert len(reekensemble.keys()) == keycount - 1
 
 
+def test_noparameters():
+    """Test what happens when parameters.txt is missing"""
+
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    # Parameters.txt exist on disk, so it is loaded:
+    assert not reekensemble.parameters.empty
+    # Remove it each realization:
+    reekensemble.remove_data("parameters.txt")
+    assert reekensemble.parameters.empty
+
+    # However, when parameters.txt is excplicitly asked for,
+    # an exception should be raised:
+    with pytest.raises(KeyError):
+        reekensemble.get_df("parameters.txt")
+
+    reekensemble.load_smry(time_index="yearly", column_keys="FOPT")
+    assert not reekensemble.get_df("unsmry--yearly").empty
+    with pytest.raises(KeyError):
+        reekensemble.get_df("unsmry--yearly", merge="parameters.txt")
+
+
 def test_emptyens():
     """Check that we can initialize an empty ensemble"""
     ens = ScratchEnsemble("emptyens")
