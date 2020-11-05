@@ -7,10 +7,6 @@ in the Schedule section, to simulate a premature failure. FMU-ensemble does
 not try to distuingish between early exits from failure or deliberate (like this).
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import shutil
 import datetime

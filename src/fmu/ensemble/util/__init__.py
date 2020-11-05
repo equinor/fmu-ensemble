@@ -2,6 +2,7 @@
 
 
 import os
+from collections.abc import MutableMapping
 
 
 def flatten(dictionary, parent_key="", sep="_"):
@@ -18,13 +19,7 @@ def flatten(dictionary, parent_key="", sep="_"):
     Returns:
         dict with only one level.
     """
-    # pylint: disable=import-outside-toplevel
-    try:
-        # Python3.3
-        from collections.abc import MutableMapping
-    except ImportError:
-        # Python 2.7:
-        from collections import MutableMapping
+
     items = []
     for key, value in dictionary.items():
         new_key = parent_key + sep + key if parent_key else key

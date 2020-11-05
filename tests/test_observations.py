@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 """Testing observations in fmu-ensemble."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import glob
 import datetime
 import yaml
-import six
 import pandas as pd
 import numpy as np
 import dateutil
@@ -649,7 +644,7 @@ def test_virtual_observations():
 
     summaryvector = "FOPT"
     representative_realizations = {}
-    for virtrealname, virtreal in six.iteritems(virtreals):
+    for virtrealname, virtreal in virtreals.items():
         # Create empty observation object
         obs = Observations({})
         obs.load_smry(virtreal, summaryvector, time_index="yearly")
@@ -679,7 +674,7 @@ def test_virtual_observations():
 
     summaryvector = "FOPT"
     vrepresentative_realizations = {}
-    for virtrealname, virtreal in six.iteritems(vvirtreals):
+    for virtrealname, virtreal in vvirtreals.items():
         # Create empty observation object
         obs = Observations({})
         obs.load_smry(virtreal, summaryvector, time_index="yearly")

@@ -1,17 +1,12 @@
 """Module containing a VirtualEnsemble class"""
 
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import re
 import shutil
 import fnmatch
 import datetime
 
-import six
 import yaml
 import numpy as np
 import pandas as pd
@@ -1094,7 +1089,7 @@ file is picked up"""
                 self._manifest = {}
             else:
                 self._manifest = manifest
-        elif isinstance(manifest, six.string_types):
+        elif isinstance(manifest, str):
             if os.path.exists(manifest):
                 with open(manifest) as file_handle:
                     manifest_fromyaml = yaml.safe_load(file_handle)

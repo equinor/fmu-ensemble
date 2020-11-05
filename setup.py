@@ -24,13 +24,12 @@ REQUIREMENTS = [
     "numpy",
     "pandas>0.23.0",
     "pyyaml>=5.1",
-    "six>=1.12.0",
 ]
 
 SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm"]
 
 TEST_REQUIREMENTS = [
-    "black>=20.8b0; python_version >= '3'",
+    "black>=20.8b0",
     "flake8>=2.6.0",
     "pylint",
     "pytest>=2.9.2",
@@ -61,8 +60,6 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.6",
@@ -73,5 +70,5 @@ setup(
     tests_require=TEST_REQUIREMENTS,
     setup_requires=SETUP_REQUIREMENTS,
     extras_require=EXTRAS_REQUIRE,
-    python_requires=">=2.7",
+    python_requires=">=3.6",
 )
