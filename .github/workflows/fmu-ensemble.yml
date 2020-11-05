@@ -45,7 +45,6 @@ jobs:
       - name: 📦 Install fmu-ensemble with dependencies
         run: |
           pip install --upgrade pip
-          pip install libecl
           pip install 'pandas==${{  matrix.pandas-version }}'
           pip install .
 
