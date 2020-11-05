@@ -1,12 +1,7 @@
 """Module for handling linear combinations of ensembles"""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import fnmatch
 
-import six
 import pandas as pd
 
 from .etc import Interaction
@@ -140,7 +135,7 @@ class EnsembleCombination(object):
 
         if keyfilter is None:
             keyfilter = "*"
-        if isinstance(keyfilter, six.string_types):
+        if isinstance(keyfilter, str):
             keyfilter = [keyfilter]
         if not isinstance(keyfilter, list):
             raise TypeError("keyfilter in to_virtual() must be list or string")

@@ -1,13 +1,8 @@
 """Module containing the ScratchEnsemble class"""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import re
 import os
 import glob
-import six
 import dateutil
 
 import pandas as pd
@@ -395,7 +390,7 @@ class ScratchEnsemble(object):
                 self._manifest = {}
             else:
                 self._manifest = manifest
-        elif isinstance(manifest, six.string_types):
+        elif isinstance(manifest, str):
             if os.path.exists(manifest):
                 with open(manifest) as file_handle:
                     manifest_fromyaml = yaml.safe_load(file_handle)
@@ -510,11 +505,11 @@ class ScratchEnsemble(object):
         for index, realization in self.realizations.items():
             try:
                 realization.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError:
+            except ValueError as exc:
                 # This would at least occur for unsupported fileformat,
                 # and that we should not skip.
                 logger.critical("load_file() failed in realization %d", index)
-                raise ValueError
+                raise ValueError from exc
             except IOError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
@@ -1471,7 +1466,7 @@ class ScratchEnsemble(object):
         all_keys = set.union(
             *[
                 set(realization.get_init().keys())
-                for _, realization in six.iteritems(self.realizations)
+                for _, realization in self.realizations.items()
             ]
         )
         return all_keys
@@ -1484,7 +1479,7 @@ class ScratchEnsemble(object):
         all_keys = set.union(
             *[
                 set(realization.get_unrst().keys())
-                for _, realization in six.iteritems(self.realizations)
+                for _, realization in self.realizations.items()
             ]
         )
         return all_keys
@@ -1496,7 +1491,7 @@ class ScratchEnsemble(object):
         all_report_dates = set.union(
             *[
                 set(realization.report_dates)
-                for _, realization in six.iteritems(self.realizations)
+                for _, realization in self.realizations.items()
             ]
         )
         all_report_dates = list(all_report_dates)
@@ -1549,11 +1544,11 @@ class ScratchEnsemble(object):
         """
         mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
-            for _, realization in six.iteritems(self.realizations):
+            for _, realization in self.realizations.items():
                 mean += realization.get_global_unrst_keyword(prop, report)
             mean.safe_div(global_active)
             return mean
-        for _, realization in six.iteritems(self.realizations):
+        for _, realization in self.realizations.items():
             mean += realization.get_global_init_keyword(prop)
         mean.safe_div(global_active)
         return mean
@@ -1569,12 +1564,12 @@ class ScratchEnsemble(object):
         """
         std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
-            for _, realization in six.iteritems(self.realizations):
+            for _, realization in self.realizations.items():
                 real_prop = realization.get_global_unrst_keyword(prop, report)
                 std_dev.add_squared(real_prop - mean)
             std_dev.safe_div(global_active)
             return std_dev.isqrt()
-        for _, realization in six.iteritems(self.realizations):
+        for _, realization in self.realizations.items():
             real_prop = realization.get_global_init_keyword(prop)
             std_dev.add_squared(real_prop - mean)
         std_dev.safe_div(global_active)

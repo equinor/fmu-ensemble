@@ -1,14 +1,9 @@
 """Testing fmu-ensemble, EnsembleSet class."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import re
 import glob
 import shutil
-import six
 
 import pandas as pd
 import pytest
@@ -38,18 +33,12 @@ def symlink_iter(origensdir, newitername):
         realizationdir = fullpathrealizationdir.split("/")[-1]
         if not os.path.exists(realizationdir):
             os.mkdir(realizationdir)
-        if not six.PY2:
-            shutil.copytree(
-                fullpathrealizationdir + "/iter-0",
-                realizationdir + "/" + newitername,
-                copy_function=os.symlink,
-            )
-        else:
-            # On Python2, we do full tree copies as copy_function
-            # is not supported there.
-            shutil.copytree(
-                fullpathrealizationdir + "/iter-0", realizationdir + "/" + newitername
-            )
+
+        shutil.copytree(
+            fullpathrealizationdir + "/iter-0",
+            realizationdir + "/" + newitername,
+            copy_function=os.symlink,
+        )
 
 
 def test_ensembleset_reek001(tmpdir):

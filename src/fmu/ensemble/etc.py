@@ -29,17 +29,11 @@ the ```print_fmu_header``` method
 
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import sys
 import inspect
 import logging
 import timeit
-
-import six
 
 # pylint: disable=protected-access
 
@@ -313,24 +307,10 @@ class Interaction(object):
 
     @staticmethod
     def _get_class_from_frame(frame):
-        if six.PY2:
-            # pylint: disable=deprecated-method
-            args, _, _, value_dict = inspect.getargvalues(frame)
-            # we check the first parameter for the frame function is
-            # named 'self'
-            if args and args[0] == "self":
-                instance = value_dict.get("self", None)
-                if instance:
-                    # return its class
-                    return getattr(instance, "__class__", None)
-        else:
-            # python3 is incomplete (need more coffee)
-            current = inspect.currentframe()
-            outer = inspect.getouterframes(current)
-            return outer[0]
-
-        # return None otherwise
-        return None
+        # Incomplete (need more coffee)
+        current = inspect.currentframe()
+        outer = inspect.getouterframes(current)
+        return outer[0]
 
     def _output(self, idx, level, string):
 

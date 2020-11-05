@@ -1,12 +1,7 @@
 """Module for handling linear combinations of realizations. """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import fnmatch
 
-import six
 import numpy as np
 import pandas as pd
 
@@ -121,7 +116,7 @@ class RealizationCombination(object):
             refdf = pd.Series(refdf)
         if isinstance(refdf, (int, float, np.number)):
             result = self.scale * refdf
-        elif isinstance(refdf, six.string_types):
+        elif isinstance(refdf, str):
             logger.warning("String data %s ignored", localpath)
             return None
         else:
@@ -180,7 +175,7 @@ class RealizationCombination(object):
 
         if keyfilter is None:
             keyfilter = "*"
-        if isinstance(keyfilter, six.string_types):
+        if isinstance(keyfilter, str):
             keyfilter = [keyfilter]
         if not isinstance(keyfilter, list):
             raise TypeError("keyfilter in to_virtual() must be list or string")
