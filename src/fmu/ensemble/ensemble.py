@@ -1406,7 +1406,11 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
-        ref = list(self.realizations.values())[0]
+        egrid_reals = [
+            real for real in self.realizations.values() if real.get_grid() is not None
+        ]
+        # Pick a "random" reference realization for grids.
+        ref = egrid_reals[0]
         grid_index = ref.get_grid_index(active_only=active_only)
         corners = ref.get_grid_corners(grid_index)
         centre = ref.get_grid_centre(grid_index)
@@ -1433,7 +1437,8 @@ class ScratchEnsemble(object):
                 "eactive", self.global_size, EclDataType.ECL_INT
             )
             for realization in self.realizations.values():
-                self._global_active += realization.actnum
+                if realization.get_grid() is not None:
+                    self._global_active += realization.actnum
 
         return self._global_active
 
@@ -1446,7 +1451,13 @@ class ScratchEnsemble(object):
         if not self.realizations:
             return 0
         if self._global_size is None:
-            self._global_size = list(self.realizations.values())[0].global_size
+            egrid_reals = [
+                real
+                for real in self.realizations.values()
+                if real.get_grid() is not None
+            ]
+            ref = egrid_reals[0]
+            self._global_size = ref.global_size
         return self._global_size
 
     def _get_grid_index(self, active=True):
@@ -1455,6 +1466,9 @@ class ScratchEnsemble(object):
             :func:`fmu.ensemble.Realization.get_grid()`.
         """
         if not self.realizations:
+            return None
+        else:
+            logger.warning("No GRID file in realization %s", self)
             return None
         return list(self.realizations.values())[0].get_grid_index(active=active)
 
@@ -1467,6 +1481,7 @@ class ScratchEnsemble(object):
             *[
                 set(realization.get_init().keys())
                 for _, realization in self.realizations.items()
+                if realization.get_grid() is not None
             ]
         )
         return all_keys
@@ -1480,6 +1495,7 @@ class ScratchEnsemble(object):
             *[
                 set(realization.get_unrst().keys())
                 for _, realization in self.realizations.items()
+                if realization.get_unrst() is not None
             ]
         )
         return all_keys
@@ -1492,6 +1508,7 @@ class ScratchEnsemble(object):
             *[
                 set(realization.report_dates)
                 for _, realization in self.realizations.items()
+                if realization.get_unrst() is not None
             ]
         )
         all_report_dates = list(all_report_dates)
@@ -1545,11 +1562,13 @@ class ScratchEnsemble(object):
         mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
             for _, realization in self.realizations.items():
-                mean += realization.get_global_unrst_keyword(prop, report)
+                if realization.get_unrst() is not None:
+                    mean += realization.get_global_unrst_keyword(prop, report)
             mean.safe_div(global_active)
             return mean
         for _, realization in self.realizations.items():
-            mean += realization.get_global_init_keyword(prop)
+            if realization.get_grid() is not None:
+                mean += realization.get_global_init_keyword(prop)
         mean.safe_div(global_active)
         return mean
 
@@ -1570,7 +1589,8 @@ class ScratchEnsemble(object):
             std_dev.safe_div(global_active)
             return std_dev.isqrt()
         for _, realization in self.realizations.items():
-            real_prop = realization.get_global_init_keyword(prop)
-            std_dev.add_squared(real_prop - mean)
+            if realization.get_grid() is not None:
+                real_prop = realization.get_global_init_keyword(prop)
+                std_dev.add_squared(real_prop - mean)
         std_dev.safe_div(global_active)
         return std_dev.isqrt()
