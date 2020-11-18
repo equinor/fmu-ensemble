@@ -324,10 +324,11 @@ VirtualRealization object from an Ensemble object. If we want only the
 aggregated table for our particular custom function, we can aggregate the
 ensemble only for that particular datatype:
 
-.. code-block:: python
+.. code-block:: ipython
 
-   mean_realization = ensemble.agg("mean", keylist="zonestats.csv")
-   mean_realization.get_df("zonestats.csv")
+   In [1]: mean_realization = ensemble.agg("mean", keylist="zonestats.csv")
+   In [2]: mean_realization.get_df("zonestats.csv")
+   Out [2]:
            ZONE        PERMX        VOLUME            Z         PORV
    0  LowerReek  1105.552718  6.070259e+08  1599.113406  109885776.0
    1    MidReek   966.315122  9.608399e+08  1586.559663  161875872.0
