@@ -35,11 +35,22 @@ TEST_REQUIREMENTS = [
     "pylint",
     "pytest>=2.9.2",
     "pyyaml>=5.1",
-    "sphinx>=1.4.8",
-    "sphinx_rtd_theme>=0.4.1",
 ]
 
-EXTRAS_REQUIRE = {"tests": TEST_REQUIREMENTS, "parquet": ["pyarrow"]}
+DOCS_REQUIREMENTS = [
+    "ipython",
+    "rstcheck",
+    "sphinx",
+    "sphinx-argparse",
+    "sphinx_rtd_theme",
+]
+
+
+EXTRAS_REQUIRE = {
+    "tests": TEST_REQUIREMENTS,
+    "docs": DOCS_REQUIREMENTS,
+    "parquet": ["pyarrow"],
+}
 
 setup(
     name="fmu-ensemble",
