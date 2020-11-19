@@ -25,19 +25,13 @@ from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
 
+import ecl2df
+
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
 from .util import parse_number, flatten, shortcut2path
 from .util.rates import compute_volumetric_rates
 from .util.dates import unionize_smry_dates
-
-HAVE_ECL2DF = False
-try:
-    import ecl2df
-
-    HAVE_ECL2DF = True
-except ImportError:
-    HAVE_ECL2DF = False
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +98,8 @@ class ScratchRealization(object):
         self.files = pd.DataFrame(
             columns=["FULLPATH", "FILETYPE", "LOCALPATH", "BASENAME"]
         )
+        self.eclfiles = None  # ecl2df.EclFiles object
+
         self._eclsum = None  # Placeholder for caching
         self._eclsum_include_restart = None  # Flag for cached object
 
@@ -851,18 +847,21 @@ class ScratchRealization(object):
         Returns:
             ecl2df.EclFiles. None if nothing found
         """
-        if not HAVE_ECL2DF:
-            logger.warning("ecl2df not installed. Skipping")
-            return None
-        data_file_row = self.files[self.files["FILETYPE"] == "DATA"]
+        data_file_rows = self.files[self.files["FILETYPE"] == "DATA"]
         data_filename = None
-        if len(data_file_row) == 1:
-            data_filename = data_file_row["FULLPATH"].values[0]
+        unsmry_file_rows = self.files[self.files["FILETYPE"] == "UNSMRY"]
+        unsmry_filename = None
+        if len(data_file_rows) == 1:
+            data_filename = data_file_rows["FULLPATH"].values[0]
+        elif len(unsmry_file_rows) == 1:
+            unsmry_filename = unsmry_file_rows["FULLPATH"].values[0]
+            # We construct the DATA file, even though it might not exist:
+            data_filename = unsmry_filename.replace(".UNSMRY", ".DATA")
         elif self._autodiscovery:
             data_fileguess = os.path.join(self._origpath, "eclipse/model", "*.DATA")
             data_filenamelist = glob.glob(data_fileguess)
             if not data_filenamelist:
-                return None  # No filename matches *DATA
+                return None  # No filename matches *DATA or *UNSMRY
             if len(data_filenamelist) > 1:
                 logger.warning(
                     (
@@ -870,14 +869,29 @@ class ScratchRealization(object):
                         "consider turning off auto-discovery"
                     )
                 )
-            data_filename = data_filenamelist[0]
-            self.find_files(data_filename)
+            if data_filenamelist:
+                data_filename = data_filenamelist[0]
+                self.find_files(data_filename)
+
+            unsmry_fileguess = os.path.join(self._origpath, "eclipse/model", "*.UNSMRY")
+            unsmry_filenamelist = glob.glob(unsmry_fileguess)
+            if not unsmry_filenamelist:
+                return None  # No filename matches
+            if len(unsmry_filenamelist) > 1:
+                logger.warning(
+                    "Multiple UNSMRY files found, consider turning off auto-discovery"
+                )
+            unsmry_filename = unsmry_filenamelist[0]
+            self.find_files(unsmry_filename)
+
         else:
-            # There is no DATA file to be found.
-            logger.warning("No DATA file found!")
+            logger.warning("No DATA and/or UNSMRY file found!")
             return None
         if not os.path.exists(data_filename):
-            return None
+            if unsmry_filename is not None:
+                return ecl2df.EclFiles(unsmry_filename.replace(".UNSMRY", ".DATA"))
+            else:
+                return None
         return ecl2df.EclFiles(data_filename)
 
     def get_eclsum(self, cache=True, include_restart=True):
@@ -945,102 +959,35 @@ class ScratchRealization(object):
 
         return eclsum
 
-    def load_smry(
-        self,
-        time_index="raw",
-        column_keys=None,
-        cache_eclsum=True,
-        start_date=None,
-        end_date=None,
-        include_restart=True,
-    ):
-        """Produce dataframe from Summary data from the realization
+    def load_smry(self, **kwargs):
+        """Wrap around get_smry(), but also cache the result"""
 
-        When this function is called, the dataframe will be
-        internalized.  Internalization of summary data in a
-        realization object supports different time_index, but there is
-        no handling of multiple sets of column_keys. The cached data
-        will be called
+        # This change of indexing is peculiar for load_smry() vs get_smry().
+        # It might change in fmu-ensemble 2.0 to always return a datetime64
+        # index.
+        dframe = self.get_smry(**kwargs).reset_index()
 
-          'share/results/tables/unsmry--<time_index>.csv'
+        cachename = None
+        # Cache the result for supported time indices:
+        if "time_index" not in kwargs or kwargs["time_index"] is None:
+            cachename = "raw"
+        elif isinstance(kwargs["time_index"], list):
+            cachename = "custom"
+        elif str(kwargs["time_index"]) in [
+            "raw",
+            "first",
+            "last",
+            "report",
+            "daily",
+            "weekly",
+            "monthly",
+            "yearly",
+        ]:
+            cachename = kwargs["time_index"]
 
-        where <time_index> is among 'yearly', 'monthly', 'daily', 'first',
-        'last' or 'raw' (meaning the raw dates in the SMRY file), depending
-        on the chosen time_index. If a custom time_index (list
-        of datetime) was supplied, <time_index> will be called 'custom'.
-
-        Wraps ecl.summary.EclSum.pandas_frame()
-
-        See also get_smry()
-
-        Args:
-            time_index: string indicating a resampling frequency,
-               'yearly', 'monthly', 'daily', 'first', 'last' or 'raw', the
-               latter will return the simulated report steps (also default).
-               If a list of DateTime is supplied, data will be resampled
-               to these.
-            column_keys: list of column key wildcards. None means everything.
-            cache_eclsum: boolean for whether to keep the loaded EclSum
-                object in memory after data has been loaded.
-            start_date: str or date with first date to include.
-                Dates prior to this date will be dropped, supplied
-                start_date will always be included. Overridden if time_index
-                is 'first' or 'last'.
-            end_date: str or date with last date to be included.
-                Dates past this date will be dropped, supplied
-                end_date will always be included. Overridden if time_index
-                is 'first' or 'last'.
-            include_restart: boolean sent to libecl for whether restart
-                files should be traversed.
-
-        Returns:
-            DataFrame with summary keys as columns and dates as indices.
-                Empty dataframe if no summary is available or column
-                keys do not exist.
-            DataFrame: with summary keys as columns and dates as indices.
-                Empty dataframe if no summary is available.
-        """
-        if not self.get_eclsum(cache=cache_eclsum):
-            # Return empty, but do not store the empty dataframe in self.data
-            return pd.DataFrame()
-        time_index_path = time_index
-        if time_index == "raw":
-            time_index_arg = None
-        elif isinstance(time_index, str):
-            # Note: This call will recache the smry object.
-            time_index_arg = self.get_smry_dates(
-                freq=time_index,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
-        elif isinstance(time_index, (list, np.ndarray)):
-            time_index_arg = time_index
-            time_index_path = "custom"
-        elif time_index is None:
-            time_index_path = "raw"
-            time_index_arg = time_index
-        else:
-            raise TypeError("'time_index' has to be a string, a list or None")
-
-        if not isinstance(column_keys, list):
-            column_keys = [column_keys]
-
-        # Do the actual work:
-        dframe = self.get_eclsum(
-            cache=cache_eclsum, include_restart=include_restart
-        ).pandas_frame(time_index_arg, column_keys)
-        dframe = dframe.reset_index()
-        dframe.rename(columns={"index": "DATE"}, inplace=True)
-
-        # Cache the result:
-        localpath = "share/results/tables/unsmry--" + time_index_path + ".csv"
-        self.data[localpath] = dframe
-
-        # Do this to ensure that we cut the rope to the EclSum object
-        # Can be critical for garbage collection
-        if not cache_eclsum:
-            self._eclsum = None
+        if cachename:
+            localpath = "share/results/tables/unsmry--" + cachename + ".csv"
+            self.data[localpath] = dframe
         return dframe
 
     def get_smry(
@@ -1051,8 +998,9 @@ class ScratchRealization(object):
         start_date=None,
         end_date=None,
         include_restart=True,
+        datetimeindex=False,
     ):
-        """Wrapper for EclSum.pandas_frame
+        """Wrapper for ecl2df.summary
 
         This gives access to the underlying data on disk without
         touching internalized dataframes.
@@ -1075,43 +1023,45 @@ class ScratchRealization(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overridden if time_index
                 is 'first' or 'last'.
+            include_restart (bool): Whether to traverse restart files.
+            datetimeindex (bool): Set to True if a datetime64 indes is wanted.
 
         Returns empty dataframe if there is no summary file, or if the
         column_keys are not existing.
         """
-        if not isinstance(column_keys, list):
-            column_keys = [column_keys]
-        if isinstance(time_index, str) and time_index == "raw":
-            time_index_arg = None
-        elif isinstance(time_index, str):
-            try:
-                parseddate = dateutil.parser.isoparse(time_index)
-                time_index_arg = [parseddate]
-            except ValueError:
-
-                time_index_arg = self.get_smry_dates(
-                    freq=time_index,
-                    start_date=start_date,
-                    end_date=end_date,
-                    include_restart=include_restart,
-                )
-        elif time_index is None or isinstance(time_index, (list, np.ndarray)):
-            time_index_arg = time_index
-        else:
-            raise TypeError("'time_index' has to be a string, a list or None")
-        if self.get_eclsum(cache=cache_eclsum, include_restart=include_restart):
-            try:
-                dataframe = self.get_eclsum(
-                    cache=cache_eclsum, include_restart=include_restart
-                ).pandas_frame(time_index_arg, column_keys)
-            except ValueError:
-                # We get here if we have requested non-existing column keys
-                return pd.DataFrame()
-            if not cache_eclsum:
-                # Ensure EclSum object can be garbage collected
+        if self.get_eclfiles() is None:
+            return pd.DataFrame()
+        try:
+            dframe = ecl2df.summary.df(
+                self.get_eclfiles(),
+                time_index=time_index,
+                column_keys=column_keys,
+                start_date=start_date,
+                end_date=end_date,
+                include_restart=include_restart,
+                params=False,
+                paramfile=None,
+                datetime=datetimeindex,
+            )
+            if cache_eclsum:
+                if self.get_eclfiles():
+                    # This is necessary for tests to pass, but might not
+                    # be the way to do it since ecl2df should take full
+                    # responsibility for the eclsum objects.
+                    self._eclsum = self.get_eclfiles().get_eclsum()
+            else:
+                # Do this to ensure that we cut the rope to the EclSum object
+                # Can be critical for garbage collection
                 self._eclsum = None
-            return dataframe
-        return pd.DataFrame()
+            return dframe
+        except OSError:
+            # Missing or bogus UNSMRY file
+            return pd.DataFrame()
+        except ValueError:
+            # From libecl when requested columns keys are not found,
+            # or from pd.tseries.frequencies.to_offset() if frequency
+            # specifier is not known.
+            return pd.DataFrame()
 
     def get_smry_meta(self, column_keys=None):
         """

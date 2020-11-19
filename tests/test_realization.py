@@ -320,9 +320,7 @@ def test_volumetric_rates():
     assert real.get_volumetric_rates(column_keys="FOOBAR").empty
     assert real.get_volumetric_rates(column_keys=["FOOBAR"]).empty
     assert real.get_volumetric_rates(column_keys={}).empty
-
-    with pytest.raises(ValueError):
-        real.get_volumetric_rates(column_keys="FOPT", time_index="bogus")
+    assert real.get_volumetric_rates(column_keys="FOPT", time_index="bogus").empty
 
     mcum = real.get_smry(column_keys="FOPT", time_index="monthly")
     dmcum = real.get_volumetric_rates(column_keys="FOPT", time_index="monthly")
@@ -330,7 +328,7 @@ def test_volumetric_rates():
 
     # Pick 10 **random** dates to get the volumetric rates between:
     daily_dates = real.get_smry_dates(freq="daily", normalize=False)
-    subset_dates = np.random.choice(daily_dates, size=10, replace=False)
+    subset_dates = list(np.random.choice(daily_dates, size=10, replace=False))
     subset_dates.sort()
     dcum = real.get_smry(column_keys="FOPT", time_index=subset_dates)
     ddcum = real.get_volumetric_rates(column_keys="FOPT", time_index=subset_dates)

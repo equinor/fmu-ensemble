@@ -3,24 +3,15 @@
 import os
 import logging
 
-import pytest
+import ecl2df
 
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
-
-HAVE_ECL2DF = True
-try:
-    import ecl2df
-except ImportError:
-    HAVE_ECL2DF = False
 
 logger = logging.getLogger(__name__)
 
 
 def test_ecl2df_real():
     """Check that we can utilize ecl2df on single realizations"""
-
-    if not HAVE_ECL2DF:
-        pytest.skip()
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -49,8 +40,6 @@ def test_reek():
     reekens = ScratchEnsemble(
         "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
     )
-    if not HAVE_ECL2DF:
-        pytest.skip()
 
     def extract_compdat(kwargs):
         """Callback fnction to extract compdata data using ecl2df
@@ -90,8 +79,6 @@ def test_smry_via_ecl2df():
     reekens = ScratchEnsemble(
         "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
     )
-    if not HAVE_ECL2DF:
-        pytest.skip()
 
     callback_smry = reekens.apply(get_smry, column_keys="FOPT", time_index="yearly")
     direct_smry = reekens.get_smry(column_keys="FOPT", time_index="yearly")

@@ -152,7 +152,6 @@ def test_reek001(tmpdir):
         ]
     )
     assert len(reekensemble) == 5
-    print(reekensemble.files)
     assert len(reekensemble.files) == 24
 
     # File discovery must be repeated for the newly added realizations

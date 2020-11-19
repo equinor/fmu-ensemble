@@ -1,6 +1,4 @@
-"""
-Observations support and related calculations
-"""
+"""Observations support and related calculations"""
 
 import os
 import math
