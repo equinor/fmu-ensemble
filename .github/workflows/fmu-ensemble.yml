@@ -49,13 +49,12 @@ jobs:
           pip install .
 
       - name: 📦 Install test dependencies
-        run: pip install .[tests]
+        run: pip install .[tests,docs]
 
       - name: 🧾 List all installed packages
         run: pip freeze
 
       - name: 🕵️ Check code style
-        if: matrix.python-version != '2.7'
         run: |
           black --check src/ tests/test_*.py setup.py
           flake8 src tests/*.py
@@ -66,6 +65,12 @@ jobs:
           pytest tests/
           pip install .[parquet]
           pytest tests/test_virtualensemble.py
+
+      - name: Syntax check on RST documentation
+        run: rstcheck -r docs/
+
+      - name: Build docs
+        run: |
           sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
           python setup.py build_sphinx
           touch build/sphinx/html/.nojekyll
