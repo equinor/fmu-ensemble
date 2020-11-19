@@ -872,11 +872,6 @@ file is picked up"""
 
             # Now ask the VirtualRealization to do interpolation
             interp = vreal.get_smry(column_keys=column_keys, time_index=time_index)
-            # Assume we get back a dataframe indexed by the dates from vreal
-            # We must reset that index, and ensure the index column
-            # gets a correct name
-            interp.index = interp.index.set_names(["DATE"])
-            interp = interp.reset_index()
             interp["REAL"] = realidx
             smry_interpolated.append(interp)
         return pd.concat(smry_interpolated, ignore_index=True, sort=False)

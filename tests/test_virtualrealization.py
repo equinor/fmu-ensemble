@@ -155,10 +155,10 @@ def test_get_smry():
     assert all(vfopt == fopt)
     # But note that the dtype of the index in each dataframe differs
     # vfopt.index.dtype == datetime, while fopt.index.dtype == object
-    assert len(fopt.columns) == 1  # DATE is index (unlabeled)
+    assert len(fopt.columns) == 2  # DATE is the first column
 
     dvfopt = vreal.get_smry(column_keys="FOPT", time_index="daily")
-    assert all(dvfopt.diff() >= 0)
+    assert all(dvfopt["FOPT"].diff().dropna() >= 0)
     # Linear interpolation should give many unique values:
     assert len(dvfopt["FOPT"].unique()) == 1462
     # Length is here 1462 while daily smry for the scratchrealization
@@ -256,7 +256,7 @@ def test_get_smry2():
 
     alldefaults = vreal.get_smry()
     assert len(alldefaults) == monthly_length
-    assert len(alldefaults.columns) == 49
+    assert len(alldefaults.columns) == 50
 
 
 def test_get_smry_cumulative():

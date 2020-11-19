@@ -287,6 +287,10 @@ class VirtualRealization(object):
         Returns data for those columns that are known, unknown
         columns will be issued a warning for.
 
+        The returned dataframe will have a dummy index, and the dates in
+        the column DATE. The DATE column will contain either datetime.datetime
+        or pandas.Timestamp objects.
+
         BUG: If some columns are available only in certain dataframes,
         we might miss them (e.g. we ask for yearly FOPT, and we have
         yearly smry with only WOPT data, and FOPT is only in daily
@@ -359,9 +363,10 @@ class VirtualRealization(object):
         )
 
         smry = self.get_df("unsmry--" + chosen_smry)[["DATE"] + column_keys]
+        # index is dummy, the date is in the DATE column
+        smry.set_index("DATE", inplace=True)
 
         # Add the extra datetimes to interpolate at.
-        smry.set_index("DATE", inplace=True)
         smry.index = pd.to_datetime(smry.index)
         smry = smry.append(
             pd.DataFrame(index=pd.to_datetime(time_index_dt)), sort=False
@@ -390,8 +395,9 @@ class VirtualRealization(object):
                 smry[noncum_columns].fillna(method="bfill").fillna(value=0)
             )
 
-        smry.index = smry.index.set_names(["DATE"])
-        return smry.loc[pd.to_datetime(time_index_dt)]
+        smry = smry.loc[pd.to_datetime(time_index_dt)]
+        smry.index.name = "DATE"
+        return smry.reset_index()
 
     def get_smry_dates(self, freq="monthly", normalize=False):
         """Return list of datetimes available in the realization

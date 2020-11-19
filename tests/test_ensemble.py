@@ -71,6 +71,7 @@ def test_reek001(tmpdir):
     paramsdf = reekensemble.parameters  # also test as property
     paramsdf = reekensemble.get_df("parameters.txt")
     assert len(paramsdf) == 5
+    print(paramsdf.head())
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv("params.csv", index=False)
 
@@ -152,7 +153,6 @@ def test_reek001(tmpdir):
         ]
     )
     assert len(reekensemble) == 5
-    print(reekensemble.files)
     assert len(reekensemble.files) == 24
 
     # File discovery must be repeated for the newly added realizations
@@ -499,9 +499,6 @@ def test_ensemble_ecl():
     assert not reekensemble.get_wellnames("")
     assert len(reekensemble.get_wellnames(["OP*", "WI*"])) == 8
 
-    # eclipse well groups list
-    assert len(reekensemble.get_groupnames()) == 3
-
     # delta between two ensembles
     diff = reekensemble - reekensemble
     assert len(diff.get_smry(column_keys=["FOPR", "FGPR", "FWCT"]).columns) == 5
@@ -827,57 +824,6 @@ def test_nonexisting():
         "noaccess", "/scratch/johan_sverdrup/js_phase5/" + "foo/realization-*/iter-0"
     )
     assert not nopermission
-
-
-def test_eclsumcaching():
-    """Test caching of eclsum"""
-
-    if "__file__" in globals():
-        # Easen up copying test code into interactive sessions
-        testdir = os.path.dirname(os.path.abspath(__file__))
-    else:
-        testdir = os.path.abspath(".")
-
-    dirs = testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
-    ens = ScratchEnsemble("reektest", dirs)
-
-    # The problem here is if you load in a lot of UNSMRY files
-    # and the Python process keeps them in memory. Not sure
-    # how to check in code that an object has been garbage collected
-    # but for garbage collection to work, at least the realization
-    # _eclsum variable must be None.
-
-    ens.load_smry()
-    # Default is to do caching, so these will not be None:
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    # If we redo this operation, the same objects should all
-    # be None afterwards:
-    ens.load_smry(cache_eclsum=False)
-    # cache_eclsum==None is from v1.1.5 no longer equivalent to False
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry_stats()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry_stats(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry_dates()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    # Clear the cached objects because the statement above has cached it..
-    for _, realization in ens.realizations.items():
-        realization._eclsum = None
-
-    ens.get_smry_dates(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
 
 def test_filedescriptors():

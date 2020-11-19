@@ -689,16 +689,13 @@ class ScratchEnsemble(object):
             # the realization index, and end up in a MultiIndex
             dframe = pd.concat(dflist, sort=False).reset_index()
             dframe.rename(columns={"level_0": "REAL"}, inplace=True)
-            del dframe["level_1"]  # This is the indices from each real
-            return dframe
+            return dframe.drop("level_1", axis="columns", errors="ignore")
         raise KeyError("No data found for " + localpath)
 
     def load_smry(
         self,
         time_index="raw",
         column_keys=None,
-        stacked=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -743,9 +740,6 @@ class ScratchEnsemble(object):
                 by vector name, and with realization index as columns.
                 This only works when time_index is the same for all
                 realizations. Not implemented yet!
-            cache_eclsum (boolean): Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
-                memory simultaneously
             start_date (str or date): First date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -761,28 +755,6 @@ class ScratchEnsemble(object):
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
-        if stacked is not None:
-            warnings.warn(
-                (
-                    "stacked option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-        else:
-            stacked = True
-        if not stacked:
-            raise NotImplementedError
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         # Future: Multithread this!
         for realidx, realization in self.realizations.items():
             # We do not store the returned DataFrames here,
@@ -793,7 +765,6 @@ class ScratchEnsemble(object):
             realization.load_smry(
                 time_index=time_index,
                 column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
                 start_date=start_date,
                 end_date=end_date,
                 include_restart=include_restart,
@@ -984,7 +955,6 @@ class ScratchEnsemble(object):
         normalize=True,
         start_date=None,
         end_date=None,
-        cache_eclsum=None,
         include_restart=True,
     ):
         """Return list of datetimes for an ensemble according to frequency
@@ -1016,28 +986,12 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes. Empty list if no data found.
         """
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_dates() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-        else:
-            cache_eclsum = True
-
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self.realizations.items():
-            if realization.get_eclsum(
-                cache=cache_eclsum, include_restart=include_restart
-            ):
+            if realization.get_eclsum(include_restart=include_restart):
                 eclsumsdates.append(
-                    realization.get_eclsum(
-                        cache=cache_eclsum, include_restart=include_restart
-                    ).dates
+                    realization.get_eclsum(include_restart=include_restart).dates
                 )
         return unionize_smry_dates(eclsumsdates, freq, normalize, start_date, end_date)
 
@@ -1046,7 +1000,6 @@ class ScratchEnsemble(object):
         column_keys=None,
         time_index="monthly",
         quantiles=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -1069,8 +1022,6 @@ class ScratchEnsemble(object):
                to compute. Quantiles refer to scientific standard, which
                is opposite to the oil industry convention.
                Ask for p10 if you need the oil industry p90.
-            cache_eclsum: boolean for whether to keep the loaded EclSum
-                object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -1088,15 +1039,6 @@ class ScratchEnsemble(object):
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_stats() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         if quantiles is None:
             quantiles = [10, 90]
 
@@ -1111,7 +1053,6 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(
             time_index=time_index,
             column_keys=column_keys,
-            cache_eclsum=cache_eclsum,
             start_date=start_date,
             end_date=end_date,
         )
@@ -1377,7 +1318,6 @@ class ScratchEnsemble(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1388,6 +1328,9 @@ class ScratchEnsemble(object):
         Wraps around Realization.get_smry() which wraps around
         ecl.summary.EclSum.pandas_frame()
 
+        The returned dataframe will always have a dummy index, and
+        DATE and REAL as columns.
+
         Args:
             time_index: list of DateTime if interpolation is wanted
                default is None, which returns the raw Eclipse report times
@@ -1396,9 +1339,6 @@ class ScratchEnsemble(object):
                a wanted frequencey for dates, daily, weekly, monthly, yearly,
                that will be send to get_smry_dates()
             column_keys: list of column key wildcards
-            cache_eclsum: boolean for whether to cache the EclSum
-                objects. Defaults to True. Set to False if
-                not enough memory to keep all summary files in memory.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -1415,15 +1355,6 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         if isinstance(time_index, str):
             # Try interpreting as ISO-date:
             try:
@@ -1442,14 +1373,12 @@ class ScratchEnsemble(object):
             dframe = realization.get_smry(
                 time_index=time_index,
                 column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
                 include_restart=include_restart,
             )
             dframe.insert(0, "REAL", index)
-            dframe.index.name = "DATE"
             dflist.append(dframe)
         if dflist:
-            return pd.concat(dflist, sort=False).reset_index()
+            return pd.concat(dflist, sort=False)
         return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg="mean", active_only=False):

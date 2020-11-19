@@ -320,9 +320,7 @@ def test_volumetric_rates():
     assert real.get_volumetric_rates(column_keys="FOOBAR").empty
     assert real.get_volumetric_rates(column_keys=["FOOBAR"]).empty
     assert real.get_volumetric_rates(column_keys={}).empty
-
-    with pytest.raises(ValueError):
-        real.get_volumetric_rates(column_keys="FOPT", time_index="bogus")
+    assert real.get_volumetric_rates(column_keys="FOPT", time_index="bogus").empty
 
     mcum = real.get_smry(column_keys="FOPT", time_index="monthly")
     dmcum = real.get_volumetric_rates(column_keys="FOPT", time_index="monthly")
@@ -330,9 +328,9 @@ def test_volumetric_rates():
 
     # Pick 10 **random** dates to get the volumetric rates between:
     daily_dates = real.get_smry_dates(freq="daily", normalize=False)
-    subset_dates = np.random.choice(daily_dates, size=10, replace=False)
+    subset_dates = list(np.random.choice(daily_dates, size=10, replace=False))
     subset_dates.sort()
-    dcum = real.get_smry(column_keys="FOPT", time_index=subset_dates)
+    dcum = real.get_smry(column_keys="FOPT", time_index=subset_dates).set_index("DATE")
     ddcum = real.get_volumetric_rates(column_keys="FOPT", time_index=subset_dates)
     assert ddcum["FOPR"].iloc[-1] == 0
 
@@ -428,21 +426,29 @@ def test_datenormalization():
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
     real = ensemble.ScratchRealization(realdir)
     raw = real.get_smry(column_keys="FOPT", time_index="raw")
-    assert str(raw.index[-1]) == "2003-01-02 00:00:00"
+    assert str(raw["DATE"].values[-1]) == "2003-01-02T00:00:00.000000000"
     daily = real.get_smry(column_keys="FOPT", time_index="daily")
-    assert str(daily.index[-1]) == "2003-01-02"
+    assert str(daily["DATE"].values[-1]) == "2003-01-02"
     monthly = real.get_smry(column_keys="FOPT", time_index="monthly")
-    assert str(monthly.index[-1]) == "2003-02-01"
+    assert str(monthly["DATE"].values[-1]) == "2003-02-01"
     yearly = real.get_smry(column_keys="FOPT", time_index="yearly")
-    assert str(yearly.index[-1]) == "2004-01-01"
+    assert str(yearly["DATE"].values[-1]) == "2004-01-01"
     weekly = real.get_smry(column_keys="FOPT", time_index="weekly")
-    assert str(weekly.index[-1]) == "2003-01-06"  # First Monday after 2003-01-02
+    assert (
+        str(weekly["DATE"].values[-1]) == "2003-01-06"
+    )  # First Monday after 2003-01-02
     weekly = real.get_smry(column_keys="FOPT", time_index="W-MON")
-    assert str(weekly.index[-1]) == "2003-01-06"  # First Monday after 2003-01-02
+    assert (
+        str(weekly["DATE"].values[-1]) == "2003-01-06"
+    )  # First Monday after 2003-01-02
     weekly = real.get_smry(column_keys="FOPT", time_index="W-TUE")
-    assert str(weekly.index[-1]) == "2003-01-07"  # First Tuesday after 2003-01-02
+    assert (
+        str(weekly["DATE"].values[-1]) == "2003-01-07"
+    )  # First Tuesday after 2003-01-02
     weekly = real.get_smry(column_keys="FOPT", time_index="W-THU")
-    assert str(weekly.index[-1]) == "2003-01-02"  # First Thursday after 2003-01-02
+    assert (
+        str(weekly["DATE"].values[-1]) == "2003-01-02"
+    )  # First Thursday after 2003-01-02
 
     # Check that time_index=None and time_index="raw" behaves like default
     raw = real.load_smry(column_keys="FOPT", time_index="raw")
@@ -456,15 +462,18 @@ def test_datenormalization():
     # Check that we get the same correct normalization
     # with load_smry()
     real.load_smry(column_keys="FOPT", time_index="raw")
-    assert str(real.get_df("unsmry--raw")["DATE"].iloc[-1]) == "2003-01-02 00:00:00"
+    assert (
+        str(real.get_df("unsmry--raw")["DATE"].values[-1])
+        == "2003-01-02T00:00:00.000000000"
+    )
     real.load_smry(column_keys="FOPT", time_index="daily")
-    assert str(real.get_df("unsmry--daily")["DATE"].iloc[-1]) == "2003-01-02"
+    assert str(real.get_df("unsmry--daily")["DATE"].values[-1]) == "2003-01-02"
     real.load_smry(column_keys="FOPT", time_index="monthly")
-    assert str(real.get_df("unsmry--monthly")["DATE"].iloc[-1]) == "2003-02-01"
+    assert str(real.get_df("unsmry--monthly")["DATE"].values[-1]) == "2003-02-01"
     real.load_smry(column_keys="FOPT", time_index="yearly")
-    assert str(real.get_df("unsmry--yearly")["DATE"].iloc[-1]) == "2004-01-01"
+    assert str(real.get_df("unsmry--yearly")["DATE"].values[-1]) == "2004-01-01"
     real.load_smry(column_keys="FOPT", time_index="weekly")
-    assert str(real.get_df("unsmry--weekly")["DATE"].iloc[-1]) == "2003-01-06"
+    assert str(real.get_df("unsmry--weekly")["DATE"].values[-1]) == "2003-01-06"
 
 
 def test_singlereal_ecl(tmp="TMP"):
@@ -514,7 +523,7 @@ def test_singlereal_ecl(tmp="TMP"):
     # Try ISO-date for time_index:
     singledata = real.get_smry(time_index="2000-05-05", column_keys="FOPT")
     assert "FOPT" in singledata
-    assert "2000-05-05" in singledata.index
+    assert str(singledata["DATE"].values[0]).startswith("2000-05-05")
 
     # start and end should be included:
     assert (
