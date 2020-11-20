@@ -1,13 +1,11 @@
 """Module for handling linear combinations of ensembles"""
 
 import fnmatch
+import logging
 
 import pandas as pd
 
-from .etc import Interaction
-
-xfmu = Interaction()
-logger = xfmu.functionlogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class EnsembleCombination(object):

@@ -3,15 +3,14 @@
 import re
 import os
 import glob
+import logging
 
 import numpy as np
 import pandas as pd
 
-from .etc import Interaction
 from .ensemble import ScratchEnsemble, VirtualEnsemble
 
-xfmu = Interaction()
-logger = xfmu.functionlogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class EnsembleSet(object):

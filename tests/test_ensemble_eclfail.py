@@ -8,20 +8,16 @@ not try to distuingish between early exits from failure or deliberate (like this
 """
 
 import os
+import logging
 import shutil
 import datetime
 
 import numpy as np
 import pandas as pd
 
-from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_ens_premature_ecl(tmpdir):

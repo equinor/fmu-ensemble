@@ -2,6 +2,7 @@
 # pylint: disable=protected-access,duplicate-code
 
 import os
+import logging
 import datetime
 
 import numpy as np
@@ -9,15 +10,10 @@ import pandas as pd
 
 import pytest
 
-from fmu.ensemble import etc
 from fmu.ensemble.virtualrealization import smry_cumulative
 from fmu import ensemble
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_virtual_realization():

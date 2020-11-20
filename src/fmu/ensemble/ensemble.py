@@ -4,6 +4,7 @@ import re
 import os
 import glob
 import dateutil
+import logging
 
 import pandas as pd
 import numpy as np
@@ -11,7 +12,6 @@ import yaml
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
-from .etc import Interaction
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
@@ -20,8 +20,7 @@ from .realization import parse_number
 from .util import shortcut2path
 from .util.dates import unionize_smry_dates
 
-xfmu = Interaction()
-logger = xfmu.functionlogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ScratchEnsemble(object):

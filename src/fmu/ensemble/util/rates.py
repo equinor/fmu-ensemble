@@ -3,12 +3,11 @@
 
 import calendar
 import dateutil
+import logging
+
 import pandas as pd
 
-from ..etc import Interaction
-
-fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def compute_volumetric_rates(realization, column_keys, time_index, time_unit):

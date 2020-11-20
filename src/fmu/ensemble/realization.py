@@ -14,6 +14,7 @@ import glob
 import json
 from datetime import datetime, date, time
 import dateutil
+import logging
 
 import yaml
 import numpy as np
@@ -24,7 +25,6 @@ from ecl.eclfile import EclFile
 from ecl.grid import EclGrid
 from ecl import EclFileFlagEnum
 
-from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
 from .util import parse_number, flatten, shortcut2path
@@ -39,8 +39,7 @@ try:
 except ImportError:
     HAVE_ECL2DF = False
 
-fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ScratchRealization(object):

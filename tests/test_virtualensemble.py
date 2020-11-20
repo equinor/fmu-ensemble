@@ -1,12 +1,12 @@
 """Testing fmu-ensemble, virtualized ensembles"""
 
 import os
+import logging
 from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
 
-from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 try:
@@ -17,11 +17,7 @@ try:
 except ImportError:
     HAVE_PYARROW = False
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_virtualensemble():

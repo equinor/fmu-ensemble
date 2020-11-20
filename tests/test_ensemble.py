@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 
 import os
+import logging
 
 import yaml
 import numpy
@@ -11,7 +12,7 @@ import pytest
 
 from test_ensembleset import symlink_iter
 
-from fmu.ensemble import etc, ScratchEnsemble, ScratchRealization
+from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 
 try:
@@ -20,11 +21,7 @@ try:
 except ImportError:
     SKIP_FMU_TOOLS = True
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_reek001(tmpdir):

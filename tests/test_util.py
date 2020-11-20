@@ -1,20 +1,16 @@
 """Test general utility functions in use by fmu.ensemble"""
 import datetime
+import logging
 
 import numpy as np
 
 import pytest
 
-from fmu.ensemble import etc
 from fmu.ensemble.util import flatten, parse_number, shortcut2path
 from fmu.ensemble.util.dates import normalize_dates
 from fmu.ensemble.util.rates import cumcolumn_to_ratecolumn
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_cumcolumn_to_ratecolumn():

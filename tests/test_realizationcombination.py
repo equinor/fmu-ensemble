@@ -1,19 +1,15 @@
 """Testing fmu-ensemble."""
 
 import os
+import logging
 
 import pytest
 
-from fmu.ensemble import etc
 from fmu import ensemble
 
 from fmu.ensemble import ScratchEnsemble
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_realizationcombination_basic():
