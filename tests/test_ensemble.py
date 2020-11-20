@@ -921,18 +921,12 @@ def test_filedescriptors():
 
 
 def test_read_eclgrid():
-    """Test reading Eclipse grids of a full ensemble
-
-    This is a cpu-intensive test
-
-    Will silently pass if the directory does not exist"""
-
-    if not os.path.exists("/scratch/fmu/akia/3_r001_reek/realization-1"):
-        pytest.skip("Only works on Stavanger Linux")
-
-    ensemble_path = "/scratch/fmu/akia/3_r001_reek/realization-*1/iter-0"
-    reekensemble = ScratchEnsemble("ensemblename", ensemble_path)
-    grid_df = reekensemble.get_eclgrid(["PERMX", "FLOWATI+", "FLOWATJ+"], report=4)
+    """Test reading Eclipse grids of a full ensemble"""
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    reekensemble = ScratchEnsemble(
+        "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
+    )
+    grid_df = reekensemble.get_eclgrid(["PERMX", "FLOWATI+", "FLOWATJ+"], report=1)
 
     assert len(grid_df.columns) == 35
     assert len(grid_df["i"]) == 35840

@@ -1456,48 +1456,56 @@ class ScratchRealization(object):
         """
         Return the grid index in a pandas dataframe.
         """
-        return self.get_grid().export_index(active_only=active_only)
+        if self.get_grid():
+            return self.get_grid().export_index(active_only=active_only)
+        logger.warning("No GRID file in realization %s", self)
 
     def get_grid_corners(self, grid_index):
         """Return a dataframe with the the x, y, z for the
         8 grid corners of corner point cells"""
-        corners = self.get_grid().export_corners(grid_index)
-        columns = [
-            "x1",
-            "y1",
-            "z1",
-            "x2",
-            "y2",
-            "z2",
-            "x3",
-            "y3",
-            "z3",
-            "x4",
-            "y4",
-            "z4",
-            "x5",
-            "y5",
-            "z5",
-            "x6",
-            "y6",
-            "z6",
-            "x7",
-            "y7",
-            "z7",
-            "x8",
-            "y8",
-            "z8",
-        ]
+        if self.get_grid():
+            corners = self.get_grid().export_corners(grid_index)
+            columns = [
+                "x1",
+                "y1",
+                "z1",
+                "x2",
+                "y2",
+                "z2",
+                "x3",
+                "y3",
+                "z3",
+                "x4",
+                "y4",
+                "z4",
+                "x5",
+                "y5",
+                "z5",
+                "x6",
+                "y6",
+                "z6",
+                "x7",
+                "y7",
+                "z7",
+                "x8",
+                "y8",
+                "z8",
+            ]
 
-        return pd.DataFrame(data=corners, columns=columns)
+            return pd.DataFrame(data=corners, columns=columns)
+        else:
+            logger.warning("No GRID file in realization %s", self)
 
     def get_grid_centre(self, grid_index):
         """Return the grid centre of corner-point-cells, x, y and z
         in distinct columns"""
-        grid_cell_centre = self.get_grid().export_position(grid_index)
-        return pd.DataFrame(
-            data=grid_cell_centre, columns=["cell_x", "cell_y", "cell_z"]
-        )
+        if self.get_grid():
+            grid_cell_centre = self.get_grid().export_position(grid_index)
+            return pd.DataFrame(
+                data=grid_cell_centre, columns=["cell_x", "cell_y", "cell_z"]
+            )
+        else:
+            logger.warning("No GRID file in realization %s", self)
 
     def get_grid(self):
         """
@@ -1524,7 +1532,8 @@ class ScratchRealization(object):
         """
         :returns: Number of cells in the realization.
         """
-        return self.get_grid().get_global_size()
+        if self.get_grid() is not None:
+            return self.get_grid().get_global_size()
 
     @property
     def actnum(self):
@@ -1533,7 +1542,7 @@ class ScratchRealization(object):
             Active cells are given value 1, while
             inactive cells have value 1.
         """
-        if not self._actnum:
+        if not self._actnum and self.get_init() is not None:
             self._actnum = self.get_init()["PORV"][0].create_actnum()
         return self._actnum
 
@@ -1542,7 +1551,8 @@ class ScratchRealization(object):
         """
         :returns: List of DateTime.DateTime for which values are reported.
         """
-        return self.get_unrst().report_dates
+        if self.get_unrst() is not None:
+            return self.get_unrst().report_dates
 
     def get_global_init_keyword(self, prop):
         """
@@ -1550,7 +1560,8 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        return self.get_init()[prop][0].scatter_copy(self.actnum)
+        if self.get_init() is not None:
+            return self.get_init()[prop][0].scatter_copy(self.actnum)
 
     def get_global_unrst_keyword(self, prop, report):
         """
@@ -1558,4 +1569,5 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
-        return self.get_unrst()[prop][report].scatter_copy(self.actnum)
+        if self.get_unrst() is not None:
+            return self.get_unrst()[prop][report].scatter_copy(self.actnum)
