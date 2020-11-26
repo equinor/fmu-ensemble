@@ -4,6 +4,7 @@
 import os
 import datetime
 import shutil
+import logging
 import pandas as pd
 import yaml
 from dateutil.relativedelta import relativedelta
@@ -23,11 +24,7 @@ try:
 except ImportError:
     SKIP_FMU_TOOLS = True
 
-fmux = ensemble.etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_single_realization(tmpdir):

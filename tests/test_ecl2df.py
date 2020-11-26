@@ -1,10 +1,10 @@
 """Testing incorporation of ecl2df in fmu-ensemble."""
 
 import os
+import logging
 
 import pytest
 
-from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 HAVE_ECL2DF = True
@@ -13,8 +13,7 @@ try:
 except ImportError:
     HAVE_ECL2DF = False
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
+logger = logging.getLogger(__name__)
 
 
 def test_ecl2df_real():

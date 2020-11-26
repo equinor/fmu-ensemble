@@ -2,18 +2,17 @@
 import os
 import fnmatch
 import shutil
+import logging
+
 import pandas as pd
 import numpy as np
-
-from .etc import Interaction
 
 from .realizationcombination import RealizationCombination
 from .util import shortcut2path
 from .util.rates import compute_volumetric_rates
 from .util.dates import date_range
 
-fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class VirtualRealization(object):

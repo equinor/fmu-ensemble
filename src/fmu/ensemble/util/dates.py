@@ -4,11 +4,9 @@
 import datetime
 import dateutil
 import pandas as pd
+import logging
 
-from ..etc import Interaction
-
-xfmu = Interaction()
-logger = xfmu.functionlogger(__name__)
+logger = logging.getLogger(__name__)
 
 """Mapping from fmu-ensemble custom offset strings to Pandas DateOffset strings.
 See

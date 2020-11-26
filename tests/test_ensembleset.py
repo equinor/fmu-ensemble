@@ -4,11 +4,11 @@ import os
 import re
 import glob
 import shutil
+import logging
 
 import pandas as pd
 import pytest
 
-from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
 
 try:
@@ -17,11 +17,7 @@ try:
 except ImportError:
     SKIP_FMU_TOOLS = True
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def symlink_iter(origensdir, newitername):

@@ -3,6 +3,7 @@
 
 import os
 import glob
+import logging
 import datetime
 import yaml
 import pandas as pd
@@ -10,14 +11,9 @@ import numpy as np
 import dateutil
 import pytest
 
-from fmu.ensemble import etc
 from fmu.ensemble import Observations, ScratchRealization, ScratchEnsemble, EnsembleSet
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="WARNING")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_observation_import(tmpdir):

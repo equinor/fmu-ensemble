@@ -6,12 +6,12 @@ import os
 import math
 import datetime
 from collections import OrderedDict
+import logging
 
 import yaml
 import pandas as pd
 import dateutil
 
-from .etc import Interaction
 from .realization import ScratchRealization
 from .ensemble import ScratchEnsemble
 from .ensembleset import EnsembleSet
@@ -20,8 +20,8 @@ from .realizationcombination import RealizationCombination
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 
-xfmu = Interaction()
-logger = xfmu.functionlogger(__name__)
+logger = logging.getLogger(__name__)
+print(__name__)
 
 
 class Observations(object):

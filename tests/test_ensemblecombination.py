@@ -1,19 +1,14 @@
 """Testing linear combinations of ensemble."""
 
 import os
-
+import logging
 import pandas as pd
 
 import pytest
 
-from fmu.ensemble import etc
 from fmu import ensemble
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_ensemblecombination_basic():

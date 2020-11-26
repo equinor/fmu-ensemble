@@ -1,17 +1,13 @@
 """Testing batch functions in fmu-ensemble."""
 
 import os
+import logging
 
 import yaml
 
-from fmu.ensemble import etc
 from fmu.ensemble import ScratchEnsemble, EnsembleSet
 
-fmux = etc.Interaction()
-logger = fmux.basiclogger(__name__, level="INFO")
-
-if not fmux.testsetup():
-    raise SystemExit()
+logger = logging.getLogger(__name__)
 
 
 def test_batch():

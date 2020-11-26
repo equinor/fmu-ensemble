@@ -6,12 +6,12 @@ import re
 import shutil
 import fnmatch
 import datetime
+import logging
 
 import yaml
 import numpy as np
 import pandas as pd
 
-from .etc import Interaction
 from .virtualrealization import VirtualRealization
 from .ensemblecombination import EnsembleCombination
 
@@ -22,8 +22,7 @@ try:
 except ImportError:
     HAVE_PYARROW = False
 
-fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class VirtualEnsemble(object):
