@@ -21,7 +21,6 @@ from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
 
 logger = logging.getLogger(__name__)
-print(__name__)
 
 
 class Observations(object):
