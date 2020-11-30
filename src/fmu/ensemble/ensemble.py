@@ -3,9 +3,9 @@
 import re
 import os
 import glob
-import dateutil
 import logging
 
+import dateutil
 import pandas as pd
 import numpy as np
 import yaml
