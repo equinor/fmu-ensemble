@@ -23,7 +23,7 @@ with open("HISTORY.rst", "rb") as history_file:
 REQUIREMENTS = [
     "ecl>=2.9",
     "numpy",
-    "pandas>0.23.0",
+    "pandas",
     "pyyaml>=5.1",
 ]
 
