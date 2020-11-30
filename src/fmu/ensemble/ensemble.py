@@ -3,9 +3,9 @@
 import re
 import os
 import glob
-import dateutil
 import logging
 
+import dateutil
 import pandas as pd
 import numpy as np
 import yaml
@@ -1416,7 +1416,7 @@ class ScratchEnsemble(object):
         dframe = grid_index.reset_index().join(corners).join(centre)
         dframe["realizations_active"] = self.global_active.numpy_copy()
         for prop in props:
-            print("Reading the grid property: " + prop)
+            logger.info("Reading the grid property: %s", prop)
             if prop in self.init_keys:
                 dframe[prop] = self.get_init(prop, agg=agg)
             if prop in self.unrst_keys:
