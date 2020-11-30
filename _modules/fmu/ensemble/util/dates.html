@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fmu.ensemble.util.dates &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> fmu-ensemble
+          
+
+          
+            
+            <img src="../../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.3.dev1+gd4bca3b
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../util.html">fmu.ensemble.util</a> &raquo;</li>
+        
+      <li>fmu.ensemble.util.dates</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for fmu.ensemble.util.dates</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Common utility functions used in fmu.ensemble&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">dateutil</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="sd">&quot;&quot;&quot;Mapping from fmu-ensemble custom offset strings to Pandas DateOffset strings.</span>
+<span class="sd">See</span>
+<span class="sd">https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">PD_FREQ_MNEMONICS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;monthly&quot;</span><span class="p">:</span> <span class="s2">&quot;MS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;yearly&quot;</span><span class="p">:</span> <span class="s2">&quot;YS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;weekly&quot;</span><span class="p">:</span> <span class="s2">&quot;W-MON&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="date_range"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.date_range">[docs]</a><span class="k">def</span> <span class="nf">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper for pandas.date_range to allow for extra fmu-ensemble specific mnemonics</span>
+<span class="sd">    &#39;yearly&#39;, &#39;daily&#39;, &#39;weekly&#39;, mapped over to pandas DateOffsets</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        start_date (datetime.date)</span>
+<span class="sd">        end_date (datetime.date)</span>
+<span class="sd">        freq (str): monthly, daily, weekly, yearly, or a Pandas date offset</span>
+<span class="sd">            frequency.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list of datetimes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">PD_FREQ_MNEMONICS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unionize_smry_dates"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.unionize_smry_dates">[docs]</a><span class="k">def</span> <span class="nf">unionize_smry_dates</span><span class="p">(</span><span class="n">eclsumsdates</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unionize lists of dates into one datelist encompassing the date</span>
+<span class="sd">    range from all datelists, with cropping, resampling to wanted</span>
+<span class="sd">    frequency, and potential normalized dates to the frequency (rollback/rollforward)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        eclsumsdates (list of lists of datetimes)</span>
+<span class="sd">        freq (str): Requested frequency</span>
+<span class="sd">        normalize (bool): Normalize daterange to frequency or not.</span>
+<span class="sd">        start_date (datetime.date or str): Overridden if freq==&#39;first&#39;</span>
+<span class="sd">        end_date (datetime.date or str): Overridden if freq==&#39;last&#39;</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        list of datetime.date</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">eclsumsdates</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;start_date had unknown type&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">isoparse</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;end_date had unknown type&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">freq</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;report&quot;</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">):</span>
+        <span class="n">datetimes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">eclsumdatelist</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">:</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">eclsumdatelist</span><span class="p">)</span>
+        <span class="n">datetimes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">datetimes</span><span class="p">)</span>
+        <span class="n">datetimes</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">start_date</span><span class="p">:</span>
+            <span class="c1"># Convert to datetime (at 00:00:00)</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                <span class="n">start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">start_date</span><span class="p">]</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">+</span> <span class="n">datetimes</span>
+        <span class="k">if</span> <span class="n">end_date</span><span class="p">:</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">end_date</span><span class="p">]</span>
+            <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span> <span class="o">+</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">datetimes</span>
+    <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span><span class="p">:</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">start_date</span><span class="p">]</span>
+    <span class="c1"># These are datetime.datetime, not datetime.date</span>
+    <span class="n">start_smry</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
+    <span class="n">end_smry</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">eclsumsdates</span><span class="p">])</span>
+
+    <span class="p">(</span><span class="n">start_n</span><span class="p">,</span> <span class="n">end_n</span><span class="p">)</span> <span class="o">=</span> <span class="n">normalize_dates</span><span class="p">(</span><span class="n">start_smry</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">end_smry</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">freq</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_smry</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">start_date_range</span> <span class="o">=</span> <span class="n">start_date</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_smry</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="n">normalize</span><span class="p">:</span>
+        <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">end_date_range</span> <span class="o">=</span> <span class="n">end_date</span>
+
+    <span class="n">datetimes</span> <span class="o">=</span> <span class="n">date_range</span><span class="p">(</span><span class="n">start_date_range</span><span class="p">,</span> <span class="n">end_date_range</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+
+    <span class="c1"># Convert from Pandas&#39; datetime64 to datetime.date:</span>
+    <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span>
+
+    <span class="c1"># pd.date_range will not include random dates that do not</span>
+    <span class="c1"># fit on frequency boundary. Force include these if</span>
+    <span class="c1"># supplied as user arguments.</span>
+    <span class="k">if</span> <span class="n">start_date</span> <span class="ow">and</span> <span class="n">start_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">:</span>
+        <span class="n">datetimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">start_date</span><span class="p">]</span> <span class="o">+</span> <span class="n">datetimes</span>
+    <span class="k">if</span> <span class="n">end_date</span> <span class="ow">and</span> <span class="n">end_date</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">:</span>
+        <span class="n">datetimes</span> <span class="o">=</span> <span class="n">datetimes</span> <span class="o">+</span> <span class="p">[</span><span class="n">end_date</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">datetimes</span></div>
+
+
+<div class="viewcode-block" id="normalize_dates"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.normalize_dates">[docs]</a><span class="k">def</span> <span class="nf">normalize_dates</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize start and end date according to frequency</span>
+<span class="sd">    by extending the time range.</span>
+
+<span class="sd">    So for [1997-11-5, 2020-03-02] and monthly freqency</span>
+<span class="sd">    this will transform your dates to</span>
+<span class="sd">    [1997-11-1, 2020-04-01]</span>
+
+<span class="sd">    For yearly frequency will be [1997-01-01, 2021-01-01].</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        start_date: datetime.date</span>
+<span class="sd">        end_date: datetime.date</span>
+<span class="sd">        freq: string with either &#39;monthly&#39;, &#39;yearly&#39;, &#39;weekly&#39;</span>
+<span class="sd">            or any other frequency offset accepted by Pandas</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">        Tuple of normalized (start_date, end_date)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">PD_FREQ_MNEMONICS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">tseries</span><span class="o">.</span><span class="n">frequencies</span><span class="o">.</span><span class="n">to_offset</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">rollback</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">offset</span><span class="o">.</span><span class="n">rollforward</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">())</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+    .wy-side-nav-search > div.version {
+      color: white;
+￼   }
+  </style>
+
+
+</body>
+</html>

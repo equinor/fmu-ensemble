@@ -126,26 +126,18 @@ the iteration names and realization indices.
 Obtaining warning and error messages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-fmu-ensemble will by default be mute to warnings and error messages,
-unless you tell it to be verbose in your client code. The available debug
-levels are `DEBUG`, `INFO`, `WARNING`, `ERROR` and `CRITICAL` where `WARNING`
-is the default.
-
-Script authors can set a different default logging level by inserting
-the lines
+Application/script authors can configure logging output to console by e.g.
 
 .. code-block:: python
 
-    from fmu.ensemble import etc
-    fmux = etc.Interaction()
-    logger = fmux.basiclogger(__name__, level='INFO')
+    import logging
 
-while users can always override this by setting an environment variable:
+    logging.basicConfig(level=logging.INFO)
 
-.. code-block:: console
+See documentation on `Python logging`_ for more details.
 
-    export FMU_LOGGING_LEVEL=INFO  # If bash shell
-    setenv FMU_LOGGING_LEVEL INFO  # If c-shell (default shell in equinor)
+.. _Python logging: https://docs.python.org/3/library/logging.html
+
 
 Reading Eclipse data
 ^^^^^^^^^^^^^^^^^^^^

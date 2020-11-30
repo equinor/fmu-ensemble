@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 1.2.6.dev6+g7dd07eb documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                1.2.6.dev6+g7dd07eb
+                1.4.3.dev1+gd4bca3b
               </div>
             
           
@@ -163,22 +163,17 @@
   <h1>Source code for fmu.ensemble.ensembleset</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Module for book-keeping and aggregation of ensembles&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
 <span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span><span class="p">,</span> <span class="n">VirtualEnsemble</span>
 
-<span class="n">xfmu</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">xfmu</span><span class="o">.</span><span class="n">functionlogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="EnsembleSet"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet">[docs]</a><span class="k">class</span> <span class="nc">EnsembleSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -238,11 +233,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary indexed by each ensemble&#39;s name.</span>
 
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">ensembles</span> <span class="ow">and</span> <span class="n">frompath</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="p">(</span><span class="n">ensembles</span> <span class="ow">and</span> <span class="n">runpathfile</span><span class="p">)</span>
-            <span class="ow">or</span> <span class="p">(</span><span class="n">runpathfile</span> <span class="ow">and</span> <span class="n">ensembles</span><span class="p">)</span>
-        <span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ensembles</span> <span class="ow">and</span> <span class="n">frompath</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ensembles</span> <span class="ow">and</span> <span class="n">runpathfile</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="p">(</span>
                     <span class="s2">&quot;EnsembleSet only supports one initialization mode,&quot;</span>
@@ -503,8 +494,18 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Getter for ensemble.parameters(convert_numeric=True)&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;Build a dataframe of the information in each</span>
+<span class="sd">        realizations parameters.txt.</span>
+
+<span class="sd">        If no realizations have the file, an empty dataframe is returned.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pd.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
 
 <div class="viewcode-block" id="EnsembleSet.load_scalar"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.load_scalar">[docs]</a>    <span class="k">def</span> <span class="nf">load_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Parse a single value from a file</span>
@@ -604,6 +605,22 @@
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                 <span class="k">pass</span>  <span class="c1"># Allow localpath to be missing in some ensembles.</span></div>
+
+<div class="viewcode-block" id="EnsembleSet.remove_data"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.remove_data">[docs]</a>    <span class="k">def</span> <span class="nf">remove_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpaths</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove certain datatypes from each ensembles/realizations</span>
+<span class="sd">        datastores. This modifies the underlying realization</span>
+<span class="sd">        objects, and is equivalent to</span>
+
+<span class="sd">            &gt;&gt;&gt; del realization[localpath]</span>
+
+<span class="sd">        on each realization in each ensemble.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            localpaths (string): Full localpath to</span>
+<span class="sd">                the data, or list of strings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ensemble</span><span class="o">.</span><span class="n">remove_data</span><span class="p">(</span><span class="n">localpaths</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="EnsembleSet.process_batch"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.process_batch">[docs]</a>    <span class="k">def</span> <span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Process a list of functions to run/apply</span>

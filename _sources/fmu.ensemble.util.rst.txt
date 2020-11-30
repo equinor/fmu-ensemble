@@ -1,0 +1,29 @@
+fmu.ensemble.util package
+=========================
+
+Submodules
+----------
+
+fmu.ensemble.util.dates module
+------------------------------
+
+.. automodule:: fmu.ensemble.util.dates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+fmu.ensemble.util.rates module
+------------------------------
+
+.. automodule:: fmu.ensemble.util.rates
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: fmu.ensemble.util
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Advanced usage &mdash; fmu-ensemble 1.2.6.dev6+g7dd07eb documentation</title>
+  <title>Advanced usage &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                1.2.6.dev6+g7dd07eb
+                1.4.3.dev1+gd4bca3b
               </div>
             
           
@@ -476,8 +476,9 @@ aggregation to the ensemble level can be sone with the <a class="reference inter
 VirtualRealization object from an Ensemble object. If we want only the
 aggregated table for our particular custom function, we can aggregate the
 ensemble only for that particular datatype:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mean_realization</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
-<span class="n">mean_realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">mean_realization</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">mean_realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+<span class="n">Out</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
         <span class="n">ZONE</span>        <span class="n">PERMX</span>        <span class="n">VOLUME</span>            <span class="n">Z</span>         <span class="n">PORV</span>
 <span class="mi">0</span>  <span class="n">LowerReek</span>  <span class="mf">1105.552718</span>  <span class="mf">6.070259e+08</span>  <span class="mf">1599.113406</span>  <span class="mf">109885776.0</span>
 <span class="mi">1</span>    <span class="n">MidReek</span>   <span class="mf">966.315122</span>  <span class="mf">9.608399e+08</span>  <span class="mf">1586.559663</span>  <span class="mf">161875872.0</span>

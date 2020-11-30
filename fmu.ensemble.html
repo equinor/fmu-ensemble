@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble package &mdash; fmu-ensemble 1.2.6.dev6+g7dd07eb documentation</title>
+  <title>fmu.ensemble package &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
   
 
   
@@ -36,7 +36,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="next" title="fmu.ensemble.util package" href="fmu.ensemble.util.html" />
     <link rel="prev" title="fmu package" href="fmu.html" /> 
 </head>
 
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                1.2.6.dev6+g7dd07eb
+                1.4.3.dev1+gd4bca3b
               </div>
             
           
@@ -180,6 +180,20 @@
             
   <div class="section" id="fmu-ensemble-package">
 <h1>fmu.ensemble package<a class="headerlink" href="#fmu-ensemble-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fmu.ensemble.util.html">fmu.ensemble.util package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fmu.ensemble.util.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fmu.ensemble.util.html#module-fmu.ensemble.util.dates">fmu.ensemble.util.dates module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fmu.ensemble.util.html#module-fmu.ensemble.util.rates">fmu.ensemble.util.rates module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fmu.ensemble.util.html#module-fmu.ensemble.util">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
@@ -320,7 +334,7 @@ objects, and is equivalent to</p>
 <p>on each realization in the ensemble.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>localpath</strong> (<em>string</em>) – Full localpath to
+<dd class="field-odd"><p><strong>localpaths</strong> (<em>string</em>) – Full localpaths to
 the data, or list of strings.</p>
 </dd>
 </dl>
@@ -378,7 +392,14 @@ nothing but a Python dictionary with unspecified content</p>
 <dl class="py method">
 <dt id="fmu.ensemble.ensemble.ScratchEnsemble.parameters">
 <em class="property">property </em><code class="sig-name descname">parameters</code><a class="headerlink" href="#fmu.ensemble.ensemble.ScratchEnsemble.parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Getter for get_parameters(convert_numeric=True)</p>
+<dd><p>Build a dataframe of the information in each
+realizations parameters.txt.</p>
+<p>If no realizations have the file, an empty dataframe is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1130,27 +1151,6 @@ and corresponding values for given property as values.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt id="fmu.ensemble.ensemble.shortcut2path">
-<code class="sig-prename descclassname">fmu.ensemble.ensemble.</code><code class="sig-name descname">shortcut2path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span></em>, <em class="sig-param"><span class="n">shortpath</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensemble.html#shortcut2path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensemble.shortcut2path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert short pathnames to fully qualified pathnames
-within the datastore.</p>
-<p>If the fully qualified localpath is</p>
-<blockquote>
-<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</div></blockquote>
-<p>then you can also access this with these alternatives:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>simulator_volume_fipnum</p></li>
-<li><p>simulator_volume_fipnum.csv</p></li>
-<li><p>share/results/volumes/simulator_volume_fipnum</p></li>
-</ul>
-</div></blockquote>
-<p>but only as long as there is no ambiguity. In case
-of ambiguity, the shortpath will be returned.</p>
-</dd></dl>
-
 </div>
 <div class="section" id="module-fmu.ensemble.ensemblecombination">
 <span id="fmu-ensemble-ensemblecombination-module"></span><h2>fmu.ensemble.ensemblecombination module<a class="headerlink" href="#module-fmu.ensemble.ensemblecombination" title="Permalink to this headline">¶</a></h2>
@@ -1483,7 +1483,14 @@ the runpath file.</p>
 <dl class="py method">
 <dt id="fmu.ensemble.ensembleset.EnsembleSet.parameters">
 <em class="property">property </em><code class="sig-name descname">parameters</code><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Getter for ensemble.parameters(convert_numeric=True)</p>
+<dd><p>Build a dataframe of the information in each
+realizations parameters.txt.</p>
+<p>If no realizations have the file, an empty dataframe is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1557,6 +1564,24 @@ Thus it might work on dates, but be careful with numbers.</p></li>
 dataframes</p></li>
 <li><p><strong>keys</strong> – list of strings of keys to delete from a dictionary</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmu.ensemble.ensembleset.EnsembleSet.remove_data">
+<code class="sig-name descname">remove_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">localpaths</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/ensembleset.html#EnsembleSet.remove_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.ensembleset.EnsembleSet.remove_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove certain datatypes from each ensembles/realizations
+datastores. This modifies the underlying realization
+objects, and is equivalent to</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">realization</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>on each realization in each ensemble.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>localpaths</strong> (<em>string</em>) – Full localpath to
+the data, or list of strings.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1784,160 +1809,6 @@ returned. Empty string will not match anything.</p>
 summary file or no matched well names.</p>
 </dd>
 </dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-fmu.ensemble.etc">
-<span id="fmu-ensemble-etc-module"></span><h2>fmu.ensemble.etc module<a class="headerlink" href="#module-fmu.ensemble.etc" title="Permalink to this headline">¶</a></h2>
-<p>Module for basic interaction with user, including logging for debugging.</p>
-<p>This module is duplicated from another project called “fmu.config”</p>
-<p>Logging is enabled by setting a environment variable:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">FMU_LOGGING_LEVEL</span><span class="o">=</span><span class="n">INFO</span>   <span class="c1"># if bash; will set logging to INFO level</span>
-<span class="n">setenv</span> <span class="n">FMU_LOGGING_LEVEL</span> <span class="n">INFO</span>   <span class="c1"># if tcsh; will set logging to INFO level</span>
-</pre></div>
-</div>
-<p>Other levels are DEBUG, ERROR and CRITICAL. WARNING is default.</p>
-<p>Usage of logging in scripts:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">etc</span>
-<span class="n">fmux</span> <span class="o">=</span> <span class="n">etc</span><span class="o">.</span><span class="n">Interaction</span><span class="p">()</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;This is logging of </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">something</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Other than logging, there is also a template for user interaction, which shall
-be used in client scripts:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fmux</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;This is a message&#39;</span><span class="p">)</span>
-<span class="n">fmux</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;This is a warning&#39;</span><span class="p">)</span>
-<span class="n">fmux</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;This is an error, will continue&#39;</span><span class="p">)</span>
-<span class="n">fmux</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s1">&#39;This is a big error, will exit&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Ind finally, there is a template for setting up a header for applications, see
-the <code class="docutils literal notranslate"><span class="pre">`print_fmu_header`</span></code> method</p>
-<dl class="py class">
-<dt id="fmu.ensemble.etc.Interaction">
-<em class="property">class </em><code class="sig-prename descclassname">fmu.ensemble.etc.</code><code class="sig-name descname">Interaction</code><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>System for handling interaction; dialogues and messages in FMU.</p>
-<p>This module cooperates with the standard Python logging module.</p>
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.logginglevel">
-<em class="property">property </em><code class="sig-name descname">logginglevel</code><a class="headerlink" href="#fmu.ensemble.etc.Interaction.logginglevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set or return a logging level property, e.g. logging.CRITICAL</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.numericallogginglevel">
-<em class="property">property </em><code class="sig-name descname">numericallogginglevel</code><a class="headerlink" href="#fmu.ensemble.etc.Interaction.numericallogginglevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a numerical logging level (read only)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.loggingformatlevel">
-<em class="property">property </em><code class="sig-name descname">loggingformatlevel</code><a class="headerlink" href="#fmu.ensemble.etc.Interaction.loggingformatlevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set logging format (for future use)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.loggingformat">
-<em class="property">property </em><code class="sig-name descname">loggingformat</code><a class="headerlink" href="#fmu.ensemble.etc.Interaction.loggingformat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the format string to be used in logging</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.tmpdir">
-<em class="property">property </em><code class="sig-name descname">tmpdir</code><a class="headerlink" href="#fmu.ensemble.etc.Interaction.tmpdir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get and set tmpdir for testing</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.print_fmu_header">
-<em class="property">static </em><code class="sig-name descname">print_fmu_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">appname</span></em>, <em class="sig-param"><span class="n">appversion</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.print_fmu_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.print_fmu_header" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints a banner for a FMU app to STDOUT.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>appname</strong> (<em>str</em>) – Name of application.</p></li>
-<li><p><strong>appversion</strong> (<em>str</em>) – Version of application on form ‘3.2.1’</p></li>
-<li><p><strong>info</strong> (<em>str</em><em>, </em><em>optional</em>) – More info, e.g. if beta release</p></li>
-</ul>
-</dd>
-</dl>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>fmux.print_fmu_header(&#39;fmu.ensemble, &#39;0.2.1&#39;, info=&#39;Beta release!&#39;)
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.basiclogger">
-<code class="sig-name descname">basiclogger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">level</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.basiclogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.basiclogger" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initiate the logger by some default settings.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.functionlogger">
-<em class="property">static </em><code class="sig-name descname">functionlogger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.functionlogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.functionlogger" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the logger for functions (not top level).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.testsetup">
-<code class="sig-name descname">testsetup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">'TMP'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.testsetup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.testsetup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Basic setup for FMU testing (developer only; relevant for tests)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.timer">
-<em class="property">static </em><code class="sig-name descname">timer</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.timer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.timer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Without args; return the time, with a time as arg return the
-difference.</p>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time1</span> <span class="o">=</span> <span class="n">timer</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">):</span>
-    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
-<span class="n">time2</span> <span class="o">=</span> <span class="n">timer</span><span class="p">(</span><span class="n">time1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Execution took </span><span class="si">{}</span><span class="s1"> seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time2</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.echo">
-<code class="sig-name descname">echo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.echo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.echo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show info at runtime (for user scripts)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.warn">
-<code class="sig-name descname">warn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.warn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.warn" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show warnings at Runtime (pure user info/warns).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.warning">
-<code class="sig-name descname">warning</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmu.ensemble.etc.Interaction.warning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show warnings at Runtime (pure user info/warns).</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.error">
-<code class="sig-name descname">error</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue an error, will not exit system by default</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.critical">
-<code class="sig-name descname">critical</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">string</span></em>, <em class="sig-param"><span class="n">sysexit</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.critical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.critical" title="Permalink to this definition">¶</a></dt>
-<dd><p>Issue a critical error, default is SystemExit.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.etc.Interaction.get_callerinfo">
-<code class="sig-name descname">get_callerinfo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">caller</span></em>, <em class="sig-param"><span class="n">frame</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/etc.html#Interaction.get_callerinfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.etc.Interaction.get_callerinfo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get caller info for logging (developer stuff)</p>
 </dd></dl>
 
 </dd></dl>
@@ -2382,27 +2253,6 @@ dataframe. If list is supplied, order can matter.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="fmu.ensemble.realization.ScratchRealization.shortcut2path">
-<code class="sig-name descname">shortcut2path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shortpath</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.shortcut2path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.shortcut2path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert short pathnames to fully qualified pathnames
-within the datastore.</p>
-<p>If the fully qualified localpath is</p>
-<blockquote>
-<div><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</div></blockquote>
-<p>then you can also access this with these alternatives:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>simulator_volume_fipnum</p></li>
-<li><p>simulator_volume_fipnum.csv</p></li>
-<li><p>share/results/volumes/simulator_volume_fipnum</p></li>
-</ul>
-</div></blockquote>
-<p>but only as long as there is no ambiguity. In case
-of ambiguity, the shortpath will be returned as is.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="fmu.ensemble.realization.ScratchRealization.find_files">
 <code class="sig-name descname">find_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">paths</span></em>, <em class="sig-param"><span class="n">metadata</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">metayaml</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.find_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.find_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Discover realization files. The files dataframe
@@ -2617,43 +2467,7 @@ value is another dictionary with potentially the metadata types:
 <dt id="fmu.ensemble.realization.ScratchRealization.get_volumetric_rates">
 <code class="sig-name descname">get_volumetric_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_unit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.get_volumetric_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.get_volumetric_rates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute volumetric rates from cumulative summary vectors</p>
-<p>Column names that are not referring to cumulative summary
-vectors are silently ignored.</p>
-<p>A Dataframe is returned with volumetric rates, that is rate
-values that can be summed up to the cumulative version. The
-‘T’ in the column name is switched with ‘R’. If you ask for
-FOPT, you will get FOPR in the returned dataframe.</p>
-<p>Rates in the returned dataframe are valid <strong>forwards</strong> in time,
-opposed to rates coming directly from the Eclipse simulator which
-are valid backwards in time.</p>
-<p>If time_unit is set, the rates will be scaled to represent
-either daily, monthly or yearly rates. These will sum up to the
-cumulative as long as you multiply with the correct number
-of days, months or year between each consecutive date index.
-Month lengths and leap years are correctly handled.</p>
-<p>The returned dataframe is indexed by DATE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>column_keys</strong> – str or list of strings, cumulative summary vectors</p></li>
-<li><p><strong>time_index</strong> – str or list of datetimes</p></li>
-<li><p><strong>time_unit</strong> – str or None. If None, the rates returned will
-be the difference in cumulative between each included
-time step (where the time interval can vary arbitrarily)
-If set to ‘days’, ‘months’ or ‘years’, the rates will
-be scaled to represent a daily, monthly or yearly rate that
-is compatible with the date index and the cumulative data.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.realization.ScratchRealization.static_get_volumetric_rates">
-<em class="property">static </em><code class="sig-name descname">static_get_volumetric_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">realization</span></em>, <em class="sig-param"><span class="n">column_keys</span></em>, <em class="sig-param"><span class="n">time_index</span></em>, <em class="sig-param"><span class="n">time_unit</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#ScratchRealization.static_get_volumetric_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.ScratchRealization.static_get_volumetric_rates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Static method for volumetric rates</p>
-<p>This method is to be used by both ScratchRealization
-and VirtualRealization, and is documented there.</p>
+<p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">fmu.ensemble.util.compute_volumetric_rates()</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -2683,7 +2497,7 @@ Empty dataframe if no summary file data available</p>
 the returned list of datetime. ‘report’ will
 yield the sorted union of all valid timesteps for
 all realizations. Other valid options are
-‘daily’, ‘monthly’ and ‘yearly’.
+‘daily’, ‘weekly’, ‘monthly’ and ‘yearly’.
 ‘first’ will give out the first date (minimum) and
 ‘last’ will give out the last date (maximum),
 both as lists with one element.</p></li>
@@ -2882,52 +2696,6 @@ non-active cells are given value 0.</p>
 
 </dd></dl>
 
-<dl class="py function">
-<dt id="fmu.ensemble.realization.normalize_dates">
-<code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">normalize_dates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span></em>, <em class="sig-param"><span class="n">end_date</span></em>, <em class="sig-param"><span class="n">freq</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#normalize_dates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.normalize_dates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Normalize start and end date according to frequency
-by extending the time range.</p>
-<p>So for [1997-11-5, 2020-03-02] and monthly freqency
-this will transform your dates to
-[1997-11-1, 2020-04-01]</p>
-<p>For yearly frequency will be [1997-01-01, 2021-01-01].</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>start_date</strong> – datetime.date</p></li>
-<li><p><strong>end_date</strong> – datetime.date</p></li>
-<li><p><strong>freq</strong> – string with either ‘monthly’ or ‘yearly’.
-Anything else will return the input as is</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple of normalized (start_date, end_date)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="fmu.ensemble.realization.flatten">
-<code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dictionary</span></em>, <em class="sig-param"><span class="n">parent_key</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">sep</span><span class="o">=</span><span class="default_value">'_'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.flatten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Flatten dictionary keys</p>
-<p>Code from stackoverflow.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="fmu.ensemble.realization.parse_number">
-<code class="sig-prename descclassname">fmu.ensemble.realization.</code><code class="sig-name descname">parse_number</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/realization.html#parse_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.realization.parse_number" title="Permalink to this definition">¶</a></dt>
-<dd><p>Try to parse the string first as an integer, then as float,
-if both fails, return the original string.</p>
-<p>Caveats: Know your Python numbers:
-<a class="reference external" href="https://stackoverflow.com/questions/379906/how-do-i-parse-a-string-to-a-float-or-int-in-python">https://stackoverflow.com/questions/379906/how-do-i-parse-a-string-to-a-float-or-int-in-python</a></p>
-<p>Beware, this is a minefield.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>int, float or string</p>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 <div class="section" id="module-fmu.ensemble.realizationcombination">
 <span id="fmu-ensemble-realizationcombination-module"></span><h2>fmu.ensemble.realizationcombination module<a class="headerlink" href="#module-fmu.ensemble.realizationcombination" title="Permalink to this headline">¶</a></h2>
@@ -3070,6 +2838,9 @@ value is another dictionary with potentially the metadata types:
 
 </dd></dl>
 
+</div>
+<div class="section" id="module-fmu.ensemble.version">
+<span id="fmu-ensemble-version-module"></span><h2>fmu.ensemble.version module<a class="headerlink" href="#module-fmu.ensemble.version" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-fmu.ensemble.virtualensemble">
 <span id="fmu-ensemble-virtualensemble-module"></span><h2>fmu.ensemble.virtualensemble module<a class="headerlink" href="#module-fmu.ensemble.virtualensemble" title="Permalink to this headline">¶</a></h2>
@@ -3598,54 +3369,7 @@ will be merged into the dataframe.</p></li>
 <dt id="fmu.ensemble.virtualrealization.VirtualRealization.get_volumetric_rates">
 <code class="sig-name descname">get_volumetric_rates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column_keys</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_unit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualrealization.html#VirtualRealization.get_volumetric_rates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualrealization.VirtualRealization.get_volumetric_rates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute volumetric rates from cumulative summary vectors</p>
-<p>Column names that are not referring to cumulative summary
-vectors are silently ignored.</p>
-<p>A Dataframe is returned with volumetric rates, that is rate
-values that can be summed up to the cumulative version. The
-‘T’ in the column name is switched with ‘R’. If you ask for
-FOPT, you will get FOPR in the returned dataframe.</p>
-<p>Rates in the returned dataframe are valid <strong>forwards</strong> in time,
-opposed to rates coming directly from the Eclipse simulator which
-are valid backwards in time.</p>
-<p>If time_unit is set, the rates will be scaled to represent
-either daily, monthly or yearly rates. These will sum up to the
-cumulative as long as you multiply with the correct number
-of days, months or year between each consecutive date index.
-Month lengths and leap years are correctly handled.</p>
-<p>The returned dataframe is indexed by DATE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>column_keys</strong> – str or list of strings, cumulative summary vectors</p></li>
-<li><p><strong>time_index</strong> – str or list of datetimes</p></li>
-<li><p><strong>time_unit</strong> – str or None. If None, the rates returned will
-be the difference in cumulative between each included
-time step (where the time interval can vary arbitrarily)
-If set to ‘days’, ‘months’ or ‘years’, the rates will
-be scaled to represent a daily, monthly or yearly rate that
-is compatible with the date index and the cumulative data.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="fmu.ensemble.virtualrealization.VirtualRealization.shortcut2path">
-<code class="sig-name descname">shortcut2path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shortpath</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fmu/ensemble/virtualrealization.html#VirtualRealization.shortcut2path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#fmu.ensemble.virtualrealization.VirtualRealization.shortcut2path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert short pathnames to fully qualified pathnames
-within the datastore.</p>
-<dl class="simple">
-<dt>If the fully qualified localpath is</dt><dd><p>‘share/results/volumes/simulator_volume_fipnum.csv’</p>
-</dd>
-<dt>then you can also access this with these alternatives:</dt><dd><ul class="simple">
-<li><p>simulator_volume_fipnum</p></li>
-<li><p>simulator_volume_fipnum.csv</p></li>
-<li><p>share/results/volumes/simulator_volume_fipnum</p></li>
-</ul>
-</dd>
-</dl>
-<p>but only as long as there is no ambiguity. In case
-of ambiguity, the shortpath will be returned.</p>
+<p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">fmu.ensemble.util.compute_volumetric_rates()</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -3686,7 +3410,7 @@ smry dataframes.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>freq</strong> – string denoting requested frequency for
 the list of datetimes.
-‘daily’, ‘monthly’ and ‘yearly’.
+‘daily’, ‘monthly’, ‘yearly’ or ‘weekly’
 ‘first’ will give out the first date (minimum) and
 ‘last’ will give out the last date (maximum),
 both as lists with one element.</p></li>
@@ -3781,7 +3505,7 @@ names</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="fmu.ensemble.util.html" class="btn btn-neutral float-right" title="fmu.ensemble.util package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="fmu.html" class="btn btn-neutral float-left" title="fmu package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

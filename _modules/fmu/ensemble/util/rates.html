@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>fmu.ensemble.util.rates &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> fmu-ensemble
+          
+
+          
+            
+            <img src="../../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.4.3.dev1+gd4bca3b
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../readme.html">Introduction to <em>fmu.ensemble</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts in fmu-ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../advancedusage.html">Advanced usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API for fmu.ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">fmu-ensemble</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../util.html">fmu.ensemble.util</a> &raquo;</li>
+        
+      <li>fmu.ensemble.util.rates</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for fmu.ensemble.util.rates</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Common utility functions for rates used in fmu.ensemble&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">import</span> <span class="nn">dateutil</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="compute_volumetric_rates"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.rates.compute_volumetric_rates">[docs]</a><span class="k">def</span> <span class="nf">compute_volumetric_rates</span><span class="p">(</span><span class="n">realization</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute volumetric rates from cumulative summary vectors</span>
+
+<span class="sd">    Column names that are not referring to cumulative summary</span>
+<span class="sd">    vectors are silently ignored.</span>
+
+<span class="sd">    A Dataframe is returned with volumetric rates, that is rate</span>
+<span class="sd">    values that can be summed up to the cumulative version. The</span>
+<span class="sd">    &#39;T&#39; in the column name is switched with &#39;R&#39;. If you ask for</span>
+<span class="sd">    FOPT, you will get FOPR in the returned dataframe.</span>
+
+<span class="sd">    Rates in the returned dataframe are valid **forwards** in time,</span>
+<span class="sd">    opposed to rates coming directly from the Eclipse simulator which</span>
+<span class="sd">    are valid backwards in time.</span>
+
+<span class="sd">    If time_unit is set, the rates will be scaled to represent</span>
+<span class="sd">    either daily, monthly or yearly rates. These will sum up to the</span>
+<span class="sd">    cumulative as long as you multiply with the correct number</span>
+<span class="sd">    of days, months or year between each consecutive date index.</span>
+<span class="sd">    Month lengths and leap years are correctly handled.</span>
+
+<span class="sd">    The returned dataframe is indexed by DATE.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        realization (ScratchRealization or VirtualRealization): The realization</span>
+<span class="sd">            object containing rates to compute from.</span>
+<span class="sd">        column_keys: str or list of strings, cumulative summary vectors</span>
+<span class="sd">        time_index: str or list of datetimes</span>
+<span class="sd">        time_unit: str or None. If None, the rates returned will</span>
+<span class="sd">            be the difference in cumulative between each included</span>
+<span class="sd">            time step (where the time interval can vary arbitrarily)</span>
+<span class="sd">            If set to &#39;days&#39;, &#39;months&#39; or &#39;years&#39;, the rates will</span>
+<span class="sd">            be scaled to represent a daily, monthly or yearly rate that</span>
+<span class="sd">            is compatible with the date index and the cumulative data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dataframe indexed by DATE with cumulative columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">time_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;days&quot;</span><span class="p">,</span> <span class="s2">&quot;months&quot;</span><span class="p">,</span> <span class="s2">&quot;years&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported time_unit &quot;</span> <span class="o">+</span> <span class="n">time_unit</span> <span class="o">+</span> <span class="s2">&quot; for volumetric rates&quot;</span>
+            <span class="p">)</span>
+
+    <span class="c1"># pylint: disable=protected-access</span>
+    <span class="n">column_keys</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">_glob_smry_keys</span><span class="p">(</span><span class="n">column_keys</span><span class="p">)</span>
+
+    <span class="c1"># Be strict and only include certain summary vectors that look</span>
+    <span class="c1"># cumulative by their name:</span>
+    <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_keys</span> <span class="k">if</span> <span class="n">cumcolumn_to_ratecolumn</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">column_keys</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No valid cumulative columns given to volumetric computation&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="n">cum_df</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">)</span>
+    <span class="c1"># get_smry() for realizations return a dataframe indexed by &#39;DATE&#39;</span>
+
+    <span class="c1"># Compute row-wise difference, shift back one row</span>
+    <span class="c1"># to get the NaN to the end, and then drop the NaN.</span>
+    <span class="c1"># The &quot;rate&quot; given for a specific date is then</span>
+    <span class="c1"># valid from that date until the next date.</span>
+    <span class="n">diff_cum</span> <span class="o">=</span> <span class="n">cum_df</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">time_unit</span><span class="p">:</span>
+        <span class="c1"># Calculate the relative timedelta between consecutive</span>
+        <span class="c1"># DateIndices. relativedeltas are correct in terms</span>
+        <span class="c1"># of number of years and number of months, but it will</span>
+        <span class="c1"># only give us integer months, and then leftover days.</span>
+        <span class="n">rel_deltas</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="p">]</span>
+        <span class="n">whole_days</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="p">]</span>
+        <span class="c1"># Need to know which years are leap years for our index:</span>
+        <span class="n">dayspryear</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="mi">365</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">calendar</span><span class="o">.</span><span class="n">isleap</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">year</span><span class="p">)</span> <span class="k">else</span> <span class="mi">366</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="p">]</span>
+        <span class="c1"># Float-contribution to years from days:</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">],</span> <span class="n">dayspryear</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">floatyearsnodays</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">years</span> <span class="o">+</span> <span class="n">r</span><span class="o">.</span><span class="n">months</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">]</span>
+        <span class="n">floatyears</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">floatyearsnodays</span><span class="p">,</span> <span class="n">days</span><span class="p">)]</span>
+
+        <span class="c1"># Calculate month-difference:</span>
+        <span class="n">floatmonthsnodays</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">years</span> <span class="o">*</span> <span class="mf">12.0</span> <span class="o">+</span> <span class="n">r</span><span class="o">.</span><span class="n">months</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">]</span>
+        <span class="c1"># How many days pr. month? We check this for the right</span>
+        <span class="c1"># end of the relevant time interval.</span>
+        <span class="n">daysprmonth</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">month</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="p">]</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">],</span> <span class="n">daysprmonth</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">floatmonths</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">floatmonthsnodays</span><span class="p">,</span> <span class="n">days</span><span class="p">)]</span>
+
+        <span class="n">diff_cum</span><span class="p">[</span><span class="s2">&quot;DAYS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">whole_days</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">diff_cum</span><span class="p">[</span><span class="s2">&quot;MONTHS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">floatmonths</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">diff_cum</span><span class="p">[</span><span class="s2">&quot;YEARS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">floatyears</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">column_keys</span><span class="p">:</span>
+            <span class="n">diff_cum</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_cum</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span> <span class="o">/</span> <span class="n">diff_cum</span><span class="p">[</span><span class="n">time_unit</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+        <span class="c1"># Drop temporary columns</span>
+        <span class="n">diff_cum</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;DAYS&quot;</span><span class="p">,</span> <span class="s2">&quot;MONTHS&quot;</span><span class="p">,</span> <span class="s2">&quot;YEARS&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Set NaN at the final row to zero</span>
+        <span class="n">diff_cum</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Translate the column vectors, &#39;FOPT&#39; -&gt; &#39;FOPR&#39; etc.</span>
+    <span class="n">rate_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">ratename</span> <span class="o">=</span> <span class="n">cumcolumn_to_ratecolumn</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ratename</span><span class="p">:</span>
+            <span class="n">rate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ratename</span><span class="p">)</span>
+    <span class="n">diff_cum</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">rate_names</span>
+    <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;DATE&quot;</span>
+    <span class="k">return</span> <span class="n">diff_cum</span></div>
+
+
+<div class="viewcode-block" id="cumcolumn_to_ratecolumn"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.rates.cumcolumn_to_ratecolumn">[docs]</a><span class="k">def</span> <span class="nf">cumcolumn_to_ratecolumn</span><span class="p">(</span><span class="n">smrycolumn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a cumulative summary column name to the</span>
+<span class="sd">    corresponding rate column name.</span>
+
+<span class="sd">    Returns None if the input summary column name</span>
+<span class="sd">    is not assumed to be cumulative.</span>
+
+<span class="sd">    Example: &quot;FOPT&quot; will be mapped to &quot;FOPR&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        smrycolumn (str): Name of summary vector/column</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: rate column or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Split by colon into components:</span>
+    <span class="n">comps</span> <span class="o">=</span> <span class="n">smrycolumn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># Do not support more than one colon.</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;CT&quot;</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="c1"># No watercuts.</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;T&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">comps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Equinor
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #ff1243;
+    }
+    /* Sidebar */
+    .wy-nav-side {
+      background: #474747;
+    }
+    .wy-side-nav-search > div.version {
+      color: white;
+￼   }
+  </style>
+
+
+</body>
+</html>

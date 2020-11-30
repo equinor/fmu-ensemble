@@ -1,6 +1,14 @@
 fmu.ensemble package
 ====================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   fmu.ensemble.util
+
 Submodules
 ----------
 
@@ -28,14 +36,6 @@ fmu.ensemble.ensembleset module
    :undoc-members:
    :show-inheritance:
 
-fmu.ensemble.etc module
------------------------
-
-.. automodule:: fmu.ensemble.etc
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 fmu.ensemble.observations module
 --------------------------------
 
@@ -56,6 +56,14 @@ fmu.ensemble.realizationcombination module
 ------------------------------------------
 
 .. automodule:: fmu.ensemble.realizationcombination
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+fmu.ensemble.version module
+---------------------------
+
+.. automodule:: fmu.ensemble.version
    :members:
    :undoc-members:
    :show-inheritance:

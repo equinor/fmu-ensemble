@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; fmu-ensemble 1.2.6.dev6+g7dd07eb documentation</title>
+  <title>Usage &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                1.2.6.dev6+g7dd07eb
+                1.4.3.dev1+gd4bca3b
               </div>
             
           
@@ -284,22 +284,13 @@ the iteration names and realization indices.</p>
 </div>
 <div class="section" id="obtaining-warning-and-error-messages">
 <h3>Obtaining warning and error messages<a class="headerlink" href="#obtaining-warning-and-error-messages" title="Permalink to this headline">¶</a></h3>
-<p>fmu-ensemble will by default be mute to warnings and error messages,
-unless you tell it to be verbose in your client code. The available debug
-levels are <cite>DEBUG</cite>, <cite>INFO</cite>, <cite>WARNING</cite>, <cite>ERROR</cite> and <cite>CRITICAL</cite> where <cite>WARNING</cite>
-is the default.</p>
-<p>Script authors can set a different default logging level by inserting
-the lines</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu.ensemble</span> <span class="kn">import</span> <span class="n">etc</span>
-<span class="n">fmux</span> <span class="o">=</span> <span class="n">etc</span><span class="o">.</span><span class="n">Interaction</span><span class="p">()</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+<p>Application/script authors can configure logging output to console by e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>while users can always override this by setting an environment variable:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">export FMU_LOGGING_LEVEL=INFO  # If bash shell</span>
-<span class="go">setenv FMU_LOGGING_LEVEL INFO  # If c-shell (default shell in equinor)</span>
-</pre></div>
-</div>
+<p>See documentation on <a class="reference external" href="https://docs.python.org/3/library/logging.html">Python logging</a> for more details.</p>
 </div>
 <div class="section" id="reading-eclipse-data">
 <h3>Reading Eclipse data<a class="headerlink" href="#reading-eclipse-data" title="Permalink to this headline">¶</a></h3>

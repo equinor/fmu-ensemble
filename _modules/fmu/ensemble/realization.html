@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>fmu.ensemble.realization &mdash; fmu-ensemble 1.2.6.dev6+g7dd07eb documentation</title>
+  <title>fmu.ensemble.realization &mdash; fmu-ensemble 1.4.3.dev1+gd4bca3b documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                1.2.6.dev6+g7dd07eb
+                1.4.3.dev1+gd4bca3b
               </div>
             
           
@@ -170,18 +170,14 @@
 <span class="sd">an archived realization.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span>
-<span class="kn">import</span> <span class="nn">calendar</span>
 <span class="kn">import</span> <span class="nn">dateutil</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -192,9 +188,11 @@
 <span class="kn">from</span> <span class="nn">ecl.grid</span> <span class="kn">import</span> <span class="n">EclGrid</span>
 <span class="kn">from</span> <span class="nn">ecl</span> <span class="kn">import</span> <span class="n">EclFileFlagEnum</span>
 
-<span class="kn">from</span> <span class="nn">.etc</span> <span class="kn">import</span> <span class="n">Interaction</span>
 <span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
 <span class="kn">from</span> <span class="nn">.realizationcombination</span> <span class="kn">import</span> <span class="n">RealizationCombination</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">parse_number</span><span class="p">,</span> <span class="n">flatten</span><span class="p">,</span> <span class="n">shortcut2path</span>
+<span class="kn">from</span> <span class="nn">.util.rates</span> <span class="kn">import</span> <span class="n">compute_volumetric_rates</span>
+<span class="kn">from</span> <span class="nn">.util.dates</span> <span class="kn">import</span> <span class="n">unionize_smry_dates</span>
 
 <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">try</span><span class="p">:</span>
@@ -204,8 +202,7 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">HAVE_ECL2DF</span> <span class="o">=</span> <span class="kc">False</span>
 
-<span class="n">fmux</span> <span class="o">=</span> <span class="n">Interaction</span><span class="p">()</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">fmux</span><span class="o">.</span><span class="n">basiclogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ScratchRealization"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization">[docs]</a><span class="k">class</span> <span class="nc">ScratchRealization</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -730,7 +727,8 @@
         <span class="n">jsonfilename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origpath</span><span class="p">,</span> <span class="s2">&quot;jobs.json&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">jsonfilename</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">jsonfilename</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">jobsinfo</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">jsonfilename</span><span class="p">))</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">jsonfilename</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+                    <span class="n">jobsinfo</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
                 <span class="n">jobsinfodf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">jobsinfo</span><span class="p">[</span><span class="s2">&quot;jobList&quot;</span><span class="p">])</span>
                 <span class="n">jobsinfodf</span><span class="p">[</span><span class="s2">&quot;JOBINDEX&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jobsinfodf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
                 <span class="c1"># Outer merge means that we will also have jobs from</span>
@@ -844,10 +842,10 @@
 <span class="sd">            KeyError if data is not found.</span>
 <span class="sd">            TypeError if data in localpath or merge is not of a mergeable type</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">fullpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
+        <span class="n">fullpath</span> <span class="o">=</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">localpath</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Could not find </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">localpath</span><span class="p">))</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">localpath</span><span class="p">)]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">localpath</span><span class="p">)]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">merge</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">merge</span> <span class="o">=</span> <span class="p">[</span><span class="n">merge</span><span class="p">]</span>  <span class="c1"># can still be None</span>
         <span class="k">if</span> <span class="n">merge</span> <span class="ow">and</span> <span class="n">merge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -890,45 +888,6 @@
                     <span class="o">+</span> <span class="s2">&quot;from </span><span class="si">{}</span><span class="s2"> of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mergekey</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span></div>
-
-<div class="viewcode-block" id="ScratchRealization.shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.shortcut2path">[docs]</a>    <span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert short pathnames to fully qualified pathnames</span>
-<span class="sd">        within the datastore.</span>
-
-<span class="sd">        If the fully qualified localpath is</span>
-
-<span class="sd">          &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
-
-<span class="sd">        then you can also access this with these alternatives:</span>
-
-<span class="sd">          * simulator_volume_fipnum</span>
-<span class="sd">          * simulator_volume_fipnum.csv</span>
-<span class="sd">          * share/results/volumes/simulator_volume_fipnum</span>
-
-<span class="sd">        but only as long as there is no ambiguity. In case</span>
-<span class="sd">        of ambiguity, the shortpath will be returned as is.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">basenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-        <span class="k">if</span> <span class="n">basenames</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">}</span>
-            <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">noexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">}</span>
-            <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="n">basenamenoexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
-            <span class="p">}</span>
-            <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="c1"># If we get here, we did not find anything that</span>
-        <span class="c1"># this shorthand could point to. Return as is, and let the</span>
-        <span class="c1"># calling function handle further errors.</span>
-        <span class="k">return</span> <span class="n">shortpath</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.find_files"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.find_files">[docs]</a>    <span class="k">def</span> <span class="nf">find_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metayaml</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Discover realization files. The files dataframe</span>
@@ -1006,7 +965,8 @@
                     <span class="c1"># might be out of luck if you have multiple..</span>
                     <span class="k">for</span> <span class="n">cand</span> <span class="ow">in</span> <span class="n">yaml_candidates</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">cand</span><span class="p">)):</span>
-                            <span class="n">metadict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">full_load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">cand</span><span class="p">)))</span>
+                            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">cand</span><span class="p">))</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
+                                <span class="n">metadict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">full_load</span><span class="p">(</span><span class="n">file_handle</span><span class="p">)</span>
                         <span class="k">continue</span>
 
                     <span class="c1"># Flatten metadict:</span>
@@ -1380,154 +1340,9 @@
 <div class="viewcode-block" id="ScratchRealization.get_volumetric_rates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_volumetric_rates">[docs]</a>    <span class="k">def</span> <span class="nf">get_volumetric_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute volumetric rates from cumulative summary vectors</span>
 
-<span class="sd">        Column names that are not referring to cumulative summary</span>
-<span class="sd">        vectors are silently ignored.</span>
-
-<span class="sd">        A Dataframe is returned with volumetric rates, that is rate</span>
-<span class="sd">        values that can be summed up to the cumulative version. The</span>
-<span class="sd">        &#39;T&#39; in the column name is switched with &#39;R&#39;. If you ask for</span>
-<span class="sd">        FOPT, you will get FOPR in the returned dataframe.</span>
-
-<span class="sd">        Rates in the returned dataframe are valid **forwards** in time,</span>
-<span class="sd">        opposed to rates coming directly from the Eclipse simulator which</span>
-<span class="sd">        are valid backwards in time.</span>
-
-<span class="sd">        If time_unit is set, the rates will be scaled to represent</span>
-<span class="sd">        either daily, monthly or yearly rates. These will sum up to the</span>
-<span class="sd">        cumulative as long as you multiply with the correct number</span>
-<span class="sd">        of days, months or year between each consecutive date index.</span>
-<span class="sd">        Month lengths and leap years are correctly handled.</span>
-
-<span class="sd">        The returned dataframe is indexed by DATE.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            column_keys: str or list of strings, cumulative summary vectors</span>
-<span class="sd">            time_index: str or list of datetimes</span>
-<span class="sd">            time_unit: str or None. If None, the rates returned will</span>
-<span class="sd">                be the difference in cumulative between each included</span>
-<span class="sd">                time step (where the time interval can vary arbitrarily)</span>
-<span class="sd">                If set to &#39;days&#39;, &#39;months&#39; or &#39;years&#39;, the rates will</span>
-<span class="sd">                be scaled to represent a daily, monthly or yearly rate that</span>
-<span class="sd">                is compatible with the date index and the cumulative data.</span>
-
+<span class="sd">        See :meth:`fmu.ensemble.util.compute_volumetric_rates`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">static_get_volumetric_rates</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span>
-        <span class="p">)</span></div>
-
-<div class="viewcode-block" id="ScratchRealization.static_get_volumetric_rates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.static_get_volumetric_rates">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">static_get_volumetric_rates</span><span class="p">(</span><span class="n">realization</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Static method for volumetric rates</span>
-
-<span class="sd">        This method is to be used by both ScratchRealization</span>
-<span class="sd">        and VirtualRealization, and is documented there.&quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">time_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;days&quot;</span><span class="p">,</span> <span class="s2">&quot;months&quot;</span><span class="p">,</span> <span class="s2">&quot;years&quot;</span><span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Unsupported time_unit &quot;</span> <span class="o">+</span> <span class="n">time_unit</span> <span class="o">+</span> <span class="s2">&quot; for volumetric rates&quot;</span>
-                <span class="p">)</span>
-
-        <span class="n">column_keys</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">_glob_smry_keys</span><span class="p">(</span><span class="n">column_keys</span><span class="p">)</span>
-
-        <span class="c1"># Be strict and only include certain summary vectors that look</span>
-        <span class="c1"># cumulative by their name:</span>
-        <span class="n">column_keys</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_keys</span> <span class="k">if</span> <span class="n">ScratchRealization</span><span class="o">.</span><span class="n">_cum_smrycol2rate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">column_keys</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No valid cumulative columns given to volumetric computation&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-
-        <span class="n">cum_df</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">)</span>
-        <span class="c1"># get_smry() for realizations return a dataframe indexed by &#39;DATE&#39;</span>
-
-        <span class="c1"># Compute row-wise difference, shift back one row</span>
-        <span class="c1"># to get the NaN to the end, and then drop the NaN.</span>
-        <span class="c1"># The &quot;rate&quot; given for a specific date is then</span>
-        <span class="c1"># valid from that date until the next date.</span>
-        <span class="n">diff_cum</span> <span class="o">=</span> <span class="n">cum_df</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">time_unit</span><span class="p">:</span>
-            <span class="c1"># Calculate the relative timedelta between consecutive</span>
-            <span class="c1"># DateIndices. relativedeltas are correct in terms</span>
-            <span class="c1"># of number of years and number of months, but it will</span>
-            <span class="c1"># only give us integer months, and then leftover days.</span>
-            <span class="n">rel_deltas</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-            <span class="p">]</span>
-            <span class="n">whole_days</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-            <span class="p">]</span>
-            <span class="c1"># Need to know which years are leap years for our index:</span>
-            <span class="n">dayspryear</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="mi">365</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">calendar</span><span class="o">.</span><span class="n">isleap</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">year</span><span class="p">)</span> <span class="k">else</span> <span class="mi">366</span>
-                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-            <span class="p">]</span>
-            <span class="c1"># Float-contribution to years from days:</span>
-            <span class="n">days</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">],</span> <span class="n">dayspryear</span><span class="p">)</span>
-            <span class="p">]</span>
-            <span class="n">floatyearsnodays</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">years</span> <span class="o">+</span> <span class="n">r</span><span class="o">.</span><span class="n">months</span> <span class="o">/</span> <span class="mf">12.0</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">]</span>
-            <span class="n">floatyears</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">floatyearsnodays</span><span class="p">,</span> <span class="n">days</span><span class="p">)]</span>
-
-            <span class="c1"># Calculate month-difference:</span>
-            <span class="n">floatmonthsnodays</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">years</span> <span class="o">*</span> <span class="mf">12.0</span> <span class="o">+</span> <span class="n">r</span><span class="o">.</span><span class="n">months</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">]</span>
-            <span class="c1"># How many days pr. month? We check this for the right</span>
-            <span class="c1"># end of the relevant time interval.</span>
-            <span class="n">daysprmonth</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">month</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="p">]</span>
-            <span class="n">days</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rel_deltas</span><span class="p">],</span> <span class="n">daysprmonth</span><span class="p">)</span>
-            <span class="p">]</span>
-            <span class="n">floatmonths</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">floatmonthsnodays</span><span class="p">,</span> <span class="n">days</span><span class="p">)]</span>
-
-            <span class="n">diff_cum</span><span class="p">[</span><span class="s2">&quot;DAYS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">whole_days</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">diff_cum</span><span class="p">[</span><span class="s2">&quot;MONTHS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">floatmonths</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">diff_cum</span><span class="p">[</span><span class="s2">&quot;YEARS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">floatyears</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">column_keys</span><span class="p">:</span>
-                <span class="n">diff_cum</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_cum</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span> <span class="o">/</span> <span class="n">diff_cum</span><span class="p">[</span><span class="n">time_unit</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
-            <span class="c1"># Drop temporary columns</span>
-            <span class="n">diff_cum</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;DAYS&quot;</span><span class="p">,</span> <span class="s2">&quot;MONTHS&quot;</span><span class="p">,</span> <span class="s2">&quot;YEARS&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="c1"># Set NaN at the final row to zero</span>
-            <span class="n">diff_cum</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># Translate the column vectors, &#39;FOPT&#39; -&gt; &#39;FOPR&#39; etc.</span>
-        <span class="n">rate_names</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">diff_cum</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="n">ratename</span> <span class="o">=</span> <span class="n">ScratchRealization</span><span class="o">.</span><span class="n">_cum_smrycol2rate</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">ratename</span><span class="p">:</span>
-                <span class="n">rate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ratename</span><span class="p">)</span>
-        <span class="n">diff_cum</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">rate_names</span>
-        <span class="n">diff_cum</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;DATE&quot;</span>
-        <span class="k">return</span> <span class="n">diff_cum</span></div>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_cum_smrycol2rate</span><span class="p">(</span><span class="n">smrycolumn</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns None if a smrycolumn is not assumed</span>
-<span class="sd">        to be cumulative, and returns a string with the corresponding</span>
-<span class="sd">        rate column if it is cumulative</span>
-
-<span class="sd">        F.ex. _cum_smrycol2rate(&#39;FOPT&#39;) will return &#39;FOPR&#39;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Split by colon into components:</span>
-        <span class="n">comps</span> <span class="o">=</span> <span class="n">smrycolumn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="c1"># Do not support more than one colon.</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;CT&quot;</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="c1"># No watercuts.</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="s2">&quot;T&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">comps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">compute_volumetric_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_smryvalues"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_smryvalues">[docs]</a>    <span class="k">def</span> <span class="nf">get_smryvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">props_wildcard</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1575,7 +1390,7 @@
 <span class="sd">                the returned list of datetime. &#39;report&#39; will</span>
 <span class="sd">                yield the sorted union of all valid timesteps for</span>
 <span class="sd">                all realizations. Other valid options are</span>
-<span class="sd">                &#39;daily&#39;, &#39;monthly&#39; and &#39;yearly&#39;.</span>
+<span class="sd">                &#39;daily&#39;, &#39;weekly&#39;, &#39;monthly&#39; and &#39;yearly&#39;.</span>
 <span class="sd">                &#39;first&#39; will give out the first date (minimum) and</span>
 <span class="sd">                &#39;last&#39; will give out the last date (maximum),</span>
 <span class="sd">                both as lists with one element.</span>
@@ -1595,13 +1410,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetimes. None if no summary data is available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
-
         <span class="n">eclsum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_eclsum</span><span class="p">(</span><span class="n">include_restart</span><span class="o">=</span><span class="n">include_restart</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">eclsum</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="n">ScratchEnsemble</span><span class="o">.</span><span class="n">_get_smry_dates</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">unionize_smry_dates</span><span class="p">(</span>
             <span class="p">[</span><span class="n">eclsum</span><span class="o">.</span><span class="n">dates</span><span class="p">],</span> <span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span>
         <span class="p">)</span></div>
 
@@ -1629,7 +1441,7 @@
 <span class="sd">            criteria.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;inplace&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">localpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
+        <span class="n">localpath</span> <span class="o">=</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">localpath</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">localpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">:</span>
@@ -1690,7 +1502,7 @@
 <span class="sd">                dataframes</span>
 <span class="sd">            keys: list of strings of keys to delete from a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">fullpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
+        <span class="n">fullpath</span> <span class="o">=</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">localpath</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">fullpath</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found&quot;</span> <span class="o">%</span> <span class="n">localpath</span><span class="p">)</span>
 
@@ -1806,48 +1618,56 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the grid index in a pandas dataframe.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_index</span><span class="p">(</span><span class="n">active_only</span><span class="o">=</span><span class="n">active_only</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_index</span><span class="p">(</span><span class="n">active_only</span><span class="o">=</span><span class="n">active_only</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No GRID file in realization </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_grid_corners"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_grid_corners">[docs]</a>    <span class="k">def</span> <span class="nf">get_grid_corners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a dataframe with the the x, y, z for the</span>
 <span class="sd">        8 grid corners of corner point cells&quot;&quot;&quot;</span>
-        <span class="n">corners</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_corners</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;x1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x3&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y3&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z3&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x4&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y4&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z4&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x5&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y5&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z5&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x6&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y6&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z6&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x7&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y7&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z7&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;x8&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;y8&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;z8&quot;</span><span class="p">,</span>
-        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">():</span>
+            <span class="n">corners</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_corners</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;x1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x3&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y3&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z3&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x5&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y5&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z5&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x6&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y6&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z6&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x7&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y7&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z7&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x8&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;y8&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z8&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">corners</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">corners</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No GRID file in realization </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_grid_centre"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_grid_centre">[docs]</a>    <span class="k">def</span> <span class="nf">get_grid_centre</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the grid centre of corner-point-cells, x, y and z</span>
 <span class="sd">        in distinct columns&quot;&quot;&quot;</span>
-        <span class="n">grid_cell_centre</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_position</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">grid_cell_centre</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cell_x&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_y&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_z&quot;</span><span class="p">]</span>
-        <span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">():</span>
+            <span class="n">grid_cell_centre</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">export_position</span><span class="p">(</span><span class="n">grid_index</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">grid_cell_centre</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cell_x&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_y&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_z&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No GRID file in realization </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_grid"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_grid">[docs]</a>    <span class="k">def</span> <span class="nf">get_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1874,7 +1694,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :returns: Number of cells in the realization.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">get_global_size</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_grid</span><span class="p">()</span><span class="o">.</span><span class="n">get_global_size</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">actnum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1883,7 +1704,7 @@
 <span class="sd">            Active cells are given value 1, while</span>
 <span class="sd">            inactive cells have value 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actnum</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actnum</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_init</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_actnum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_init</span><span class="p">()[</span><span class="s2">&quot;PORV&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">create_actnum</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_actnum</span>
 
@@ -1892,7 +1713,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :returns: List of DateTime.DateTime for which values are reported.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()</span><span class="o">.</span><span class="n">report_dates</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()</span><span class="o">.</span><span class="n">report_dates</span>
 
 <div class="viewcode-block" id="ScratchRealization.get_global_init_keyword"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_global_init_keyword">[docs]</a>    <span class="k">def</span> <span class="nf">get_global_init_keyword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1900,7 +1722,8 @@
 <span class="sd">        :returns: The EclKw of given name. Length is global_size.</span>
 <span class="sd">            non-active cells are given value 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_init</span><span class="p">()[</span><span class="n">prop</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actnum</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_init</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_init</span><span class="p">()[</span><span class="n">prop</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actnum</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ScratchRealization.get_global_unrst_keyword"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.ScratchRealization.get_global_unrst_keyword">[docs]</a>    <span class="k">def</span> <span class="nf">get_global_unrst_keyword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">report</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1908,107 +1731,8 @@
 <span class="sd">        :returns: The EclKw of given name. Length is global_size.</span>
 <span class="sd">            non-active cells are given value 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()[</span><span class="n">prop</span><span class="p">][</span><span class="n">report</span><span class="p">]</span><span class="o">.</span><span class="n">scatter_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actnum</span><span class="p">)</span></div></div>
-
-
-<div class="viewcode-block" id="normalize_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.normalize_dates">[docs]</a><span class="k">def</span> <span class="nf">normalize_dates</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Normalize start and end date according to frequency</span>
-<span class="sd">    by extending the time range.</span>
-
-<span class="sd">    So for [1997-11-5, 2020-03-02] and monthly freqency</span>
-<span class="sd">    this will transform your dates to</span>
-<span class="sd">    [1997-11-1, 2020-04-01]</span>
-
-<span class="sd">    For yearly frequency will be [1997-01-01, 2021-01-01].</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        start_date: datetime.date</span>
-<span class="sd">        end_date: datetime.date</span>
-<span class="sd">        freq: string with either &#39;monthly&#39; or &#39;yearly&#39;.</span>
-<span class="sd">            Anything else will return the input as is</span>
-<span class="sd">    Return:</span>
-<span class="sd">        Tuple of normalized (start_date, end_date)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;monthly&quot;</span><span class="p">:</span>
-        <span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="c1"># Avoid rolling forward if we are already at day 1 in a month</span>
-        <span class="k">if</span> <span class="n">end_date</span> <span class="o">!=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span>
-                <span class="n">months</span><span class="o">=</span><span class="mi">1</span>
-            <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;yearly&quot;</span><span class="p">:</span>
-        <span class="n">start_date</span> <span class="o">=</span> <span class="n">start_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="c1"># Avoid rolling forward if we are already at day 1 in a year</span>
-        <span class="k">if</span> <span class="n">end_date</span> <span class="o">!=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-            <span class="n">end_date</span> <span class="o">=</span> <span class="n">end_date</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
-                <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span>
-            <span class="p">)</span> <span class="o">+</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">relativedelta</span><span class="o">.</span><span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span>
-        <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
-        <span class="k">pass</span>
-    <span class="k">elif</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span> <span class="ow">or</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
-        <span class="c1"># This we don&#39;t need to normalize, but we should not give any warnings</span>
-        <span class="k">pass</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unrecognized frequency </span><span class="si">%s</span><span class="s2"> for date normalization&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">freq</span><span class="p">))</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">parent_key</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Flatten dictionary keys</span>
-
-<span class="sd">    Code from stackoverflow.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># pylint: disable=import-outside-toplevel</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="c1"># Python3.3^</span>
-        <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">MutableMapping</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="c1"># Python 2.7:</span>
-        <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">MutableMapping</span>
-    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">new_key</span> <span class="o">=</span> <span class="n">parent_key</span> <span class="o">+</span> <span class="n">sep</span> <span class="o">+</span> <span class="n">key</span> <span class="k">if</span> <span class="n">parent_key</span> <span class="k">else</span> <span class="n">key</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">):</span>
-            <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">new_key</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="parse_number"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.realization.parse_number">[docs]</a><span class="k">def</span> <span class="nf">parse_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Try to parse the string first as an integer, then as float,</span>
-<span class="sd">    if both fails, return the original string.</span>
-
-<span class="sd">    Caveats: Know your Python numbers:</span>
-<span class="sd">    https://stackoverflow.com/questions/379906/how-do-i-parse-a-string-to-a-float-or-int-in-python</span>
-
-<span class="sd">    Beware, this is a minefield.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        int, float or string</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">value</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="c1"># int(afloat) fails on some, e.g. NaN</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">value</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value</span>  <span class="c1"># return float</span>
-    <span class="k">else</span><span class="p">:</span>  <span class="c1"># noqa</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">value</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unrst</span><span class="p">()[</span><span class="n">prop</span><span class="p">][</span><span class="n">report</span><span class="p">]</span><span class="o">.</span><span class="n">scatter_copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actnum</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
