@@ -12,6 +12,7 @@ import yaml
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
+from .etc import Interaction  # noqa
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
