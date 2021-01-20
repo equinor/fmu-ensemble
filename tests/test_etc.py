@@ -1,9 +1,8 @@
 """Test a deprecated submodule"""
 
-from fmu import ensemble
-from fmu.ensemble import etc
-
 import pytest
+
+from fmu import ensemble
 
 
 def test_deprecated_etc():
@@ -17,6 +16,10 @@ def test_deprecated_etc():
         fmux = ensemble.etc.Interaction()
     logger = fmux.basiclogger(__name__, level="WARNING")
     logger.info("testing deprecated code")
+
+    # pylint: disable=import-outside-toplevel
+    # Test different import:
+    from fmu.ensemble import etc
 
     with pytest.warns(DeprecationWarning):
         fmux = etc.Interaction()
