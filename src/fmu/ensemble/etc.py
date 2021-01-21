@@ -9,6 +9,12 @@ import timeit
 
 # pylint: disable=protected-access
 
+warnings.filterwarnings(
+    action="always",
+    category=DeprecationWarning,
+    module=r"etc|ensemble.etc|fmu.ensemble.etc",
+)
+
 
 class _BColors(object):
     # local class for ANSI term color commands
