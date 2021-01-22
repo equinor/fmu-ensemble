@@ -34,6 +34,7 @@ TEST_REQUIREMENTS = [
     "flake8>=2.6.0",
     "pylint",
     "pytest>=2.9.2",
+    "pytest-cov",
     "pyyaml>=5.1",
 ]
 

@@ -14,7 +14,7 @@ import ecl.summary
 
 import numpy as np
 
-from test_ensembleset import symlink_iter
+from .test_ensembleset import symlink_iter
 from fmu import ensemble
 
 
