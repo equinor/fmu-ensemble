@@ -10,7 +10,7 @@ import pandas as pd
 
 import pytest
 
-from test_ensembleset import symlink_iter
+from .test_ensembleset import symlink_iter
 
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
