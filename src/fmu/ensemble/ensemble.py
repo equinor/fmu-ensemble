@@ -1462,19 +1462,18 @@ class ScratchEnsemble(object):
 
     def _get_grid_index(self, active=True):
         """
-        :returns: The grid of the ensemble, see
+        Get the grid index from the first present realization
+
+        Returns: The grid of the ensemble, see
             :func:`fmu.ensemble.Realization.get_grid()`.
         """
         if not self.realizations:
-            return None
-        else:
-            logger.warning("No GRID file in realization %s", self)
             return None
         return list(self.realizations.values())[0].get_grid_index(active=active)
 
     @property
     def init_keys(self):
-        """ Keys availible in the eclipse init file """
+        """Return all keys available in the Eclipse INIT file """
         if not self.realizations:
             return None
         all_keys = set.union(
@@ -1488,7 +1487,7 @@ class ScratchEnsemble(object):
 
     @property
     def unrst_keys(self):
-        """ Keys availaible in the eclipse unrst file """
+        """Return keys availaible in the Eclipse UNRST file """
         if not self.realizations:
             return None
         all_keys = set.union(
@@ -1501,7 +1500,7 @@ class ScratchEnsemble(object):
         return all_keys
 
     def get_unrst_report_dates(self):
-        """ returns unrst report step and the corresponding date """
+        """Returns UNRST report step and the corresponding date """
         if not self.realizations:
             return None
         all_report_dates = set.union(
