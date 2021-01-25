@@ -32,6 +32,7 @@ SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm"]
 TEST_REQUIREMENTS = [
     "black>=20.8b0",
     "flake8>=2.6.0",
+    "pre-commit",
     "pylint",
     "pytest>=2.9.2",
     "pytest-cov",
