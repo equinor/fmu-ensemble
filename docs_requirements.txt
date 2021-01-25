@@ -1,0 +1,5 @@
+ipython
+rstcheck
+sphinx
+sphinx-argparse
+sphinx_rtd_theme

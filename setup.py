@@ -29,28 +29,14 @@ REQUIREMENTS = [
 
 SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm"]
 
-TEST_REQUIREMENTS = [
-    "black>=20.8b0",
-    "flake8>=2.6.0",
-    "pre-commit",
-    "pylint",
-    "pytest>=2.9.2",
-    "pytest-cov",
-    "pyyaml>=5.1",
-]
-
-DOCS_REQUIREMENTS = [
-    "ipython",
-    "rstcheck",
-    "sphinx",
-    "sphinx-argparse",
-    "sphinx_rtd_theme",
-]
-
+with open("test_requirements.txt") as f:
+    test_requirements = f.read().splitlines()
+with open("docs_requirements.txt") as f:
+    docs_requirements = f.read().splitlines()
 
 EXTRAS_REQUIRE = {
-    "tests": TEST_REQUIREMENTS,
-    "docs": DOCS_REQUIREMENTS,
+    "tests": test_requirements,
+    "docs": docs_requirements,
     "parquet": ["pyarrow"],
 }
 
@@ -81,7 +67,7 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     test_suite="tests",
-    tests_require=TEST_REQUIREMENTS,
+    tests_require=test_requirements,
     setup_requires=SETUP_REQUIREMENTS,
     extras_require=EXTRAS_REQUIRE,
     python_requires=">=3.6",
