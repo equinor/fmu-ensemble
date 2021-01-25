@@ -35,6 +35,7 @@ TEST_REQUIREMENTS = [
     "pre-commit",
     "pylint",
     "pytest>=2.9.2",
+    "pytest-cov",
     "pyyaml>=5.1",
 ]
 
