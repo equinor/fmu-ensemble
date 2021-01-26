@@ -40,6 +40,8 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .
+          # ecl2df is an optional dependency:
+          pip install ecl2df
 
       - name: 📦 Install test dependencies
         run: pip install .[tests,docs]
