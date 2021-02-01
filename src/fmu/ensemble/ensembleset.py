@@ -4,6 +4,7 @@ import re
 import os
 import glob
 import logging
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -744,6 +745,10 @@ class EnsembleSet(object):
             summary file or no matched well names.
 
         """
+        warnings.warn(
+            "fmu.ensemble.etc is deprecated and will be removed in later versions.",
+            FutureWarning,
+        )
         result = set()
         for _, ensemble in self._ensembles.items():
             result = result.union(ensemble.get_wellnames(well_match))
