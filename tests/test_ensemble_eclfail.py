@@ -10,7 +10,6 @@ not try to distuingish between early exits from failure or deliberate (like this
 import os
 import logging
 import shutil
-import datetime
 
 import numpy as np
 import pandas as pd
@@ -134,7 +133,8 @@ def test_ens_premature_ecl(tmpdir):
     # The FOPR rate vector should be all zero after the stop
     assert (
         fail_foprs[
-            (fail_foprs["REAL"] == 1) & (fail_foprs["DATE"] > datetime.date(2000, 8, 1))
+            (fail_foprs["REAL"] == 1)
+            & (fail_foprs["DATE"] > np.datetime64("2000-08-01"))
         ]["FOPR"]
         .abs()
         .sum()
@@ -142,7 +142,8 @@ def test_ens_premature_ecl(tmpdir):
     )
     assert (
         fail_foprs[
-            (fail_foprs["REAL"] == 0) & (fail_foprs["DATE"] > datetime.date(2000, 8, 1))
+            (fail_foprs["REAL"] == 0)
+            & (fail_foprs["DATE"] > np.datetime64("2000-08-01"))
         ]["FOPR"]
         .abs()
         .sum()

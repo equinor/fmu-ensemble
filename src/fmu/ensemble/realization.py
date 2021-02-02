@@ -998,7 +998,7 @@ class ScratchRealization(object):
         start_date=None,
         end_date=None,
         include_restart=True,
-        datetimeindex=False,
+        datetimeindex=True,
     ):
         """Wrapper for ecl2df.summary
 

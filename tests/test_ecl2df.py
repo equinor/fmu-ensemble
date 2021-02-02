@@ -61,14 +61,20 @@ def test_reek():
 
 def test_smry_via_ecl2df():
     """Test that we could use ecl2df for smry extraction instead
-    of the native code inside fmu-ensemble"""
+    of the native code inside fmu-ensemble.
+
+    (This test code was made before fmu-ensemble used ecl2df by default)
+    """
 
     def get_smry(kwargs):
         """Callback function to extract smry data using ecl2df on a
         ScratchRealization"""
         eclfiles = kwargs["realization"].get_eclfiles()
         return ecl2df.summary.df(
-            eclfiles, time_index=kwargs["time_index"], column_keys=kwargs["column_keys"]
+            eclfiles,
+            time_index=kwargs["time_index"],
+            column_keys=kwargs["column_keys"],
+            datetime=True,
         )
 
     if "__file__" in globals():

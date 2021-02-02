@@ -297,10 +297,10 @@ def test_smryh():
         {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "2003-02-01"}]}
     )
     obs_future = Observations(
-        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "3003-02-01"}]}
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "2203-02-01"}]}
     )
     obs_past = Observations(
-        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "1003-02-01"}]}
+        {"smryh": [{"key": "FOPT", "histvec": "FOPTH", "time_index": "1678-02-01"}]}
     )
 
     assert obs_isodatestr

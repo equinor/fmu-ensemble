@@ -337,7 +337,8 @@ def test_volumetric_rates():
     # We are probably neither at the start or at the end of the production
     # interval.
     cumulative_error = ddcum["FOPR"].sum() - (
-        dcum["FOPT"].loc[subset_dates[-1]] - dcum["FOPT"].loc[subset_dates[0]]
+        dcum["FOPT"].loc[np.datetime64(subset_dates[-1])]
+        - dcum["FOPT"].loc[np.datetime64(subset_dates[0])]
     )
 
     # Give some slack, we might have done a lot of interpolation
@@ -428,19 +429,27 @@ def test_datenormalization():
     raw = real.get_smry(column_keys="FOPT", time_index="raw")
     assert str(raw.index[-1]) == "2003-01-02 00:00:00"
     daily = real.get_smry(column_keys="FOPT", time_index="daily")
-    assert str(daily.index[-1]) == "2003-01-02"
+    assert daily.index[-1] == np.datetime64("2003-01-02")
     monthly = real.get_smry(column_keys="FOPT", time_index="monthly")
-    assert str(monthly.index[-1]) == "2003-02-01"
+    assert monthly.index[-1] == np.datetime64("2003-02-01")
     yearly = real.get_smry(column_keys="FOPT", time_index="yearly")
-    assert str(yearly.index[-1]) == "2004-01-01"
+    assert yearly.index[-1] == np.datetime64("2004-01-01")
+
+    # First Monday after 2003-01-02:
     weekly = real.get_smry(column_keys="FOPT", time_index="weekly")
-    assert str(weekly.index[-1]) == "2003-01-06"  # First Monday after 2003-01-02
+    assert weekly.index[-1] == np.datetime64("2003-01-06")
+
+    # First Monday after 2003-01-02
     weekly = real.get_smry(column_keys="FOPT", time_index="W-MON")
-    assert str(weekly.index[-1]) == "2003-01-06"  # First Monday after 2003-01-02
+    assert weekly.index[-1] == np.datetime64("2003-01-06")
+
+    # First Tuesday after 2003-01-02
     weekly = real.get_smry(column_keys="FOPT", time_index="W-TUE")
-    assert str(weekly.index[-1]) == "2003-01-07"  # First Tuesday after 2003-01-02
+    assert weekly.index[-1] == np.datetime64("2003-01-07")
+
+    # First Thursday after 2003-01-02
     weekly = real.get_smry(column_keys="FOPT", time_index="W-THU")
-    assert str(weekly.index[-1]) == "2003-01-02"  # First Thursday after 2003-01-02
+    assert weekly.index[-1] == np.datetime64("2003-01-02")
 
     # Check that time_index=None and time_index="raw" behaves like default
     raw = real.load_smry(column_keys="FOPT", time_index="raw")
@@ -456,13 +465,15 @@ def test_datenormalization():
     real.load_smry(column_keys="FOPT", time_index="raw")
     assert str(real.get_df("unsmry--raw")["DATE"].iloc[-1]) == "2003-01-02 00:00:00"
     real.load_smry(column_keys="FOPT", time_index="daily")
-    assert str(real.get_df("unsmry--daily")["DATE"].iloc[-1]) == "2003-01-02"
+    assert real.get_df("unsmry--daily")["DATE"].iloc[-1] == np.datetime64("2003-01-02")
     real.load_smry(column_keys="FOPT", time_index="monthly")
-    assert str(real.get_df("unsmry--monthly")["DATE"].iloc[-1]) == "2003-02-01"
+    assert real.get_df("unsmry--monthly")["DATE"].iloc[-1] == np.datetime64(
+        "2003-02-01"
+    )
     real.load_smry(column_keys="FOPT", time_index="yearly")
-    assert str(real.get_df("unsmry--yearly")["DATE"].iloc[-1]) == "2004-01-01"
+    assert real.get_df("unsmry--yearly")["DATE"].iloc[-1] == np.datetime64("2004-01-01")
     real.load_smry(column_keys="FOPT", time_index="weekly")
-    assert str(real.get_df("unsmry--weekly")["DATE"].iloc[-1]) == "2003-01-06"
+    assert real.get_df("unsmry--weekly")["DATE"].iloc[-1] == np.datetime64("2003-01-06")
 
 
 def test_singlereal_ecl(tmp="TMP"):

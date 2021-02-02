@@ -7,6 +7,7 @@ from collections import OrderedDict
 import logging
 
 import yaml
+import numpy as np
 import pandas as pd
 import dateutil
 
@@ -311,7 +312,8 @@ class Observations(object):
                                 column_keys=[obsunit["key"], obsunit["histvec"]],
                             )
                         elif isinstance(
-                            obsunit["time_index"], (datetime.datetime, datetime.date)
+                            obsunit["time_index"],
+                            (datetime.datetime, datetime.date, np.datetime64),
                         ):
                             # real.get_smry only allows strings or
                             # list of datetimes as time_index.
@@ -479,18 +481,16 @@ class Observations(object):
                 # If time_index is not a supported mnemonic,
                 # parse it to a date object
                 if "time_index" in unit:
-                    if (
-                        unit["time_index"]
-                        not in [
-                            "raw",
-                            "report",
-                            "yearly",
-                            "daily",
-                            "first",
-                            "last",
-                            "monthly",
-                        ]
-                        and not isinstance(unit["time_index"], datetime.datetime)
+                    if unit["time_index"] not in [
+                        "raw",
+                        "report",
+                        "yearly",
+                        "daily",
+                        "first",
+                        "last",
+                        "monthly",
+                    ] and not isinstance(
+                        unit["time_index"], (datetime.datetime, np.datetime64)
                     ):
                         try:
                             unit["time_index"] = dateutil.parser.isoparse(
@@ -535,7 +535,9 @@ class Observations(object):
                         observation["date"] = dateutil.parser.isoparse(
                             observation["date"]
                         ).date()
-                    if not isinstance(observation["date"], datetime.date):
+                    if not isinstance(
+                        observation["date"], (datetime.date, np.datetime64)
+                    ):
                         logger.error("Date not understood %s", str(observation["date"]))
                         continue
             # If everything is deleted from 'smry', delete it
