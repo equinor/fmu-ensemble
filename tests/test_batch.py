@@ -38,6 +38,7 @@ def test_batch():
     ens = ScratchEnsemble(
         "reektest", testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
     )
+
     ens.process_batch(
         batch=[
             {"load_scalar": {"localpath": "npv.txt"}},
@@ -45,6 +46,7 @@ def test_batch():
             {"load_smry": {"column_keys": "*", "time_index": "daily"}},
         ]
     )
+
     assert len(ens.get_df("npv.txt")) == 5
     assert len(ens.get_df("unsmry--daily")["FOPR"]) == 5490
     assert len(ens.get_df("unsmry--yearly")["FOPT"]) == 25

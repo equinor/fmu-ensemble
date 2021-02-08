@@ -749,7 +749,7 @@ class ScratchEnsemble(object):
         time_index="raw",
         column_keys=None,
         stacked=True,
-        cache_eclsum=True,
+        cache_eclsum=False,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -828,7 +828,7 @@ class ScratchEnsemble(object):
                     "load_smry": {
                         "column_keys": column_keys,
                         "time_index": time_index,
-                        "cache_eclsum": cache_eclsum,
+                        "cache_eclsum": False,
                         "start_date": start_date,
                         "end_date": end_date,
                         "include_restart": include_restart,
@@ -1074,7 +1074,7 @@ class ScratchEnsemble(object):
         normalize=True,
         start_date=None,
         end_date=None,
-        cache_eclsum=True,
+        cache_eclsum=False,
         include_restart=True,
     ):
         """Return list of datetimes for an ensemble according to frequency
@@ -1111,11 +1111,11 @@ class ScratchEnsemble(object):
         eclsumsdates = []
         for _, realization in self.realizations.items():
             if realization.get_eclsum(
-                cache=cache_eclsum, include_restart=include_restart
+                cache=False, include_restart=include_restart
             ):
                 eclsumsdates.append(
                     realization.get_eclsum(
-                        cache=cache_eclsum, include_restart=include_restart
+                        cache=False, include_restart=include_restart
                     ).dates
                 )
         return unionize_smry_dates(eclsumsdates, freq, normalize, start_date, end_date)
@@ -1125,7 +1125,7 @@ class ScratchEnsemble(object):
         column_keys=None,
         time_index="monthly",
         quantiles=None,
-        cache_eclsum=True,
+        cache_eclsum=False,
         start_date=None,
         end_date=None,
     ):
@@ -1181,7 +1181,7 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(
             time_index=time_index,
             column_keys=column_keys,
-            cache_eclsum=cache_eclsum,
+            cache_eclsum=False,
             start_date=start_date,
             end_date=end_date,
         )
@@ -1434,7 +1434,7 @@ class ScratchEnsemble(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=False,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1497,7 +1497,7 @@ class ScratchEnsemble(object):
                         realization.get_smry,
                         time_index=time_index,
                         column_keys=column_keys,
-                        cache_eclsum=cache_eclsum,
+                        cache_eclsum=False,
                         include_restart=include_restart,
                     )
                     for realization in self.realizations.values()
@@ -1515,7 +1515,7 @@ class ScratchEnsemble(object):
                     realization.get_smry(
                         time_index=time_index,
                         column_keys=column_keys,
-                        cache_eclsum=cache_eclsum,
+                        cache_eclsum=False,
                         include_restart=include_restart,
                     )
                     .assign(REAL=realidx)

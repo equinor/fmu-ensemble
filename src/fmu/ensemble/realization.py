@@ -1025,7 +1025,7 @@ class ScratchRealization(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=False,
         start_date=None,
         end_date=None,
         include_restart=True,

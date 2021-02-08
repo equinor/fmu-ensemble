@@ -1,14 +1,9 @@
 """Common functions for fmu.ensemble"""
 
 import os
-import sys
+import logging
 
-import six
-
-from .etc import Interaction
-
-fmux = Interaction()
-logger = fmux.basiclogger(__name__)
+logger = logging.getLogger(__name__)
 
 ENV_NAME = "FMU_CONCURRENCY"
 
@@ -18,27 +13,20 @@ def use_concurrent():
 
     This is based on both an environment variable
     and presence of concurrent.futures, and on Python version
-    (Py2 deliberately not attempted to support)
 
     Returns:
         bool: True if concurrency mode should be used
     """
-    if six.PY2:
-        # Py2-support not attempted
-        return False
-    if "concurrent.futures" in sys.modules:
-        if ENV_NAME not in os.environ:
-            return True
-        env_var = os.environ[ENV_NAME]
-        if (
-            str(env_var) == "0"
-            or str(env_var).lower() == "false"
-            or str(env_var).lower() == "no"
-        ):
-            return False
+    if ENV_NAME not in os.environ:
         return True
-    # If concurrent.futures is not available to import, we end here.
-    return False
+    env_var = os.environ[ENV_NAME]
+    if (
+        str(env_var) == "0"
+        or str(env_var).lower() == "false"
+        or str(env_var).lower() == "no"
+    ):
+        return False
+    return True
 
 
 def set_concurrent(concurrent):
