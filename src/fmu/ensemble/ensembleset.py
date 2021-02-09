@@ -572,7 +572,7 @@ class EnsembleSet(object):
         self,
         time_index="raw",
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -612,6 +612,17 @@ class EnsembleSet(object):
             A DataFame of summary vectors for the ensembleset.
             The column 'ENSEMBLE' will denote each ensemble's name
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         # Future: Multithread this:
         for _, ensemble in self._ensembles.items():
             ensemble.load_smry(
@@ -631,7 +642,7 @@ class EnsembleSet(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=False,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -665,6 +676,18 @@ class EnsembleSet(object):
             ENSEMBLE will distinguish the different ensembles by their
             respective names.
         """
+
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = False
+
         smrylist = []
         for _, ensemble in self._ensembles.items():
             smry = ensemble.get_smry(
@@ -677,7 +700,7 @@ class EnsembleSet(object):
         return pd.DataFrame()
 
     def get_smry_dates(
-        self, freq="monthly", cache_eclsum=True, start_date=None, end_date=None
+        self, freq="monthly", cache_eclsum=None, start_date=None, end_date=None
     ):
         """Return list of datetimes from an ensembleset
 
@@ -704,6 +727,17 @@ class EnsembleSet(object):
         Returns:
             list of datetime.date.
         """
+
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry_dates() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
 
         rawdates = set()
         for _, ensemble in self._ensembles.items():

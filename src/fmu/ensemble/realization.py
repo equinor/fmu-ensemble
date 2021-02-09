@@ -950,7 +950,7 @@ class ScratchRealization(object):
         self,
         time_index="raw",
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1001,6 +1001,17 @@ class ScratchRealization(object):
             DataFrame: with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
@@ -1048,7 +1059,7 @@ class ScratchRealization(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1080,6 +1091,18 @@ class ScratchRealization(object):
         Returns empty dataframe if there is no summary file, or if the
         column_keys are not existing.
         """
+
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
         if isinstance(time_index, str) and time_index == "raw":
@@ -1193,6 +1216,14 @@ class ScratchRealization(object):
             a dataframe with values. Raw times from UNSMRY.
             Empty dataframe if no summary file data available
         """
+        warnings.warn(
+            (
+                "realization.get_smryvalues() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
+
         if not self._eclsum:  # check if it is cached
             self.get_eclsum()
 

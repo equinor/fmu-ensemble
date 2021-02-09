@@ -697,8 +697,8 @@ class ScratchEnsemble(object):
         self,
         time_index="raw",
         column_keys=None,
-        stacked=True,
-        cache_eclsum=True,
+        stacked=None,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -761,8 +761,30 @@ class ScratchEnsemble(object):
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
+        if stacked is not None:
+            warnings.warn(
+                (
+                    "stacked option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            stacked = True
         if not stacked:
             raise NotImplementedError
+
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         # Future: Multithread this!
         for realidx, realization in self.realizations.items():
             # We do not store the returned DataFrames here,
@@ -964,7 +986,7 @@ class ScratchEnsemble(object):
         normalize=True,
         start_date=None,
         end_date=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         include_restart=True,
     ):
         """Return list of datetimes for an ensemble according to frequency
@@ -997,6 +1019,17 @@ class ScratchEnsemble(object):
             list of datetimes. Empty list if no data found.
         """
 
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry_dates() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self.realizations.items():
@@ -1015,7 +1048,7 @@ class ScratchEnsemble(object):
         column_keys=None,
         time_index="monthly",
         quantiles=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -1057,6 +1090,17 @@ class ScratchEnsemble(object):
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry_stats() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         if quantiles is None:
             quantiles = [10, 90]
 
@@ -1337,7 +1381,7 @@ class ScratchEnsemble(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1375,6 +1419,17 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         if isinstance(time_index, str):
             # Try interpreting as ISO-date:
             try:

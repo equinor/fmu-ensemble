@@ -853,7 +853,7 @@ def test_eclsumcaching():
 
     # If we redo this operation, the same objects should all
     # be None afterwards:
-    ens.load_smry(cache_eclsum=None)
+    ens.load_smry(cache_eclsum=False)
     assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
     ens.get_smry()
