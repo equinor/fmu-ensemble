@@ -342,7 +342,7 @@ class ScratchEnsemble(object):
         smrycolumns = [
             vens.get_df(key).columns for key in self.keys() if "unsmry" in key
         ]
-        smrycolumns = {smrykey for sublist in smrycolumns for smrykey in sublist}
+        smrycolumns = list({smrykey for sublist in smrycolumns for smrykey in sublist})
         # flatten
         meta = self.get_smry_meta(smrycolumns)
         if meta:
@@ -627,21 +627,11 @@ class ScratchEnsemble(object):
         Returns:
             dict of dict with metadata information
         """
-        ensemble_smry_keys = self.get_smrykeys(vector_match=column_keys)
         meta = {}
-        needed_reals = 0
         # Loop over realizations until all requested keys are accounted for
         for _, realization in self.realizations.items():
-            needed_reals += 1
-            real_meta = realization.get_smry_meta(column_keys=ensemble_smry_keys)
+            real_meta = realization.get_smry_meta(column_keys=column_keys)
             meta.update(real_meta)
-            missing_keys = set(ensemble_smry_keys) - set(meta.keys())
-            if not missing_keys:
-                break
-        if needed_reals:
-            logger.info(
-                "Searched %s realization(s) to get summary metadata", str(needed_reals)
-            )
         return meta
 
     def get_df(self, localpath, merge=None):

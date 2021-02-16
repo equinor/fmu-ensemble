@@ -69,3 +69,4 @@ src/fmu/ensemble/version.py
 # other
 .idea/
 .projectile
+*.mypy_cache/*

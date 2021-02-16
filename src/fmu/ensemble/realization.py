@@ -1130,7 +1130,7 @@ class ScratchRealization(object):
         Args:
             column_keys: List or str of column key wildcards
         """
-        column_keys = self._glob_smry_keys(column_keys)
+        column_keys = self._glob_smry_keys("*" if column_keys is None else column_keys)
         meta = {}
         eclsum = self.get_eclsum()
         for col in column_keys:
