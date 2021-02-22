@@ -683,8 +683,6 @@ class EnsembleSet(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = False
 
         smrylist = []
         for _, ensemble in self._ensembles.items():
@@ -776,7 +774,8 @@ class EnsembleSet(object):
 
         """
         warnings.warn(
-            "fmu.ensemble.etc is deprecated and will be removed in later versions.",
+            "ensembleset.get_wellnames() is deprecated and "
+            "will be removed in later versions.",
             FutureWarning,
         )
         result = set()

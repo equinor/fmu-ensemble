@@ -1095,7 +1095,7 @@ class ScratchRealization(object):
         if cache_eclsum is not None:
             warnings.warn(
                 (
-                    "cache_eclsum option to load_smry() is deprecated and "
+                    "cache_eclsum option to get_smry() is deprecated and "
                     "will be removed in fmu-ensemble v2.0.0"
                 ),
                 FutureWarning,
@@ -1219,7 +1219,8 @@ class ScratchRealization(object):
         warnings.warn(
             (
                 "realization.get_smryvalues() is deprecated and "
-                "will be removed in fmu-ensemble v2.0.0"
+                "will be removed in fmu-ensemble v2.0.0. Process "
+                "columns from get_smry() instead."
             ),
             FutureWarning,
         )
