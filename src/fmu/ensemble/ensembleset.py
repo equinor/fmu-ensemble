@@ -620,8 +620,6 @@ class EnsembleSet(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = True
 
         # Future: Multithread this:
         for _, ensemble in self._ensembles.items():
@@ -736,8 +734,6 @@ class EnsembleSet(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = True
 
         rawdates = set()
         for _, ensemble in self._ensembles.items():

@@ -782,8 +782,6 @@ class ScratchEnsemble(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = True
 
         # Future: Multithread this!
         for realidx, realization in self.realizations.items():
@@ -1027,8 +1025,6 @@ class ScratchEnsemble(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = True
 
         # Build list of list of eclsum dates
         eclsumsdates = []
@@ -1098,8 +1094,6 @@ class ScratchEnsemble(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = True
 
         if quantiles is None:
             quantiles = [10, 90]
@@ -1427,8 +1421,6 @@ class ScratchEnsemble(object):
                 ),
                 FutureWarning,
             )
-        else:
-            cache_eclsum = True
 
         if isinstance(time_index, str):
             # Try interpreting as ISO-date:
