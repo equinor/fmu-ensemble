@@ -2,6 +2,7 @@
 import os
 import fnmatch
 import shutil
+import warnings
 import logging
 
 import pandas as pd
@@ -78,6 +79,11 @@ class VirtualRealization(object):
             delete: boolean, if True, existing directory at the filesystempath
                 will be deleted before export.
         """
+        warnings.warn(
+            "to_disk() is considered deprecated and might be "
+            "removed in fmu-ensemble v2.0.0",
+            FutureWarning,
+        )
         if os.path.exists(filesystempath):
             if delete:
                 shutil.rmtree(filesystempath)
@@ -141,6 +147,11 @@ class VirtualRealization(object):
             filesystempath: path to a directory that to_disk() has
                 written to (or a really careful user)
         """
+        warnings.warn(
+            "load_disk() is considered deprecated and might be "
+            "removed in fmu-ensemble v2.0.0",
+            FutureWarning,
+        )
         logger.info("Loading virtual realization from %s", filesystempath)
         for root, _, filenames in os.walk(filesystempath):
             for filename in filenames:

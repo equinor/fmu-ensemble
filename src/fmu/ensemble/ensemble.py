@@ -4,6 +4,7 @@ import re
 import os
 import glob
 import logging
+import warnings
 
 import dateutil
 import pandas as pd
@@ -696,8 +697,8 @@ class ScratchEnsemble(object):
         self,
         time_index="raw",
         column_keys=None,
-        stacked=True,
-        cache_eclsum=True,
+        stacked=None,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -760,8 +761,28 @@ class ScratchEnsemble(object):
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
+        if stacked is not None:
+            warnings.warn(
+                (
+                    "stacked option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            stacked = True
         if not stacked:
             raise NotImplementedError
+
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+
         # Future: Multithread this!
         for realidx, realization in self.realizations.items():
             # We do not store the returned DataFrames here,
@@ -963,7 +984,7 @@ class ScratchEnsemble(object):
         normalize=True,
         start_date=None,
         end_date=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         include_restart=True,
     ):
         """Return list of datetimes for an ensemble according to frequency
@@ -996,6 +1017,17 @@ class ScratchEnsemble(object):
             list of datetimes. Empty list if no data found.
         """
 
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry_dates() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self.realizations.items():
@@ -1014,7 +1046,7 @@ class ScratchEnsemble(object):
         column_keys=None,
         time_index="monthly",
         quantiles=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -1056,6 +1088,15 @@ class ScratchEnsemble(object):
             strings in the outer index are changed accordingly. If no
             data is found, return empty DataFrame.
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry_stats() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+
         if quantiles is None:
             quantiles = [10, 90]
 
@@ -1105,6 +1146,13 @@ class ScratchEnsemble(object):
             summary file or no matched well names.
 
         """
+        warnings.warn(
+            (
+                "ensemble.get_wellnames() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if isinstance(well_match, str):
             well_match = [well_match]
         result = set()
@@ -1135,7 +1183,13 @@ class ScratchEnsemble(object):
             summary file or no matched well names.
 
         """
-
+        warnings.warn(
+            (
+                "ensemble.get_groupnames() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if isinstance(group_match, str):
             group_match = [group_match]
         result = set()
@@ -1323,7 +1377,7 @@ class ScratchEnsemble(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1361,6 +1415,15 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+
         if isinstance(time_index, str):
             # Try interpreting as ISO-date:
             try:
@@ -1406,6 +1469,13 @@ class ScratchEnsemble(object):
             A dictionary. Index by grid attribute, and contains a list
             corresponding to a set of values for each grid cells.
         """
+        warnings.warn(
+            (
+                "ensemble.get_eclgrid() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         egrid_reals = [
             real for real in self.realizations.values() if real.get_grid() is not None
         ]
@@ -1432,6 +1502,13 @@ class ScratchEnsemble(object):
         :returns: An EclKw with, for each cell,
             the number of realizations where the cell is active.
         """
+        warnings.warn(
+            (
+                "ensemble.global_active() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if not self._global_active:
             self._global_active = EclKW(
                 "eactive", self.global_size, EclDataType.ECL_INT
@@ -1448,6 +1525,13 @@ class ScratchEnsemble(object):
         :returns: global size of the realizations in the Ensemble.  see
             :func:`fmu_postprocessing.modelling.Realization.global_size()`.
         """
+        warnings.warn(
+            (
+                "ensemble.global_size() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if not self.realizations:
             return 0
         if self._global_size is None:
@@ -1467,6 +1551,8 @@ class ScratchEnsemble(object):
         Returns: The grid of the ensemble, see
             :func:`fmu.ensemble.Realization.get_grid()`.
         """
+        # ensemble._get_grid_index() is deprecated and
+        # will be removed in fmu-ensemble v2.0.0
         if not self.realizations:
             return None
         return list(self.realizations.values())[0].get_grid_index(active=active)
@@ -1474,6 +1560,13 @@ class ScratchEnsemble(object):
     @property
     def init_keys(self):
         """Return all keys available in the Eclipse INIT file """
+        warnings.warn(
+            (
+                "ensemble.init_keys() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if not self.realizations:
             return None
         all_keys = set.union(
@@ -1488,6 +1581,13 @@ class ScratchEnsemble(object):
     @property
     def unrst_keys(self):
         """Return keys availaible in the Eclipse UNRST file """
+        warnings.warn(
+            (
+                "ensemble.unrst_keys() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if not self.realizations:
             return None
         all_keys = set.union(
@@ -1501,6 +1601,13 @@ class ScratchEnsemble(object):
 
     def get_unrst_report_dates(self):
         """Returns UNRST report step and the corresponding date """
+        warnings.warn(
+            (
+                "ensemble.get_unrst_report_dates() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if not self.realizations:
             return None
         all_report_dates = set.union(
@@ -1523,6 +1630,13 @@ class ScratchEnsemble(object):
             and corresponding values for given property as values.
         :raises ValueError: If prop is not found.
         """
+        warnings.warn(
+            (
+                "ensemble.get_init() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if agg == "mean":
             mean = self._keyword_mean(prop, self.global_active)
             return pd.Series(mean.numpy_copy(), name=prop)
@@ -1539,7 +1653,13 @@ class ScratchEnsemble(object):
             and corresponding values for given property as values.
         :raises ValueError: If prop is not in `TIME_DEPENDENT`.
         """
-
+        warnings.warn(
+            (
+                "ensemble.get_unrst() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if agg == "mean":
             mean = self._keyword_mean(prop, self.global_active, report=report)
             return pd.Series(mean.numpy_copy(), name=prop)
@@ -1558,6 +1678,8 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param report: Report step for unrst keywords
         """
+        # ensemble._keyword_mean() is deprecated and
+        # will be removed in fmu-ensemble v2.0.0
         mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
             for _, realization in self.realizations.items():
@@ -1580,6 +1702,8 @@ class ScratchEnsemble(object):
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
+        # ensemble._keyword_std_dev() is deprecated and
+        # will be removed in fmu-ensemble v2.0.0
         std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
         if report:
             for _, realization in self.realizations.items():

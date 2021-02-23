@@ -15,6 +15,7 @@ import json
 from datetime import datetime, date, time
 import dateutil
 import logging
+import warnings
 
 import yaml
 import numpy as np
@@ -949,7 +950,7 @@ class ScratchRealization(object):
         self,
         time_index="raw",
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1000,6 +1001,17 @@ class ScratchRealization(object):
             DataFrame: with summary keys as columns and dates as indices.
                 Empty dataframe if no summary is available.
         """
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to load_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         if not self.get_eclsum(cache=cache_eclsum):
             # Return empty, but do not store the empty dataframe in self.data
             return pd.DataFrame()
@@ -1047,7 +1059,7 @@ class ScratchRealization(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=True,
+        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1079,6 +1091,18 @@ class ScratchRealization(object):
         Returns empty dataframe if there is no summary file, or if the
         column_keys are not existing.
         """
+
+        if cache_eclsum is not None:
+            warnings.warn(
+                (
+                    "cache_eclsum option to get_smry() is deprecated and "
+                    "will be removed in fmu-ensemble v2.0.0"
+                ),
+                FutureWarning,
+            )
+        else:
+            cache_eclsum = True
+
         if not isinstance(column_keys, list):
             column_keys = [column_keys]
         if isinstance(time_index, str) and time_index == "raw":
@@ -1192,6 +1216,15 @@ class ScratchRealization(object):
             a dataframe with values. Raw times from UNSMRY.
             Empty dataframe if no summary file data available
         """
+        warnings.warn(
+            (
+                "realization.get_smryvalues() is deprecated and "
+                "will be removed in fmu-ensemble v2.0.0. Process "
+                "columns from get_smry() instead."
+            ),
+            FutureWarning,
+        )
+
         if not self._eclsum:  # check if it is cached
             self.get_eclsum()
 
@@ -1410,6 +1443,13 @@ class ScratchRealization(object):
         """
         :returns: init file of the realization.
         """
+        warnings.warn(
+            (
+                "realization.get_init() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         init_file_row = self.files[self.files.FILETYPE == "INIT"]
         init_filename = None
         if len(init_file_row) == 1:
@@ -1433,6 +1473,13 @@ class ScratchRealization(object):
         """
         :returns: restart file of the realization.
         """
+        warnings.warn(
+            (
+                "realization.get_unrst() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         unrst_file_row = self.files[self.files.FILETYPE == "UNRST"]
         unrst_filename = None
         if len(unrst_file_row) == 1:
@@ -1455,6 +1502,13 @@ class ScratchRealization(object):
         """
         Return the grid index in a pandas dataframe.
         """
+        warnings.warn(
+            (
+                "realization.get_grid_index() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_grid():
             return self.get_grid().export_index(active_only=active_only)
         logger.warning("No GRID file in realization %s", self)
@@ -1462,6 +1516,13 @@ class ScratchRealization(object):
     def get_grid_corners(self, grid_index):
         """Return a dataframe with the the x, y, z for the
         8 grid corners of corner point cells"""
+        warnings.warn(
+            (
+                "realization.get_grid_corners() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_grid():
             corners = self.get_grid().export_corners(grid_index)
             columns = [
@@ -1498,6 +1559,13 @@ class ScratchRealization(object):
     def get_grid_centre(self, grid_index):
         """Return the grid centre of corner-point-cells, x, y and z
         in distinct columns"""
+        warnings.warn(
+            (
+                "realization.get_grid_centre() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_grid():
             grid_cell_centre = self.get_grid().export_position(grid_index)
             return pd.DataFrame(
@@ -1510,6 +1578,13 @@ class ScratchRealization(object):
         """
         :returns: grid file of the realization.
         """
+        warnings.warn(
+            (
+                "realization.get_grid() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         grid_file_row = self.files[self.files.FILETYPE == "EGRID"]
         grid_filename = None
         if len(grid_file_row) == 1:
@@ -1531,6 +1606,13 @@ class ScratchRealization(object):
         """
         :returns: Number of cells in the realization.
         """
+        warnings.warn(
+            (
+                "realization.get_grid() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_grid() is not None:
             return self.get_grid().get_global_size()
 
@@ -1541,6 +1623,13 @@ class ScratchRealization(object):
             Active cells are given value 1, while
             inactive cells have value 1.
         """
+        warnings.warn(
+            (
+                "realization.get_grid() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if not self._actnum and self.get_init() is not None:
             self._actnum = self.get_init()["PORV"][0].create_actnum()
         return self._actnum
@@ -1550,6 +1639,13 @@ class ScratchRealization(object):
         """
         :returns: List of DateTime.DateTime for which values are reported.
         """
+        warnings.warn(
+            (
+                "realization.get_grid() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_unrst() is not None:
             return self.get_unrst().report_dates
 
@@ -1559,6 +1655,13 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
+        warnings.warn(
+            (
+                "realization.get_global_init_keyword() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_init() is not None:
             return self.get_init()[prop][0].scatter_copy(self.actnum)
 
@@ -1568,5 +1671,12 @@ class ScratchRealization(object):
         :returns: The EclKw of given name. Length is global_size.
             non-active cells are given value 0.
         """
+        warnings.warn(
+            (
+                "realization.get_global_unrst_keyword() is deprecated and "
+                "will be removed in later versions."
+            ),
+            FutureWarning,
+        )
         if self.get_unrst() is not None:
             return self.get_unrst()[prop][report].scatter_copy(self.actnum)

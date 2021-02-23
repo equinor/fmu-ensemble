@@ -6,6 +6,7 @@ import re
 import shutil
 import fnmatch
 import datetime
+import warnings
 import logging
 
 import yaml
@@ -468,6 +469,13 @@ class VirtualEnsemble(object):
             symlinks (boolean): If includefiles is True, setting this to True
                 means that only symlinking will take place, not full copy.
         """
+        warnings.warn(
+            (
+                "to_disk() is considered deprecated and "
+                "might be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         if not HAVE_PYARROW:
             logger.warning(
                 (
@@ -641,6 +649,13 @@ file is picked up"""
             lazy_load (bool): If True, loading of dataframes from disk
                 will be postponed until get_df() is actually called.
         """
+        warnings.warn(
+            (
+                "from_disk() is considered deprecated and "
+                "might be removed in fmu-ensemble v2.0.0"
+            ),
+            FutureWarning,
+        )
         start_time = datetime.datetime.now()
         if fmt not in ["csv", "parquet"]:
             raise ValueError("Unknown format for from_disk: %s" % fmt)
