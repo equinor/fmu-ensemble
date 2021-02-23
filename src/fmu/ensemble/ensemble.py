@@ -1025,6 +1025,8 @@ class ScratchEnsemble(object):
                 ),
                 FutureWarning,
             )
+        else:
+            cache_eclsum = True
 
         # Build list of list of eclsum dates
         eclsumsdates = []

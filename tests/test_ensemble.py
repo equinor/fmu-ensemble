@@ -851,11 +851,33 @@ def test_eclsumcaching():
     # Default is to do caching, so these will not be None:
     assert all([x._eclsum for (idx, x) in ens.realizations.items()])
 
+    # If we redo this operation, the same objects should all
+    # be None afterwards:
+    ens.load_smry(cache_eclsum=False)
+    # cache_eclsum==None is from v1.1.5 no longer equivalent to False
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+
     ens.get_smry()
     assert all([x._eclsum for (idx, x) in ens.realizations.items()])
 
+    ens.get_smry(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+
     ens.get_smry_stats()
     assert all([x._eclsum for (idx, x) in ens.realizations.items()])
+
+    ens.get_smry_stats(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+
+    ens.get_smry_dates()
+    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
+
+    # Clear the cached objects because the statement above has cached it..
+    for _, realization in ens.realizations.items():
+        realization._eclsum = None
+
+    ens.get_smry_dates(cache_eclsum=False)
+    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
 
 def test_filedescriptors():
