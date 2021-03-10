@@ -4,7 +4,6 @@
 import os
 import re
 import shutil
-import fnmatch
 import datetime
 import warnings
 import logging
@@ -545,6 +544,11 @@ class VirtualEnsemble(object):
         if self._manifest:
             with open(os.path.join(filesystempath, "_manifest.yml"), "w") as fhandle:
                 fhandle.write(yaml.dump(self._manifest))
+        smry_meta = self.get_smry_meta()
+        if smry_meta:
+            smry_meta_df = pd.DataFrame.from_dict(smry_meta, orient="index")
+            smry_meta_df.index.name = "SMRYCOLUMN"
+            smry_meta_df.to_csv(os.path.join(filesystempath, "__smry_metadata"))
 
         # The README dumped here is just for convenience. Do not assume
         # anything about its content.
@@ -664,7 +668,7 @@ file is picked up"""
         # with data coming from disk.
         self._data = {}
         self._name = None
-
+        smry_meta = {}
         for root, _, filenames in os.walk(filesystempath):
             if "__discoveredfiles" in root:
                 # Never traverse the collections of dumped
@@ -682,6 +686,14 @@ file is picked up"""
 
                 if filename == "_manifest.yml":
                     self.manifest = os.path.join(root, "_manifest.yml")
+
+                if filename == "__smry_metadata":
+                    smry_meta_df = pd.read_csv(os.path.join(root, filename))
+                    smry_meta = (
+                        smry_meta_df.set_index("SMRYCOLUMN")
+                        .replace({np.nan: None})
+                        .to_dict(orient="index")
+                    )
 
                 # We will loop through the directory structure, and
                 # data will be duplicated as they can be both in csv
@@ -725,6 +737,11 @@ file is picked up"""
             for internalizedkey, filename in self.lazy_frames.items():
                 logger.info("Loading file %s", filename)
                 self._load_frame_fromdisk(internalizedkey, filename)
+
+                # Attach any found metadata to all smry frames:
+                if smry_meta and "unsmry" in internalizedkey:
+                    self.data[internalizedkey].attrs["meta"] = smry_meta
+                # (meta will not be included if lazy-load)
             self.lazy_frames = {}
 
         # This function must be called whenever we have done
@@ -987,7 +1004,7 @@ file is picked up"""
             vol_rates_dfs.append(vol_rate_df)
         return pd.concat(vol_rates_dfs, ignore_index=True, sort=False)
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -1001,35 +1018,13 @@ file is picked up"""
         * keyword (str)
         * wgname (str or None)
 
-        This data is produced from loaded summary dataframes upon ensemble
-        virtualization.
-
-        Args:
-            column_keys (list or str): Column key wildcards.
-
         Returns:
             dict of dict with metadata.
         """
-        if column_keys is None:
-            column_keys = ["*"]
-        if not isinstance(column_keys, list):
-            column_keys = [column_keys]
-
-        available_smrynames = self.get_df("__smry_metadata")["SMRYCOLUMN"].values
-        matches = set()
-        for key in column_keys:
-            matches = matches.union(
-                [name for name in available_smrynames if fnmatch.fnmatch(name, key)]
-            )
-        # The .replace() in the chain below is to convert NaN's to None, to
-        # mimic the dataframes before they are exported to disk.
-        return (
-            self.get_df("__smry_metadata")
-            .set_index("SMRYCOLUMN")
-            .loc[matches, :]
-            .replace({np.nan: None})
-            .to_dict(orient="index")
-        )
+        meta = {}
+        for dframe in [self.get_df(key) for key in self.keys() if "unsmry" in key]:
+            meta.update(dframe.attrs["meta"])
+        return meta
 
     def __sub__(self, other):
         """Substract another ensemble from this"""

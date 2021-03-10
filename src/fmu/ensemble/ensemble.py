@@ -345,7 +345,7 @@ class ScratchEnsemble(object):
         ]
         smrycolumns = {smrykey for sublist in smrycolumns for smrykey in sublist}
         # flatten
-        meta = self.get_smry_meta(smrycolumns)
+        meta = self.get_smry_meta()
         if meta:
             meta_df = pd.DataFrame.from_dict(meta, orient="index")
             meta_df.index.name = "SMRYCOLUMN"
@@ -604,7 +604,7 @@ class ScratchEnsemble(object):
                 logger.warning("No EclSum available for realization %d", index)
         return list(result)
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -618,31 +618,12 @@ class ScratchEnsemble(object):
         * keyword (str)
         * wgname (str or None)
 
-        The requested columns are asked for over the entire ensemble, and if necessary
-        all realizations will be checked to obtain the metadata for a specific key.
-        If metadata differ between realization, behaviour is *undefined*.
-
-        Args:
-            column_keys (list or str): Column key wildcards.
-
         Returns:
             dict of dict with metadata information
         """
-        ensemble_smry_keys = self.get_smrykeys(vector_match=column_keys)
         meta = {}
-        needed_reals = 0
-        # Loop over realizations until all requested keys are accounted for
         for _, realization in self.realizations.items():
-            needed_reals += 1
-            real_meta = realization.get_smry_meta(column_keys=ensemble_smry_keys)
-            meta.update(real_meta)
-            missing_keys = set(ensemble_smry_keys) - set(meta.keys())
-            if not missing_keys:
-                break
-        if needed_reals:
-            logger.info(
-                "Searched %s realization(s) to get summary metadata", str(needed_reals)
-            )
+            meta.update(realization.get_smry_meta())
         return meta
 
     def get_df(self, localpath, merge=None):
@@ -669,6 +650,7 @@ class ScratchEnsemble(object):
             KeyError if no data is found in no realizations.
         """
         dflist = {}
+        meta = {}
         for index, realization in self.realizations.items():
             try:
                 data = realization.get_df(localpath, merge=merge)
@@ -677,6 +659,8 @@ class ScratchEnsemble(object):
                 elif isinstance(data, (str, int, float, np.number)):
                     data = pd.DataFrame(index=[1], columns=[localpath], data=data)
                 if isinstance(data, pd.DataFrame):
+                    if "meta" in data.attrs:
+                        meta.update(data.attrs["meta"])
                     dflist[index] = data
                 else:
                     raise ValueError("Unkown datatype returned " + "from realization")
@@ -689,6 +673,10 @@ class ScratchEnsemble(object):
             # the realization index, and end up in a MultiIndex
             dframe = pd.concat(dflist, sort=False).reset_index()
             dframe.rename(columns={"level_0": "REAL"}, inplace=True)
+
+            # Merge metadata from each frame:
+            if meta:
+                dframe.attrs["meta"] = meta
             return dframe.drop("level_1", axis="columns", errors="ignore")
         raise KeyError("No data found for " + localpath)
 
@@ -1192,6 +1180,12 @@ class ScratchEnsemble(object):
             key = shortcut2path(self.keys(), key)
             data = self.get_df(key)
 
+            # Preserve metadata in dataframes:
+            if "meta" in data.attrs:
+                meta = data.attrs["meta"]
+            else:
+                meta = {}
+
             # This column should never appear in aggregated data
             del data["REAL"]
 
@@ -1251,6 +1245,10 @@ class ScratchEnsemble(object):
             # We have to recognize scalars.
             if len(aggregated) == 1 and aggregated.index.values[0] == key:
                 aggregated = parse_number(aggregated.values[0])
+
+            # Preserve metadata:
+            if meta:
+                aggregated.attrs["meta"] = meta
             vreal.append(key, aggregated)
         return vreal
 
@@ -1369,16 +1367,21 @@ class ScratchEnsemble(object):
                     include_restart=include_restart,
                 )
         dflist = []
+        meta = {}
         for index, realization in self.realizations.items():
             dframe = realization.get_smry(
                 time_index=time_index,
                 column_keys=column_keys,
                 include_restart=include_restart,
             )
+            if "meta" in dframe.attrs:
+                meta.update(dframe.attrs["meta"])
             dframe.insert(0, "REAL", index)
             dflist.append(dframe)
         if dflist:
-            return pd.concat(dflist, sort=False)
+            dframes = pd.concat(dflist, sort=False)
+            dframes.attrs["meta"] = meta
+            return dframes
         return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg="mean", active_only=False):

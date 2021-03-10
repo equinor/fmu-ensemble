@@ -407,10 +407,7 @@ def test_get_smry_meta(tmpdir):
     assert origmeta["FOPT"] == metadict["FOPT"]
     assert origmeta["FWPTH"] == metadict["FWPTH"]
 
-    assert not vens.get_smry_meta([])
-    assert vens.get_smry_meta(column_keys="FOPT")["FOPT"] == origmeta["FOPT"]
-
-    assert not vens.get_smry_meta(column_keys="WOPT:NOTEXISTING")
+    assert vens.get_smry_meta()["FOPT"] == origmeta["FOPT"]
 
     # Test that it is retrievable after dumping to disk:
     vens_disk_path = str(tmpdir.join("vens_dumped"))

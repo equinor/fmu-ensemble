@@ -126,6 +126,11 @@ class VirtualRealization(object):
                 logger.warning(
                     "Don't know how to dump %s of type %s to disk", key, type(key)
                 )
+        smry_meta = self.get_smry_meta()
+        if smry_meta:
+            smry_meta_df = pd.DataFrame.from_dict(smry_meta, orient="index")
+            smry_meta_df.index.name = "SMRYCOLUMN"
+            smry_meta_df.to_csv(os.path.join(dirname, "__smry_metadata"))
 
     def load_disk(self, filesystempath):
         """Load data for a virtual realization from disk.
@@ -153,6 +158,7 @@ class VirtualRealization(object):
             FutureWarning,
         )
         logger.info("Loading virtual realization from %s", filesystempath)
+        meta = {}
         for root, _, filenames in os.walk(filesystempath):
             for filename in filenames:
                 if filename == "_description":
@@ -166,6 +172,13 @@ class VirtualRealization(object):
                 elif filename == "__repr__":
                     # Not implemented..
                     continue
+                elif filename == "__smry_metadata":
+                    meta_df = pd.read_csv(os.path.join(root, filename))
+                    meta = (
+                        meta_df.set_index("SMRYCOLUMN")
+                        .replace({np.nan: None})
+                        .to_dict(orient="index")
+                    )
                 else:
                     # GUESS scalar, key-value txt or CSV from the first
                     # two lines. SHAKY!
@@ -203,6 +216,13 @@ class VirtualRealization(object):
                         # CSV file!
                         self.append(filename, pd.read_csv(os.path.join(root, filename)))
                         logger.info("Read csv file %s", filename)
+
+        # Attach any found metadata to all smry frames:
+        if meta:
+            for key in self.keys():
+                if "unsmry" in key and isinstance(self.data[key], pd.DataFrame):
+                    print("ASSIGNING META for " + key)
+                    self.data[key].attrs["meta"] = meta
 
     def to_json(self):
         """
@@ -363,6 +383,13 @@ class VirtualRealization(object):
         )
 
         smry = self.get_df("unsmry--" + chosen_smry)[["DATE"] + column_keys]
+
+        # Preserve meta through the dataframe operations:
+        if "meta" in smry.attrs:
+            meta = smry.attrs["meta"]
+        else:
+            meta = {}
+
         # index is dummy, the date is in the DATE column
         smry.set_index("DATE", inplace=True)
 
@@ -397,6 +424,8 @@ class VirtualRealization(object):
 
         smry = smry.loc[pd.to_datetime(time_index_dt)]
         smry.index.name = "DATE"
+        if meta:
+            smry.attrs["meta"] = meta
         return smry.reset_index()
 
     def get_smry_dates(self, freq="monthly", normalize=False):
@@ -450,7 +479,7 @@ class VirtualRealization(object):
         # Convert from Pandas' datetime64 to datetime.date:
         return [x.date() for x in datetimes]
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -464,30 +493,13 @@ class VirtualRealization(object):
         * keyword (str)
         * wgname (str or None)
 
-        Args:
-            column_keys (list or str): Column key wildcards.
-
         Returns:
             dict of dict with metadata information
         """
-        # Warning: Code is identical the same function in virtualensemble.py
-        if column_keys is None:
-            column_keys = ["*"]
-        if not isinstance(column_keys, list):
-            column_keys = [column_keys]
-
-        available_smrynames = self.get_df("__smry_metadata")["SMRYCOLUMN"].values
-        matches = set()
-        for key in column_keys:
-            matches = matches.union(
-                [name for name in available_smrynames if fnmatch.fnmatch(name, key)]
-            )
-        return (
-            self.get_df("__smry_metadata")
-            .set_index("SMRYCOLUMN")
-            .loc[matches, :]
-            .to_dict(orient="index")
-        )
+        meta = {}
+        for dframe in [self.get_df(key) for key in self.keys() if "unsmry" in key]:
+            meta.update(dframe.attrs["meta"])
+        return meta
 
     def _glob_smry_keys(self, column_keys):
         """Glob a list of column keys

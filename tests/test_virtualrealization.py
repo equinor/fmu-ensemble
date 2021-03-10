@@ -129,6 +129,9 @@ def test_virtual_fromdisk(tmpdir):
     )
     assert real.get_df("npv.txt") == 3444
 
+    # Check that metadata for summary has been conserved:
+    assert "FOPT" in vreal.get_df("unsmry--yearly").attrs["meta"]
+
 
 def test_get_smry():
     """Check that we can to get_smry() on virtual realizations"""
@@ -377,6 +380,11 @@ def test_get_smry_meta():
     assert "WOPR:OP_1" in meta
 
     assert meta["FOPT"]["wgname"] is None
+
+    assert "FOPT" in vreal.get_df("unsmry--yearly").attrs["meta"]
+    assert (
+        "FOPT" in vreal.get_smry(column_keys="FOPT", time_index="monthly").attrs["meta"]
+    )
 
 
 def test_get_df_merge():

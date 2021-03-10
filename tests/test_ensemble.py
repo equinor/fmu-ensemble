@@ -71,7 +71,6 @@ def test_reek001(tmpdir):
     paramsdf = reekensemble.parameters  # also test as property
     paramsdf = reekensemble.get_df("parameters.txt")
     assert len(paramsdf) == 5
-    print(paramsdf.head())
     assert len(paramsdf.columns) == 26  # 25 parameters, + REAL column
     paramsdf.to_csv("params.csv", index=False)
 
@@ -237,18 +236,6 @@ def test_emptyens():
     assert not emptygroups
 
     emptymeta = ens.get_smry_meta()
-    assert isinstance(emptymeta, dict)
-    assert not emptymeta
-
-    emptymeta = ens.get_smry_meta("*")
-    assert isinstance(emptymeta, dict)
-    assert not emptymeta
-
-    emptymeta = ens.get_smry_meta("FOPT")
-    assert isinstance(emptymeta, dict)
-    assert not emptymeta
-
-    emptymeta = ens.get_smry_meta(["FOPT"])
     assert isinstance(emptymeta, dict)
     assert not emptymeta
 
@@ -473,24 +460,19 @@ def test_ensemble_ecl():
     )
 
     # Summary metadata:
+    reekensemble.load_smry(time_index="yearly", column_keys="*")
     meta = reekensemble.get_smry_meta()
     assert len(meta) == len(reekensemble.get_smrykeys())
     assert "FOPT" in meta
     assert not meta["FOPT"]["is_rate"]
     assert meta["FOPT"]["is_total"]
 
-    meta = reekensemble.get_smry_meta("FOPT")
-    assert meta["FOPT"]["is_total"]
+    # Meta should also be returned via dataframe's "attrs"
+    yearly_df_load = reekensemble.load_smry(time_index="yearly", column_keys="FOPT")
+    assert set(yearly_df_load.attrs["meta"].keys()) == set(["FOPT"])
 
-    meta = reekensemble.get_smry_meta("*")
-    assert meta["FOPT"]["is_total"]
-
-    meta = reekensemble.get_smry_meta(["*"])
-    assert meta["FOPT"]["is_total"]
-
-    meta = reekensemble.get_smry_meta(["FOPT", "BOGUS"])
-    assert meta["FOPT"]["is_total"]
-    assert "BOGUS" not in meta
+    yearly_df_get = reekensemble.get_smry(time_index="yearly", column_keys="FOPT")
+    assert set(yearly_df_get.attrs["meta"].keys()) == set(["FOPT"])
 
     # Eclipse well names list
     assert len(reekensemble.get_wellnames("OP*")) == 5

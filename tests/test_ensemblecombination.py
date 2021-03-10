@@ -52,7 +52,12 @@ def test_ensemblecombination_basic():
         ].sum()
     )
 
-    smrymeta = diff.get_smry_meta(["FO*"])
+    # Test presence of summary metadata:
+    assert "FOPT" in half.get_df("unsmry--yearly").attrs["meta"]
+    assert (
+        "FOPT" in half.get_smry(column_keys="FOPT", time_index="yearly").attrs["meta"]
+    )
+    smrymeta = diff.get_smry_meta()
     assert "FOPT" in smrymeta
 
     # This is only true since we only juggle one ensemble here:
@@ -96,7 +101,7 @@ def test_ensemblecombination_basic():
     # We can test something cheaper:
     zero = reekensemble + reekensemble - 2 * reekensemble
     assert zero["parameters"]["KRW1"].sum() == 0
-    smrymeta = zero.get_smry_meta(["FO*"])
+    smrymeta = zero.get_smry_meta()
     assert "FOPT" in smrymeta
 
     vzero = (
@@ -107,6 +112,7 @@ def test_ensemblecombination_basic():
     assert vzero["parameters"]["KRW1"].sum() == 0
 
     assert len(diff.get_smry(column_keys=["FOPR", "FGPR", "FWCT"]).columns) == 5
+    assert "FOPR" in diff.get_smry(column_keys="FOPR").attrs["meta"]
 
     # eclipse summary vector statistics for a given ensemble
     df_stats = diff.get_smry_stats(column_keys=["FOPR", "FGPR"], time_index="monthly")

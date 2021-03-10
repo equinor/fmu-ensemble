@@ -1070,15 +1070,33 @@ def test_find_files_yml():
 
 
 def test_get_smry_meta():
-    """
-    Test getting eclsum metadata for single realization.
+    """Test getting eclsum metadata for single realization.
+
+    Only works for loaded summary data
     """
     testdir = os.path.dirname(os.path.abspath(__file__))
     realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
     real = ensemble.ScratchRealization(realdir)
 
-    meta = real.get_smry_meta(column_keys=["*"])
-    assert isinstance(meta, dict)
+    dframe = real.load_smry(column_keys=["FOPT"])
+    # The metadata dictionary is attached to the dataframe using
+    # the "attrs" dataframe attribute:
+    assert "FOPT" in dframe.attrs["meta"]
+
+    # The same metadata is also available through get_smry_meta()
+    assert set(real.get_smry_meta().keys()) == set(["FOPT"])
+
+    real.load_smry(column_keys=["FOPR"])
+    # This is not cumulative, since we are overwriting unsmry--raw
+    assert set(real.get_smry_meta().keys()) == set(["FOPR"])
+
+    real.load_smry(time_index="yearly", column_keys=["FOPT"])
+    # Meta-data will accumulate over internalized summary frames:
+    assert set(real.get_smry_meta().keys()) == set(["FOPR", "FOPT"])
+
+    # Load all vectors:
+    real.load_smry()
+    meta = real.get_smry_meta()
     assert "FOPT" in meta
     assert "FOPTH" in meta
     assert meta["FOPT"]["unit"] == "SM3"

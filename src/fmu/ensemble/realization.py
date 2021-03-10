@@ -237,17 +237,6 @@ class ScratchRealization(object):
         else:
             vreal = VirtualRealization(name, self.data)
 
-        # Conserve metadata for smry vectors. Build metadata dict for all
-        # loaded summary vectors.
-        smrycolumns = [
-            self.get_df(key).columns for key in self.keys() if "unsmry" in key
-        ]
-        smrycolumns = {smrykey for sublist in smrycolumns for smrykey in sublist}
-        meta = self.get_smry_meta(list(smrycolumns))
-        if meta:
-            meta_df = pd.DataFrame.from_dict(meta, orient="index")
-            meta_df.index.name = "SMRYCOLUMN"
-            vreal.append("__smry_metadata", meta_df.reset_index())
         return vreal
 
     def load_file(self, localpath, fformat, convert_numeric=True, force_reread=False):
@@ -948,7 +937,6 @@ class ScratchRealization(object):
     def load_smry(self, **kwargs):
         """Wrap around get_smry(), but also cache the result"""
         dframe = self.get_smry(**kwargs)
-
         cachename = None
         # Cache the result for supported time indices:
         if "time_index" not in kwargs or kwargs["time_index"] is None:
@@ -1032,9 +1020,10 @@ class ScratchRealization(object):
             # specifier is not known.
             return pd.DataFrame()
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
-        Provide metadata for summary data vectors.
+        Provide metadata for summary data vectors. Only works
+        for summary data that has been loaded into this object.
 
         A dictionary indexed by summary vector names is returned, and each
         value is another dictionary with potentially the metadata types:
@@ -1045,24 +1034,10 @@ class ScratchRealization(object):
         * get_num (int) (only provided if not None)
         * keyword (str)
         * wgname (str or None)
-
-        Args:
-            column_keys: List or str of column key wildcards
         """
-        column_keys = self._glob_smry_keys(column_keys)
         meta = {}
-        eclsum = self.get_eclsum()
-        for col in column_keys:
-            meta[col] = {}
-            meta[col]["unit"] = eclsum.unit(col)
-            meta[col]["is_total"] = eclsum.is_total(col)
-            meta[col]["is_rate"] = eclsum.is_rate(col)
-            meta[col]["is_historical"] = eclsum.smspec_node(col).is_historical()
-            meta[col]["keyword"] = eclsum.smspec_node(col).keyword
-            meta[col]["wgname"] = eclsum.smspec_node(col).wgname
-            num = eclsum.smspec_node(col).get_num()
-            if num is not None:
-                meta[col]["get_num"] = num
+        for dframe in [self.get_df(key) for key in self.keys() if "unsmry" in key]:
+            meta.update(dframe.attrs["meta"])
         return meta
 
     def _glob_smry_keys(self, column_keys):
