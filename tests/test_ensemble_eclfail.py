@@ -73,8 +73,8 @@ def test_ens_premature_ecl(tmpdir):
     # Check also get_smry():
     assert len(failensemble.get_smry().groupby("REAL").max()["DATE"].unique()) == 2
 
-    # With time_index set to something, then all realization will get
-    # interpolated onto the same date range
+    # With time_index set to something, each realization is still time-interpolated
+    # individually and we still have two different max-dates:
     assert (
         len(
             failensemble.get_smry(time_index="monthly")
@@ -82,9 +82,10 @@ def test_ens_premature_ecl(tmpdir):
             .max()["DATE"]
             .unique()
         )
-        == 1
+        == 2
     )
-    # This is in fact *different* from what you would get from load_smry (issue #97)
+    # load_smry and get_smry behave the same
+    # (they were different in fmu-ensemble 1.x)
     assert (
         len(
             failensemble.load_smry(time_index="monthly")
@@ -94,8 +95,6 @@ def test_ens_premature_ecl(tmpdir):
         )
         == 2
     )
-    # (this behaviour might change, get_smry() is allowed in
-    # the future to mimic load_smry())
 
     # Check that FOPT is very much lower in real 1 in failed ensemble:
     assert (
@@ -156,34 +155,74 @@ def test_ens_premature_ecl(tmpdir):
     filtered_stats = filtered_fail_ensemble.get_smry_stats(time_index="monthly")
     # Original stats
     orig_stats = origensemble.get_smry_stats(time_index="monthly")
+    orig_smry = origensemble.get_smry(time_index="monthly").set_index(["REAL", "DATE"])
 
-    # The 30 last rows are the rows from 2000-09-01 to 2003-02-01:
-    assert fail_stats.loc["minimum"]["FOPR"].iloc[-30:].abs().sum() == 0
-    assert fail_stats.loc["minimum"]["FOPT"].iloc[-30:].unique()[0] == 1431247.125
+    # fmu-ensemble 1.x extrapolated the failed realization with zero rates to the
+    # common end-date for the ensemble, giving zero as the minimum realization.
+    # fmu-ensemble 2.x have NaNs for rates after the failure date, and do not
+    # enter the statistics
+
+    # Thus the minimum rates at the latest dates (post failure in real 0) is nonzero:
+    assert fail_stats.loc["minimum"]["FOPR"].iloc[-30:].abs().sum() > 0
+
+    # The final date is present in the statistics frames
+    assert "2003-02-01" in fail_stats.loc["minimum"].index.astype(str).values
+
     # Oh no, in filtered stats, the last date 2003-02-01 is
     # not included, probably a minor bug!
+    assert "2003-02-01" not in filtered_stats.loc["minimum"].index.astype(str).values
     # But that means that the indexing of the last 30 is a little bit rogue.
     # (this test should work even that bug is fixed)
     assert filtered_stats.loc["minimum"]["FOPR"].iloc[-29:].abs().sum() > 0
     assert len(filtered_stats.loc["minimum"]["FOPT"].iloc[-29:].unique()) == 29
 
-    # Mean FOPR and FOPT should be affected by the zero-padded rates:
-    assert (
-        fail_stats.loc["mean"].iloc[-10]["FOPR"]
-        < filtered_stats.loc["mean"].iloc[-10]["FOPR"]
-    )
-    assert (
-        fail_stats.loc["mean"].iloc[-10]["FOPR"]
-        < orig_stats.loc["mean"].iloc[-10]["FOPR"]
-    )
-    assert (
-        fail_stats.loc["mean"].iloc[-10]["FOPT"]
-        < filtered_stats.loc["mean"].iloc[-10]["FOPT"]
-    )
-    assert (
-        fail_stats.loc["mean"].iloc[-10]["FOPT"]
-        < orig_stats.loc["mean"].iloc[-10]["FOPT"]
-    )
+    # Mean FOPR and FOPT should be affected by the zero-padded rates.
+    # In fail_stats, realization 1 is truncated, and in filtered_stats
+    # realization 1 does not exist.
+
+    # Some manually computed means from orig summary:
+    fopr_mean_all = (
+        orig_smry.loc[0, datetime.datetime(2002, 1, 1)]["FOPR"]
+        # Pandas allows index lookup using both strings and datetimes (not date),
+        # because we have done a set_index() on the frame.
+        + orig_smry.loc[1, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[2, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[3, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[4, "2002-01-01"]["FOPR"]
+    ) / 5
+    fopr_mean_not1 = (
+        orig_smry.loc[0, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[2, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[3, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[4, "2002-01-01"]["FOPR"]
+    ) / 4  # == 5627.0299072265625
+
+    # The last alternative was how fmu.ensemble v1.x worked:
+    fopr_mean_zero1 = (  # noqa
+        orig_smry.loc[0, "2002-01-01"]["FOPR"]
+        + 0
+        + orig_smry.loc[2, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[3, "2002-01-01"]["FOPR"]
+        + orig_smry.loc[4, "2002-01-01"]["FOPR"]
+    ) / 5  # == 4501.62392578125
+
+    # Pandas 1.2.3 at least provides different time objects between the two frames:
+    # failensemble.get_smry_stats(time_index="monthly").loc["mean"].index.values
+    # filtered_fail_ensemble.get_smry_stats(time_index="monthly").loc["mean"].index.values
+    # with datetime.date() in the first and datetime64[ns] in the latter.
+    # We don't want to expose this test code to that detail, so convert to strings:
+    fail_stats_mean = fail_stats.loc["mean"]
+    fail_stats_mean.index = fail_stats_mean.index.astype(str)
+    assert fail_stats_mean.loc["2002-01-01"]["FOPR"] == fopr_mean_not1
+    filtered_stats_mean = filtered_stats.loc["mean"]
+    filtered_stats_mean.index = filtered_stats_mean.index.astype(str)
+    assert filtered_stats_mean.loc["2002-01-01"]["FOPR"] == fopr_mean_not1
+    orig_stats_mean = orig_stats.loc["mean"]
+    orig_stats_mean.index = orig_stats_mean.index.astype(str)
+    assert orig_stats_mean.loc["2002-01-01"]["FOPR"] == fopr_mean_all
+    # FOPT is handled identical to FOPR, as there is no extrapolation
+    # by default of summary vectors in fmu.ensemble v2.x (in v1.x rates and totals
+    # were extrapolated individually)
 
     # Delta profiles:
     delta_fail = origensemble - failensemble

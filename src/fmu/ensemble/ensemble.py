@@ -6,7 +6,6 @@ import glob
 import logging
 import warnings
 
-import dateutil
 import pandas as pd
 import numpy as np
 import yaml
@@ -1000,6 +999,10 @@ class ScratchEnsemble(object):
         independent of what is internalized. It accesses the summary files
         directly and can thus obtain data at any time frequency.
 
+        Quantiles refer to the scientific standard, opposite to the oil
+        industry convention. If quantiles are explicitly supplied, the 'pXX'
+        strings in the outer index are changed accordingly.
+
         Args:
             column_keys: list of column key wildcards
             time_index: list of DateTime if interpolation is wanted
@@ -1020,12 +1023,8 @@ class ScratchEnsemble(object):
                 is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
-            'mean', 'p10', 'p90', inner index are the dates. Column names
-            are the different vectors. Quantiles refer to the scientific
-            standard, opposite to the oil industry convention.
-            If quantiles are explicitly supplied, the 'pXX'
-            strings in the outer index are changed accordingly. If no
-            data is found, return empty DataFrame.
+            'mean', 'p10', 'p90', inner index is DATE. Column names are summary
+            vectors. If no data is found, an empty dataframe is returned.
         """
         if quantiles is None:
             quantiles = [10, 90]
@@ -1045,20 +1044,19 @@ class ScratchEnsemble(object):
             end_date=end_date,
         )
         if "REAL" in dframe:
-            dframe = dframe.drop(columns="REAL").groupby("DATE")
+            dframe_grouped = dframe.drop(columns="REAL").groupby("DATE")
         else:
-            logger.warning("No data found for get_smry_stats")
+            logger.warning("No data found for get_smry_stats()")
             return pd.DataFrame()
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
-        dframes["mean"] = dframe.mean()
+        dframes["mean"] = dframe_grouped.mean()
         for quantile in quantiles:
             quantile_str = "p" + str(quantile)
-            dframes[quantile_str] = dframe.quantile(q=quantile / 100.0)
-        dframes["maximum"] = dframe.max()
-        dframes["minimum"] = dframe.min()
-
+            dframes[quantile_str] = dframe_grouped.quantile(q=quantile / 100.0)
+        dframes["maximum"] = dframe_grouped.max()
+        dframes["minimum"] = dframe_grouped.min()
         return pd.concat(dframes, names=["STATISTIC"], sort=False)
 
     def get_wellnames(self, well_match=None):
@@ -1324,10 +1322,13 @@ class ScratchEnsemble(object):
         Aggregates summary data from all realizations.
 
         Wraps around Realization.get_smry() which wraps around
+        ecl2df.summary.df() which wraps around
         ecl.summary.EclSum.pandas_frame()
 
         The returned dataframe will always have a dummy index, and
-        DATE and REAL as columns.
+        DATE and REAL as columns. The DATE datatype will be datetime64[ns]
+        if dates are prior to year 2262, if not it will be datetime.datetime
+        objects.
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -1353,25 +1354,14 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
-        if isinstance(time_index, str):
-            # Try interpreting as ISO-date:
-            try:
-                parseddate = dateutil.parser.isoparse(time_index)
-                time_index = [parseddate]
-            # But this should fail when a frequency string is supplied:
-            except ValueError:
-                time_index = self.get_smry_dates(
-                    time_index,
-                    start_date=start_date,
-                    end_date=end_date,
-                    include_restart=include_restart,
-                )
         dflist = []
         meta = {}
         for index, realization in self.realizations.items():
             dframe = realization.get_smry(
                 time_index=time_index,
                 column_keys=column_keys,
+                start_date=start_date,
+                end_date=end_date,
                 include_restart=include_restart,
             )
             if "meta" in dframe.attrs:
