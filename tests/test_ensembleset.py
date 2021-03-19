@@ -37,6 +37,15 @@ def symlink_iter(origensdir, newitername):
         )
 
 
+def rms_vol2df(kwargs):
+    """Callback function to be sent to ensemble objects"""
+    fullpath = os.path.join(kwargs["realization"].runpath(), kwargs["filename"])
+    # The supplied callback should not fail too easy.
+    if os.path.exists(fullpath):
+        return volumetrics.rmsvolumetrics_txt2df(fullpath)
+    return pd.DataFrame()
+
+
 def test_ensembleset_reek001(tmpdir):
     """Test import of a stripped 5 realization ensemble,
     manually doubled to two identical ensembles
@@ -202,15 +211,7 @@ def test_ensembleset_reek001(tmpdir):
     assert len(ensset3.keys()) == predel_len - 1
 
     # Test callback functionality, that we can convert rms
-    # volumetrics in each realization. First we need a
-    # wrapper which is able to work on ScratchRealizations.
-    def rms_vol2df(kwargs):
-        """Callback function to be sent to ensemble objects"""
-        fullpath = os.path.join(kwargs["realization"].runpath(), kwargs["filename"])
-        # The supplied callback should not fail too easy.
-        if os.path.exists(fullpath):
-            return volumetrics.rmsvolumetrics_txt2df(fullpath)
-        return pd.DataFrame()
+    # volumetrics in each realization.
 
     if not SKIP_FMU_TOOLS:
         rmsvols_df = ensset3.apply(

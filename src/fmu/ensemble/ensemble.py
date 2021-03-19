@@ -5,15 +5,14 @@ import os
 import glob
 import logging
 import warnings
+from concurrent.futures import ProcessPoolExecutor
 
-import dateutil
 import pandas as pd
 import numpy as np
 import yaml
 from ecl import EclDataType
 from ecl.eclfile import EclKW
 
-from .etc import Interaction  # noqa
 from .realization import ScratchRealization
 from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
@@ -21,6 +20,7 @@ from .ensemblecombination import EnsembleCombination
 from .realization import parse_number
 from .util import shortcut2path
 from .util.dates import unionize_smry_dates
+from .common import use_concurrent
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +61,8 @@ class ScratchEnsemble(object):
             or relative path to a realization RUNPATH, third column is
             the basename of the Eclipse simulation, relative to RUNPATH.
             Fourth column is not used.
-        runpathfilter (str): If supplied, the only the runpaths in
-            the runpathfile which contains this string will be included
+        runpathfilter (str): If supplied, only the runpaths in
+            the runpathfile which contain this string will be included
             Use to select only a specific realization f.ex.
         autodiscovery (boolean): True by default, means that the class
             can try to autodiscover data in the realization. Turn
@@ -181,9 +181,12 @@ class ScratchEnsemble(object):
         Args:
             paths (list/str): String or list of strings with wildcards
                 to file system. Absolute or relative paths.
+            realidxregexp (str): Passed on to ScratchRealization init,
+                used to determine index from the path.
             autodiscovery (boolean): whether files can be attempted
                 auto-discovered
-            batch (list): Batch commands sent to each realization.
+            batch (list): Batch commands sent to each realization for
+                immediate execution after initialization.
 
         Returns:
             count (int): Number of realizations successfully added.
@@ -196,13 +199,30 @@ class ScratchEnsemble(object):
             globbedpaths = glob.glob(paths)
 
         count = 0
-        for realdir in globbedpaths:
-            realization = ScratchRealization(
-                realdir,
-                realidxregexp=realidxregexp,
-                autodiscovery=autodiscovery,
-                batch=batch,
-            )
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                futures_reals = [
+                    executor.submit(
+                        ScratchRealization,
+                        realdir,
+                        realidxregexp=realidxregexp,
+                        autodiscovery=autodiscovery,
+                        batch=batch,
+                    )
+                    for realdir in globbedpaths
+                ]
+                loaded_reals = [x.result() for x in futures_reals]
+        else:
+            loaded_reals = [
+                ScratchRealization(
+                    realdir,
+                    realidxregexp=realidxregexp,
+                    autodiscovery=autodiscovery,
+                    batch=batch,
+                )
+                for realdir in globbedpaths
+            ]
+        for realdir, realization in zip(globbedpaths, loaded_reals):
             if realization.index is None:
                 logger.critical(
                     "Could not determine realization index for path %s", realdir
@@ -260,21 +280,47 @@ class ScratchEnsemble(object):
             ):
                 raise ValueError("runpath dataframe not correct")
 
-        for _, row in runpath_df.iterrows():
-            if runpathfilter and runpathfilter not in row["runpath"]:
-                continue
-            logger.info("Adding realization from %s", row["runpath"])
-            realization = ScratchRealization(
-                row["runpath"],
-                index=int(row["index"]),
-                autodiscovery=False,
-                batch=batch,
+        if runpathfilter:
+            runpath_df = runpath_df[runpath_df["runpath"].str.contains(runpathfilter)]
+
+        if use_concurrent():
+            logger.info(
+                "Loading %s realizations concurrently from runpathfile",
+                str(len(runpath_df)),
             )
-            # Use the ECLBASE from the runpath file to
-            # ensure we recognize the correct UNSMRY file
-            realization.find_files(row["eclbase"] + ".DATA")
-            realization.find_files(row["eclbase"] + ".UNSMRY")
-            self.realizations[int(row["index"])] = realization
+            with ProcessPoolExecutor() as executor:
+                futures_reals = [
+                    executor.submit(
+                        ScratchRealization,
+                        row.runpath,
+                        index=int(row.index),
+                        autodiscovery=False,
+                        find_files=[
+                            row.eclbase + ".DATA",
+                            row.eclbase + ".UNSMRY",
+                        ],
+                        batch=batch,
+                    ).result()
+                    for row in runpath_df.itertuples()
+                ]
+                loaded_reals = [x.result for x in futures_reals]
+        else:
+            logger.info(
+                "Loading %s realizations sequentially from runpathfile",
+                str(len(runpath_df)),
+            )
+            loaded_reals = [
+                ScratchRealization(
+                    row.runpath,
+                    index=int(row.index),
+                    autodiscovery=False,
+                    find_files=[row.eclbase + ".DATA", row.eclbase + ".UNSMRY"],
+                    batch=batch,
+                )
+                for row in runpath_df.itertuples()
+            ]
+        for real in loaded_reals:
+            self.realizations[real.index] = real
 
         return len(self) - prelength
 
@@ -308,8 +354,11 @@ class ScratchEnsemble(object):
             realindices = [realindices]
         popped = 0
         for index in realindices:
-            self.realizations.pop(index, None)
-            popped += 1
+            if index in self.realizations.keys():
+                self.realizations.pop(index, None)
+                popped += 1
+            else:
+                logger.warning("Can't remove realization %d, it is not there", index)
         logger.info("removed %d realization(s)", popped)
 
     def to_virtual(self, name=None):
@@ -345,7 +394,7 @@ class ScratchEnsemble(object):
         ]
         smrycolumns = {smrykey for sublist in smrycolumns for smrykey in sublist}
         # flatten
-        meta = self.get_smry_meta(smrycolumns)
+        meta = self.get_smry_meta()
         if meta:
             meta_df = pd.DataFrame.from_dict(meta, orient="index")
             meta_df.index.name = "SMRYCOLUMN"
@@ -503,18 +552,18 @@ class ScratchEnsemble(object):
             pd.Dataframe: with loaded data aggregated. Column 'REAL'
             distuinguishes each realizations data.
         """
-        for index, realization in self.realizations.items():
-            try:
-                realization.load_file(localpath, fformat, convert_numeric, force_reread)
-            except ValueError as exc:
-                # This would at least occur for unsupported fileformat,
-                # and that we should not skip.
-                logger.critical("load_file() failed in realization %d", index)
-                raise ValueError from exc
-            except IOError:
-                # At ensemble level, we allow files to be missing in
-                # some realizations
-                logger.warning("Could not read %s for realization %d", localpath, index)
+        self.process_batch(
+            batch=[
+                {
+                    "load_file": {
+                        "localpath": localpath,
+                        "fformat": fformat,
+                        "convert_numeric": convert_numeric,
+                        "force_reread": force_reread,
+                    }
+                }
+            ]
+        )
         if self.get_df(localpath).empty:
             raise ValueError("No ensemble data found for {}".format(localpath))
         return self.get_df(localpath)
@@ -604,7 +653,7 @@ class ScratchEnsemble(object):
                 logger.warning("No EclSum available for realization %d", index)
         return list(result)
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -618,31 +667,12 @@ class ScratchEnsemble(object):
         * keyword (str)
         * wgname (str or None)
 
-        The requested columns are asked for over the entire ensemble, and if necessary
-        all realizations will be checked to obtain the metadata for a specific key.
-        If metadata differ between realization, behaviour is *undefined*.
-
-        Args:
-            column_keys (list or str): Column key wildcards.
-
         Returns:
             dict of dict with metadata information
         """
-        ensemble_smry_keys = self.get_smrykeys(vector_match=column_keys)
         meta = {}
-        needed_reals = 0
-        # Loop over realizations until all requested keys are accounted for
         for _, realization in self.realizations.items():
-            needed_reals += 1
-            real_meta = realization.get_smry_meta(column_keys=ensemble_smry_keys)
-            meta.update(real_meta)
-            missing_keys = set(ensemble_smry_keys) - set(meta.keys())
-            if not missing_keys:
-                break
-        if needed_reals:
-            logger.info(
-                "Searched %s realization(s) to get summary metadata", str(needed_reals)
-            )
+            meta.update(realization.get_smry_meta())
         return meta
 
     def get_df(self, localpath, merge=None):
@@ -669,7 +699,12 @@ class ScratchEnsemble(object):
             KeyError if no data is found in no realizations.
         """
         dflist = {}
+        meta = {}
         for index, realization in self.realizations.items():
+            # There is probably no gain from running this concurrently
+            # over the realizations. Each realization object holds
+            # the dataframes in memory already, so retrieval
+            # is at no cost.
             try:
                 data = realization.get_df(localpath, merge=merge)
                 if isinstance(data, dict):
@@ -677,6 +712,8 @@ class ScratchEnsemble(object):
                 elif isinstance(data, (str, int, float, np.number)):
                     data = pd.DataFrame(index=[1], columns=[localpath], data=data)
                 if isinstance(data, pd.DataFrame):
+                    if "meta" in data.attrs:
+                        meta.update(data.attrs["meta"])
                     dflist[index] = data
                 else:
                     raise ValueError("Unkown datatype returned " + "from realization")
@@ -689,16 +726,17 @@ class ScratchEnsemble(object):
             # the realization index, and end up in a MultiIndex
             dframe = pd.concat(dflist, sort=False).reset_index()
             dframe.rename(columns={"level_0": "REAL"}, inplace=True)
-            del dframe["level_1"]  # This is the indices from each real
-            return dframe
+
+            # Merge metadata from each frame:
+            if meta:
+                dframe.attrs["meta"] = meta
+            return dframe.drop("level_1", axis="columns", errors="ignore")
         raise KeyError("No data found for " + localpath)
 
     def load_smry(
         self,
         time_index="raw",
         column_keys=None,
-        stacked=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -743,9 +781,6 @@ class ScratchEnsemble(object):
                 by vector name, and with realization index as columns.
                 This only works when time_index is the same for all
                 realizations. Not implemented yet!
-            cache_eclsum (boolean): Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
-                memory simultaneously
             start_date (str or date): First date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -761,47 +796,32 @@ class ScratchEnsemble(object):
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
-        if stacked is not None:
-            warnings.warn(
-                (
-                    "stacked option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-        else:
-            stacked = True
-        if not stacked:
-            raise NotImplementedError
+        # process_batch() will modify each Realization object
+        # and add the loaded smry data to the list of internalized
+        # data, under a well-defined name (<dir>/unsmry--<timeindexstr>.csv)
 
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
-        # Future: Multithread this!
-        for realidx, realization in self.realizations.items():
-            # We do not store the returned DataFrames here,
-            # instead we look them up afterwards using get_df()
-            # Downside is that we have to compute the name of the
-            # cached object as it is not returned.
-            logger.info("Loading smry from realization %s", realidx)
-            realization.load_smry(
-                time_index=time_index,
-                column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
-                start_date=start_date,
-                end_date=end_date,
-                include_restart=include_restart,
-            )
+        # Since load_smry() also should return the aggregation
+        # of the loaded smry data, we need to pick up this
+        # data and aggregate it.
+        self.process_batch(
+            batch=[
+                {
+                    "load_smry": {
+                        "column_keys": column_keys,
+                        "time_index": time_index,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "include_restart": include_restart,
+                    }
+                }
+            ]
+        )
         if isinstance(time_index, (list, np.ndarray)):
             time_index = "custom"
         elif time_index is None:
             time_index = "raw"
+        # Note the dependency that the load_smry() function in
+        # ScratchRealization will store to this key-name:
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
     def get_volumetric_rates(self, column_keys=None, time_index=None):
@@ -942,12 +962,31 @@ class ScratchEnsemble(object):
             ScratchEnsemble: This ensemble object (self), for it
                 to be picked up by ProcessPoolExecutor and pickling.
         """
-        for realization in self.realizations.values():
-            realization.process_batch(batch)
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                real_indices = self.realizations.keys()
+                futures_reals = [
+                    executor.submit(
+                        real.process_batch, batch, excepts=(OSError, IOError)
+                    )
+                    for real in self.realizations.values()
+                ]
+                # Reassemble the realization dictionary from
+                # the pickled results of the ProcessPool:
+                self.realizations = {
+                    r_idx: real
+                    for (r_idx, real) in zip(
+                        real_indices, [x.result() for x in futures_reals]
+                    )
+                }
+        else:
+            for realization in self.realizations.values():
+                realization.process_batch(batch, excepts=(OSError, IOError))
+
         return self
 
     def apply(self, callback, **kwargs):
-        """Callback functionalty, apply a function to every realization
+        """Callback functionality, apply a function to every realization
 
         The supplied function handle will be handed over to
         each underlying realization object. The function supplied
@@ -967,16 +1006,47 @@ class ScratchEnsemble(object):
             pd.DataFrame, aggregated result of the supplied function
             on each realization.
         """
-        results = []
         logger.info("Ensemble %s is running callback %s", self.name, str(callback))
-        for realidx, realization in self.realizations.items():
-            result = realization.apply(callback, **kwargs).copy()
-            # (we took a copy since we are modifying it here:)
-            # Todo: Avoid copy by concatenatint a dict of dataframes
-            # where realization index is the dict keys.
-            result["REAL"] = realidx
-            results.append(result)
-        return pd.concat(results, sort=False, ignore_index=True)
+
+        # It is tempting to just call process_batch() here, but then we
+        # don't know how to collect the results from this particular
+        # apply() operation (if we enforced nonempty localpath, we could)
+        # > kwargs["callback"] = callback
+        # > ens.process_batch(batch=[{"apply": **kwargs}])  # (untested)
+        if use_concurrent():
+            with ProcessPoolExecutor() as executor:
+                real_indices = self.realizations.keys()
+                kwargs["excepts"] = (OSError, IOError)
+                futures_reals = [
+                    executor.submit(real.apply, callback, **kwargs)
+                    for real in self.realizations.values()
+                ]
+                # Reassemble a list of dataframes from the pickled results
+                # of the ProcessPool:
+                dframes_dict_from_apply = {
+                    realidx: dframe
+                    for (realidx, dframe) in zip(
+                        real_indices, [x.result() for x in futures_reals]
+                    )
+                }
+                # If localpath is an argument to the apply function, we not only
+                # need to return the data aggregated, but should also modify
+                # the realization data-dictionary for each member of the ensemble
+                # object.
+                if "localpath" in kwargs:
+                    for realidx, dataframe in dframes_dict_from_apply.items():
+                        self.realizations[realidx].data[kwargs["localpath"]] = dataframe
+                dframes_from_apply = [
+                    dframe.assign(REAL=realidx)
+                    for (realidx, dframe) in dframes_dict_from_apply.items()
+                ]
+
+        else:
+            dframes_from_apply = [
+                realization.apply(callback, **kwargs).assign(REAL=realidx)
+                for (realidx, realization) in self.realizations.items()
+            ]
+        return pd.concat(dframes_from_apply, sort=False, ignore_index=True)
 
     def get_smry_dates(
         self,
@@ -984,7 +1054,6 @@ class ScratchEnsemble(object):
         normalize=True,
         start_date=None,
         end_date=None,
-        cache_eclsum=None,
         include_restart=True,
     ):
         """Return list of datetimes for an ensemble according to frequency
@@ -1016,28 +1085,12 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes. Empty list if no data found.
         """
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_dates() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-        else:
-            cache_eclsum = True
-
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self.realizations.items():
-            if realization.get_eclsum(
-                cache=cache_eclsum, include_restart=include_restart
-            ):
+            if realization.get_eclsum(include_restart=include_restart):
                 eclsumsdates.append(
-                    realization.get_eclsum(
-                        cache=cache_eclsum, include_restart=include_restart
-                    ).dates
+                    realization.get_eclsum(include_restart=include_restart).dates
                 )
         return unionize_smry_dates(eclsumsdates, freq, normalize, start_date, end_date)
 
@@ -1046,7 +1099,6 @@ class ScratchEnsemble(object):
         column_keys=None,
         time_index="monthly",
         quantiles=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -1059,6 +1111,10 @@ class ScratchEnsemble(object):
         independent of what is internalized. It accesses the summary files
         directly and can thus obtain data at any time frequency.
 
+        Quantiles refer to the scientific standard, opposite to the oil
+        industry convention. If quantiles are explicitly supplied, the 'pXX'
+        strings in the outer index are changed accordingly.
+
         Args:
             column_keys: list of column key wildcards
             time_index: list of DateTime if interpolation is wanted
@@ -1069,8 +1125,6 @@ class ScratchEnsemble(object):
                to compute. Quantiles refer to scientific standard, which
                is opposite to the oil industry convention.
                Ask for p10 if you need the oil industry p90.
-            cache_eclsum: boolean for whether to keep the loaded EclSum
-                object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -1081,22 +1135,9 @@ class ScratchEnsemble(object):
                 is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
-            'mean', 'p10', 'p90', inner index are the dates. Column names
-            are the different vectors. Quantiles refer to the scientific
-            standard, opposite to the oil industry convention.
-            If quantiles are explicitly supplied, the 'pXX'
-            strings in the outer index are changed accordingly. If no
-            data is found, return empty DataFrame.
+            'mean', 'p10', 'p90', inner index is DATE. Column names are summary
+            vectors. If no data is found, an empty dataframe is returned.
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_stats() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         if quantiles is None:
             quantiles = [10, 90]
 
@@ -1111,25 +1152,23 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(
             time_index=time_index,
             column_keys=column_keys,
-            cache_eclsum=cache_eclsum,
             start_date=start_date,
             end_date=end_date,
         )
         if "REAL" in dframe:
-            dframe = dframe.drop(columns="REAL").groupby("DATE")
+            dframe_grouped = dframe.drop(columns="REAL").groupby("DATE")
         else:
-            logger.warning("No data found for get_smry_stats")
+            logger.warning("No data found for get_smry_stats()")
             return pd.DataFrame()
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
-        dframes["mean"] = dframe.mean()
+        dframes["mean"] = dframe_grouped.mean()
         for quantile in quantiles:
             quantile_str = "p" + str(quantile)
-            dframes[quantile_str] = dframe.quantile(q=quantile / 100.0)
-        dframes["maximum"] = dframe.max()
-        dframes["minimum"] = dframe.min()
-
+            dframes[quantile_str] = dframe_grouped.quantile(q=quantile / 100.0)
+        dframes["maximum"] = dframe_grouped.max()
+        dframes["minimum"] = dframe_grouped.min()
         return pd.concat(dframes, names=["STATISTIC"], sort=False)
 
     def get_wellnames(self, well_match=None):
@@ -1251,6 +1290,12 @@ class ScratchEnsemble(object):
             key = shortcut2path(self.keys(), key)
             data = self.get_df(key)
 
+            # Preserve metadata in dataframes:
+            if "meta" in data.attrs:
+                meta = data.attrs["meta"]
+            else:
+                meta = {}
+
             # This column should never appear in aggregated data
             del data["REAL"]
 
@@ -1310,6 +1355,10 @@ class ScratchEnsemble(object):
             # We have to recognize scalars.
             if len(aggregated) == 1 and aggregated.index.values[0] == key:
                 aggregated = parse_number(aggregated.values[0])
+
+            # Preserve metadata:
+            if meta:
+                aggregated.attrs["meta"] = meta
             vreal.append(key, aggregated)
         return vreal
 
@@ -1377,7 +1426,6 @@ class ScratchEnsemble(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1386,7 +1434,13 @@ class ScratchEnsemble(object):
         Aggregates summary data from all realizations.
 
         Wraps around Realization.get_smry() which wraps around
+        ecl2df.summary.df() which wraps around
         ecl.summary.EclSum.pandas_frame()
+
+        The returned dataframe will always have a dummy index, and
+        DATE and REAL as columns. The DATE datatype will be datetime64[ns]
+        if dates are prior to year 2262, if not it will be datetime.datetime
+        objects.
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -1396,9 +1450,6 @@ class ScratchEnsemble(object):
                a wanted frequencey for dates, daily, weekly, monthly, yearly,
                that will be send to get_smry_dates()
             column_keys: list of column key wildcards
-            cache_eclsum: boolean for whether to cache the EclSum
-                objects. Defaults to True. Set to False if
-                not enough memory to keep all summary files in memory.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -1415,41 +1466,37 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
-        if isinstance(time_index, str):
-            # Try interpreting as ISO-date:
-            try:
-                parseddate = dateutil.parser.isoparse(time_index)
-                time_index = [parseddate]
-            # But this should fail when a frequency string is supplied:
-            except ValueError:
-                time_index = self.get_smry_dates(
-                    time_index,
+        dframes = []
+        with ProcessPoolExecutor() as executor:
+            real_indices = self.realizations.keys()
+            # Note that we cannot use process_batch()
+            # here as we need dataframes in return, not
+            # realizations.
+            futures_dframes = [
+                executor.submit(
+                    realization.get_smry,
+                    time_index=time_index,
+                    column_keys=column_keys,
                     start_date=start_date,
                     end_date=end_date,
                     include_restart=include_restart,
                 )
-        dflist = []
-        for index, realization in self.realizations.items():
-            dframe = realization.get_smry(
-                time_index=time_index,
-                column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
-                include_restart=include_restart,
-            )
-            dframe.insert(0, "REAL", index)
-            dframe.index.name = "DATE"
-            dflist.append(dframe)
-        if dflist:
-            return pd.concat(dflist, sort=False).reset_index()
+                for realization in self.realizations.values()
+            ]
+            # Reassemble a list of dataframes from the pickled results
+            # of the ProcessPool, also preserving smry metadata:
+            meta = {}
+            for realidx, dframe in zip(
+                real_indices, [x.result() for x in futures_dframes]
+            ):
+                if "meta" in dframe.attrs:
+                    meta.update(dframe.attrs["meta"])
+                dframes.append(dframe.assign(REAL=realidx))
+
+        if dframes:
+            merged = pd.concat(dframes, sort=False)
+            merged.attrs["meta"] = meta
+            return merged
         return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg="mean", active_only=False):

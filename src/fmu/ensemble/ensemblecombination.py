@@ -98,20 +98,30 @@ class EnsembleCombination(object):
         refdf = self.ref.get_df(localpath, merge=merge).set_index(indexlist)
         refdf = refdf.select_dtypes(include="number")
         result = refdf.mul(self.scale)
+        meta = {}
+        if "meta" in refdf.attrs:
+            meta.update(refdf.attrs["meta"])
         if self.add:
             otherdf = self.add.get_df(localpath, merge=merge).set_index(indexlist)
             otherdf = otherdf.select_dtypes(include="number")
             result = result.add(otherdf)
+            if "meta" in otherdf.attrs:
+                meta.update(otherdf.attrs["meta"])
         if self.sub:
             otherdf = self.sub.get_df(localpath, merge=merge).set_index(indexlist)
             otherdf = otherdf.select_dtypes(include="number")
             result = result.sub(otherdf)
+            if "meta" in otherdf.attrs:
+                meta.update(otherdf.attrs["meta"])
         # Delete rows where everything is NaN, which will be case when
         # realization (multi-)indices does not match up in both ensembles.
         result.dropna(axis="index", how="all", inplace=True)
         # Also delete columns where everything is NaN, happens when
         # column data are not similar
         result.dropna(axis="columns", how="all", inplace=True)
+        # Add metadata:
+        if meta:
+            result.attrs["meta"] = meta
         return result.reset_index()
 
     def to_virtual(self, keyfilter=None):
@@ -204,6 +214,7 @@ class EnsembleCombination(object):
                 time_index=time_index, column_keys=column_keys
             ).set_index(indexlist)
             result = result.sub(otherdf)
+        result.attrs["meta"] = self.get_smry_meta()
         return result.reset_index()
 
     def get_smry_stats(self, column_keys=None, time_index="monthly"):
@@ -251,7 +262,7 @@ class EnsembleCombination(object):
             sort=False,
         )
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -264,15 +275,12 @@ class EnsembleCombination(object):
         * get_num (int) (only provided if not None)
         * keyword (str)
         * wgname (str or None)
-
-        Args:
-            column_keys: List or str of column key wildcards
         """
-        meta = self.ref.get_smry_meta(column_keys=column_keys)
+        meta = self.ref.get_smry_meta()
         if self.add:
-            meta.update(self.add.get_smry_meta(column_keys=column_keys))
+            meta.update(self.add.get_smry_meta())
         if self.sub:
-            meta.update(self.sub.get_smry_meta(column_keys=column_keys))
+            meta.update(self.sub.get_smry_meta())
         return meta
 
     def agg(self, aggregation, keylist=None, excludekeys=None):

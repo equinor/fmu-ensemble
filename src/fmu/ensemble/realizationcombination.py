@@ -149,6 +149,8 @@ class RealizationCombination(object):
             # Also delete columns where everything is NaN, happens when
             # column data are not similar
             result.dropna(axis="columns", how="all", inplace=True)
+            # Add metadata
+            result.attrs["meta"] = self.get_smry_meta()
             return result.reset_index()
         if isinstance(result, pd.Series):
             return result.dropna().to_dict()
@@ -240,7 +242,7 @@ class RealizationCombination(object):
             result = result.sub(otherdf)
         return result.reset_index()
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -253,15 +255,12 @@ class RealizationCombination(object):
         * get_num (int) (only provided if not None)
         * keyword (str)
         * wgname (str og None)
-
-        Args:
-            column_keys: List or str of column key wildcards
         """
-        meta = self.ref.get_smry_meta(column_keys=column_keys)
+        meta = self.ref.get_smry_meta()
         if self.add:
-            meta.update(self.add.get_smry_meta(column_keys=column_keys))
+            meta.update(self.add.get_smry_meta())
         if self.sub:
-            meta.update(self.sub.get_smry_meta(column_keys=column_keys))
+            meta.update(self.sub.get_smry_meta())
         return meta
 
     @property

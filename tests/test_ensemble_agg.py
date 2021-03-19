@@ -39,6 +39,12 @@ def test_ensemble_aggregations(tmpdir):
     }
 
     tmpdir.chdir()
+    assert "FOPT" in stats["min"].get_df("unsmry--yearly").attrs["meta"]
+    assert (
+        "FOPT"
+        in stats["min"].get_smry(column_keys="FOPT", time_index="yearly").attrs["meta"]
+    )
+
     stats["min"].to_disk("virtreal_min", delete=True)
     stats["max"].to_disk("virtreal_max", delete=True)
     stats["mean"].to_disk("virtreal_mean", delete=True)

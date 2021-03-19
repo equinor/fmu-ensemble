@@ -65,7 +65,9 @@ def compute_volumetric_rates(realization, column_keys, time_index, time_unit):
         return pd.DataFrame()
 
     cum_df = realization.get_smry(column_keys=column_keys, time_index=time_index)
-    # get_smry() for realizations return a dataframe indexed by 'DATE'
+
+    if not cum_df.empty:
+        cum_df.set_index("DATE", inplace=True)
 
     # Compute row-wise difference, shift back one row
     # to get the NaN to the end, and then drop the NaN.
