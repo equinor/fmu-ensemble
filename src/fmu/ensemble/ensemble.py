@@ -201,16 +201,17 @@ class ScratchEnsemble(object):
         count = 0
         if use_concurrent():
             with ProcessPoolExecutor() as executor:
-                loaded_reals = [
+                futures_reals = [
                     executor.submit(
                         ScratchRealization,
                         realdir,
                         realidxregexp=realidxregexp,
                         autodiscovery=autodiscovery,
                         batch=batch,
-                    ).result()
+                    )
                     for realdir in globbedpaths
                 ]
+                loaded_reals = [x.result() for x in futures_reals]
         else:
             loaded_reals = [
                 ScratchRealization(
@@ -288,7 +289,7 @@ class ScratchEnsemble(object):
                 str(len(runpath_df)),
             )
             with ProcessPoolExecutor() as executor:
-                loaded_reals = [
+                futures_reals = [
                     executor.submit(
                         ScratchRealization,
                         row.runpath,
@@ -302,6 +303,7 @@ class ScratchEnsemble(object):
                     ).result()
                     for row in runpath_df.itertuples()
                 ]
+                loaded_reals = [x.result for x in futures_reals]
         else:
             logger.info(
                 "Loading %s realizations sequentially from runpathfile",
