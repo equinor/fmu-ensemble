@@ -1059,7 +1059,7 @@ def test_apply(tmpdir):
 
 
 def test_manifest(tmpdir):
-    """Test initializing ensembles with manifest """
+    """Test initializing ensembles with manifest"""
 
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
