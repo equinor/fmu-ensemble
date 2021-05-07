@@ -1559,7 +1559,7 @@ class ScratchEnsemble(object):
 
     @property
     def init_keys(self):
-        """Return all keys available in the Eclipse INIT file """
+        """Return all keys available in the Eclipse INIT file"""
         warnings.warn(
             (
                 "ensemble.init_keys() is deprecated and "
@@ -1580,7 +1580,7 @@ class ScratchEnsemble(object):
 
     @property
     def unrst_keys(self):
-        """Return keys availaible in the Eclipse UNRST file """
+        """Return keys availaible in the Eclipse UNRST file"""
         warnings.warn(
             (
                 "ensemble.unrst_keys() is deprecated and "
@@ -1600,7 +1600,7 @@ class ScratchEnsemble(object):
         return all_keys
 
     def get_unrst_report_dates(self):
-        """Returns UNRST report step and the corresponding date """
+        """Returns UNRST report step and the corresponding date"""
         warnings.warn(
             (
                 "ensemble.get_unrst_report_dates() is deprecated and "
