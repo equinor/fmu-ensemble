@@ -6,7 +6,6 @@ import glob
 import logging
 import warnings
 
-import dateutil
 import pandas as pd
 import numpy as np
 import yaml
@@ -345,7 +344,7 @@ class ScratchEnsemble(object):
         ]
         smrycolumns = {smrykey for sublist in smrycolumns for smrykey in sublist}
         # flatten
-        meta = self.get_smry_meta(smrycolumns)
+        meta = self.get_smry_meta()
         if meta:
             meta_df = pd.DataFrame.from_dict(meta, orient="index")
             meta_df.index.name = "SMRYCOLUMN"
@@ -604,7 +603,7 @@ class ScratchEnsemble(object):
                 logger.warning("No EclSum available for realization %d", index)
         return list(result)
 
-    def get_smry_meta(self, column_keys=None):
+    def get_smry_meta(self):
         """
         Provide metadata for summary data vectors.
 
@@ -618,31 +617,12 @@ class ScratchEnsemble(object):
         * keyword (str)
         * wgname (str or None)
 
-        The requested columns are asked for over the entire ensemble, and if necessary
-        all realizations will be checked to obtain the metadata for a specific key.
-        If metadata differ between realization, behaviour is *undefined*.
-
-        Args:
-            column_keys (list or str): Column key wildcards.
-
         Returns:
             dict of dict with metadata information
         """
-        ensemble_smry_keys = self.get_smrykeys(vector_match=column_keys)
         meta = {}
-        needed_reals = 0
-        # Loop over realizations until all requested keys are accounted for
         for _, realization in self.realizations.items():
-            needed_reals += 1
-            real_meta = realization.get_smry_meta(column_keys=ensemble_smry_keys)
-            meta.update(real_meta)
-            missing_keys = set(ensemble_smry_keys) - set(meta.keys())
-            if not missing_keys:
-                break
-        if needed_reals:
-            logger.info(
-                "Searched %s realization(s) to get summary metadata", str(needed_reals)
-            )
+            meta.update(realization.get_smry_meta())
         return meta
 
     def get_df(self, localpath, merge=None):
@@ -669,6 +649,7 @@ class ScratchEnsemble(object):
             KeyError if no data is found in no realizations.
         """
         dflist = {}
+        meta = {}
         for index, realization in self.realizations.items():
             try:
                 data = realization.get_df(localpath, merge=merge)
@@ -677,6 +658,8 @@ class ScratchEnsemble(object):
                 elif isinstance(data, (str, int, float, np.number)):
                     data = pd.DataFrame(index=[1], columns=[localpath], data=data)
                 if isinstance(data, pd.DataFrame):
+                    if "meta" in data.attrs:
+                        meta.update(data.attrs["meta"])
                     dflist[index] = data
                 else:
                     raise ValueError("Unkown datatype returned " + "from realization")
@@ -689,16 +672,17 @@ class ScratchEnsemble(object):
             # the realization index, and end up in a MultiIndex
             dframe = pd.concat(dflist, sort=False).reset_index()
             dframe.rename(columns={"level_0": "REAL"}, inplace=True)
-            del dframe["level_1"]  # This is the indices from each real
-            return dframe
+
+            # Merge metadata from each frame:
+            if meta:
+                dframe.attrs["meta"] = meta
+            return dframe.drop("level_1", axis="columns", errors="ignore")
         raise KeyError("No data found for " + localpath)
 
     def load_smry(
         self,
         time_index="raw",
         column_keys=None,
-        stacked=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -743,9 +727,6 @@ class ScratchEnsemble(object):
                 by vector name, and with realization index as columns.
                 This only works when time_index is the same for all
                 realizations. Not implemented yet!
-            cache_eclsum (boolean): Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
-                memory simultaneously
             start_date (str or date): First date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -761,28 +742,6 @@ class ScratchEnsemble(object):
             pd.DataFame: Summary vectors for the ensemble, or
             a dict of dataframes if stacked=False.
         """
-        if stacked is not None:
-            warnings.warn(
-                (
-                    "stacked option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-        else:
-            stacked = True
-        if not stacked:
-            raise NotImplementedError
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         # Future: Multithread this!
         for realidx, realization in self.realizations.items():
             # We do not store the returned DataFrames here,
@@ -793,7 +752,6 @@ class ScratchEnsemble(object):
             realization.load_smry(
                 time_index=time_index,
                 column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
                 start_date=start_date,
                 end_date=end_date,
                 include_restart=include_restart,
@@ -984,7 +942,6 @@ class ScratchEnsemble(object):
         normalize=True,
         start_date=None,
         end_date=None,
-        cache_eclsum=None,
         include_restart=True,
     ):
         """Return list of datetimes for an ensemble according to frequency
@@ -1016,28 +973,12 @@ class ScratchEnsemble(object):
         Returns:
             list of datetimes. Empty list if no data found.
         """
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_dates() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-        else:
-            cache_eclsum = True
-
         # Build list of list of eclsum dates
         eclsumsdates = []
         for _, realization in self.realizations.items():
-            if realization.get_eclsum(
-                cache=cache_eclsum, include_restart=include_restart
-            ):
+            if realization.get_eclsum(include_restart=include_restart):
                 eclsumsdates.append(
-                    realization.get_eclsum(
-                        cache=cache_eclsum, include_restart=include_restart
-                    ).dates
+                    realization.get_eclsum(include_restart=include_restart).dates
                 )
         return unionize_smry_dates(eclsumsdates, freq, normalize, start_date, end_date)
 
@@ -1046,7 +987,6 @@ class ScratchEnsemble(object):
         column_keys=None,
         time_index="monthly",
         quantiles=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -1059,6 +999,10 @@ class ScratchEnsemble(object):
         independent of what is internalized. It accesses the summary files
         directly and can thus obtain data at any time frequency.
 
+        Quantiles refer to the scientific standard, opposite to the oil
+        industry convention. If quantiles are explicitly supplied, the 'pXX'
+        strings in the outer index are changed accordingly.
+
         Args:
             column_keys: list of column key wildcards
             time_index: list of DateTime if interpolation is wanted
@@ -1069,8 +1013,6 @@ class ScratchEnsemble(object):
                to compute. Quantiles refer to scientific standard, which
                is opposite to the oil industry convention.
                Ask for p10 if you need the oil industry p90.
-            cache_eclsum: boolean for whether to keep the loaded EclSum
-                object in memory after data has been loaded.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -1081,22 +1023,9 @@ class ScratchEnsemble(object):
                 is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
         Returns:
             A MultiIndex dataframe. Outer index is 'minimum', 'maximum',
-            'mean', 'p10', 'p90', inner index are the dates. Column names
-            are the different vectors. Quantiles refer to the scientific
-            standard, opposite to the oil industry convention.
-            If quantiles are explicitly supplied, the 'pXX'
-            strings in the outer index are changed accordingly. If no
-            data is found, return empty DataFrame.
+            'mean', 'p10', 'p90', inner index is DATE. Column names are summary
+            vectors. If no data is found, an empty dataframe is returned.
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_stats() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         if quantiles is None:
             quantiles = [10, 90]
 
@@ -1111,25 +1040,23 @@ class ScratchEnsemble(object):
         dframe = self.get_smry(
             time_index=time_index,
             column_keys=column_keys,
-            cache_eclsum=cache_eclsum,
             start_date=start_date,
             end_date=end_date,
         )
         if "REAL" in dframe:
-            dframe = dframe.drop(columns="REAL").groupby("DATE")
+            dframe_grouped = dframe.drop(columns="REAL").groupby("DATE")
         else:
-            logger.warning("No data found for get_smry_stats")
+            logger.warning("No data found for get_smry_stats()")
             return pd.DataFrame()
 
         # Build a dictionary of dataframes to be concatenated
         dframes = {}
-        dframes["mean"] = dframe.mean()
+        dframes["mean"] = dframe_grouped.mean()
         for quantile in quantiles:
             quantile_str = "p" + str(quantile)
-            dframes[quantile_str] = dframe.quantile(q=quantile / 100.0)
-        dframes["maximum"] = dframe.max()
-        dframes["minimum"] = dframe.min()
-
+            dframes[quantile_str] = dframe_grouped.quantile(q=quantile / 100.0)
+        dframes["maximum"] = dframe_grouped.max()
+        dframes["minimum"] = dframe_grouped.min()
         return pd.concat(dframes, names=["STATISTIC"], sort=False)
 
     def get_wellnames(self, well_match=None):
@@ -1251,6 +1178,12 @@ class ScratchEnsemble(object):
             key = shortcut2path(self.keys(), key)
             data = self.get_df(key)
 
+            # Preserve metadata in dataframes:
+            if "meta" in data.attrs:
+                meta = data.attrs["meta"]
+            else:
+                meta = {}
+
             # This column should never appear in aggregated data
             del data["REAL"]
 
@@ -1310,6 +1243,10 @@ class ScratchEnsemble(object):
             # We have to recognize scalars.
             if len(aggregated) == 1 and aggregated.index.values[0] == key:
                 aggregated = parse_number(aggregated.values[0])
+
+            # Preserve metadata:
+            if meta:
+                aggregated.attrs["meta"] = meta
             vreal.append(key, aggregated)
         return vreal
 
@@ -1377,7 +1314,6 @@ class ScratchEnsemble(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
         include_restart=True,
@@ -1386,7 +1322,13 @@ class ScratchEnsemble(object):
         Aggregates summary data from all realizations.
 
         Wraps around Realization.get_smry() which wraps around
+        ecl2df.summary.df() which wraps around
         ecl.summary.EclSum.pandas_frame()
+
+        The returned dataframe will always have a dummy index, and
+        DATE and REAL as columns. The DATE datatype will be datetime64[ns]
+        if dates are prior to year 2262, if not it will be datetime.datetime
+        objects.
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -1396,9 +1338,6 @@ class ScratchEnsemble(object):
                a wanted frequencey for dates, daily, weekly, monthly, yearly,
                that will be send to get_smry_dates()
             column_keys: list of column key wildcards
-            cache_eclsum: boolean for whether to cache the EclSum
-                objects. Defaults to True. Set to False if
-                not enough memory to keep all summary files in memory.
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -1415,41 +1354,24 @@ class ScratchEnsemble(object):
             REAL with integers is added to distinguish realizations. If
             no realizations, empty DataFrame is returned.
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
-        if isinstance(time_index, str):
-            # Try interpreting as ISO-date:
-            try:
-                parseddate = dateutil.parser.isoparse(time_index)
-                time_index = [parseddate]
-            # But this should fail when a frequency string is supplied:
-            except ValueError:
-                time_index = self.get_smry_dates(
-                    time_index,
-                    start_date=start_date,
-                    end_date=end_date,
-                    include_restart=include_restart,
-                )
         dflist = []
+        meta = {}
         for index, realization in self.realizations.items():
             dframe = realization.get_smry(
                 time_index=time_index,
                 column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
+                start_date=start_date,
+                end_date=end_date,
                 include_restart=include_restart,
             )
+            if "meta" in dframe.attrs:
+                meta.update(dframe.attrs["meta"])
             dframe.insert(0, "REAL", index)
-            dframe.index.name = "DATE"
             dflist.append(dframe)
         if dflist:
-            return pd.concat(dflist, sort=False).reset_index()
+            dframes = pd.concat(dflist, sort=False)
+            dframes.attrs["meta"] = meta
+            return dframes
         return pd.DataFrame()
 
     def get_eclgrid(self, props, report=0, agg="mean", active_only=False):

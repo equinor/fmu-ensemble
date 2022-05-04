@@ -1,6 +1,4 @@
-"""
-Observations support and related calculations
-"""
+"""Observations support and related calculations"""
 
 import os
 import math
@@ -174,7 +172,7 @@ class Observations(object):
         """
         dataseries = realization.get_smry(
             column_keys=[smryvector], time_index=time_index
-        )[smryvector]
+        )[["DATE", smryvector]].set_index("DATE")[smryvector]
 
         # In the context of this function, datetimes are not supported. Ensure dates:
         if isinstance(dataseries.index, pd.DatetimeIndex):

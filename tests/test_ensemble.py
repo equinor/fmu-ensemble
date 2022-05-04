@@ -152,7 +152,6 @@ def test_reek001(tmpdir):
         ]
     )
     assert len(reekensemble) == 5
-    print(reekensemble.files)
     assert len(reekensemble.files) == 24
 
     # File discovery must be repeated for the newly added realizations
@@ -237,18 +236,6 @@ def test_emptyens():
     assert not emptygroups
 
     emptymeta = ens.get_smry_meta()
-    assert isinstance(emptymeta, dict)
-    assert not emptymeta
-
-    emptymeta = ens.get_smry_meta("*")
-    assert isinstance(emptymeta, dict)
-    assert not emptymeta
-
-    emptymeta = ens.get_smry_meta("FOPT")
-    assert isinstance(emptymeta, dict)
-    assert not emptymeta
-
-    emptymeta = ens.get_smry_meta(["FOPT"])
     assert isinstance(emptymeta, dict)
     assert not emptymeta
 
@@ -473,24 +460,19 @@ def test_ensemble_ecl():
     )
 
     # Summary metadata:
+    reekensemble.load_smry(time_index="yearly", column_keys="*")
     meta = reekensemble.get_smry_meta()
     assert len(meta) == len(reekensemble.get_smrykeys())
     assert "FOPT" in meta
     assert not meta["FOPT"]["is_rate"]
     assert meta["FOPT"]["is_total"]
 
-    meta = reekensemble.get_smry_meta("FOPT")
-    assert meta["FOPT"]["is_total"]
+    # Meta should also be returned via dataframe's "attrs"
+    yearly_df_load = reekensemble.load_smry(time_index="yearly", column_keys="FOPT")
+    assert set(yearly_df_load.attrs["meta"].keys()) == set(["FOPT"])
 
-    meta = reekensemble.get_smry_meta("*")
-    assert meta["FOPT"]["is_total"]
-
-    meta = reekensemble.get_smry_meta(["*"])
-    assert meta["FOPT"]["is_total"]
-
-    meta = reekensemble.get_smry_meta(["FOPT", "BOGUS"])
-    assert meta["FOPT"]["is_total"]
-    assert "BOGUS" not in meta
+    yearly_df_get = reekensemble.get_smry(time_index="yearly", column_keys="FOPT")
+    assert set(yearly_df_get.attrs["meta"].keys()) == set(["FOPT"])
 
     # Eclipse well names list
     assert len(reekensemble.get_wellnames("OP*")) == 5
@@ -498,9 +480,6 @@ def test_ensemble_ecl():
     assert len(reekensemble.get_wellnames()) == 8
     assert not reekensemble.get_wellnames("")
     assert len(reekensemble.get_wellnames(["OP*", "WI*"])) == 8
-
-    # eclipse well groups list
-    assert len(reekensemble.get_groupnames()) == 3
 
     # delta between two ensembles
     diff = reekensemble - reekensemble
@@ -827,57 +806,6 @@ def test_nonexisting():
         "noaccess", "/scratch/johan_sverdrup/js_phase5/" + "foo/realization-*/iter-0"
     )
     assert not nopermission
-
-
-def test_eclsumcaching():
-    """Test caching of eclsum"""
-
-    if "__file__" in globals():
-        # Easen up copying test code into interactive sessions
-        testdir = os.path.dirname(os.path.abspath(__file__))
-    else:
-        testdir = os.path.abspath(".")
-
-    dirs = testdir + "/data/testensemble-reek001/" + "realization-*/iter-0"
-    ens = ScratchEnsemble("reektest", dirs)
-
-    # The problem here is if you load in a lot of UNSMRY files
-    # and the Python process keeps them in memory. Not sure
-    # how to check in code that an object has been garbage collected
-    # but for garbage collection to work, at least the realization
-    # _eclsum variable must be None.
-
-    ens.load_smry()
-    # Default is to do caching, so these will not be None:
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    # If we redo this operation, the same objects should all
-    # be None afterwards:
-    ens.load_smry(cache_eclsum=False)
-    # cache_eclsum==None is from v1.1.5 no longer equivalent to False
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry_stats()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry_stats(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    ens.get_smry_dates()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
-
-    # Clear the cached objects because the statement above has cached it..
-    for _, realization in ens.realizations.items():
-        realization._eclsum = None
-
-    ens.get_smry_dates(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
 
 
 def test_filedescriptors():

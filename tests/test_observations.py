@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing observations in fmu-ensemble."""
 
 import os
@@ -66,24 +65,26 @@ def test_real_mismatch():
     )
     realmis = obs.mismatch(real)
 
-    # Check layout of returned data
-    assert isinstance(realmis, pd.DataFrame)
-    assert len(realmis) == 1
+    pd.testing.assert_frame_equal(
+        realmis,
+        pd.DataFrame(
+            [
+                {
+                    "OBSTYPE": "txt",
+                    "OBSKEY": "parameters.txt/FWL",
+                    "MISMATCH": -2.0,
+                    "L1": 2.0,
+                    "L2": 4.0,
+                    "SIMVALUE": 1700,
+                    "OBSVALUE": 1702,
+                    "MEASERROR": 1,
+                    "SIGN": -1,
+                }
+            ]
+        ),
+    )
     assert "REAL" not in realmis.columns  # should only be there for ensembles.
-    assert "OBSTYPE" in realmis.columns
-    assert "OBSKEY" in realmis.columns
     assert "DATE" not in realmis.columns  # date is not relevant
-    assert "MISMATCH" in realmis.columns
-    assert "L1" in realmis.columns
-    assert "L2" in realmis.columns
-
-    # Check actually computed values, there should only be one row with data:
-    assert realmis.loc[0, "OBSTYPE"] == "txt"
-    assert realmis.loc[0, "OBSKEY"] == "parameters.txt/FWL"
-    assert realmis.loc[0, "MISMATCH"] == -2
-    assert realmis.loc[0, "SIGN"] == -1
-    assert realmis.loc[0, "L1"] == 2
-    assert realmis.loc[0, "L2"] == 4
 
     # Another observation set:
     obs2 = Observations(
@@ -96,12 +97,46 @@ def test_real_mismatch():
         }
     )
     realmis2 = obs2.mismatch(real)
-    assert len(realmis2) == 3
-    assert "parameters.txt/RMS_SEED" in realmis2["OBSKEY"].values
-    assert "outputs.txt/top_structure" in realmis2["OBSKEY"].values
-    assert "npv.txt" in realmis2["OBSKEY"].values
-
-    # assert much more!
+    pd.testing.assert_frame_equal(
+        realmis2,
+        pd.DataFrame(
+            [
+                {
+                    "OBSTYPE": "txt",
+                    "OBSKEY": "parameters.txt/RMS_SEED",
+                    "MISMATCH": -177148215.0,
+                    "L1": 177148215.0,
+                    "L2": 3.1381490077686224e16,
+                    "SIMVALUE": 422851785,
+                    "OBSVALUE": 600000000,
+                    "MEASERROR": 1,
+                    "SIGN": -1,
+                },
+                {
+                    "OBSTYPE": "txt",
+                    "OBSKEY": "outputs.txt/top_structure",
+                    "MISMATCH": 24.0,
+                    "L1": 24.0,
+                    "L2": 576.0,
+                    "SIMVALUE": 3224,
+                    "OBSVALUE": 3200,
+                    "MEASERROR": 1,
+                    "SIGN": 1,
+                },
+                {
+                    "OBSTYPE": "scalar",
+                    "OBSKEY": "npv.txt",
+                    "MISMATCH": 44.0,
+                    "L1": 44.0,
+                    "L2": 1936.0,
+                    "SIMVALUE": 3444,
+                    "OBSVALUE": 3400,
+                    "MEASERROR": 1,
+                    "SIGN": 1,
+                },
+            ]
+        ),
+    )
 
     # Test that we can write the observations to yaml
     # and verify that the exported yaml can be reimported
@@ -215,6 +250,26 @@ def test_smry():
     # loaded realization.
     mismatch = obs.mismatch(real)
 
+    # Assert the first row exactly:
+    pd.testing.assert_frame_equal(
+        mismatch.head(1),
+        pd.DataFrame(
+            [
+                {
+                    "OBSTYPE": "smry",
+                    "OBSKEY": "WBP4:OP_1",
+                    "DATE": datetime.date(2001, 1, 1),
+                    "MEASERROR": 4.0,
+                    "MISMATCH": -2.159454345703125,
+                    "OBSVALUE": 251.0,
+                    "SIMVALUE": 248.84054565429688,
+                    "L1": 2.159454345703125,
+                    "L2": 4.663243071176112,
+                    "SIGN": -1,
+                }
+            ]
+        ),
+    )
     assert len(mismatch) == 21  # later: implement counting in the obs object
     assert mismatch.L1.sum() > 0
     assert mismatch.L2.sum() > 0
@@ -537,7 +592,6 @@ def test_ensset_mismatch():
         == mismatch[mismatch.ENSEMBLE == "iter-1"].L1.sum()
     )
 
-    # This is quite hard to input in dict-format. Better via YAML..
     obs_pr = Observations(
         {
             "smry": [

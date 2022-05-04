@@ -572,7 +572,6 @@ class EnsembleSet(object):
         self,
         time_index="raw",
         column_keys=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -596,9 +595,6 @@ class EnsembleSet(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
-            cache_eclsum: Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
-                memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -612,21 +608,11 @@ class EnsembleSet(object):
             A DataFame of summary vectors for the ensembleset.
             The column 'ENSEMBLE' will denote each ensemble's name
         """
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to load_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         # Future: Multithread this:
         for _, ensemble in self._ensembles.items():
             ensemble.load_smry(
                 time_index=time_index,
                 column_keys=column_keys,
-                cache_eclsum=cache_eclsum,
                 start_date=start_date,
                 end_date=end_date,
             )
@@ -640,7 +626,6 @@ class EnsembleSet(object):
         self,
         time_index=None,
         column_keys=None,
-        cache_eclsum=None,
         start_date=None,
         end_date=None,
     ):
@@ -656,11 +641,6 @@ class EnsembleSet(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
-            cache_eclsum: boolean for whether to cache the EclSum
-                objects. Defaults to False. Set to True if
-                there is enough memory to keep all realizations summary
-                files in memory at once. This will speed up subsequent
-                operations
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -674,30 +654,16 @@ class EnsembleSet(object):
             ENSEMBLE will distinguish the different ensembles by their
             respective names.
         """
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         smrylist = []
         for _, ensemble in self._ensembles.items():
-            smry = ensemble.get_smry(
-                time_index, column_keys, cache_eclsum, start_date, end_date
-            )
+            smry = ensemble.get_smry(time_index, column_keys, start_date, end_date)
             smry.insert(0, "ENSEMBLE", ensemble.name)
             smrylist.append(smry)
         if smrylist:
             return pd.concat(smrylist, sort=False)
         return pd.DataFrame()
 
-    def get_smry_dates(
-        self, freq="monthly", cache_eclsum=None, start_date=None, end_date=None
-    ):
+    def get_smry_dates(self, freq="monthly", start_date=None, end_date=None):
         """Return list of datetimes from an ensembleset
 
         Datetimes from each realization in each ensemble can
@@ -709,9 +675,6 @@ class EnsembleSet(object):
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
-            cache_eclsum: Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
-                memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
                 start_date will always be included. Overridden if time_index
@@ -723,22 +686,11 @@ class EnsembleSet(object):
         Returns:
             list of datetime.date.
         """
-
-        if cache_eclsum is not None:
-            warnings.warn(
-                (
-                    "cache_eclsum option to get_smry_dates() is deprecated and "
-                    "will be removed in fmu-ensemble v2.0.0"
-                ),
-                FutureWarning,
-            )
-
         rawdates = set()
         for _, ensemble in self._ensembles.items():
             rawdates = rawdates.union(
                 ensemble.get_smry_dates(
                     freq="report",
-                    cache_eclsum=cache_eclsum,
                     start_date=start_date,
                     end_date=end_date,
                 )
