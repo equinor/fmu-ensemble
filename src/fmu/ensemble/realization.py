@@ -391,7 +391,11 @@ class ScratchRealization(object):
                 "FULLPATH": fullpath,
                 "BASENAME": os.path.split(localpath)[-1],
             }
-            self.files = self.files.append(filerow, ignore_index=True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=FutureWarning)
+                # append deprecated  on pandas >= 1.4,
+                # switch to e.g. pandas.concat when dropping Python 3.6 support
+                self.files = self.files.append(filerow, ignore_index=True)
         try:
             keyvalues = pd.read_csv(
                 fullpath,
@@ -490,18 +494,24 @@ class ScratchRealization(object):
             # to be present.
             return pd.DataFrame()  # will be empty
         errorcolumns = ["error" + str(x) for x in range(0, 10)]
-        status = pd.read_csv(
-            statusfile,
-            sep=r"\s+",
-            skiprows=1,
-            header=None,
-            names=["FORWARD_MODEL", "colon", "STARTTIME", "dots", "ENDTIME"]
-            + errorcolumns,
-            dtype=str,
-            engine="python",
-            error_bad_lines=False,
-            warn_bad_lines=True,
-        )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=FutureWarning)
+            # error_bad_lines and warn_bad_lines emit a FutureWarning on pandas >= 1.3,
+            # these two arguments can be replaced with on_bad_lines="skip"
+            # when dropping Python 3.6 support.
+            status = pd.read_csv(
+                statusfile,
+                sep=r"\s+",
+                skiprows=1,
+                header=None,
+                names=["FORWARD_MODEL", "colon", "STARTTIME", "dots", "ENDTIME"]
+                + errorcolumns,
+                dtype=str,
+                engine="python",
+                error_bad_lines=False,
+                warn_bad_lines=True,
+            )
 
         # dtype str messes up a little bit, pre-Pandas 0.24.1 gives 'None' as
         # a string where data is missing.
