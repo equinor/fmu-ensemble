@@ -73,6 +73,7 @@ def test_real_mismatch():
     assert "OBSTYPE" in realmis.columns
     assert "OBSKEY" in realmis.columns
     assert "DATE" not in realmis.columns  # date is not relevant
+    assert "LABEL" in realmis.columns
     assert "MISMATCH" in realmis.columns
     assert "L1" in realmis.columns
     assert "L2" in realmis.columns
@@ -80,6 +81,7 @@ def test_real_mismatch():
     # Check actually computed values, there should only be one row with data:
     assert realmis.loc[0, "OBSTYPE"] == "txt"
     assert realmis.loc[0, "OBSKEY"] == "parameters.txt/FWL"
+    assert set(realmis["LABEL"]) == {""}
     assert realmis.loc[0, "MISMATCH"] == -2
     assert realmis.loc[0, "SIGN"] == -1
     assert realmis.loc[0, "L1"] == 2
@@ -225,6 +227,34 @@ def test_smry():
     # vreal = real.to_virtual()
     # vmismatch = obs.mismatch(vreal)
     # print(vmismatch)
+
+
+def test_smry_labels():
+    testdir = os.path.dirname(os.path.abspath(__file__))
+    real = ScratchRealization(
+        testdir + "/data/testensemble-reek001/" + "realization-0/iter-0/"
+    )
+    real.load_smry()
+    obs_pr = Observations(
+        {
+            "smry": [
+                {
+                    "key": "WBP4:OP_1",
+                    "comment": "Pressure observations well OP_1",
+                    "observations": [
+                        {
+                            "value": 250,
+                            "error": 1,
+                            "date": datetime.date(2001, 1, 1),
+                            "label": "WBP4_OP_1_01",
+                        }
+                    ],
+                }
+            ]
+        }
+    )
+    mismatch = obs_pr.mismatch(real)
+    assert mismatch["LABEL"].values == ["WBP4_OP_1_01"]
 
 
 def test_errormessages():
