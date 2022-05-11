@@ -148,7 +148,11 @@ class ScratchRealization(object):
                 "FULLPATH": os.path.join(abspath, "STATUS"),
                 "BASENAME": "STATUS",
             }
-            self.files = self.files.append(filerow, ignore_index=True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=FutureWarning)
+                # append deprecated  on pandas >= 1.4,
+                # switch to e.g. pandas.concat when dropping Python 3.6 support
+                self.files = self.files.append(filerow, ignore_index=True)
             self.load_status()
         else:
             logger.warning("No STATUS file, %s", abspath)
@@ -160,7 +164,11 @@ class ScratchRealization(object):
                 "FULLPATH": os.path.join(abspath, "jobs.json"),
                 "BASENAME": "jobs.json",
             }
-            self.files = self.files.append(filerow, ignore_index=True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=FutureWarning)
+                # append deprecated  on pandas >= 1.4,
+                # switch to e.g. pandas.concat when dropping Python 3.6 support
+                self.files = self.files.append(filerow, ignore_index=True)
 
         if os.path.exists(os.path.join(abspath, "OK")):
             self.load_scalar("OK")
@@ -315,7 +323,11 @@ class ScratchRealization(object):
                 "FULLPATH": fullpath,
                 "BASENAME": os.path.split(localpath)[-1],
             }
-            self.files = self.files.append(filerow, ignore_index=True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=FutureWarning)
+                # append deprecated  on pandas >= 1.4,
+                # switch to e.g. pandas.concat when dropping Python 3.6 support
+                self.files = self.files.append(filerow, ignore_index=True)
         try:
             value = pd.read_csv(
                 fullpath,
@@ -448,7 +460,11 @@ class ScratchRealization(object):
                 "FULLPATH": fullpath,
                 "BASENAME": os.path.split(localpath)[-1],
             }
-            self.files = self.files.append(filerow, ignore_index=True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=FutureWarning)
+                # append deprecated  on pandas >= 1.4,
+                # switch to e.g. pandas.concat when dropping Python 3.6 support
+                self.files = self.files.append(filerow, ignore_index=True)
         try:
             if convert_numeric:
                 # Trust that Pandas will determine sensible datatypes
@@ -833,8 +849,12 @@ class ScratchRealization(object):
                     self.files = self.files[self.files["FULLPATH"] != absmatch]
                 if metadata:
                     filerow.update(metadata)
-                self.files = self.files.append(filerow, ignore_index=True)
-                returnedslice = returnedslice.append(filerow, ignore_index=True)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=FutureWarning)
+                    # append deprecated  on pandas >= 1.4,
+                    # switch to e.g. pandas.concat when dropping Python 3.6 support
+                    self.files = self.files.append(filerow, ignore_index=True)
+                    returnedslice = returnedslice.append(filerow, ignore_index=True)
         return returnedslice
 
     @property
