@@ -12,15 +12,14 @@ on:
       - published
   schedule:
     # Run CI every night and check that tests are working with latest dependencies
-    - cron:  '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
-
   fmu-ensemble:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
       - name: 📖 Checkout commit locally
@@ -42,8 +41,7 @@ jobs:
           pip install .
 
       - name: 📦 Install test dependencies
-        run:
-          pip install ecl2df
+        run: pip install ecl2df
           pip install .[tests,docs]
 
       - name: 🧾 List all installed packages
@@ -71,7 +69,7 @@ jobs:
           touch build/sphinx/html/.nojekyll
 
       - name: 🚢 Build and deploy Python package
-        if: github.event_name == 'release' && matrix.python-version == '3.6'
+        if: github.event_name == 'release' && matrix.python-version == '3.8'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_fmuensemble_token }}
@@ -81,7 +79,7 @@ jobs:
           twine upload dist/*
 
       - name: 📚 Update GitHub pages
-        if: github.event_name == 'release' && github.repository == 'equinor' && matrix.python-version == '3.6'
+        if: github.event_name == 'release' && github.repository == 'equinor' && matrix.python-version == '3.8'
         run: |
           cp -R ./build/sphinx/html ../html
 
