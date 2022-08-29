@@ -363,13 +363,9 @@ class VirtualRealization(object):
         # Add the extra datetimes to interpolate at.
         smry.set_index("DATE", inplace=True)
         smry.index = pd.to_datetime(smry.index)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=FutureWarning)
-            # append deprecated  on pandas >= 1.4,
-            # switch to e.g. pandas.concat when dropping Python 3.6 support
-            smry = smry.append(
-                pd.DataFrame(index=pd.to_datetime(time_index_dt)), sort=False
-            )
+        smry = pd.concat(
+            [smry, pd.DataFrame(index=pd.to_datetime(time_index_dt))], sort=False
+        )
         # Drop duplicated dates. It is always the first one which is the
         # original.
         smry = smry[~smry.index.duplicated(keep="first")]

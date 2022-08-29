@@ -265,11 +265,7 @@ class EnsembleSet(object):
                     batchname = str(itermatch.group(1))
                     break
             df_row = {"path": path, "real": real, "iter": iterr, "batch": batchname}
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=FutureWarning)
-                # append deprecated  on pandas >= 1.4,
-                # switch to e.g. pandas.concat when dropping Python 3.6 support
-                paths_df = paths_df.append(df_row, ignore_index=True)
+            paths_df = pd.concat([paths_df, df_row], ignore_index=True)
         paths_df.fillna(value="Unknown", inplace=True)
         # Initialize ensemble objects for each iter found:
         iters = sorted(paths_df["iter"].unique())
