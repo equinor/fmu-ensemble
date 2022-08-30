@@ -232,6 +232,7 @@ class Observations(object):
         The returned dataframe contains the columns:
             * OBSTYPE - category/type of the observation
             * OBSKEY - name of the observation key
+            * LABEL - if an observation has it
             * DATE - only where relevant.
             * OBSINDEX - where an enumeration is relevant
             * MISMATCH - signed difference between value and result
@@ -272,6 +273,7 @@ class Observations(object):
                             OBSKEY=str(obsunit["localpath"])
                             + "/"
                             + str(obsunit["key"]),
+                            LABEL=obsunit.get("label", ""),
                             MISMATCH=mismatch,
                             L1=abs(mismatch),
                             L2=abs(mismatch) ** 2,
@@ -296,6 +298,7 @@ class Observations(object):
                         dict(
                             OBSTYPE=obstype,
                             OBSKEY=str(obsunit["key"]),
+                            LABEL=obsunit.get("label", ""),
                             MISMATCH=mismatch,
                             L1=abs(mismatch),
                             SIMVALUE=sim_value,
@@ -353,6 +356,7 @@ class Observations(object):
                         dict(
                             OBSTYPE="smryh",
                             OBSKEY=obsunit["key"],
+                            LABEL=obsunit.get("label", ""),
                             MISMATCH=sim_hist["mismatch"].sum(),
                             MEASERROR=measerror,
                             L1=sim_hist["mismatch"].abs().sum(),
@@ -383,6 +387,7 @@ class Observations(object):
                                 OBSKEY=obsunit["key"],
                                 DATE=unit["date"],
                                 MEASERROR=unit["error"],
+                                LABEL=unit.get("label", ""),
                                 MISMATCH=mismatch,
                                 OBSVALUE=unit["value"],
                                 SIMVALUE=sim_value,
