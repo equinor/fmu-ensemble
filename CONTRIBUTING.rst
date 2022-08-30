@@ -89,7 +89,7 @@ In addition:
 
 * Use pytest as testing engine
 
-* Code shall be be Python 2.7.13 + and python 3.4 + compliant
+* Code shall be be Python 3.8+ compliant
 
 
 Use flake8 and/or pylint to check
@@ -108,4 +108,3 @@ The pylint is rather strict and sometimes exceptions are needed... , but anyway 
     python -m pylint mycode.py
 
     make lint   # for all
-
