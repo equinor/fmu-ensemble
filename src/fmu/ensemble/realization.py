@@ -148,7 +148,9 @@ class ScratchRealization(object):
                 "FULLPATH": os.path.join(abspath, "STATUS"),
                 "BASENAME": "STATUS",
             }
-            self.files = pd.concat([self.files, filerow], ignore_index=True)
+            self.files = pd.concat(
+                [self.files, pd.DataFrame([filerow])], ignore_index=True
+            )
             self.load_status()
         else:
             logger.warning("No STATUS file, %s", abspath)
@@ -160,7 +162,9 @@ class ScratchRealization(object):
                 "FULLPATH": os.path.join(abspath, "jobs.json"),
                 "BASENAME": "jobs.json",
             }
-            self.files = pd.concat([self.files, filerow], ignore_index=True)
+            self.files = pd.concat(
+                [self.files, pd.DataFrame([filerow])], ignore_index=True
+            )
 
         if os.path.exists(os.path.join(abspath, "OK")):
             self.load_scalar("OK")
@@ -315,7 +319,9 @@ class ScratchRealization(object):
                 "FULLPATH": fullpath,
                 "BASENAME": os.path.split(localpath)[-1],
             }
-            self.files = pd.concat([self.files, filerow], ignore_index=True)
+            self.files = pd.concat(
+                [self.files, pd.DataFrame([filerow])], ignore_index=True
+            )
         try:
             value = pd.read_csv(
                 fullpath,
@@ -391,7 +397,9 @@ class ScratchRealization(object):
                 "FULLPATH": fullpath,
                 "BASENAME": os.path.split(localpath)[-1],
             }
-            self.files = pd.concat([self.files, filerow], ignore_index=True)
+            self.files = pd.concat(
+                [self.files, pd.DataFrame([filerow])], ignore_index=True
+            )
         try:
             keyvalues = pd.read_csv(
                 fullpath,
@@ -444,7 +452,9 @@ class ScratchRealization(object):
                 "FULLPATH": fullpath,
                 "BASENAME": os.path.split(localpath)[-1],
             }
-            self.files = pd.concat([self.files, filerow], ignore_index=True)
+            self.files = pd.concat(
+                [self.files, pd.DataFrame([filerow])], ignore_index=True
+            )
         try:
             if convert_numeric:
                 # Trust that Pandas will determine sensible datatypes
@@ -823,8 +833,12 @@ class ScratchRealization(object):
                     self.files = self.files[self.files["FULLPATH"] != absmatch]
                 if metadata:
                     filerow.update(metadata)
-                self.files = pd.concat([self.files, filerow], ignore_index=True)
-                returnedslice = pd.concat([returnedslice, filerow], ignore_index=True)
+                self.files = pd.concat(
+                    [self.files, pd.DataFrame([filerow])], ignore_index=True
+                )
+                returnedslice = pd.concat(
+                    [returnedslice, pd.DataFrame([filerow])], ignore_index=True
+                )
         return returnedslice
 
     @property

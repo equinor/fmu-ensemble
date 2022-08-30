@@ -265,7 +265,7 @@ class EnsembleSet(object):
                     batchname = str(itermatch.group(1))
                     break
             df_row = {"path": path, "real": real, "iter": iterr, "batch": batchname}
-            paths_df = pd.concat([paths_df, df_row], ignore_index=True)
+            paths_df = pd.concat([paths_df, pd.DataFrame([df_row])], ignore_index=True)
         paths_df.fillna(value="Unknown", inplace=True)
         # Initialize ensemble objects for each iter found:
         iters = sorted(paths_df["iter"].unique())
