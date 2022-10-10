@@ -525,12 +525,14 @@ class ScratchRealization(object):
         errorjobs = status[errorcolumns[0]] != ""
 
         # Merge any error strings:
-        status.loc[errorjobs, "errorstring"] = (
+        error_string = (
             status.loc[errorjobs, errorcolumns]
             .astype(str)
             .apply(" ".join, axis=1)
             .apply(str.strip)
         )
+        status["errorstring"] = np.nan
+        status.loc[errorjobs, "errorstring"] = error_string
         status.drop(errorcolumns, axis=1, inplace=True)
 
         # Delete potential unwanted row
