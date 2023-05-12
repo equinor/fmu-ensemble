@@ -1128,7 +1128,6 @@ class ScratchRealization(object):
                 parseddate = dateutil.parser.isoparse(time_index)
                 time_index_arg = [parseddate]
             except ValueError:
-
                 time_index_arg = self.get_smry_dates(
                     freq=time_index,
                     start_date=start_date,
