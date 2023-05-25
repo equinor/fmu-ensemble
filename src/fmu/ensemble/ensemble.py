@@ -804,9 +804,7 @@ class ScratchEnsemble(object):
             time_index = "raw"
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
-    def get_volumetric_rates(
-        self, column_keys=None, time_index=None, time_unit=None
-        ):
+    def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
 
         Column names that are not referring to cumulative summary
