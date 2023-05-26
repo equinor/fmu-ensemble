@@ -204,6 +204,7 @@ can pick the realization that is closest to your statistics of choice.
     # Load an ensemble we want to analyze
     ens = ensemble.ScratchEnsemble('hmensemble',
             '/scratch/foo/something/realization-*/iter-3')
+    ens.load_smry(column_keys=['FOPT'], time_index='yearly')
 
     # Calculate a "mean" realization
     mean = ens.agg('mean')
@@ -220,7 +221,7 @@ can pick the realization that is closest to your statistics of choice.
 
     # Group mismatch data by realization, and pick the realization
     # index with the smallest sum of squared errors ('L2')
-    closest_to_mean = mis.groupby('REAL').sum()['L2']\
+    closest_to_mean = mis.groupby('REAL').sum(numeric_only=True)['L2']\
                                          .sort_values()\
                                          .index\
                                          .values[0]
