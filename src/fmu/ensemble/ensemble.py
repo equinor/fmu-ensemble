@@ -804,7 +804,7 @@ class ScratchEnsemble(object):
             time_index = "raw"
         return self.get_df("share/results/tables/unsmry--" + time_index + ".csv")
 
-    def get_volumetric_rates(self, column_keys=None, time_index=None):
+    def get_volumetric_rates(self, column_keys=None, time_index=None, time_unit=None):
         """Compute volumetric rates from cumulative summary vectors
 
         Column names that are not referring to cumulative summary
@@ -819,9 +819,21 @@ class ScratchEnsemble(object):
         opposed to rates coming directly from the Eclipse simulator which
         are valid backwards in time.
 
+        If time_unit is set, the rates will be scaled to represent
+        either daily, monthly or yearly rates. These will sum up to the
+        cumulative as long as you multiply with the correct number
+        of days, months or year between each consecutive date index.
+        Month lengths and leap years are correctly handled.
+
         Args:
             column_keys (str or list of str): cumulative summary vectors
             time_index (str or list of datetimes):
+            time_unit: str or None. If None, the rates returned will
+                be the difference in cumulative between each included
+                time step (where the time interval can vary arbitrarily)
+                If set to 'days', 'months' or 'years', the rates will
+                be scaled to represent a daily, monthly or yearly rate that
+                is compatible with the date index and the cumulative data.
 
         Returns:
             pd.DataFrame: analoguous to the dataframe returned by get_smry().
@@ -830,7 +842,7 @@ class ScratchEnsemble(object):
         vol_dfs = []
         for realidx, real in self.realizations.items():
             vol_real = real.get_volumetric_rates(
-                column_keys=column_keys, time_index=time_index
+                column_keys=column_keys, time_index=time_index, time_unit=time_unit
             )
             if "DATE" not in vol_real.columns and vol_real.index.name == "DATE":
                 # This should be true, if not we might be in trouble.
