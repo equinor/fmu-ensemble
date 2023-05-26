@@ -210,7 +210,7 @@ can pick the realization that is closest to your statistics of choice.
     mean = ens.agg('mean')
 
     # Create an empty observation object
-    obs = Observations({})
+    obs = ensemble.Observations({})
 
     # Load data from the mean realization as virtual observations:
     obs.load_smry(mean, 'FOPT', time_index='yearly')
