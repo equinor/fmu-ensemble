@@ -10,8 +10,8 @@ import dateutil
 import pandas as pd
 import numpy as np
 import yaml
-from ecl import EclDataType
-from ecl.eclfile import EclKW
+from resdata import ResDataType
+from resdata.resfile import ResdataKW
 
 from .etc import Interaction  # noqa
 from .realization import ScratchRealization
@@ -723,7 +723,7 @@ class ScratchEnsemble(object):
         you have retrieved it through get_smry()
 
         Wraps around Realization.load_smry() which wraps around
-        ecl.summary.EclSum.pandas_frame()
+        resdata.summary.Summary.pandas_frame()
 
         Beware that the default time_index for ensembles is 'monthly',
         differing from realizations which use raw dates by default.
@@ -1398,7 +1398,7 @@ class ScratchEnsemble(object):
         Aggregates summary data from all realizations.
 
         Wraps around Realization.get_smry() which wraps around
-        ecl.summary.EclSum.pandas_frame()
+        resdata.summary.Summary.pandas_frame()
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -1511,7 +1511,7 @@ class ScratchEnsemble(object):
     @property
     def global_active(self):
         """
-        :returns: An EclKw with, for each cell,
+        :returns: An ResdataKW with, for each cell,
             the number of realizations where the cell is active.
         """
         warnings.warn(
@@ -1522,8 +1522,8 @@ class ScratchEnsemble(object):
             FutureWarning,
         )
         if not self._global_active:
-            self._global_active = EclKW(
-                "eactive", self.global_size, EclDataType.ECL_INT
+            self._global_active = ResdataKW(
+                "eactive", self.global_size, ResDataType.RD_INT
             )
             for realization in self.realizations.values():
                 if realization.get_grid() is not None:
@@ -1686,13 +1686,13 @@ class ScratchEnsemble(object):
         """
         :returns: Mean values of keywords.
         :param prop: Name of resulting Keyword.
-        :param global_active: A EclKW with, for each cell, The number of
+        :param global_active: A ResdataKW with, for each cell, The number of
             realizations where the cell is active.
         :param report: Report step for unrst keywords
         """
         # ensemble._keyword_mean() is deprecated and
         # will be removed in fmu-ensemble v2.0.0
-        mean = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+        mean = ResdataKW(prop, len(global_active), ResDataType.RD_FLOAT)
         if report:
             for _, realization in self.realizations.items():
                 if realization.get_unrst() is not None:
@@ -1710,13 +1710,13 @@ class ScratchEnsemble(object):
         :returns: Standard deviation of keywords.
         :param name: Name of resulting Keyword.
         :param keywords: List of pairs of keywords and list of active cell
-        :param global_active: A EclKW with, for each cell, The number of
+        :param global_active: A ResdataKW with, for each cell, The number of
             realizations where the cell is active.
         :param mean: Mean of keywords.
         """
         # ensemble._keyword_std_dev() is deprecated and
         # will be removed in fmu-ensemble v2.0.0
-        std_dev = EclKW(prop, len(global_active), EclDataType.ECL_FLOAT)
+        std_dev = ResdataKW(prop, len(global_active), ResDataType.RD_FLOAT)
         if report:
             for _, realization in self.realizations.items():
                 real_prop = realization.get_global_unrst_keyword(prop, report)

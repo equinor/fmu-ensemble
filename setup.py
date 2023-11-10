@@ -20,7 +20,7 @@ with open("HISTORY.rst", "rb") as history_file:
     history = history_file.read().decode("UTF-8")
 
 REQUIREMENTS = [
-    "ecl>=2.9",
+    "resdata>=4.0.0",
     "numpy",
     "pandas<2",
     "pyyaml>=5.1",
