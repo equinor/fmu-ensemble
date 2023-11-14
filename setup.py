@@ -26,7 +26,7 @@ REQUIREMENTS = [
     "pyyaml>=5.1",
 ]
 
-SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm"]
+SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm < 6.1"]
 
 with open("test_requirements.txt") as f:
     test_requirements = f.read().splitlines()
