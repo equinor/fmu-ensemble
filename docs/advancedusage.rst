@@ -175,13 +175,13 @@ matching), use the YAML syntax:
       # Mandatory elements per entry: key and observations
     - key: WBP4:OP_1
         # This is a global comment regarding this set of observations
-        comment: "Shut-in pressures converted from well head conditions"
-        observations:
-           # Mandatory elements per entry in ecl_vector observations: value, error, date
-           - {value: 251, error: 4, date: 2001-01-01}
-           - {value: 251, error: 10, date: 2002-01-01}
-           - {value: 251, error: 10, date: 2003-01-01,
-              comment: First measurement after sensor drift correction}
+      comment: "Shut-in pressures converted from well head conditions"
+      observations:
+         # Mandatory elements per entry in ecl_vector observations: value, error, date
+         - {value: 251, error: 4, date: 2001-01-01}
+         - {value: 251, error: 10, date: 2002-01-01}
+         - {value: 251, error: 10, date: 2003-01-01,
+            comment: First measurement after sensor drift correction}
 
 
 Representative realizations
