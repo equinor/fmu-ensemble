@@ -3,15 +3,6 @@
 """The setup script."""
 from setuptools import setup, find_packages
 
-try:
-    from sphinx.setup_command import BuildDoc
-
-    cmdclass = {"build_sphinx": BuildDoc}
-except ImportError:
-    # sphinx not installed - do not provide build_sphinx cmd
-    cmdclass = {}
-
-
 with open("README.rst") as readme_file:
     readme = readme_file.read()
 
@@ -42,7 +33,6 @@ EXTRAS_REQUIRE = {
 setup(
     name="fmu-ensemble",
     use_scm_version={"write_to": "src/fmu/ensemble/version.py"},
-    cmdclass=cmdclass,
     description="Python API to ensembles produced by ERT",
     long_description=readme + "\n\n" + history,
     author="Håvard Berland",
