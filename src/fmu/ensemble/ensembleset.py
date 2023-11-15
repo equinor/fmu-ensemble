@@ -580,7 +580,7 @@ class EnsembleSet(object):
         Fetch summary data from all ensembles
 
         Wraps around Ensemble.load_smry() which wraps
-        Realization.load_smry(), which wraps ecl.summary.EclSum.pandas_frame()
+        Realization.load_smry(), which wraps resdata.summary.Summary.pandas_frame()
 
         The time index is determined at realization level. If you
         ask for 'monthly', you will from each realization get its
@@ -596,8 +596,8 @@ class EnsembleSet(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
-            cache_eclsum: Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
+            cache_eclsum: Boolean for whether we should cache the Summary
+                objects. Set to False if you cannot keep all Summary files in
                 memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied
@@ -648,7 +648,7 @@ class EnsembleSet(object):
 
         Wraps around Ensemble.get_smry(), which wraps around
         Realization.get_smry() which wraps around
-        ecl.summary.EclSum.pandas_frame()
+        resdata.summary.Summary.pandas_frame()
 
         Args:
             time_index: list of DateTime if interpolation is wanted
@@ -656,7 +656,7 @@ class EnsembleSet(object):
                If a string is supplied, that string is attempted used
                via get_smry_dates() in order to obtain a time index.
             column_keys: list of column key wildcards
-            cache_eclsum: boolean for whether to cache the EclSum
+            cache_eclsum: boolean for whether to cache the Summary
                 objects. Defaults to False. Set to True if
                 there is enough memory to keep all realizations summary
                 files in memory at once. This will speed up subsequent
@@ -709,8 +709,8 @@ class EnsembleSet(object):
                yield the sorted union of all valid timesteps for
                all realizations. Other valid options are
                'daily', 'monthly' and 'yearly'.
-            cache_eclsum: Boolean for whether we should cache the EclSum
-                objects. Set to False if you cannot keep all EclSum files in
+            cache_eclsum: Boolean for whether we should cache the Summary
+                objects. Set to False if you cannot keep all Summary files in
                 memory simultaneously
             start_date: str or date with first date to include.
                 Dates prior to this date will be dropped, supplied

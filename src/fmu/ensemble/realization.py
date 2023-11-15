@@ -21,10 +21,10 @@ import yaml
 import numpy as np
 import pandas as pd
 
-import ecl.summary
-from ecl.eclfile import EclFile
-from ecl.grid import EclGrid
-from ecl import EclFileFlagEnum
+from resdata.summary import Summary
+from resdata.resfile import ResdataFile
+from resdata.rd_util import FileMode
+from resdata.grid import Grid
 
 from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
@@ -947,7 +947,7 @@ class ScratchRealization(object):
         if not os.path.exists(unsmry_filename):
             return None
         try:
-            eclsum = ecl.summary.EclSum(
+            eclsum = Summary(
                 unsmry_filename, lazy_load=False, include_restart=include_restart
             )
         except IOError:
@@ -986,7 +986,7 @@ class ScratchRealization(object):
         on the chosen time_index. If a custom time_index (list
         of datetime) was supplied, <time_index> will be called 'custom'.
 
-        Wraps ecl.summary.EclSum.pandas_frame()
+        Wraps resdata.summary.Summary.pandas_frame()
 
         See also get_smry()
 
@@ -1480,9 +1480,7 @@ class ScratchRealization(object):
             return None
 
         if not self._eclinit:
-            self._eclinit = EclFile(
-                init_filename, flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM
-            )
+            self._eclinit = ResdataFile(init_filename, flags=FileMode.CLOSE_STREAM)
         return self._eclinit
 
     def get_unrst(self):
@@ -1509,9 +1507,7 @@ class ScratchRealization(object):
         if not os.path.exists(unrst_filename):
             return None
         if not self._eclunrst:
-            self._eclunrst = EclFile(
-                unrst_filename, flags=EclFileFlagEnum.ECL_FILE_CLOSE_STREAM
-            )
+            self._eclunrst = ResdataFile(unrst_filename, flags=FileMode.CLOSE_STREAM)
         return self._eclunrst
 
     def get_grid_index(self, active_only):
@@ -1614,7 +1610,7 @@ class ScratchRealization(object):
         if not os.path.exists(grid_filename):
             return None
         if not self._eclgrid:
-            self._eclgrid = EclGrid(grid_filename)
+            self._eclgrid = Grid(grid_filename)
         return self._eclgrid
 
     @property
