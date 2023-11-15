@@ -10,7 +10,7 @@ import yaml
 from dateutil.relativedelta import relativedelta
 
 import pytest
-import ecl.summary
+from resdata.summary import Summary
 
 import numpy as np
 
@@ -475,7 +475,7 @@ def test_singlereal_ecl(tmp="TMP"):
     real = ensemble.ScratchRealization(realdir)
 
     # Eclipse summary files:
-    assert isinstance(real.get_eclsum(), ecl.summary.EclSum)
+    assert isinstance(real.get_eclsum(), Summary)
     if not os.path.exists(tmp):
         os.mkdir(tmp)
     real.load_smry().to_csv(os.path.join(tmp, "real0smry.csv"), index=False)
