@@ -201,7 +201,6 @@ class Observations(object):
         self.observations["smry"].append(virtobs)
 
     def __len__(self):
-
         """Return the number of observation units present"""
         # This is not correctly implemented yet..
         return len(self.observations.keys())
