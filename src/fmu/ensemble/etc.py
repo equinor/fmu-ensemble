@@ -294,7 +294,6 @@ class Interaction(object):
         return outer[0]
 
     def _output(self, idx, level, string):
-
         # pylint: disable=too-many-branches
 
         prefix = ""
