@@ -1,22 +1,22 @@
 """Testing fmu-ensemble."""
 # pylint: disable=protected-access
 
-import os
 import datetime
-import shutil
 import logging
-import pandas as pd
-import yaml
-from dateutil.relativedelta import relativedelta
-
-import pytest
-from resdata.summary import Summary
+import os
+import shutil
+from pathlib import Path
 
 import numpy as np
+import pandas as pd
+import pytest
+import yaml
+from dateutil.relativedelta import relativedelta
+from resdata.summary import Summary
 
-from .test_ensembleset import symlink_iter
 from fmu import ensemble
 
+from .test_ensembleset import symlink_iter
 
 try:
     SKIP_FMU_TOOLS = False
@@ -613,6 +613,36 @@ def test_singlereal_ecl(tmp="TMP"):
         # This does not exist before we have asked for it
         # pylint: disable=pointless-statement
         "FOPT" in real["unsmry--yearly"]
+
+
+def test_can_import_summary_files_beyond_2262(tmpdir, monkeypatch):
+    """Pandas is/has been eager to use datetime64[ns] which overflows in year 2262,
+    ensure this limitation is sufficiently worked around."""
+    monkeypatch.chdir(tmpdir)
+    res_sum = Summary.from_pandas(
+        "TESTCASE",
+        pd.DataFrame(
+            [
+                {"DATE": datetime.date(2000, 1, 1), "FPR": 200},
+                {"DATE": datetime.date(2263, 1, 1), "FPR": 1},
+            ]
+        ).set_index("DATE"),
+    )
+    runpath = "realization-0/iter-0"
+    Path(runpath).mkdir(parents=True)
+    os.chdir(runpath)
+    # fwrite() can only write to cwd
+    Summary.fwrite(res_sum)
+    os.chdir(tmpdir)
+
+    real = ensemble.ScratchRealization(runpath)
+    real.find_files("TESTCASE.UNSMRY")
+    for time_index in ["raw", "monthly", "yearly"]:
+        assert "2263-01-01" in str(
+            real.get_smry(column_keys="*", time_index=time_index)
+        )
+    with pytest.raises(ValueError):
+        real.get_smry(column_keys="*", time_index="weekly")
 
 
 def test_independent_realization(tmp="TMP"):

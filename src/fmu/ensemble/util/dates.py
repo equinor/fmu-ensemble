@@ -5,6 +5,7 @@ import datetime
 import dateutil
 import pandas as pd
 import logging
+from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,12 @@ def date_range(start_date, end_date, freq):
     Returns:
         list of datetimes
     """
-    freq = PD_FREQ_MNEMONICS.get(freq, freq)
-    return pd.date_range(start_date, end_date, freq=freq)
+    try:
+        return pd.date_range(
+            start_date, end_date, freq=PD_FREQ_MNEMONICS.get(freq, freq)
+        )
+    except pd.errors.OutOfBoundsDatetime:
+        return _fallback_date_range(start_date, end_date, freq)
 
 
 def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date=None):
@@ -125,7 +130,9 @@ def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date
     return datetimes
 
 
-def normalize_dates(start_date, end_date, freq):
+def normalize_dates(
+    start_date: datetime.date, end_date: datetime.date, freq: str
+) -> Tuple[datetime.date, datetime.date]:
     """
     Normalize start and end date according to frequency
     by extending the time range.
@@ -145,6 +152,93 @@ def normalize_dates(start_date, end_date, freq):
     Return:
         Tuple of normalized (start_date, end_date)
     """
-    freq = PD_FREQ_MNEMONICS.get(freq, freq)
-    offset = pd.tseries.frequencies.to_offset(freq)
-    return (offset.rollback(start_date).date(), offset.rollforward(end_date).date())
+    offset = pd.tseries.frequencies.to_offset(PD_FREQ_MNEMONICS.get(freq, freq))
+    try:
+        start_normalized = offset.rollback(start_date).date()
+    except pd.errors.OutOfBoundsDatetime:
+        # Pandas only supports datetime up to year 2262
+        start_normalized = _fallback_date_roll(
+            datetime.datetime.combine(start_date, datetime.time()), "back", freq
+        ).date()
+    try:
+        end_normalized = offset.rollforward(end_date).date()
+    except pd.errors.OutOfBoundsDatetime:
+        # Pandas only supports datetime up to year 2262
+        end_normalized = _fallback_date_roll(
+            datetime.datetime.combine(end_date, datetime.time()), "forward", freq
+        ).date()
+
+    return (start_normalized, end_normalized)
+
+
+def _fallback_date_roll(
+    rollme: datetime.datetime, direction: str, freq: str
+) -> datetime.datetime:
+    """Fallback function for rolling dates forward or backward onto a
+    date frequency boundary.
+
+    This function reimplements pandas' DateOffset.roll_forward() and backward()
+    only for monthly and yearly frequency. This is necessary as Pandas does not
+    support datetimes beyond year 2262 due to all datetimes in Pandas being
+    represented by nanosecond accuracy.
+
+    This function is a fallback only, to keep support for using all Pandas timeoffsets
+    in situations where years beyond 2262 is not a issue."""
+    if direction not in ["back", "forward"]:
+        raise ValueError(f"Unknown direction {direction}")
+
+    if freq == "yearly":
+        if direction == "forward":
+            if rollme <= datetime.datetime(year=rollme.year, month=1, day=1):
+                return datetime.datetime(year=rollme.year, month=1, day=1)
+            return datetime.datetime(year=rollme.year + 1, month=1, day=1)
+        return datetime.datetime(year=rollme.year, month=1, day=1)
+
+    if freq == "monthly":
+        if direction == "forward":
+            if rollme <= datetime.datetime(year=rollme.year, month=rollme.month, day=1):
+                return datetime.datetime(year=rollme.year, month=rollme.month, day=1)
+            return datetime.datetime(
+                year=rollme.year, month=rollme.month, day=1
+            ) + dateutil.relativedelta.relativedelta(  # type: ignore
+                months=1
+            )
+        return datetime.datetime(year=rollme.year, month=rollme.month, day=1)
+
+    raise ValueError(
+        "Only yearly or monthly frequencies are "
+        "supported for simulations beyond year 2262"
+    )
+
+
+def _fallback_date_range(
+    start: datetime.date, end: datetime.date, freq: str
+) -> List[datetime.datetime]:
+    """Fallback routine for generating date ranges beyond Pandas datetime64[ns]
+    year-2262 limit.
+
+    Assumes that the start and end times already fall on a frequency boundary.
+    """
+    if start == end:
+        return [datetime.datetime.combine(start, datetime.datetime.min.time())]
+    if end < start:
+        return []
+    if freq == "yearly":
+        dates = [datetime.datetime.combine(start, datetime.datetime.min.time())] + [
+            datetime.datetime(year=year, month=1, day=1)
+            for year in range(start.year + 1, end.year + 1)
+        ]
+        if datetime.datetime.combine(end, datetime.datetime.min.time()) != dates[-1]:
+            dates = dates + [
+                datetime.datetime.combine(end, datetime.datetime.min.time())
+            ]
+        return dates
+    if freq == "monthly":
+        dates = []
+        date = datetime.datetime.combine(start, datetime.datetime.min.time())
+        enddatetime = datetime.datetime.combine(end, datetime.datetime.min.time())
+        while date <= enddatetime:
+            dates.append(date)
+            date = date + dateutil.relativedelta.relativedelta(months=1)  # type: ignore
+        return dates
+    raise ValueError("Unsupported frequency for datetimes beyond year 2262")
