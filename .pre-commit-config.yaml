@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v2.5.0
+  rev: v4.5.0
   hooks:
   - id:  no-commit-to-branch
     args: ['--branch', 'master']
@@ -12,12 +12,15 @@ repos:
   - id: mixed-line-ending
   - id: trailing-whitespace
 
-- repo: https://github.com/ambv/black
-  rev: 20.8b1
+- repo: https://github.com/psf/black
+  rev: 23.11.0
   hooks:
   - id: black
 
-- repo: https://gitlab.com/pycqa/flake8
-  rev: 3.8.4
-  hooks:
-  - id: flake8
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.7
+    hooks:
+    - id: ruff
+      args: [ --fix ]
+
+exclude: "tests/data/testensemble-reek001"

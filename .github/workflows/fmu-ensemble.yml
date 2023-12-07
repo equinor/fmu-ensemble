@@ -50,8 +50,7 @@ jobs:
 
       - name: 🕵️ Check code style
         run: |
-          black --check src/ tests/test_*.py setup.py
-          flake8 src tests/*.py
+          pre-commit run --all-files
 
       - name: 🤖 Run tests
         run: |

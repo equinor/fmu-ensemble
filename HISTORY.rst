@@ -19,5 +19,3 @@ work from at leastL:
 * Smørbukk Sør webportal
 * Post-processing library made for webportal (2017/2018) https://github.com/Statoil/fmu_postprocessing
 * PyPostFMU https://git.equinor.com/FDIL/pypostfmu
-
-

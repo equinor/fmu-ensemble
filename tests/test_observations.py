@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Testing observations in fmu-ensemble."""
 
 import os
