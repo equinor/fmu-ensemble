@@ -49,6 +49,8 @@ jobs:
         run: pip freeze
 
       - name: 🕵️ Check code style
+        env:
+          SKIP: no-commit-to-branch
         run: |
           pre-commit run --all-files
 
