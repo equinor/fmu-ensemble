@@ -1,6 +1,5 @@
 """Module containing a VirtualEnsemble class"""
 
-
 import os
 import re
 import shutil

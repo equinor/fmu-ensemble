@@ -1,4 +1,5 @@
 """Testing fmu-ensemble, virtual realizations"""
+
 # pylint: disable=protected-access,duplicate-code
 
 import os

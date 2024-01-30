@@ -1,4 +1,5 @@
 """Contains the VirtualRealization class"""
+
 import os
 import fnmatch
 import shutil
