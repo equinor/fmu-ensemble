@@ -31,13 +31,13 @@ from .util.dates import unionize_smry_dates
 from .util.rates import compute_volumetric_rates
 from .virtualrealization import VirtualRealization
 
-HAVE_ECL2DF = False
+HAVE_RES2DF = False
 try:
-    import ecl2df
+    import res2df
 
-    HAVE_ECL2DF = True
+    HAVE_RES2DF = True
 except ImportError:
-    HAVE_ECL2DF = False
+    HAVE_RES2DF = False
 
 logger = logging.getLogger(__name__)
 
@@ -844,9 +844,9 @@ class ScratchRealization(object):
         """
         return self.data["parameters.txt"]
 
-    def get_eclfiles(self):
+    def get_resdatafiles(self):
         """
-        Return an ecl2df.EclFiles object to connect to the ecl2df package
+        Return an res2df.ResdataFiles object to connect to the res2df package
 
         If autodiscovery, it will search for a DATA file in
         the standard location eclipse/model/...DATA.
@@ -858,10 +858,10 @@ class ScratchRealization(object):
             >>> real.find_files("eclipse/model/MYMODELPREDICTION.DATA")
 
         Returns:
-            ecl2df.EclFiles. None if nothing found
+            res2df.ResdataFiles. None if nothing found
         """
-        if not HAVE_ECL2DF:
-            logger.warning("ecl2df not installed. Skipping")
+        if not HAVE_RES2DF:
+            logger.warning("res2df not installed. Skipping")
             return None
         data_file_row = self.files[self.files["FILETYPE"] == "DATA"]
         data_filename = None
@@ -887,7 +887,7 @@ class ScratchRealization(object):
             return None
         if not os.path.exists(data_filename):
             return None
-        return ecl2df.EclFiles(data_filename)
+        return res2df.ResdataFiles(data_filename)
 
     def get_eclsum(self, cache=True, include_restart=True):
         """

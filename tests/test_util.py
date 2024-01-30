@@ -1,4 +1,5 @@
 """Test general utility functions in use by fmu.ensemble"""
+
 import datetime
 import logging
 

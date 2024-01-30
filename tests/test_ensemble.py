@@ -1,4 +1,5 @@
 """Testing fmu-ensemble."""
+
 # pylint: disable=protected-access
 
 import logging
