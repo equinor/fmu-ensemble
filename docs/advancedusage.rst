@@ -253,15 +253,15 @@ in the realization object to use, potentially only the directory).
    :header-rows: 1
 
 where PORV and VOLUME are sums over each zone, Z is the minimum (thus apex pr.
-zone) and PERMX is an arithmetic mean. In the language of `ecl2df
-<https://equinor.github.io/ecl2df/>`_ this could be done with a code like this:
+zone) and PERMX is an arithmetic mean. In the language of `res2df
+<https://equinor.github.io/res2df/>`_ this could be done with a code like this:
 
 .. code-block:: python
 
-   from ecl2df import grid, EclFiles
+   from res2df import grid, ResdataFiles
 
-   eclfiles = EclFiles('MYDATADECK.DATA')  # There is a file zones.lyr alongside this.
-   grid_df = grid.df(eclfiles)  # Produce a dataframe with one row pr. cell
+   resdatafiles = ResdataFiles('MYDATADECK.DATA')  # There is a file zones.lyr alongside this.
+   grid_df = grid.df(resdatafiles)  # Produce a dataframe with one row pr. cell
    my_aggregators = {'PORV': 'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'}
    stats_df = grid_df.groupby("ZONE").agg(my_aggregators)
    print(stats_df)
@@ -269,10 +269,10 @@ zone) and PERMX is an arithmetic mean. In the language of `ecl2df
 
 ``ScratchRealization`` objects contain the methods ``runpath()`` which will give
 the full path to the directory  the realization resides in, this can be used
-freely by your function.  For easier coupling with ecl2df, the function
-``get_eclfiles()`` is provided.
+freely by your function.  For easier coupling with res2df, the function
+``get_resdatafiles()`` is provided.
 
-To be able to inject the ecl2df lines above into the API of fmu.ensemble and the
+To be able to inject the res2df lines above into the API of fmu.ensemble and the
 :py:meth:`apply() <fmu.ensemble.ensemble.ScratchEnsemble.apply>` function, we
 need to to put it into a wrapper function.  This wrapper function will always
 receive a Realization object as a named argument, and it must return a
@@ -280,7 +280,7 @@ dataframe. The wrapper function can look like this:
 
 .. code-block:: python
 
-   from ecl2df import grid, EclFiles
+   from res2df import grid, ResdataFiles
 
    def my_realization_stats(args):
       """A custom function for performing a particular calculation
@@ -290,8 +290,8 @@ dataframe. The wrapper function can look like this:
          args (dict): A dictionary with parameters to my custom function.
              The keys 'realization' and 'localpath' are reserved for fmu.ensemble."""
       realization = args["realization"]  # Provided by fmu.ensemble apply()
-      eclfiles = realization.get_eclfiles()
-      grid_df = grid.df(eclfiles)
+      resdatafiles = realization.get_resdatafiles()
+      grid_df = grid.df(resdatafiles)
       my_aggregators = {'PORV': 'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'}
       stats_df = grid_df.groupby("ZONE").agg(my_aggregators)
       return stats_df.reset_index()  # Zone names are in the index, lost if not reset.
