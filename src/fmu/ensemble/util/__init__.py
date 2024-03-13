@@ -1,6 +1,5 @@
 """Common utility functions used in fmu.ensemble"""
 
-
 import os
 from collections.abc import MutableMapping
 

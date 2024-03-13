@@ -1,6 +1,5 @@
 """Common utility functions for rates used in fmu.ensemble"""
 
-
 import calendar
 import dateutil
 import logging

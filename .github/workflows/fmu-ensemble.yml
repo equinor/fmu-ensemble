@@ -42,7 +42,7 @@ jobs:
 
       - name: 📦 Install test dependencies
         run: |
-          pip install ecl2df
+          pip install res2df
           pip install .[tests,docs]
 
       - name: 🧾 List all installed packages

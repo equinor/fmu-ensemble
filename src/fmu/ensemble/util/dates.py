@@ -1,6 +1,5 @@
 """Common utility functions used in fmu.ensemble"""
 
-
 import datetime
 import dateutil
 import pandas as pd
