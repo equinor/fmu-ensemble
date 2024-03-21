@@ -157,7 +157,7 @@ def test_ensemblecomb_observations():
     obs.load_smry(mean, "FOPT", time_index="yearly")
     mis = obs.mismatch(delta_ens)
     # Realization 4 is best representing the mean delta FOPT:
-    assert mis.groupby("REAL").sum()["L2"].sort_values().index.values[0] == 4
+    assert mis.groupby("REAL")["L2"].sum().sort_values().index.values[0] == 4
     # (this is the same as the representative realization for mean as
     # found in test_observations.py::test_virtual_observations)
 

@@ -679,7 +679,7 @@ def test_virtual_observations():
         mis = obs.mismatch(ens)
 
         closest_realization = (
-            mis.groupby("REAL").sum()["L2"].sort_values().index.values[0]
+            mis.groupby("REAL")["L2"].sum().sort_values().index.values[0]
         )
         representative_realizations[virtrealname] = closest_realization
 
@@ -707,7 +707,7 @@ def test_virtual_observations():
         mis = obs.mismatch(ens)
 
         closest_realization = (
-            mis.groupby("REAL").sum()["L2"].sort_values().index.values[0]
+            mis.groupby("REAL")["L2"].sum().sort_values().index.values[0]
         )
         vrepresentative_realizations[virtrealname] = closest_realization
 
