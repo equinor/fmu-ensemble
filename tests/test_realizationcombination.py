@@ -1,12 +1,10 @@
 """Testing fmu-ensemble."""
 
-import os
 import logging
+import os
 
 import pytest
-
 from fmu import ensemble
-
 from fmu.ensemble import ScratchEnsemble
 
 logger = logging.getLogger(__name__)

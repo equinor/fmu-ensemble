@@ -7,30 +7,29 @@ it can be computed from other realizations, or it can be
 an archived realization.
 """
 
-import os
-import re
 import copy
 import glob
 import json
-from datetime import datetime, date, time
-import dateutil
 import logging
+import os
+import re
 import warnings
+from datetime import date, datetime, time
 
-import yaml
+import dateutil
 import numpy as np
 import pandas as pd
-
-from resdata.summary import Summary
-from resdata.resfile import ResdataFile
-from resdata.rd_util import FileMode
+import yaml
 from resdata.grid import Grid
+from resdata.rd_util import FileMode
+from resdata.resfile import ResdataFile
+from resdata.summary import Summary
 
-from .virtualrealization import VirtualRealization
 from .realizationcombination import RealizationCombination
-from .util import parse_number, flatten, shortcut2path
-from .util.rates import compute_volumetric_rates
+from .util import flatten, parse_number, shortcut2path
 from .util.dates import unionize_smry_dates
+from .util.rates import compute_volumetric_rates
+from .virtualrealization import VirtualRealization
 
 HAVE_ECL2DF = False
 try:

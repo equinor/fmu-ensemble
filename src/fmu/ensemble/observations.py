@@ -2,23 +2,23 @@
 Observations support and related calculations
 """
 
-import os
-import math
 import datetime
-from collections import OrderedDict
 import logging
+import math
+import os
+from collections import OrderedDict
 
-import yaml
-import pandas as pd
 import dateutil
+import pandas as pd
+import yaml
 
-from .realization import ScratchRealization
 from .ensemble import ScratchEnsemble
-from .ensembleset import EnsembleSet
 from .ensemblecombination import EnsembleCombination
+from .ensembleset import EnsembleSet
+from .realization import ScratchRealization
 from .realizationcombination import RealizationCombination
-from .virtualrealization import VirtualRealization
 from .virtualensemble import VirtualEnsemble
+from .virtualrealization import VirtualRealization
 
 logger = logging.getLogger(__name__)
 

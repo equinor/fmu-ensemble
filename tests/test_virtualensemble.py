@@ -1,12 +1,12 @@
 """Testing fmu-ensemble, virtualized ensembles"""
 
-import os
 import logging
+import os
 from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import pytest
-
 from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 try:

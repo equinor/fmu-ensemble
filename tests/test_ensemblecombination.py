@@ -1,11 +1,10 @@
 """Testing linear combinations of ensemble."""
 
-import os
 import logging
+import os
+
 import pandas as pd
-
 import pytest
-
 from fmu import ensemble
 
 logger = logging.getLogger(__name__)
