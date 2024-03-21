@@ -255,8 +255,8 @@ class VirtualEnsemble(object):
             if key not in self.data.keys():
                 self.data[key] = dframe
             else:
-                self.data[key] = self.data[key].append(
-                    dframe, ignore_index=True, sort=True
+                self.data[key] = pd.concat(
+                    [self.data[key], dframe], ignore_index=True, sort=True
                 )
         self.update_realindices()
 
@@ -1030,7 +1030,7 @@ file is picked up"""
         return (
             self.get_df("__smry_metadata")
             .set_index("SMRYCOLUMN")
-            .loc[matches, :]
+            .loc[list(matches), :]
             .replace({np.nan: None})
             .to_dict(orient="index")
         )

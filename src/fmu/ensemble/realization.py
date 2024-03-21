@@ -512,14 +512,7 @@ class ScratchRealization(object):
             on_bad_lines="skip",
         )
 
-        # dtype str messes up a little bit, pre-Pandas 0.24.1 gives 'None' as
-        # a string where data is missing.
-        status.replace("None", "", inplace=True)
-        # While Pandas 0.24.1 will insert proper Null values in those cells,
-        # we fill them with the empty string for the rest of this code to work
         status.fillna("", inplace=True)
-        # It should be ok to have both of these statements running, but the
-        # replace() is probably superfluous when pandas 0.23 is gone.
 
         errorjobs = status[errorcolumns[0]] != ""
 

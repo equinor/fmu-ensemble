@@ -194,7 +194,7 @@ class Observations(object):
             realization
         )
         virtobs["observations"] = []
-        for date, value in dataseries.iteritems():
+        for date, value in dataseries.items():
             virtobs["observations"].append(
                 {"value": value, "error": smryerror, "date": date}
             )

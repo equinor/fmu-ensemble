@@ -480,7 +480,7 @@ class VirtualRealization(object):
         return (
             self.get_df("__smry_metadata")
             .set_index("SMRYCOLUMN")
-            .loc[matches, :]
+            .loc[list(matches), :]
             .to_dict(orient="index")
         )
 
