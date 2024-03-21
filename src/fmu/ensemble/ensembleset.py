@@ -1,9 +1,9 @@
 """Module for book-keeping and aggregation of ensembles"""
 
-import re
-import os
 import glob
 import logging
+import os
+import re
 import warnings
 
 import numpy as np

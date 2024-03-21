@@ -1,19 +1,16 @@
 """Testing fmu-ensemble."""
 # pylint: disable=protected-access
 
-import os
 import logging
+import os
 
-import yaml
 import numpy
 import pandas as pd
-
 import pytest
-
-from .test_ensembleset import symlink_iter
-
+import yaml
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
+from .test_ensembleset import symlink_iter
 
 try:
     SKIP_FMU_TOOLS = False

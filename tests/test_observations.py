@@ -1,16 +1,16 @@
 """Testing observations in fmu-ensemble."""
 
-import os
+import datetime
 import glob
 import logging
-import datetime
-import yaml
-import pandas as pd
-import numpy as np
-import dateutil
-import pytest
+import os
 
-from fmu.ensemble import Observations, ScratchRealization, ScratchEnsemble, EnsembleSet
+import dateutil
+import numpy as np
+import pandas as pd
+import pytest
+import yaml
+from fmu.ensemble import EnsembleSet, Observations, ScratchEnsemble, ScratchRealization
 
 logger = logging.getLogger(__name__)
 

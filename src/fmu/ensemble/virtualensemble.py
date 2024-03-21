@@ -1,20 +1,19 @@
 """Module containing a VirtualEnsemble class"""
 
-
+import datetime
+import fnmatch
+import logging
 import os
 import re
 import shutil
-import fnmatch
-import datetime
 import warnings
-import logging
 
-import yaml
 import numpy as np
 import pandas as pd
+import yaml
 
-from .virtualrealization import VirtualRealization
 from .ensemblecombination import EnsembleCombination
+from .virtualrealization import VirtualRealization
 
 try:
     import pyarrow

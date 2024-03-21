@@ -3,9 +3,7 @@ import datetime
 import logging
 
 import numpy as np
-
 import pytest
-
 from fmu.ensemble.util import flatten, parse_number, shortcut2path
 from fmu.ensemble.util.dates import normalize_dates
 from fmu.ensemble.util.rates import cumcolumn_to_ratecolumn

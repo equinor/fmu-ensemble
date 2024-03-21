@@ -1,15 +1,14 @@
 """Testing fmu-ensemble, EnsembleSet class."""
 
+import glob
+import logging
 import os
 import re
-import glob
 import shutil
-import logging
 
 import pandas as pd
 import pytest
-
-from fmu.ensemble import ScratchEnsemble, EnsembleSet
+from fmu.ensemble import EnsembleSet, ScratchEnsemble
 
 try:
     SKIP_FMU_TOOLS = False

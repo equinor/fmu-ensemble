@@ -1,17 +1,15 @@
 """Testing fmu-ensemble, virtual realizations"""
 # pylint: disable=protected-access,duplicate-code
 
-import os
-import logging
 import datetime
+import logging
+import os
 
 import numpy as np
 import pandas as pd
-
 import pytest
-
-from fmu.ensemble.virtualrealization import smry_cumulative
 from fmu import ensemble
+from fmu.ensemble.virtualrealization import smry_cumulative
 
 logger = logging.getLogger(__name__)
 

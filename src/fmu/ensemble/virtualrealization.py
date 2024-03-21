@@ -1,17 +1,18 @@
 """Contains the VirtualRealization class"""
-import os
+
 import fnmatch
+import logging
+import os
 import shutil
 import warnings
-import logging
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from .realizationcombination import RealizationCombination
 from .util import shortcut2path
-from .util.rates import compute_volumetric_rates
 from .util.dates import date_range
+from .util.rates import compute_volumetric_rates
 
 logger = logging.getLogger(__name__)
 

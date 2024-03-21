@@ -1,26 +1,25 @@
 """Module containing the ScratchEnsemble class"""
 
-import re
-import os
 import glob
 import logging
+import os
+import re
 import warnings
 
 import dateutil
-import pandas as pd
 import numpy as np
+import pandas as pd
 import yaml
 from resdata import ResDataType
 from resdata.resfile import ResdataKW
 
-from .etc import Interaction  # noqa
-from .realization import ScratchRealization
-from .virtualrealization import VirtualRealization
-from .virtualensemble import VirtualEnsemble
 from .ensemblecombination import EnsembleCombination
-from .realization import parse_number
+from .etc import Interaction  # noqa
+from .realization import ScratchRealization, parse_number
 from .util import shortcut2path
 from .util.dates import unionize_smry_dates
+from .virtualensemble import VirtualEnsemble
+from .virtualrealization import VirtualRealization
 
 logger = logging.getLogger(__name__)
 

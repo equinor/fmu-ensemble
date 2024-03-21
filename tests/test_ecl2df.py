@@ -1,10 +1,9 @@
 """Testing incorporation of ecl2df in fmu-ensemble."""
 
-import os
 import logging
+import os
 
 import pytest
-
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 HAVE_ECL2DF = True

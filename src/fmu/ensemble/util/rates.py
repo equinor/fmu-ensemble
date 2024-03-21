@@ -1,10 +1,9 @@
 """Common utility functions for rates used in fmu.ensemble"""
 
-
 import calendar
-import dateutil
 import logging
 
+import dateutil
 import pandas as pd
 
 logger = logging.getLogger(__name__)

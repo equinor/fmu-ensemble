@@ -1,11 +1,11 @@
 """This module is deprecated and will be removed in fmu-ensemble v2.0.0"""
 
-import os
-import sys
-import warnings
 import inspect
 import logging
+import os
+import sys
 import timeit
+import warnings
 
 # pylint: disable=protected-access
 

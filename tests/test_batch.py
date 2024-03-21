@@ -1,11 +1,10 @@
 """Testing batch functions in fmu-ensemble."""
 
-import os
 import logging
+import os
 
 import yaml
-
-from fmu.ensemble import ScratchEnsemble, EnsembleSet
+from fmu.ensemble import EnsembleSet, ScratchEnsemble
 
 logger = logging.getLogger(__name__)
 
