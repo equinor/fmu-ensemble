@@ -31,6 +31,14 @@ from .util.dates import unionize_smry_dates
 from .util.rates import compute_volumetric_rates
 from .virtualrealization import VirtualRealization
 
+HAVE_ECL2DF = False
+try:
+    import ecl2df
+
+    HAVE_ECL2DF = True
+except ImportError:
+    HAVE_ECL2DF = False
+
 HAVE_RES2DF = False
 try:
     import res2df
@@ -843,6 +851,40 @@ class ScratchRealization(object):
             dict with data from parameters.txt
         """
         return self.data["parameters.txt"]
+
+    def get_eclfiles(self):
+        """
+        get_eclfiles is deprecated as ecl2df has been renamed to res2df.
+        Use the function get_resdatafiles together with res2df instead.
+        """
+        if not HAVE_ECL2DF:
+            logger.warning("ecl2df not installed. Skipping")
+            return None
+        data_file_row = self.files[self.files["FILETYPE"] == "DATA"]
+        data_filename = None
+        if len(data_file_row) == 1:
+            data_filename = data_file_row["FULLPATH"].values[0]
+        elif self._autodiscovery:
+            data_fileguess = os.path.join(self._origpath, "eclipse/model", "*.DATA")
+            data_filenamelist = glob.glob(data_fileguess)
+            if not data_filenamelist:
+                return None  # No filename matches *DATA
+            if len(data_filenamelist) > 1:
+                logger.warning(
+                    (
+                        "Multiple DATA files found, "
+                        "consider turning off auto-discovery"
+                    )
+                )
+            data_filename = data_filenamelist[0]
+            self.find_files(data_filename)
+        else:
+            # There is no DATA file to be found.
+            logger.warning("No DATA file found!")
+            return None
+        if not os.path.exists(data_filename):
+            return None
+        return ecl2df.EclFiles(data_filename)
 
     def get_resdatafiles(self):
         """
