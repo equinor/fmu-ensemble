@@ -12,7 +12,7 @@ with open("HISTORY.rst", "rb") as history_file:
 
 REQUIREMENTS = [
     "resdata>=4.0.0",
-    "numpy",
+    "numpy<2",
     "pandas",
     "pyyaml>=5.1",
 ]
