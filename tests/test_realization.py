@@ -235,18 +235,15 @@ def test_status_load(tmpdir):
     assert status["DURATION"].values[0] == 0  # in seconds
     # NB: The current code is not able to pick this error string
 
-    with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
-        status_fh.write("first line always ignored\n")
-        status_fh.write("INCLUDE_PC                      : 12:XX:55 .... 12:40:55  \n")
-    real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
-    status = real.get_df("STATUS")
-    assert len(status) == 1
-    assert "FORWARD_MODEL" in status
-    assert np.isnan(status["DURATION"].values[0])
 
+@pytest.mark.parametrize(
+    "timeinfo", ["12:XX:55 .... 12:40:55", "12:40 .... 12:40:55", "12:40:33 .... 12:41"]
+)
+def test_status_load_wrong_time_syntax(tmpdir, timeinfo: str):
+    tmpdir.join("realization-0").mkdir()
     with open(str(tmpdir.join("realization-0/STATUS")), "w") as status_fh:
         status_fh.write("first line always ignored\n")
-        status_fh.write("INCLUDE_PC                      : 12:40.... 12:40:55  \n")
+        status_fh.write(f"INCLUDE_PC                      :  {timeinfo}   \n")
     real = ensemble.ScratchRealization(str(tmpdir.join("realization-0")))
     status = real.get_df("STATUS")
     assert len(status) == 1

@@ -571,6 +571,10 @@ class ScratchRealization(object):
                     # We get where if STARTIME.split(':') does not contain
                     # integers only:
                     durations.append(np.nan)
+                except IndexError:
+                    # We get here if a clock time string is invalid, like missing seconds.
+                    print("got indexerror")
+                    durations.append(np.nan)
         status["DURATION"] = durations
 
         # Augment data from jobs.json if that file is available:
