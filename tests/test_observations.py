@@ -4,13 +4,15 @@ import datetime
 import glob
 import logging
 import os
-
+import contextlib
 import dateutil
 import numpy as np
 import pandas as pd
 import pytest
 import yaml
 from fmu.ensemble import EnsembleSet, Observations, ScratchEnsemble, ScratchRealization
+from pathlib import Path
+import res2df
 
 logger = logging.getLogger(__name__)
 
@@ -226,6 +228,47 @@ def test_smry():
     # vreal = real.to_virtual()
     # vmismatch = obs.mismatch(vreal)
     # print(vmismatch)
+
+
+def test_smry_handling_of_rate_vectors(tmpdir):
+    """Rate vectors in Eclipse are valid backwards in time.
+
+    Computing mismatches on rates for a specific date thus needs to look
+    forward in time.
+
+    """
+    df = pd.DataFrame(
+        [
+            {"DATE": "2024-01-01", "FOPR": 10},
+            {"DATE": "2024-02-01", "FOPR": 100},
+            {"DATE": "2024-03-01", "FOPR": 1000},
+        ]
+    )
+
+    real_dir = Path(tmpdir / "realization-0" / "iter-0")
+    ecl_dir = real_dir / "eclipse" / "model"
+    ecl_dir.mkdir(parents=True)
+    with contextlib.chdir(ecl_dir):
+        res_smry = res2df.summary.df2ressum(df, casename="FOPRTEST")
+        res_smry.fwrite()
+
+    rate_obs = Observations(
+        {
+            "smry": [
+                {
+                    "key": "FOPR",
+                    "observations": [
+                        {"date": datetime.date(2024, 2, 1), "error": 1, "value": 1000}
+                    ],
+                }
+            ]
+        }
+    )
+
+    real = ScratchRealization(str(real_dir))
+    real.load_smry()
+    mismatch = rate_obs.mismatch(real)
+    assert mismatch.loc[0, "MISMATCH"] == 0.0
 
 
 def test_smry_labels():
