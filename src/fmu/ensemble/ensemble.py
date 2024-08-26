@@ -754,7 +754,7 @@ class ScratchEnsemble(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overridden if time_index
                 is 'first' or 'last'. If string, use ISO-format, YYYY-MM-DD.
-            include_restart (boolean): boolean sent to libecl for whether restart
+            include_restart (boolean): boolean sent to resdata for whether restart
                 files should be traversed.
         Returns:
             pd.DataFame: Summary vectors for the ensemble, or
@@ -1021,7 +1021,7 @@ class ScratchEnsemble(object):
                 end_date will always be included. Overrides
                 normalized dates. Overridden if freq is 'first' or 'last'.
                 If string, use ISO-format, YYYY-MM-DD.
-            include_restart: boolean sent to libecl for whether restart
+            include_restart: boolean sent to resdata for whether restart
                 files should be traversed.
 
         Returns:
@@ -1418,7 +1418,7 @@ class ScratchEnsemble(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overridden if time_index
                 is 'first' or 'last'.
-            include_restart: boolean sent to libecl for whether restart
+            include_restart: boolean sent to resdata for whether restart
                 files should be traversed.
 
         Returns:
