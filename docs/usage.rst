@@ -144,9 +144,9 @@ Reading Eclipse data
 
 The ensemble class has specific support for parsing binary files produced
 by reservoir simulator outputting the Eclipse binary format. This support
-is through `libecl_`.
+is through `resdata`_.
 
-.. _libecl: https://github.com/equinor/libecl
+.. _resdata: https://github.com/equinor/resdata
 
 .. code-block:: python
 

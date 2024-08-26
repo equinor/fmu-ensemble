@@ -938,7 +938,7 @@ class ScratchRealization(object):
     def get_eclsum(self, cache=True, include_restart=True):
         """
         Fetch the Eclipse Summary file from the realization
-        and return as a libecl EclSum object
+        and return as a ResdataFile object
 
         Unless the UNSMRY file has been discovered, it will
         pick the file from the glob `eclipse/model/*UNSMRY`,
@@ -952,7 +952,7 @@ class ScratchRealization(object):
             cache: boolean indicating whether we should keep an
                 object reference to the EclSum object. Set to
                 false if you need to conserve memory.
-            include_restart: boolean sent to libecl for whether restart
+            include_restart: boolean sent to resdata for whether restart
                 files should be traversed.
 
         Returns:
@@ -1045,7 +1045,7 @@ class ScratchRealization(object):
                 Dates past this date will be dropped, supplied
                 end_date will always be included. Overridden if time_index
                 is 'first' or 'last'.
-            include_restart: boolean sent to libecl for whether restart
+            include_restart: boolean sent to resdata for whether restart
                 files should be traversed.
 
         Returns:
@@ -1291,7 +1291,7 @@ class ScratchRealization(object):
                 prop: self._eclsum.numpy_vector(prop, report_only=False)
                 for prop in props
             }
-        else:  # get_values() is deprecated in newer libecl
+        else:  # get_values() is deprecated in resdata
             data = {
                 prop: self._eclsum.get_values(prop, report_only=False) for prop in props
             }
