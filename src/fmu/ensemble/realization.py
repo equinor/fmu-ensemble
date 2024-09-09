@@ -523,7 +523,6 @@ class ScratchRealization(object):
         status.fillna("", inplace=True)
 
         errorjobs = status[errorcolumns[0]] != ""
-
         # Merge any error strings:
         error_string = (
             status.loc[errorjobs, errorcolumns]
@@ -531,7 +530,7 @@ class ScratchRealization(object):
             .apply(" ".join, axis=1)
             .apply(str.strip)
         )
-        status["errorstring"] = np.nan
+        status["errorstring"] = pd.NA
         status.loc[errorjobs, "errorstring"] = error_string
         status.drop(errorcolumns, axis=1, inplace=True)
 

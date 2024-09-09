@@ -381,7 +381,9 @@ def test_volumetric_rates():
     # Calculate cumulative production from the computed volumetric daily rates:
     dayscum["FOPRcum"] = dayscum["FOPR"] * dayscum["DIFFDAYS"]
     # Check that this sum is equal to FOPT between first and last date:
-    assert dayscum["FOPRcum"].sum() == pytest.approx(dcum["FOPT"][-1] - dcum["FOPT"][0])
+    assert dayscum["FOPRcum"].sum() == pytest.approx(
+        dcum["FOPT"].iloc[-1] - dcum["FOPT"].iloc[0]
+    )
     # (here we could catch an error in case we don't support leap days)
 
     # Monthly rates between the random dates:

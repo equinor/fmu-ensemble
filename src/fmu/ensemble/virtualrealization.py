@@ -381,15 +381,10 @@ class VirtualRealization(object):
         ]
         if cum_columns:
             smry[cum_columns] = (
-                smry[cum_columns]
-                .interpolate(method="time")
-                .fillna(method="ffill")
-                .fillna(method="bfill")
+                smry[cum_columns].interpolate(method="time").ffill().bfill()
             )
         if noncum_columns:
-            smry[noncum_columns] = (
-                smry[noncum_columns].fillna(method="bfill").fillna(value=0)
-            )
+            smry[noncum_columns] = smry[noncum_columns].bfill().fillna(value=0)
 
         smry.index = smry.index.set_names(["DATE"])
         return smry.loc[pd.to_datetime(time_index_dt)]
