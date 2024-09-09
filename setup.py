@@ -12,12 +12,12 @@ with open("HISTORY.rst", "rb") as history_file:
 
 REQUIREMENTS = [
     "resdata>=4.0.0",
-    "numpy<2",
+    "numpy",
     "pandas",
     "pyyaml>=5.1",
 ]
 
-SETUP_REQUIREMENTS = ["setuptools>=28", "setuptools_scm"]
+SETUP_REQUIREMENTS = ["setuptools>=65", "setuptools_scm"]
 
 with open("test_requirements.txt") as f:
     test_requirements = f.read().splitlines()
