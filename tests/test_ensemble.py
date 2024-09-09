@@ -544,7 +544,8 @@ def test_ensemble_ecl():
     # For oil industry, p15 on FOPT should yield a larger value than p85.
     # But the quantiles we get out follows the rest of the world
     # so we check for the opposite.
-    assert df_stats["FOPT"]["p85"][-1] > df_stats["FOPT"]["p15"][-1]
+
+    assert df_stats["FOPT"]["p85"].iloc[-1] > df_stats["FOPT"]["p15"].iloc[-1]
 
     with pytest.raises(ValueError):
         reekensemble.get_smry_stats(
