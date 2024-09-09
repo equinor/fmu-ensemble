@@ -20,6 +20,16 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        numpy-version: ["numpy<2", "numpy>=2"]
+        exclude:
+          - python-version: "3.8"
+            numpy-version: "numpy>=2"
+          - python-version: "3.9"
+            numpy-version: "numpy>=2"
+          - python-version: "3.10"
+            numpy-version: "numpy<2"
+          - python-version: "3.12"
+            numpy-version: "numpy<2"
 
     steps:
       - name: 📖 Checkout commit locally
@@ -42,8 +52,14 @@ jobs:
 
       - name: 📦 Install test dependencies
         run: |
-          pip install res2df ecl2df
+          pip install res2df
           pip install .[tests,docs]
+          pip install "${{ matrix.numpy-version }}"
+
+      - name: Install ecl2df
+        if: matrix.numpy-version == 'numpy<2'
+        run: |
+          pip install ecl2df
 
       - name: 🧾 List all installed packages
         run: pip freeze
