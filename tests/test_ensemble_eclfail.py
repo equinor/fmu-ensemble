@@ -14,6 +14,7 @@ import shutil
 
 import numpy as np
 import pandas as pd
+
 from fmu.ensemble import ScratchEnsemble
 
 logger = logging.getLogger(__name__)

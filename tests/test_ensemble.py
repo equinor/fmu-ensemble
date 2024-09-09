@@ -5,10 +5,11 @@
 import logging
 import os
 
-import numpy
+import numpy as np
 import pandas as pd
 import pytest
 import yaml
+
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 from .test_ensembleset import symlink_iter
@@ -58,7 +59,7 @@ def test_reek001(tmpdir):
     assert int(statusdf.loc[4, "RMS_BATCH"]["DURATION"].values[0]) == 195
 
     # STATUS in real4 is modified to simulate that Eclipse never finished:
-    assert numpy.isnan(statusdf.loc[4, "ECLIPSE100_2014.2"]["DURATION"].values[0])
+    assert np.isnan(statusdf.loc[4, "ECLIPSE100_2014.2"]["DURATION"].values[0])
 
     tmpdir.chdir()
     statusdf.to_csv("status.csv", index=False)
@@ -284,13 +285,14 @@ def test_reek001_scalars():
     assert "REAL" in npv
     assert "npv.txt" in npv  # filename is the column name
     assert len(npv) == 5
-    assert npv.dtypes["REAL"] == int
-    assert npv.dtypes["npv.txt"] == object
+
+    assert npv.dtypes["REAL"] == np.int64
+    assert isinstance(npv.dtypes["npv.txt"], object)
     # This is undesirable, can cause trouble with aggregation
     # Try again:
     reekensemble.load_scalar("npv.txt", force_reread=True, convert_numeric=True)
     npv = reekensemble.get_df("npv.txt")
-    assert npv.dtypes["npv.txt"] == int or npv.dtypes["npv.txt"] == float
+    assert npv.dtypes["npv.txt"] in (np.int64, np.float64)
     assert len(npv) == 4  # the error should now be removed
 
     reekensemble.load_scalar("emptyscalarfile")  # missing in real-4

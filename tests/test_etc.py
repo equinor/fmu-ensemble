@@ -1,6 +1,7 @@
 """Test a deprecated submodule"""
 
 import pytest
+
 from fmu import ensemble
 
 

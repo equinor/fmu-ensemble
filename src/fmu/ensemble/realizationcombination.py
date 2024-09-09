@@ -1,4 +1,4 @@
-"""Module for handling linear combinations of realizations. """
+"""Module for handling linear combinations of realizations."""
 
 import fnmatch
 import logging

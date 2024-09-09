@@ -13,8 +13,9 @@ import pandas as pd
 import pytest
 import yaml
 from dateutil.relativedelta import relativedelta
-from fmu import ensemble
 from resdata.summary import Summary
+
+from fmu import ensemble
 
 from .test_ensembleset import symlink_iter
 
