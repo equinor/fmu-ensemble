@@ -1,6 +1,7 @@
 from datetime import datetime as dt
 
 import pytest
+
 from fmu.ensemble.util.dates import _fallback_date_roll, date_range
 
 # These tests are duplicated from https://github.com/equinor/res2df/blob/master/tests/test_summary.py

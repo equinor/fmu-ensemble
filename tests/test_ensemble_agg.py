@@ -5,6 +5,7 @@ import os
 
 import pandas as pd
 import pytest
+
 from fmu.ensemble import ScratchEnsemble
 
 logger = logging.getLogger(__name__)

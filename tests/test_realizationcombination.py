@@ -4,6 +4,7 @@ import logging
 import os
 
 import pytest
+
 from fmu import ensemble
 from fmu.ensemble import ScratchEnsemble
 

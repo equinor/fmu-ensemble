@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
+
 from fmu.ensemble import EnsembleSet, Observations, ScratchEnsemble, ScratchRealization
 
 logger = logging.getLogger(__name__)

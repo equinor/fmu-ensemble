@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v4.6.0
   hooks:
   - id:  no-commit-to-branch
     args: ['--branch', 'master']
@@ -13,14 +13,10 @@ repos:
   - id: trailing-whitespace
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.2
+    rev: v0.6.4
     hooks:
     - id: ruff
       args: [ --extend-select, I, --fix ]
-
-- repo: https://github.com/psf/black
-  rev: 23.11.0
-  hooks:
-  - id: black
+    - id: ruff-format
 
 exclude: "tests/data/testensemble-reek001"

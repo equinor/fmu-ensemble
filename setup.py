@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """The setup script."""
+
 from setuptools import find_packages, setup
 
 with open("README.rst") as readme_file:
@@ -54,6 +55,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     test_suite="tests",
     tests_require=test_requirements,

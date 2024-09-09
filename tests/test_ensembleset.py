@@ -8,6 +8,7 @@ import shutil
 
 import pandas as pd
 import pytest
+
 from fmu.ensemble import EnsembleSet, ScratchEnsemble
 
 try:

@@ -4,6 +4,7 @@ import logging
 import os
 
 import pytest
+
 from fmu.ensemble import ScratchEnsemble, ScratchRealization
 
 HAVE_RES2DF = True
