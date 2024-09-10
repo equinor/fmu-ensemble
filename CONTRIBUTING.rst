@@ -63,7 +63,7 @@ PEP8 and PEP20
 
 * Use PEP8 standard (https://www.python.org/dev/peps/pep-0008/) and PEP20 philosophy, with line length set 88.
 
-* Use the source code formatter black (https://github.com/python/black)
+* Use the source code formatter ruff (https://github.com/astral-sh/ruff)
 
 * Naming: `files_as_this`, `ClassesAsThis`, `ExceptionsAsThis`, `CONSTANTS`,
   `function_as_this`, `method_as_this`
