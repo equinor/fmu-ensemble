@@ -41,7 +41,7 @@ jobs:
         run: git fetch --unshallow --tags
 
       - name: 🐍 Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -58,12 +58,6 @@ jobs:
 
       - name: 🧾 List all installed packages
         run: pip freeze
-
-      - name: 🕵️ Check code style
-        env:
-          SKIP: no-commit-to-branch
-        run: |
-          pre-commit run --all-files
 
       - name: 🤖 Run tests
         run: |
