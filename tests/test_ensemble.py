@@ -87,7 +87,7 @@ def test_reek001(tmpdir):
     assert "NPV" in reekensemble.load_txt("outputs.txt").columns
     # Check implicit discovery
     assert "outputs.txt" in reekensemble.files["LOCALPATH"].values
-    assert all([os.path.isabs(x) for x in reekensemble.files["FULLPATH"]])
+    assert all(os.path.isabs(x) for x in reekensemble.files["FULLPATH"])
 
     # File discovery:
     csvvolfiles = reekensemble.find_files(
@@ -117,7 +117,7 @@ def test_reek001(tmpdir):
     assert len(newfiles.columns) + 1 == len(csvvolfiles.columns)
 
     # FULLPATH should always contain absolute paths
-    assert all([os.path.isabs(x) for x in reekensemble.files["FULLPATH"]])
+    assert all(os.path.isabs(x) for x in reekensemble.files["FULLPATH"])
 
     # The metadata in the rediscovered files should have been removed
     assert reekensemble.files[reekensemble.files["GRID"] == "simgrid"].empty
@@ -807,7 +807,7 @@ def test_ertrunpathfile():
     )
     assert len(ens) == 5
 
-    assert all([os.path.isabs(x) for x in ens.files["FULLPATH"]])
+    assert all(os.path.isabs(x) for x in ens.files["FULLPATH"])
     # Check that the UNSMRY files has been discovered, they should always be
     # because ECLBASE is given in the runpathfile
     assert sum(["UNSMRY" in x for x in ens.files["BASENAME"].unique()]) == 5
@@ -850,35 +850,35 @@ def test_eclsumcaching():
 
     ens.load_smry()
     # Default is to do caching, so these will not be None:
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert all(x._eclsum for (idx, x) in ens.realizations.items())
 
     # If we redo this operation, the same objects should all
     # be None afterwards:
     ens.load_smry(cache_eclsum=False)
     # cache_eclsum==None is from v1.1.5 no longer equivalent to False
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert not any(x._eclsum for (idx, x) in ens.realizations.items())
 
     ens.get_smry()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert all(x._eclsum for (idx, x) in ens.realizations.items())
 
     ens.get_smry(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert not any(x._eclsum for (idx, x) in ens.realizations.items())
 
     ens.get_smry_stats()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert all(x._eclsum for (idx, x) in ens.realizations.items())
 
     ens.get_smry_stats(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert not any(x._eclsum for (idx, x) in ens.realizations.items())
 
     ens.get_smry_dates()
-    assert all([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert all(x._eclsum for (idx, x) in ens.realizations.items())
 
     # Clear the cached objects because the statement above has cached it..
     for _, realization in ens.realizations.items():
         realization._eclsum = None
 
     ens.get_smry_dates(cache_eclsum=False)
-    assert not any([x._eclsum for (idx, x) in ens.realizations.items()])
+    assert not any(x._eclsum for (idx, x) in ens.realizations.items())
 
 
 def test_filedescriptors():

@@ -312,21 +312,26 @@ def test_todisk(tmpdir):
         assert set(vens.keys()) == set(fromcsvdisk2.keys())
 
     # Test manual intervention:
-    fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["FOO", "BAR", "COM"])
+    rng = np.random.default_rng()
+    fooframe = pd.DataFrame(
+        data=rng.standard_normal(size=(3, 3)), columns=["FOO", "BAR", "COM"]
+    )
     fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
     manualens = VirtualEnsemble(fromdisk="vens_dumped")
     assert "share/results/tables/randomdata.csv" not in manualens.keys()
 
     # Now with correct column header,
     # but floating point data for realizations..
-    fooframe = pd.DataFrame(data=np.random.randn(3, 3), columns=["REAL", "BAR", "COM"])
+    fooframe = pd.DataFrame(
+        data=rng.standard_normal(size=(3, 3)), columns=["REAL", "BAR", "COM"]
+    )
     fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))
     manualens = VirtualEnsemble(fromdisk="vens_dumped")
     assert "share/results/tables/randomdata.csv" not in manualens.keys()
 
     # Now with correct column header, and with integer data for REAL..
     fooframe = pd.DataFrame(
-        data=np.random.randint(low=0, high=100, size=(3, 3)),
+        data=rng.integers(low=0, high=100, size=(3, 3)),
         columns=["REAL", "BAR", "COM"],
     )
     fooframe.to_csv(os.path.join("vens_dumped", "share/results/tables/randomdata.csv"))

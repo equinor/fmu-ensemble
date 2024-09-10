@@ -16,7 +16,7 @@ repos:
     rev: v0.6.4
     hooks:
     - id: ruff
-      args: [ --extend-select, I, --fix ]
+      args: [ --fix ]
     - id: ruff-format
 
 exclude: "tests/data/testensemble-reek001"

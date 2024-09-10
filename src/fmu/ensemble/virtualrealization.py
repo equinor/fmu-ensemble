@@ -89,10 +89,9 @@ class VirtualRealization(object):
             if delete:
                 shutil.rmtree(filesystempath)
                 os.mkdir(filesystempath)
-            else:
-                if os.listdir(filesystempath):
-                    logger.critical("Refusing to write to non-empty directory")
-                    raise IOError("Directory %s not empty" % filesystempath)
+            elif os.listdir(filesystempath):
+                logger.critical("Refusing to write to non-empty directory")
+                raise IOError("Directory %s not empty" % filesystempath)
         else:
             os.mkdir(filesystempath)
 
@@ -107,9 +106,8 @@ class VirtualRealization(object):
 
         for key in self.keys():
             dirname = os.path.join(filesystempath, os.path.dirname(key))
-            if dirname:
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
+            if dirname and not os.path.exists(dirname):
+                os.makedirs(dirname)
 
             data = self.get_df(key)
             filename = os.path.join(dirname, os.path.basename(key))
@@ -157,9 +155,8 @@ class VirtualRealization(object):
         for root, _, filenames in os.walk(filesystempath):
             for filename in filenames:
                 if filename == "_description":
-                    self._description = " ".join(
-                        open(os.path.join(root, filename)).readlines()
-                    )
+                    with open(os.path.join(root, filename)) as fhandle:
+                        self._description = " ".join(fhandle.readlines())
                     logger.info("got name as %s", self._description)
                 elif filename == "STATUS":
                     self.append("STATUS", pd.read_csv(os.path.join(root, filename)))

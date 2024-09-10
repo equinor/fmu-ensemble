@@ -439,7 +439,7 @@ class EnsembleSet(object):
         if self.shortcut2path(localpath) not in self.keys():
             raise ValueError("%s not found" % localpath)
         for _, ensemble in self._ensembles.items():
-            try:
+            try:  # noqa: SIM105
                 ensemble.drop(localpath, **kwargs)
             except ValueError:
                 pass  # Allow localpath to be missing in some ensembles.
@@ -781,4 +781,4 @@ class EnsembleSet(object):
         result = set()
         for _, ensemble in self._ensembles.items():
             result = result.union(ensemble.get_wellnames(well_match))
-        return sorted(list(result))
+        return sorted(result)

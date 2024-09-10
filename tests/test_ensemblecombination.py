@@ -74,7 +74,7 @@ def test_ensemblecombination_basic():
     assert not vhalf_filtered2.get_df("unsmry--yearly").empty
     with pytest.raises((KeyError, ValueError)):
         # pylint: disable=pointless-statement
-        vhalf_filtered2.parameters
+        _ = vhalf_filtered2.parameters
 
     # Get summary data with parameters:
     smry_params = vhalf.get_df("unsmry--yearly", merge="parameters.txt")

@@ -114,7 +114,7 @@ def test_single_realization(tmpdir):
     assert "emptyscalarfile" in real.files["LOCALPATH"].values
 
     # Check that FULLPATH always has absolute paths
-    assert all([os.path.isabs(x) for x in real.files["FULLPATH"]])
+    assert all(os.path.isabs(x) for x in real.files["FULLPATH"])
 
     with pytest.raises(IOError):
         real.load_scalar("notexisting.txt")
@@ -328,7 +328,8 @@ def test_volumetric_rates():
 
     # Pick 10 **random** dates to get the volumetric rates between:
     daily_dates = real.get_smry_dates(freq="daily", normalize=False)
-    subset_dates = np.random.choice(daily_dates, size=10, replace=False)
+    rng = np.random.default_rng()
+    subset_dates = rng.choice(daily_dates, size=10, replace=False)
     subset_dates.sort()
     dcum = real.get_smry(column_keys="FOPT", time_index=subset_dates)
     ddcum = real.get_volumetric_rates(column_keys="FOPT", time_index=subset_dates)
@@ -612,7 +613,7 @@ def test_singlereal_ecl(tmp="TMP"):
     with pytest.raises((ValueError, KeyError)):
         # This does not exist before we have asked for it
         # pylint: disable=pointless-statement
-        "FOPT" in real["unsmry--yearly"]
+        _ = "FOPT" in real["unsmry--yearly"]
 
 
 def test_can_import_summary_files_beyond_2262(tmpdir, monkeypatch):
@@ -798,8 +799,8 @@ def test_filesystem_changes():
     # Should not fail
 
     # Try with an empty STATUS file:
-    fhandle = open(realdir + "/STATUS", "w")
-    fhandle.close()
+    with open(realdir + "/STATUS", "w") as fhandle:
+        pass
     real = ensemble.ScratchRealization(realdir)
     assert real.get_df("STATUS").empty
     # This demonstrates we can fool the Realization object, and
@@ -807,35 +808,33 @@ def test_filesystem_changes():
 
     # Try with a STATUS file with error message on first job
     # the situation where there is one successful job.
-    fhandle = open(realdir + "/STATUS", "w")
-    fhandle.write(
-        (
-            "Current host                    : st-rst16-02-03/x86_64  "
-            "file-server:10.14.10.238\n"
-            "LSF JOBID: not running LSF\n"
-            "COPY_FILE                       : 20:58:57 .... 20:59:00   "
-            "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
-            "Config/jobs/util/script/copy_file.py failed with exit code: 1\n"
+    with open(realdir + "/STATUS", "w") as fhandle:
+        fhandle.write(
+            (
+                "Current host                    : st-rst16-02-03/x86_64  "
+                "file-server:10.14.10.238\n"
+                "LSF JOBID: not running LSF\n"
+                "COPY_FILE                       : 20:58:57 .... 20:59:00   "
+                "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
+                "Config/jobs/util/script/copy_file.py failed with exit code: 1\n"
+            )
         )
-    )
-    fhandle.close()
     real = ensemble.ScratchRealization(realdir)
     # When issue 37 is resolved, update this to 1 and check the
     # error message is picked up.
     assert len(real.get_df("STATUS")) == 1
-    fhandle = open(realdir + "/STATUS", "w")
-    fhandle.write(
-        (
-            "Current host                    : st-rst16-02-03/x86_64  "
-            "file-server:10.14.10.238\n"
-            "LSF JOBID: not running LSF\n"
-            "COPY_FILE                       : 20:58:55 .... 20:58:57\n"
-            "COPY_FILE                       : 20:58:57 .... 20:59:00  "
-            " EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
-            "Config/jobs/util/script/copy_file.py failed with exit code: 1 "
+    with open(realdir + "/STATUS", "w") as fhandle:
+        fhandle.write(
+            (
+                "Current host                    : st-rst16-02-03/x86_64  "
+                "file-server:10.14.10.238\n"
+                "LSF JOBID: not running LSF\n"
+                "COPY_FILE                       : 20:58:55 .... 20:58:57\n"
+                "COPY_FILE                       : 20:58:57 .... 20:59:00  "
+                " EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
+                "Config/jobs/util/script/copy_file.py failed with exit code: 1 "
+            )
         )
-    )
-    fhandle.close()
     real = ensemble.ScratchRealization(realdir)
     assert len(real.get_df("STATUS")) == 2
     # Check that we have the error string picked up:
@@ -865,10 +864,9 @@ def test_filesystem_changes():
     # Unquoted valued with spaces will be truncated,
     # quoted valued will be correctly parsed
     # (read_csv(sep='\s+') is the parser)
-    param_file = open(realdir + "/parameters.txt", "a")
-    param_file.write("FOOBAR 1 2 3 4 5 6\n")
-    param_file.write('FOOSPACES "1 2 3 4 5 6"\n')
-    param_file.close()
+    with open(realdir + "/parameters.txt", "a") as param_file:
+        param_file.write("FOOBAR 1 2 3 4 5 6\n")
+        param_file.write('FOOSPACES "1 2 3 4 5 6"\n')
 
     real = ensemble.ScratchRealization(realdir)
     assert real.parameters["FOOBAR"] == 1
@@ -1069,7 +1067,7 @@ def test_find_files_yml():
             fileh.write("baah")
         yamlfile = "." + filename + ".yml"
         with open(os.path.join(realdir, yamlfile), "w") as fileh:
-            fileh.write(yaml.dump(dict(a=dict(x=1, y=2), b="bar")))
+            fileh.write(yaml.dump({"a": {"x": 1, "y": 2}, "b": "bar"}))
 
     # Now find the gri files, and add metadata:
     files_df = real.find_files("*.gri", metayaml=True)
@@ -1120,7 +1118,7 @@ def test_get_smry_meta():
     # Can create dataframes like this:
     meta_df = pd.DataFrame.from_dict(meta, orient="index")
     hist_keys = meta_df[meta_df["is_historical"]].index
-    assert all([key.split(":")[0].endswith("H") for key in hist_keys])
+    assert all(key.split(":")[0].endswith("H") for key in hist_keys)
 
     # When virtualizing a realization, smry data must be loaded
     # for smry metadata to be conserved
@@ -1197,7 +1195,7 @@ def test_get_df_merge():
     assert "top_structure" in scalar_dict
 
     # Inject a random dict and merge with:
-    real.data["foodict"] = dict(BAR="COM")
+    real.data["foodict"] = {"BAR": "COM"}
     dframe = real.get_df("parameters", merge="foodict")
     assert "BAR" in dframe
     assert "SORG1" in dframe

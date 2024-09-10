@@ -345,11 +345,11 @@ class ScratchRealization(object):
             value = parse_number(value)
             if not isinstance(value, str):
                 self.data[localpath] = value
-            else:
-                # In case we are re-reading, we must
-                # ensure there is no value present now:
-                if localpath in self.data:
-                    del self.data[localpath]
+
+            # In case we are re-reading, we must
+            # ensure there is no value present now:
+            elif localpath in self.data:
+                del self.data[localpath]
         else:
             self.data[localpath] = value
         return value
@@ -463,12 +463,9 @@ class ScratchRealization(object):
                 [self.files, pd.DataFrame([filerow])], ignore_index=True
             )
         try:
-            if convert_numeric:
-                # Trust that Pandas will determine sensible datatypes
-                # faster than the convert_numeric() function
-                dtype = None
-            else:
-                dtype = str
+            # Trust that Pandas will determine sensible datatypes
+            # faster than the convert_numeric() function
+            dtype = None if convert_numeric else str
             dframe = pd.read_csv(fullpath, dtype=dtype)
             if "REAL" in dframe:
                 dframe.rename(columns={"REAL": "REAL_ORIG"}, inplace=True)
@@ -706,9 +703,7 @@ class ScratchRealization(object):
             # this function happily returns references to the internal
             # dataframes in the realization object. So ensure
             # we copy dataframes if any merging is about to happen.
-            if isinstance(data, pd.DataFrame):
-                data = data.copy()
-            elif isinstance(data, dict):
+            if isinstance(data, (pd.DataFrame, dict)):
                 data = data.copy()
             elif isinstance(data, (str, int, float, np.number)):
                 # Convert scalar data into something mergeable
@@ -958,9 +953,9 @@ class ScratchRealization(object):
             EclSum: object representing the summary file. None if
                 nothing was found.
         """
-        if cache and self._eclsum:  # Return cached object if available
-            if self._eclsum_include_restart == include_restart:
-                return self._eclsum
+        # Return cached object if available
+        if cache and self._eclsum and self._eclsum_include_restart == include_restart:
+            return self._eclsum
 
         unsmry_file_row = self.files[self.files.FILETYPE == "UNSMRY"]
         unsmry_filename = None
@@ -1368,9 +1363,12 @@ class ScratchRealization(object):
             return False
         if not kwargs:
             return localpath in self.keys()
-        if isinstance(self.data[localpath], dict):
-            if "key" in kwargs and "value" not in kwargs:
-                return kwargs["key"] in self.data[localpath]
+        if (
+            isinstance(self.data[localpath], dict)
+            and "key" in kwargs
+            and "value" not in kwargs
+        ):
+            return kwargs["key"] in self.data[localpath]
         if isinstance(self.data[localpath], pd.DataFrame):
             if "key" in kwargs:
                 raise ValueError("Don't use key for tabular data")
@@ -1455,10 +1453,7 @@ class ScratchRealization(object):
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]
-        if self.index is not None:
-            indexstr = str(self.index)
-        else:
-            indexstr = "Error"
+        indexstr = str(self.index) if self.index is not None else "Error"
         return "<Realization, index={}, path=...{}>".format(indexstr, pathsummary)
 
     def __sub__(self, other):
