@@ -1,0 +1,43 @@
+name: style
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  release:
+    types:
+      - published
+
+jobs:
+  fmu-ensemble:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - name: 📖 Checkout commit locally
+        uses: actions/checkout@v4
+
+      - name: 📖 Checkout tags
+        # This seems necessary for setuptools_scm to be able to infer
+        # the correct version.
+        run: git fetch --unshallow --tags
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 📦 Install fmu-ensemble with style dependencies
+        run: |
+          pip install ".[style]"
+
+      - name: 🕵️ Check code style
+        env:
+          SKIP: no-commit-to-branch
+        run: |
+          pre-commit run --all-files
