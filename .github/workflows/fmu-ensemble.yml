@@ -45,15 +45,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: 📦 Install fmu-ensemble with dependencies
-        run: |
-          pip install --upgrade pip
-          pip install .
-
-      - name: 📦 Install test dependencies
+      - name: 📦 Install fmu-ensemble with test dependencies
         run: |
           pip install res2df
-          pip install .[tests,docs]
+          pip install ".[test, docs]"
           pip install "${{ matrix.numpy-version }}"
 
       - name: Install ecl2df
@@ -74,7 +69,7 @@ jobs:
         run: |
           python -c "import fmu.ensemble"
           pytest tests/
-          pip install .[parquet]
+          pip install ".[parquet]"
           pytest tests/test_virtualensemble.py
 
       - name: Syntax check on RST documentation

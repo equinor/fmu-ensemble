@@ -26,7 +26,7 @@ jobs:
       - name: Install fmu-ensemble and test dependencies
         run: |
           pip install pip -U
-          pip install .[tests]
+          pip install ".[test]"
 
       - name: Generate coverage report
         run: |

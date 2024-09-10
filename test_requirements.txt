@@ -1,4 +1,0 @@
-pre-commit
-pytest>=2.9.2
-pytest-cov
-pyyaml>=5.1
