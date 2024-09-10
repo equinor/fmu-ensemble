@@ -36,6 +36,14 @@ fmu.ensemble.ensembleset module
    :undoc-members:
    :show-inheritance:
 
+fmu.ensemble.etc module
+-----------------------
+
+.. automodule:: fmu.ensemble.etc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 fmu.ensemble.observations module
 --------------------------------
 

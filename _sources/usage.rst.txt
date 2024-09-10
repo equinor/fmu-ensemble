@@ -46,7 +46,7 @@ into Python's memory first.
    ens
    # the output should be something like
    #   <Ensemble reek_r001_iter0, 50 realizations>
-            
+
 You name your ensemble in the first argument. This name is used when you combine
 the ensemble with other ensembles into an ``EnsembleSet``. The path is where on
 the filesystem your realizations roots are. The realization root is also called
@@ -69,7 +69,7 @@ When an ensemble is loaded into memory, you can ask for certain properties,
     # Obtain a Pandas Dataframe of the parameters
     ens.parameters
 
-    # Unique realizations indices with parameters.txt 
+    # Unique realizations indices with parameters.txt
     ens.parameters['REAL'].unique()
 
     # List of parameters available:
@@ -78,7 +78,7 @@ When an ensemble is loaded into memory, you can ask for certain properties,
 Loading multiple ensembles
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have multiple ensembles in the typical ``realization-*/iter-*`` 
+If you have multiple ensembles in the typical ``realization-*/iter-*``
 directory structure, you can load all these ensembles in one go:
 
 .. code-block:: python
@@ -144,9 +144,9 @@ Reading Eclipse data
 
 The ensemble class has specific support for parsing binary files produced
 by reservoir simulator outputting the Eclipse binary format. This support
-is through `libecl_`.
+is through `resdata`_.
 
-.. _libecl: https://github.com/equinor/libecl
+.. _resdata: https://github.com/equinor/resdata
 
 .. code-block:: python
 
@@ -159,7 +159,7 @@ containing the summary data you requested. Each row is the values for
 a specific realization at a specific time. Pandas DataFrames can be
 written to disk as CSV files quite easily using e.g.
 ``smry.to_csv('summaryvectors.csv', index=False)``. For `time_index` you
-may also try `yearly`, `daily` or `raw`. Check the function 
+may also try `yearly`, `daily` or `raw`. Check the function
 documentation for further possibilities.
 
 If you replace `get_smry` with `load_smry` the same dataframe will also be
@@ -202,10 +202,10 @@ You can then ask to get a "volumetric rate" for `FOPT` at various time
 indices, yearly will give you yearly volumes, monthly will give monthly
 volumes etc. The data is returned as `FOPR` but you must be careful not to
 mix its meaning with the original `FOPR`. It is also possible to supply a
-custom time index (with arbitrary time between each index), but where the 
+custom time index (with arbitrary time between each index), but where the
 volumetric rates are scaled to correspond to daily/monthly/yearly rates.
 These will sum up to the cumulative given correct integration (with
-time interval length weigthing). 
+time interval length weigthing).
 
 .. code-block:: python
 
@@ -330,7 +330,7 @@ ensemble and returned as a DataFrame. The current implementation can be
 slow for large grid model and/or ensembles with many realizations.
 
 .. code-block:: python
-    
+
     # Find of the report number corresponding to the date you are interested to extract from
     ens.get_unrst_report_dates()
     # Extract the mean of following properties at the report step 4
@@ -370,7 +370,7 @@ Examples:
     # Extract the subset for a specific sensitivity.
     vens = ens.filter('parameters.txt', key='DRAINAGE_STRATEGY',
                       value='Depletion', inplace=False)
-    
+
     # Remove all realizations where a specific output file
     # (that we have tried to internalize) is missing
     ens.filter('geo_oil_1.csv')

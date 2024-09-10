@@ -175,13 +175,13 @@ matching), use the YAML syntax:
       # Mandatory elements per entry: key and observations
     - key: WBP4:OP_1
         # This is a global comment regarding this set of observations
-        comment: "Shut-in pressures converted from well head conditions"
-        observations:
-           # Mandatory elements per entry in ecl_vector observations: value, error, date
-           - {value: 251, error: 4, date: 2001-01-01}
-           - {value: 251, error: 10, date: 2002-01-01}
-           - {value: 251, error: 10, date: 2003-01-01,
-              comment: First measurement after sensor drift correction}
+      comment: "Shut-in pressures converted from well head conditions"
+      observations:
+         # Mandatory elements per entry in ecl_vector observations: value, error, date
+         - {value: 251, error: 4, date: 2001-01-01}
+         - {value: 251, error: 10, date: 2002-01-01}
+         - {value: 251, error: 10, date: 2003-01-01,
+            comment: First measurement after sensor drift correction}
 
 
 Representative realizations
@@ -204,12 +204,13 @@ can pick the realization that is closest to your statistics of choice.
     # Load an ensemble we want to analyze
     ens = ensemble.ScratchEnsemble('hmensemble',
             '/scratch/foo/something/realization-*/iter-3')
+    ens.load_smry(column_keys=['FOPT'], time_index='yearly')
 
     # Calculate a "mean" realization
     mean = ens.agg('mean')
 
     # Create an empty observation object
-    obs = Observations({})
+    obs = ensemble.Observations({})
 
     # Load data from the mean realization as virtual observations:
     obs.load_smry(mean, 'FOPT', time_index='yearly')
@@ -220,7 +221,7 @@ can pick the realization that is closest to your statistics of choice.
 
     # Group mismatch data by realization, and pick the realization
     # index with the smallest sum of squared errors ('L2')
-    closest_to_mean = mis.groupby('REAL').sum()['L2']\
+    closest_to_mean = mis.groupby('REAL').sum(numeric_only=True)['L2']\
                                          .sort_values()\
                                          .index\
                                          .values[0]
@@ -252,15 +253,15 @@ in the realization object to use, potentially only the directory).
    :header-rows: 1
 
 where PORV and VOLUME are sums over each zone, Z is the minimum (thus apex pr.
-zone) and PERMX is an arithmetic mean. In the language of `ecl2df
-<https://equinor.github.io/ecl2df/>`_ this could be done with a code like this:
+zone) and PERMX is an arithmetic mean. In the language of `res2df
+<https://equinor.github.io/res2df/>`_ this could be done with a code like this:
 
 .. code-block:: python
 
-   from ecl2df import grid, EclFiles
+   from res2df import grid, ResdataFiles
 
-   eclfiles = EclFiles('MYDATADECK.DATA')  # There is a file zones.lyr alongside this.
-   grid_df = grid.df(eclfiles)  # Produce a dataframe with one row pr. cell
+   resdatafiles = ResdataFiles('MYDATADECK.DATA')  # There is a file zones.lyr alongside this.
+   grid_df = grid.df(resdatafiles)  # Produce a dataframe with one row pr. cell
    my_aggregators = {'PORV': 'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'}
    stats_df = grid_df.groupby("ZONE").agg(my_aggregators)
    print(stats_df)
@@ -268,10 +269,10 @@ zone) and PERMX is an arithmetic mean. In the language of `ecl2df
 
 ``ScratchRealization`` objects contain the methods ``runpath()`` which will give
 the full path to the directory  the realization resides in, this can be used
-freely by your function.  For easier coupling with ecl2df, the function
-``get_eclfiles()`` is provided.
+freely by your function.  For easier coupling with res2df, the function
+``get_resdatafiles()`` is provided.
 
-To be able to inject the ecl2df lines above into the API of fmu.ensemble and the
+To be able to inject the res2df lines above into the API of fmu.ensemble and the
 :py:meth:`apply() <fmu.ensemble.ensemble.ScratchEnsemble.apply>` function, we
 need to to put it into a wrapper function.  This wrapper function will always
 receive a Realization object as a named argument, and it must return a
@@ -279,7 +280,7 @@ dataframe. The wrapper function can look like this:
 
 .. code-block:: python
 
-   from ecl2df import grid, EclFiles
+   from res2df import grid, ResdataFiles
 
    def my_realization_stats(args):
       """A custom function for performing a particular calculation
@@ -289,8 +290,8 @@ dataframe. The wrapper function can look like this:
          args (dict): A dictionary with parameters to my custom function.
              The keys 'realization' and 'localpath' are reserved for fmu.ensemble."""
       realization = args["realization"]  # Provided by fmu.ensemble apply()
-      eclfiles = realization.get_eclfiles()
-      grid_df = grid.df(eclfiles)
+      resdatafiles = realization.get_resdatafiles()
+      grid_df = grid.df(resdatafiles)
       my_aggregators = {'PORV': 'sum', 'VOLUME': 'sum', 'Z': 'min', 'PERMX': 'mean'}
       stats_df = grid_df.groupby("ZONE").agg(my_aggregators)
       return stats_df.reset_index()  # Zone names are in the index, lost if not reset.
@@ -324,7 +325,7 @@ VirtualRealization object from an Ensemble object. If we want only the
 aggregated table for our particular custom function, we can aggregate the
 ensemble only for that particular datatype:
 
-.. code-block:: ipython
+.. code-block::
 
    In [1]: mean_realization = ensemble.agg("mean", keylist="zonestats.csv")
    In [2]: mean_realization.get_df("zonestats.csv")
@@ -333,5 +334,3 @@ ensemble only for that particular datatype:
    0  LowerReek  1105.552718  6.070259e+08  1599.113406  109885776.0
    1    MidReek   966.315122  9.608399e+08  1586.559663  161875872.0
    2  UpperReek   592.824625  1.028779e+09  1571.164775  148655376.0
-
-
