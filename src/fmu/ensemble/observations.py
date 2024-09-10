@@ -75,7 +75,7 @@ class Observations(object):
             observations: dict with observation structure or string
                 with path to a yaml file.
         """
-        self.observations = dict()
+        self.observations = {}
 
         if isinstance(observations, str):
             with open(observations) as yamlfile:
@@ -267,20 +267,20 @@ class Observations(object):
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(
-                        dict(
-                            OBSTYPE=obstype,
-                            OBSKEY=str(obsunit["localpath"])
+                        {
+                            "OBSTYPE": obstype,
+                            "OBSKEY": str(obsunit["localpath"])
                             + "/"
                             + str(obsunit["key"]),
-                            LABEL=obsunit.get("label", ""),
-                            MISMATCH=mismatch,
-                            L1=abs(mismatch),
-                            L2=abs(mismatch) ** 2,
-                            SIMVALUE=sim_value,
-                            OBSVALUE=obsunit["value"],
-                            MEASERROR=measerror,
-                            SIGN=sign,
-                        )
+                            "LABEL": obsunit.get("label", ""),
+                            "MISMATCH": mismatch,
+                            "L1": abs(mismatch),
+                            "L2": abs(mismatch) ** 2,
+                            "SIMVALUE": sim_value,
+                            "OBSVALUE": obsunit["value"],
+                            "MEASERROR": measerror,
+                            "SIGN": sign,
+                        }
                     )
                 if obstype == "scalar":
                     try:
@@ -294,18 +294,18 @@ class Observations(object):
                     measerror = 1
                     sign = (mismatch > 0) - (mismatch < 0)
                     mismatches.append(
-                        dict(
-                            OBSTYPE=obstype,
-                            OBSKEY=str(obsunit["key"]),
-                            LABEL=obsunit.get("label", ""),
-                            MISMATCH=mismatch,
-                            L1=abs(mismatch),
-                            SIMVALUE=sim_value,
-                            OBSVALUE=obsunit["value"],
-                            MEASERROR=measerror,
-                            L2=abs(mismatch) ** 2,
-                            SIGN=sign,
-                        )
+                        {
+                            "OBSTYPE": obstype,
+                            "OBSKEY": str(obsunit["key"]),
+                            "LABEL": obsunit.get("label", ""),
+                            "MISMATCH": mismatch,
+                            "L1": abs(mismatch),
+                            "SIMVALUE": sim_value,
+                            "OBSVALUE": obsunit["value"],
+                            "MEASERROR": measerror,
+                            "L2": abs(mismatch) ** 2,
+                            "SIGN": sign,
+                        }
                     )
                 if obstype == "smryh":
                     if "time_index" in obsunit:
@@ -352,16 +352,16 @@ class Observations(object):
                     )
                     measerror = 1
                     mismatches.append(
-                        dict(
-                            OBSTYPE="smryh",
-                            OBSKEY=obsunit["key"],
-                            LABEL=obsunit.get("label", ""),
-                            MISMATCH=sim_hist["mismatch"].sum(),
-                            MEASERROR=measerror,
-                            L1=sim_hist["mismatch"].abs().sum(),
-                            L2=math.sqrt((sim_hist["mismatch"] ** 2).sum()),
-                            TIME_INDEX=time_index_str,
-                        )
+                        {
+                            "OBSTYPE": "smryh",
+                            "OBSKEY": obsunit["key"],
+                            "LABEL": obsunit.get("label", ""),
+                            "MISMATCH": sim_hist["mismatch"].sum(),
+                            "MEASERROR": measerror,
+                            "L1": sim_hist["mismatch"].abs().sum(),
+                            "L2": math.sqrt((sim_hist["mismatch"] ** 2).sum()),
+                            "TIME_INDEX": time_index_str,
+                        }
                     )
                 if obstype == "smry":
                     # For 'smry', there is a list of
@@ -381,19 +381,19 @@ class Observations(object):
                         mismatch = float(sim_value - unit["value"])
                         sign = (mismatch > 0) - (mismatch < 0)
                         mismatches.append(
-                            dict(
-                                OBSTYPE="smry",
-                                OBSKEY=obsunit["key"],
-                                DATE=unit["date"],
-                                MEASERROR=unit["error"],
-                                LABEL=unit.get("label", ""),
-                                MISMATCH=mismatch,
-                                OBSVALUE=unit["value"],
-                                SIMVALUE=sim_value,
-                                L1=abs(mismatch),
-                                L2=abs(mismatch) ** 2,
-                                SIGN=sign,
-                            )
+                            {
+                                "OBSTYPE": "smry",
+                                "OBSKEY": obsunit["key"],
+                                "DATE": unit["date"],
+                                "MEASERROR": unit["error"],
+                                "LABEL": unit.get("label", ""),
+                                "MISMATCH": mismatch,
+                                "OBSVALUE": unit["value"],
+                                "SIMVALUE": sim_value,
+                                "L1": abs(mismatch),
+                                "L2": abs(mismatch) ** 2,
+                                "SIGN": sign,
+                            }
                         )
         return pd.DataFrame(mismatches)
 
@@ -422,13 +422,12 @@ class Observations(object):
         zeroerrors = mismatch["MEASERROR"] < 1e-7
         if defaulterrors:
             mismatch[zeroerrors]["MEASERROR"] = 1
-        else:
-            if zeroerrors.any():
-                print(mismatch[zeroerrors])
-                raise ValueError(
-                    "Zero measurement error in observation set"
-                    + ". can't be used to calculate misfit"
-                )
+        elif zeroerrors.any():
+            print(mismatch[zeroerrors])
+            raise ValueError(
+                "Zero measurement error in observation set"
+                + ". can't be used to calculate misfit"
+            )
         if "MISFIT" not in mismatch.columns:
             mismatch["MISFIT"] = mismatch["L2"] / (mismatch["MEASERROR"] ** 2)
 
@@ -484,8 +483,10 @@ class Observations(object):
                     continue
                 # If time_index is not a supported mnemonic,
                 # parse it to a date object
-                if "time_index" in unit:
-                    if unit["time_index"] not in [
+                if (
+                    "time_index" in unit
+                    and unit["time_index"]
+                    not in {
                         "raw",
                         "report",
                         "yearly",
@@ -493,18 +494,20 @@ class Observations(object):
                         "first",
                         "last",
                         "monthly",
-                    ] and not isinstance(unit["time_index"], datetime.datetime):
-                        try:
-                            unit["time_index"] = dateutil.parser.isoparse(
-                                unit["time_index"]
-                            ).date()
-                        except (TypeError, ValueError) as exception:
-                            logger.warning(
-                                "Parsing date %s failed with error",
-                                (str(unit["time_index"]), str(exception)),
-                            )
-                            del smryhunits[smryhunits.index(unit)]
-                            continue
+                    }
+                    and not isinstance(unit["time_index"], datetime.datetime)
+                ):
+                    try:
+                        unit["time_index"] = dateutil.parser.isoparse(
+                            unit["time_index"]
+                        ).date()
+                    except (TypeError, ValueError) as exception:
+                        logger.warning(
+                            "Parsing date %s failed with error",
+                            (str(unit["time_index"]), str(exception)),
+                        )
+                        del smryhunits[smryhunits.index(unit)]
+                        continue
             # If everything has been deleted through cleanup, delete the section
             if not smryhunits:
                 del self.observations["smryh"]

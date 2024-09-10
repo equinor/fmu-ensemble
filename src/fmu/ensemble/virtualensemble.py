@@ -392,10 +392,7 @@ class VirtualEnsemble(object):
             if not (int in dtypes or float in dtypes):
                 logger.info("No numerical data to aggregate in %s", key)
                 continue
-            if groupby:
-                aggobject = data.groupby(groupby)
-            else:
-                aggobject = data
+            aggobject = data.groupby(groupby) if groupby else data
 
             if quantilematcher.match(aggregation):
                 quantile = int(quantilematcher.match(aggregation).group(1))
@@ -503,15 +500,14 @@ class VirtualEnsemble(object):
                     logger.info(" - Deleted existing directory")
                     shutil.rmtree(filesystempath)
                     os.mkdir(filesystempath)
-                else:
-                    if os.listdir(filesystempath):
-                        logger.critical(
-                            (
-                                "Refusing to write virtual ensemble "
-                                " to non-empty directory"
-                            )
+                elif os.listdir(filesystempath):
+                    logger.critical(
+                        (
+                            "Refusing to write virtual ensemble "
+                            " to non-empty directory"
                         )
-                        raise IOError("Directory %s not empty" % filesystempath)
+                    )
+                    raise IOError("Directory %s not empty" % filesystempath)
             else:
                 os.mkdir(filesystempath)
 
@@ -592,20 +588,16 @@ file is picked up"""
 
         for key in self.keys():
             dirname = os.path.join(filesystempath, os.path.dirname(key))
-            if dirname:
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
+            if dirname and not os.path.exists(dirname):
+                os.makedirs(dirname)
 
             data = self.get_df(key)
             filename = os.path.join(dirname, os.path.basename(key))
 
             # Trim .csv from end of dict-key
             # .csv will be reinstated by logic in from_disk()
-            if filename[-4:] == ".csv":
-                filebase = filename[:-4]
-            else:
-                # parameters.txt or STATUS ends here:
-                filebase = filename
+            # parameters.txt or STATUS ends here
+            filebase = filename[:-4] if filename[-4:] == ".csv" else filename
 
             if not isinstance(data, pd.DataFrame):
                 raise ValueError("VirtualEnsembles should " + "only store DataFrames")
@@ -675,9 +667,8 @@ file is picked up"""
             for filename in filenames:
                 # Special treatment of the filename "_name"
                 if filename == "_name":
-                    self._name = "".join(
-                        open(os.path.join(root, filename), "r").readlines()
-                    ).strip()
+                    with open(os.path.join(root, filename), "r") as fhandle:
+                        self._name = "".join(fhandle.readlines()).strip()
 
                 if filename == "_manifest.yml":
                     self.manifest = os.path.join(root, "_manifest.yml")
@@ -732,10 +723,7 @@ file is picked up"""
         self.update_realindices()
 
         end_time = datetime.datetime.now()
-        if lazy_load:
-            lazy_str = "(lazy) "
-        else:
-            lazy_str = ""
+        lazy_str = "(lazy) " if lazy_load else ""
         logger.info(
             "Loading ensemble from disk %stook %g seconds",
             lazy_str,

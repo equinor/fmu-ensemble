@@ -112,14 +112,12 @@ class ScratchEnsemble(object):
             globbedpaths = [glob.glob(path) for path in paths]
             globbedpaths = list({item for sublist in globbedpaths for item in sublist})
         if not globbedpaths:
-            if isinstance(runpathfile, str):
-                if not runpathfile:
-                    logger.warning("Initialized empty ScratchEnsemble")
-                    return
-            if isinstance(runpathfile, pd.DataFrame):
-                if runpathfile.empty:
-                    logger.warning("Initialized empty ScratchEnsemble")
-                    return
+            if isinstance(runpathfile, str) and not runpathfile:
+                logger.warning("Initialized empty ScratchEnsemble")
+                return
+            if isinstance(runpathfile, pd.DataFrame) and runpathfile.empty:
+                logger.warning("Initialized empty ScratchEnsemble")
+                return
 
         count = None
         if globbedpaths:
@@ -893,9 +891,8 @@ class ScratchEnsemble(object):
             if inplace:
                 if not realization.contains(localpath, **kwargs):
                     deletethese.append(realidx)
-            else:
-                if realization.contains(localpath, **kwargs):
-                    keepthese.append(realidx)
+            elif realization.contains(localpath, **kwargs):
+                keepthese.append(realidx)
 
         if inplace:
             logger.info("Removing realizations %s", deletethese)
@@ -932,7 +929,7 @@ class ScratchEnsemble(object):
         if shortcut2path(self.keys(), localpath) not in self.keys():
             raise ValueError("%s not found" % localpath)
         for _, realization in self.realizations.items():
-            try:
+            try:  # noqa: SIM105
                 realization.drop(localpath, **kwargs)
             except ValueError:
                 pass  # Allow localpath to be missing in some realizations
@@ -1176,7 +1173,7 @@ class ScratchEnsemble(object):
                     for well in well_match:
                         result = result.union(set(eclsum.wells(well)))
 
-        return sorted(list(result))
+        return sorted(result)
 
     def get_groupnames(self, group_match=None):
         """
@@ -1213,7 +1210,7 @@ class ScratchEnsemble(object):
                     for group in group_match:
                         result = result.union(set(eclsum.groups(group)))
 
-        return sorted(list(result))
+        return sorted(result)
 
     def agg(self, aggregation, keylist=None, excludekeys=None):
         """Aggregate the ensemble data into one VirtualRealization

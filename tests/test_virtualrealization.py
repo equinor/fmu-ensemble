@@ -352,7 +352,7 @@ def test_glob_smry_keys():
     assert len(vreal._glob_smry_keys(["FOP*"])) == 9
 
     assert len(vreal._glob_smry_keys("WOPT:*")) == 8
-    assert all([x.startswith("WOPT:") for x in vreal._glob_smry_keys("WOPT:*")])
+    assert all(x.startswith("WOPT:") for x in vreal._glob_smry_keys("WOPT:*"))
 
     assert not vreal._glob_smry_keys("FOOBAR")
 

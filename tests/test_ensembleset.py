@@ -1,5 +1,6 @@
 """Testing fmu-ensemble, EnsembleSet class."""
 
+import contextlib
 import glob
 import logging
 import os
@@ -63,10 +64,8 @@ def test_ensembleset_reek001(tmpdir):
     assert len(ensset["iter-1"].get_df("STATUS")) == 250
 
     # Try adding the same object over again
-    try:
+    with contextlib.suppress(ValueError):
         ensset.add_ensemble(iter0)
-    except ValueError:
-        pass
     assert len(ensset) == 2  # Unchanged!
 
     # Initializing nothing, we get warning about the missing name
@@ -422,12 +421,10 @@ def test_filestructures(tmpdir):
             )
             os.makedirs(runpath1)
             os.makedirs(runpath2)
-            open(os.path.join(runpath1, "parameters.txt"), "w").write(
-                "REALTIMESITER " + str(real * iterr) + "\n"
-            )
-            open(os.path.join(runpath1, "parameters.txt"), "w").write(
-                "REALTIMESITERX2 " + str(real * iterr * 2) + "\n"
-            )
+            with open(os.path.join(runpath1, "parameters.txt"), "w") as fhandle:
+                fhandle.write("REALTIMESITER " + str(real * iterr) + "\n")
+            with open(os.path.join(runpath2, "parameters.txt"), "w") as fhandle:
+                fhandle.write("REALTIMESITERX2 " + str(real * iterr * 2) + "\n")
 
     # Initializing from this ensemble root should give nothing,
     # we do not recognize this iter_*/real_* by default
@@ -525,23 +522,23 @@ def test_ertrunpathfile(tmp="TMP"):
     # Also construct an artificial ert runpathfile with iter-0 and iter-1,
     # by modifying a copy of the runpath for iter-0
 
-    iter0runpath = open(testdir + "/data/ert-runpath-file", "r").readlines()
+    with open(testdir + "/data/ert-runpath-file", "r") as fhandle:
+        iter0runpath = fhandle.readlines()
 
     if not os.path.exists(tmp):
         os.mkdir(tmp)
 
-    enssetrunpathfile = open(tmp + "/ensset-runpath-file", "w")
-    print(iter0runpath)
-    enssetrunpathfile.write("".join(iter0runpath))
-    for line in iter0runpath:
-        (real, path, eclname, _) = line.split()
-        enssetrunpathfile.write(real + " ")  # CHECK THIS!
-        # Could the first column just be the line number?
-        # Iterate on the ERT official doc when determined.
-        enssetrunpathfile.write(path.replace("iter-0", "iter-1") + " ")
-        enssetrunpathfile.write(eclname + " ")
-        enssetrunpathfile.write("001" + "\n")
-    enssetrunpathfile.close()
+    with open(tmp + "/ensset-runpath-file", "w") as enssetrunpathfile:
+        print(iter0runpath)
+        enssetrunpathfile.write("".join(iter0runpath))
+        for line in iter0runpath:
+            (real, path, eclname, _) = line.split()
+            enssetrunpathfile.write(real + " ")  # CHECK THIS!
+            # Could the first column just be the line number?
+            # Iterate on the ERT official doc when determined.
+            enssetrunpathfile.write(path.replace("iter-0", "iter-1") + " ")
+            enssetrunpathfile.write(eclname + " ")
+            enssetrunpathfile.write("001" + "\n")
 
     ensset = EnsembleSet("ensfromrunpath", runpathfile=tmp + "/ensset-runpath-file")
     assert len(ensset) == 2
