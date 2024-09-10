@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>65", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fmu-ensemble"
+authors = [
+    {name = "Håvard Berland", email = "havb@equinor.com"},
+]
+description = "Python API to ensembles produced by ERT"
+requires-python = ">= 3.8"
+readme = "README.rst"
+license = {text = "GPL-3.0"}
+keywords = ["fmu", "ensemble"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = ["version"]
+dependencies = [
+    "resdata >= 4.0.0",
+    "numpy",
+    "pandas",
+    "pyyaml >= 5.1",
+]
+
+[project.urls]
+Repository = "https://github.com/equinor/fmu-ensemble"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=2.9.2",
+    "pytest-cov",
+]
+docs = [
+    "ipython",
+    "rstcheck",
+    "sphinx",
+    "sphinx-argparse",
+    "sphinx_rtd_theme",
+]
+style = [
+    "pre-commit",
+]
+parquet = [
+    "pyarrow",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+write_to = "src/fmu/ensemble/version.py"
+
+[tool.rstcheck]
+ignore_directives = ["argparse", "automodule"]
+# This looks like a bug in rstcheck:
+ignore_messages = "Hyperlink target .* is not referenced"
