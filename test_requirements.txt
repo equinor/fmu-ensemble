@@ -1,7 +1,4 @@
-black>=21.4b0
-flake8>=2.6.0
 pre-commit
-pylint
 pytest>=2.9.2
 pytest-cov
 pyyaml>=5.1
