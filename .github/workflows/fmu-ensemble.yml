@@ -98,7 +98,7 @@ jobs:
           twine upload dist/*
 
       - name: 📚 Update GitHub pages
-        if: github.event_name == 'release' && github.repository == 'equinor' && matrix.python-version == '3.8'
+        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.8'
         run: |
           cp -R ./build/sphinx/html ../html
 
