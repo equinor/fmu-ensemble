@@ -869,10 +869,7 @@ class ScratchRealization(object):
                 return None  # No filename matches *DATA
             if len(data_filenamelist) > 1:
                 logger.warning(
-                    (
-                        "Multiple DATA files found, "
-                        "consider turning off auto-discovery"
-                    )
+                    ("Multiple DATA files found, consider turning off auto-discovery")
                 )
             data_filename = data_filenamelist[0]
             self.find_files(data_filename)
@@ -914,10 +911,7 @@ class ScratchRealization(object):
                 return None  # No filename matches *DATA
             if len(data_filenamelist) > 1:
                 logger.warning(
-                    (
-                        "Multiple DATA files found, "
-                        "consider turning off auto-discovery"
-                    )
+                    ("Multiple DATA files found, consider turning off auto-discovery")
                 )
             data_filename = data_filenamelist[0]
             self.find_files(data_filename)

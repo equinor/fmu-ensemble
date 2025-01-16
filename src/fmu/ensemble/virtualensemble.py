@@ -474,10 +474,7 @@ class VirtualEnsemble(object):
         )
         if not HAVE_PYARROW:
             logger.warning(
-                (
-                    "Only exporting to CSV files. "
-                    "Install pyarrow to have parquet output"
-                )
+                ("Only exporting to CSV files. Install pyarrow to have parquet output")
             )
 
         # Trigger load of all lazy frames:
@@ -502,10 +499,7 @@ class VirtualEnsemble(object):
                     os.mkdir(filesystempath)
                 elif os.listdir(filesystempath):
                     logger.critical(
-                        (
-                            "Refusing to write virtual ensemble "
-                            " to non-empty directory"
-                        )
+                        ("Refusing to write virtual ensemble  to non-empty directory")
                     )
                     raise IOError("Directory %s not empty" % filesystempath)
             else:
@@ -1130,10 +1124,7 @@ file is picked up"""
             return False
         if frame["REAL"].dtype != np.int64:
             logger.warning(
-                (
-                    "The column 'REAL' must contain "
-                    "only integers in file %s  - ignored"
-                ),
+                ("The column 'REAL' must contain only integers in file %s  - ignored"),
                 filename,
             )
             return False
