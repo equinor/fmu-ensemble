@@ -31,14 +31,6 @@ from .util.dates import unionize_smry_dates
 from .util.rates import compute_volumetric_rates
 from .virtualrealization import VirtualRealization
 
-HAVE_ECL2DF = False
-try:
-    import ecl2df
-
-    HAVE_ECL2DF = True
-except ImportError:
-    HAVE_ECL2DF = False
-
 HAVE_RES2DF = False
 try:
     import res2df
@@ -855,9 +847,12 @@ class ScratchRealization(object):
         get_eclfiles is deprecated as ecl2df has been renamed to res2df.
         Use the function get_resdatafiles together with res2df instead.
         """
-        if not HAVE_ECL2DF:
+        try:
+            import ecl2df
+        except ImportError:
             logger.warning("ecl2df not installed. Skipping")
             return None
+
         data_file_row = self.files[self.files["FILETYPE"] == "DATA"]
         data_filename = None
         if len(data_file_row) == 1:
