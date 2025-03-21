@@ -71,7 +71,7 @@ jobs:
           touch build/sphinx/html/.nojekyll
 
       - name: 🚢 Build and deploy Python package
-        if: github.event_name == 'release' && matrix.python-version == '3.8'
+        if: github.event_name == 'release' && matrix.python-version == '3.11' && matrix.numpy-version == 'numpy<2'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_fmuensemble_token }}
@@ -81,7 +81,7 @@ jobs:
           twine upload dist/*
 
       - name: 📚 Update GitHub pages
-        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.8'
+        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.11' && matrix.numpy-version == 'numpy<2'
         run: |
           cp -R ./build/sphinx/html ../html
 
