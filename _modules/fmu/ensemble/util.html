@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.util &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>fmu.ensemble.util &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=d749edf1"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -34,9 +32,6 @@
             fmu-ensemble
               <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -84,11 +79,13 @@
   <h1>Source code for fmu.ensemble.util</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Common utility functions used in fmu.ensemble&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">MutableMapping</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">MutableMapping</span>
 
 
-<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../../../fmu.ensemble.util.html#fmu.ensemble.util.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">parent_key</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="flatten">
+<a class="viewcode-back" href="../../../fmu.ensemble.util.html#fmu.ensemble.util.flatten">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">parent_key</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Flatten nested dictionaries by introducing new keys</span>
 <span class="sd">    with the accumulated path.</span>
 
@@ -113,7 +110,10 @@
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="parse_number"><a class="viewcode-back" href="../../../fmu.ensemble.util.html#fmu.ensemble.util.parse_number">[docs]</a><span class="k">def</span> <span class="nf">parse_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+
+<div class="viewcode-block" id="parse_number">
+<a class="viewcode-back" href="../../../fmu.ensemble.util.html#fmu.ensemble.util.parse_number">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to parse the string first as an integer, then as float,</span>
 <span class="sd">    if both fails, return the original string.</span>
 
@@ -147,7 +147,10 @@
             <span class="k">return</span> <span class="n">value</span></div>
 
 
-<div class="viewcode-block" id="shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.util.html#fmu.ensemble.util.shortcut2path">[docs]</a><span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
+
+<div class="viewcode-block" id="shortcut2path">
+<a class="viewcode-back" href="../../../fmu.ensemble.util.html#fmu.ensemble.util.shortcut2path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">shortcut2path</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert short pathnames to fully qualified pathnames</span>
 <span class="sd">    within the datastore.</span>
@@ -191,6 +194,7 @@
     <span class="c1"># this shorthand could point to. Return as is, and let the</span>
     <span class="c1"># calling function handle further errors.</span>
     <span class="k">return</span> <span class="n">shortpath</span></div>
+
 </pre></div>
 
            </div>

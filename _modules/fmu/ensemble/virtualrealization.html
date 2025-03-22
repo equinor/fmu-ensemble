@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>fmu.ensemble.virtualrealization &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=d749edf1"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -34,9 +32,6 @@
             fmu-ensemble
               <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -84,24 +79,26 @@
   <h1>Source code for fmu.ensemble.virtualrealization</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Contains the VirtualRealization class&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">fnmatch</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span> <span class="nn">.realizationcombination</span> <span class="kn">import</span> <span class="n">RealizationCombination</span>
-<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">shortcut2path</span>
-<span class="kn">from</span> <span class="nn">.util.dates</span> <span class="kn">import</span> <span class="n">date_range</span>
-<span class="kn">from</span> <span class="nn">.util.rates</span> <span class="kn">import</span> <span class="n">compute_volumetric_rates</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.realizationcombination</span><span class="w"> </span><span class="kn">import</span> <span class="n">RealizationCombination</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">shortcut2path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.util.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">date_range</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.util.rates</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_volumetric_rates</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="VirtualRealization"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization">[docs]</a><span class="k">class</span> <span class="nc">VirtualRealization</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualRealization">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VirtualRealization</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A computed or archived realization.</span>
 
 <span class="sd">    Computed or archived, one cannot assume to have access to the file</span>
@@ -113,7 +110,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longdescription</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longdescription</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_description</span> <span class="o">=</span> <span class="n">description</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_longdescription</span> <span class="o">=</span> <span class="n">longdescription</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
@@ -121,22 +118,27 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
 
-<div class="viewcode-block" id="VirtualRealization.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualRealization.keys">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.keys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the keys of all data in internal datastore&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve data for a specific key. Wrapper for get_df(),</span>
 <span class="sd">        shorthands are allowed.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete a key from the internal datastore. The key must be fully</span>
 <span class="sd">        qualified, no shorthands.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">localpath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">localpath</span><span class="p">]</span>
 
-<div class="viewcode-block" id="VirtualRealization.append"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualRealization.append">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.append">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Append data to the datastore.</span>
 
 <span class="sd">        No checks performed on the dataframe coming in. If key exists,</span>
@@ -147,11 +149,14 @@
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span></div>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Represent the realization. Show only the last part of the path&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;VirtualRealization, </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_description</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VirtualRealization.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualRealization.to_disk">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.to_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the virtual realization to the filesystem.</span>
 
 <span class="sd">        All data will be dumped to the requested directory according</span>
@@ -210,7 +215,10 @@
                     <span class="s2">&quot;Don&#39;t know how to dump </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> to disk&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
                 <span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.load_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.load_disk">[docs]</a>    <span class="k">def</span> <span class="nf">load_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.load_disk">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.load_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load data for a virtual realization from disk.</span>
 
 <span class="sd">        Existing data in the current object will be wiped,</span>
@@ -286,7 +294,10 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)))</span>
                         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Read csv file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.to_json"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.to_json">[docs]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.to_json">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.to_json">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Dump realization data to json.</span>
 
@@ -295,7 +306,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.get_df"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_df">[docs]</a>    <span class="k">def</span> <span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.get_df">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_df">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Access the internal datastore which contains dataframes, dicts</span>
 <span class="sd">        or scalars.</span>
 
@@ -353,14 +367,20 @@
             <span class="k">return</span> <span class="n">data</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data ended up being None&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.get_volumetric_rates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_volumetric_rates">[docs]</a>    <span class="k">def</span> <span class="nf">get_volumetric_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.get_volumetric_rates">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_volumetric_rates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_volumetric_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute volumetric rates from cumulative summary vectors</span>
 
 <span class="sd">        See :meth:`fmu.ensemble.util.compute_volumetric_rates`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">compute_volumetric_rates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.get_smry">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Analog function to get_smry() in ScratchRealization</span>
 
 <span class="sd">        Accesses the internalized summary data and performs</span>
@@ -470,7 +490,10 @@
         <span class="n">smry</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">smry</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">set_names</span><span class="p">([</span><span class="s2">&quot;DATE&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">smry</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">time_index_dt</span><span class="p">)]</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.get_smry_dates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_dates">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.get_smry_dates">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_dates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return list of datetimes available in the realization</span>
 
 <span class="sd">        Similar to the function in ScratchRealization,</span>
@@ -521,7 +544,10 @@
         <span class="c1"># Convert from Pandas&#39; datetime64 to datetime.date:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="VirtualRealization.get_smry_meta"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualRealization.get_smry_meta">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.VirtualRealization.get_smry_meta">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provide metadata for summary data vectors.</span>
 
@@ -560,7 +586,8 @@
             <span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_glob_smry_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_glob_smry_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Glob a list of column keys</span>
 
 <span class="sd">        Given a list of wildcard summary vectors,</span>
@@ -604,48 +631,51 @@
             <span class="n">matches</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;DATE&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Substract another realization from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add another realization from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale this realization by a scalar value&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add another realization from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Substract another realization from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale this realization by a scalar value&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">RealizationCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convenience getter for parameters.txt&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return name of ensemble&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_description</span></div>
 
 
-<div class="viewcode-block" id="smry_cumulative"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.smry_cumulative">[docs]</a><span class="k">def</span> <span class="nf">smry_cumulative</span><span class="p">(</span><span class="n">column_keys</span><span class="p">):</span>
+
+<div class="viewcode-block" id="smry_cumulative">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualrealization.smry_cumulative">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">smry_cumulative</span><span class="p">(</span><span class="n">column_keys</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine whether smry vectors are cumulative</span>
 
 <span class="sd">    Returns list of booleans, indicating whether a certain</span>
@@ -676,6 +706,7 @@
         <span class="ow">or</span> <span class="p">(</span><span class="s2">&quot;T:&quot;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">and</span> <span class="s2">&quot;CT:&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">column_keys</span>
     <span class="p">]</span></div>
+
 </pre></div>
 
            </div>

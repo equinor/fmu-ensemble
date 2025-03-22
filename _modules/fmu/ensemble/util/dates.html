@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.util.dates &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+  <title>fmu.ensemble.util.dates &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=d749edf1"></script>
-        <script src="../../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=fd927af5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -34,9 +32,6 @@
             fmu-ensemble
               <img src="../../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -85,12 +80,12 @@
   <h1>Source code for fmu.ensemble.util.dates</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Common utility functions used in fmu.ensemble&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">dateutil</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dateutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -106,7 +101,9 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="date_range"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.date_range">[docs]</a><span class="k">def</span> <span class="nf">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+<div class="viewcode-block" id="date_range">
+<a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.date_range">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for pandas.date_range to allow for extra fmu-ensemble specific mnemonics</span>
 <span class="sd">    &#39;yearly&#39;, &#39;daily&#39;, &#39;weekly&#39;, mapped over to pandas DateOffsets</span>
 
@@ -127,7 +124,10 @@
         <span class="k">return</span> <span class="n">_fallback_date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="unionize_smry_dates"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.unionize_smry_dates">[docs]</a><span class="k">def</span> <span class="nf">unionize_smry_dates</span><span class="p">(</span><span class="n">eclsumsdates</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="unionize_smry_dates">
+<a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.unionize_smry_dates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">unionize_smry_dates</span><span class="p">(</span><span class="n">eclsumsdates</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Unionize lists of dates into one datelist encompassing the date</span>
 <span class="sd">    range from all datelists, with cropping, resampling to wanted</span>
@@ -215,7 +215,10 @@
     <span class="k">return</span> <span class="n">datetimes</span></div>
 
 
-<div class="viewcode-block" id="normalize_dates"><a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.normalize_dates">[docs]</a><span class="k">def</span> <span class="nf">normalize_dates</span><span class="p">(</span>
+
+<div class="viewcode-block" id="normalize_dates">
+<a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.normalize_dates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_dates</span><span class="p">(</span>
     <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -256,7 +259,8 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">start_normalized</span><span class="p">,</span> <span class="n">end_normalized</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_fallback_date_roll</span><span class="p">(</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fallback_date_roll</span><span class="p">(</span>
     <span class="n">rollme</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fallback function for rolling dates forward or backward onto a</span>
@@ -296,7 +300,7 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_fallback_date_range</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_fallback_date_range</span><span class="p">(</span>
     <span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fallback routine for generating date ranges beyond Pandas datetime64[ns]</span>

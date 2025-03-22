@@ -1,23 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Concepts in fmu-ensemble &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Concepts in fmu-ensemble &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=d749edf1"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fd927af5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -37,9 +35,6 @@
             fmu-ensemble
               <img src="_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -99,18 +94,18 @@
            <div itemprop="articleBody">
              
   <section id="concepts-in-fmu-ensemble">
-<h1>Concepts in fmu-ensemble<a class="headerlink" href="#concepts-in-fmu-ensemble" title="Permalink to this heading"></a></h1>
+<h1>Concepts in fmu-ensemble<a class="headerlink" href="#concepts-in-fmu-ensemble" title="Link to this heading"></a></h1>
 <p>There are some concepts in fmu-ensemble that one needs to understand
 at some point</p>
 <section id="realization">
-<h2>Realization<a class="headerlink" href="#realization" title="Permalink to this heading"></a></h2>
+<h2>Realization<a class="headerlink" href="#realization" title="Link to this heading"></a></h2>
 <p>A realization is a single model run. It usually includes one Eclipse
 run, but that is not a requirement. As long as you have a done some
 computational job that has left some (supported) files on the
 filesystem, it can be possible to load results from the realization
 using fmu-ensemble.</p>
 <section id="scratchrealization">
-<h3>ScratchRealization<a class="headerlink" href="#scratchrealization" title="Permalink to this heading"></a></h3>
+<h3>ScratchRealization<a class="headerlink" href="#scratchrealization" title="Link to this heading"></a></h3>
 <p>The class <cite>ScratchRealization</cite> is a Python object that can load
 realization results (and input) from the filesystem from a <em>single</em>
 realization, typically located on <code class="docutils literal notranslate"><span class="pre">/scratch</span></code>. You can ask the object
@@ -129,7 +124,7 @@ subsets and at different sampling frequencies, but do not want to
 internalize all the data into the object.</p>
 </section>
 <section id="virtualrealization">
-<h3>VirtualRealization<a class="headerlink" href="#virtualrealization" title="Permalink to this heading"></a></h3>
+<h3>VirtualRealization<a class="headerlink" href="#virtualrealization" title="Link to this heading"></a></h3>
 <p>A <cite>VirtualRealization</cite> is typically a <cite>ScratchRealization</cite> where you
 have removed the tie to the location on the original filesystem.  The
 VirtualRealization object only knows of the data that was internalized
@@ -158,14 +153,14 @@ variant for storage is to use <code class="docutils literal notranslate"><span c
 as a <em>json</em> datatype, for which there probably exists use cases.</p>
 </section>
 <section id="realizationcombination">
-<h3>RealizationCombination<a class="headerlink" href="#realizationcombination" title="Permalink to this heading"></a></h3>
+<h3>RealizationCombination<a class="headerlink" href="#realizationcombination" title="Link to this heading"></a></h3>
 <p>The object <cite>RealizationCombination</cite> is an object that the user will
 not observe directly, but it will work under the hood every time
 arithmetic operations on realizations are done.</p>
 </section>
 </section>
 <section id="ensemble">
-<h2>Ensemble<a class="headerlink" href="#ensemble" title="Permalink to this heading"></a></h2>
+<h2>Ensemble<a class="headerlink" href="#ensemble" title="Link to this heading"></a></h2>
 <p>An ensemble is a collection of realizations, where the realizations
 share some common features making it relevant to do statistical
 aggregations over them. This does not necessarily exclude random
@@ -175,7 +170,7 @@ anything, they can always be collected in simple Python lists as well.</p>
 an <em>integer</em>, and will always be present in the column <code class="docutils literal notranslate"><span class="pre">REAL</span></code> in
 aggregated dataframes.</p>
 <section id="scratchensemble">
-<h3>ScratchEnsemble<a class="headerlink" href="#scratchensemble" title="Permalink to this heading"></a></h3>
+<h3>ScratchEnsemble<a class="headerlink" href="#scratchensemble" title="Link to this heading"></a></h3>
 <p>A <cite>ScratchEnsemble</cite> is an ensemble that is initialized from a
 directory of realization-runs on the file system, typically on
 <cite>/scratch</cite>. This object can do a full initialization of all
@@ -187,7 +182,7 @@ an aggregated dataset, data aggregation over all realizations is
 performed on the fly.</p>
 </section>
 <section id="virtualensemble">
-<h3>VirtualEnsemble<a class="headerlink" href="#virtualensemble" title="Permalink to this heading"></a></h3>
+<h3>VirtualEnsemble<a class="headerlink" href="#virtualensemble" title="Link to this heading"></a></h3>
 <p>Analogous to the relationship between <cite>ScratchRealization</cite> and
 <cite>VirtualRealization</cite>, a <cite>VirtualEnsemble</cite> is an ensemble with no
 strings attached to the original filesystem. All data from its underlying
@@ -210,7 +205,7 @@ aggregated data in a VirtualEnsemble, for example making new summary
 vectors that are combinations of other data.</p>
 </section>
 <section id="ensemblecombination">
-<h3>EnsembleCombination<a class="headerlink" href="#ensemblecombination" title="Permalink to this heading"></a></h3>
+<h3>EnsembleCombination<a class="headerlink" href="#ensemblecombination" title="Link to this heading"></a></h3>
 <p>Whenever you try do add or substract ensembles, the objects you get in
 return are of type <cite>EnsembleCombination</cite>. These objects act as
 ensembles, but its data is always a combination of the data in two or

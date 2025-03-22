@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=d749edf1"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -34,9 +32,6 @@
             fmu-ensemble
               <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -86,28 +81,30 @@
 <span class="sd">Observations support and related calculations</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
 
-<span class="kn">import</span> <span class="nn">dateutil</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dateutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
-<span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">ScratchEnsemble</span>
-<span class="kn">from</span> <span class="nn">.ensemblecombination</span> <span class="kn">import</span> <span class="n">EnsembleCombination</span>
-<span class="kn">from</span> <span class="nn">.ensembleset</span> <span class="kn">import</span> <span class="n">EnsembleSet</span>
-<span class="kn">from</span> <span class="nn">.realization</span> <span class="kn">import</span> <span class="n">ScratchRealization</span>
-<span class="kn">from</span> <span class="nn">.realizationcombination</span> <span class="kn">import</span> <span class="n">RealizationCombination</span>
-<span class="kn">from</span> <span class="nn">.virtualensemble</span> <span class="kn">import</span> <span class="n">VirtualEnsemble</span>
-<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScratchEnsemble</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.ensemblecombination</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnsembleCombination</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.ensembleset</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnsembleSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.realization</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScratchRealization</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.realizationcombination</span><span class="w"> </span><span class="kn">import</span> <span class="n">RealizationCombination</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.virtualensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualEnsemble</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.virtualrealization</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualRealization</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Observations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations">[docs]</a><span class="k">class</span> <span class="nc">Observations</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Observations">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Observations</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a set of observations and the ability to</span>
 <span class="sd">    compare realizations and ensembles to the observations</span>
 
@@ -146,7 +143,7 @@
     <span class="c1">#   (each observation unit should be representable as</span>
     <span class="c1">#   a dict, and then it is mergeable in Pandas)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize an observation object with observations</span>
 <span class="sd">        from file or from an incoming dictionary structure</span>
 
@@ -178,11 +175,13 @@
             <span class="c1"># (fixme: this string does not make sense)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">%s</span><span class="s2">: &quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">obskey</span><span class="p">])))</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">someobject</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">someobject</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Pick objects from the observations dict&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">someobject</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Observations.mismatch"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.mismatch">[docs]</a>    <span class="k">def</span> <span class="nf">mismatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ens_or_real</span><span class="p">):</span>
+<div class="viewcode-block" id="Observations.mismatch">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.mismatch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mismatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ens_or_real</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the mismatch from the current observation set</span>
 <span class="sd">        to the incoming ensemble or realization.</span>
 
@@ -233,7 +232,10 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported object for mismatch calculation&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Observations.load_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.load_smry">[docs]</a>    <span class="k">def</span> <span class="nf">load_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realization</span><span class="p">,</span> <span class="n">smryvector</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;yearly&quot;</span><span class="p">,</span> <span class="n">smryerror</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Observations.load_smry">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.load_smry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realization</span><span class="p">,</span> <span class="n">smryvector</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;yearly&quot;</span><span class="p">,</span> <span class="n">smryerror</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an observation unit from a VirtualRealization or</span>
 <span class="sd">        ScratchRealization, being a specific summaryvector, picking</span>
 <span class="sd">        values with the specified time resolution.</span>
@@ -284,20 +286,23 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="s2">&quot;smry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">virtobs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of observation units present&quot;&quot;&quot;</span>
         <span class="c1"># This is not correctly implemented yet..</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Decide if the observation set is empty</span>
 
 <span class="sd">        An empty observation set is has zero observation</span>
 <span class="sd">        unit count&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Observations.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Observations.keys">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.keys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of observation units present.</span>
 
 <span class="sd">        This list might change into a dataframe in the future,</span>
@@ -305,7 +310,8 @@
 <span class="sd">        the number of observation units.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_realization_mismatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_realization_mismatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the mismatch from the current loaded</span>
 <span class="sd">        observations to a realization.</span>
 
@@ -481,7 +487,7 @@
                         <span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mismatches</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_realization_misfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">defaulterrors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">corr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_realization_misfit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">defaulterrors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">corr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The misfit value for the observation set</span>
 
 <span class="sd">        Ref: https://wiki.statoil.no/wiki/index.php/RP_HM/Observations#Misfit_function</span>
@@ -517,7 +523,7 @@
 
         <span class="k">return</span> <span class="n">mismatch</span><span class="p">[</span><span class="s2">&quot;MISFIT&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_clean_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clean_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Verify integrity of observations, remove</span>
 <span class="sd">        observation units that cannot be used.</span>
 
@@ -631,7 +637,9 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">smryunits</span><span class="p">:</span>
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="s2">&quot;smry&quot;</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Observations.to_ert2observations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_ert2observations">[docs]</a>    <span class="k">def</span> <span class="nf">to_ert2observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Observations.to_ert2observations">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_ert2observations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_ert2observations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the observation set to an observation</span>
 <span class="sd">        file for use with Ert 2.x.</span>
 
@@ -639,7 +647,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a representation of the object</span>
 
 <span class="sd">        The representation is a YAML string</span>
@@ -648,7 +657,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Observations.to_yaml"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_yaml">[docs]</a>    <span class="k">def</span> <span class="nf">to_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Observations.to_yaml">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_yaml">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_yaml</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the current observations to YAML format</span>
 
 <span class="sd">        Returns:</span>
@@ -656,7 +667,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Observations.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Observations.to_disk">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations.to_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the current observation object to disk</span>
 
 <span class="sd">        In YAML-format. If a new observation object</span>
@@ -676,7 +690,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dirname</span><span class="p">:</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fhandle</span><span class="p">:</span>
-            <span class="n">fhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">())</span></div></div>
+            <span class="n">fhandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">())</span></div>
+</div>
+
 </pre></div>
 
            </div>

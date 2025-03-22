@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>fmu.ensemble.virtualensemble &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=d749edf1"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -34,9 +32,6 @@
             fmu-ensemble
               <img src="../../../_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -84,23 +79,23 @@
   <h1>Source code for fmu.ensemble.virtualensemble</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Module containing a VirtualEnsemble class&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">fnmatch</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
-<span class="kn">from</span> <span class="nn">.ensemblecombination</span> <span class="kn">import</span> <span class="n">EnsembleCombination</span>
-<span class="kn">from</span> <span class="nn">.virtualrealization</span> <span class="kn">import</span> <span class="n">VirtualRealization</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.ensemblecombination</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnsembleCombination</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.virtualrealization</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualRealization</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">pyarrow</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span>
 
     <span class="n">HAVE_PYARROW</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -109,7 +104,9 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="VirtualEnsemble"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble">[docs]</a><span class="k">class</span> <span class="nc">VirtualEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualEnsemble">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VirtualEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A computed or archived ensemble</span>
 
 <span class="sd">    Computed or archived, there is no link to the original dataset(s)</span>
@@ -134,7 +131,7 @@
 <span class="sd">        manifest: dict with any information about the ensemble</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -179,12 +176,14 @@
         <span class="k">if</span> <span class="n">fromdisk</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">from_disk</span><span class="p">(</span><span class="n">fromdisk</span><span class="p">,</span> <span class="n">lazy_load</span><span class="o">=</span><span class="n">lazy_load</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of realizations (integer) included in the</span>
 <span class="sd">        ensemble&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realindices</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">get_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualEnsemble.get_realindices">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_realindices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the integer indices for realizations in this ensemble</span>
 
 <span class="sd">        Returns:</span>
@@ -192,7 +191,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.update_realindices"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.update_realindices">[docs]</a>    <span class="k">def</span> <span class="nf">update_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.update_realindices">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.update_realindices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the internal list of known realization indices</span>
 
 <span class="sd">        Anything that adds or removes realizations must</span>
@@ -209,7 +211,10 @@
                 <span class="n">idxset</span> <span class="o">=</span> <span class="n">idxset</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">realindices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxset</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.keys">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.keys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all keys in the internal datastore</span>
 
 <span class="sd">        The keys are also called localpaths, and resemble the the</span>
@@ -219,12 +224,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.lazy_keys"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.lazy_keys">[docs]</a>    <span class="k">def</span> <span class="nf">lazy_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.lazy_keys">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.lazy_keys">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lazy_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return keys that are not yet loaded, but will</span>
 <span class="sd">        be loaded on demand&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lazy_frames</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.shortcut2path"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.shortcut2path">[docs]</a>    <span class="k">def</span> <span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.shortcut2path">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.shortcut2path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Convert short pathnames to fully qualified pathnames</span>
 <span class="sd">        within the datastore.</span>
@@ -243,13 +254,14 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span> <span class="nn">.ensemble</span> <span class="kn">import</span> <span class="n">shortcut2path</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">shortcut2path</span>
 
         <span class="k">if</span> <span class="n">keys</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">shortpath</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shorthand for .get_df()</span>
 
 <span class="sd">        Args:</span>
@@ -258,7 +270,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_realization"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_realization">[docs]</a>    <span class="k">def</span> <span class="nf">get_realization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realindex</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualEnsemble.get_realization">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_realization">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_realization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realindex</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a virtual realization object, with data</span>
 <span class="sd">        taken from the virtual ensemble. Each dataframe</span>
@@ -297,7 +311,10 @@
             <span class="k">return</span> <span class="n">vreal</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No data for realization </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">realindex</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.add_realization"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.add_realization">[docs]</a>    <span class="k">def</span> <span class="nf">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realization</span><span class="p">,</span> <span class="n">realidx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.add_realization">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.add_realization">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_realization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">realization</span><span class="p">,</span> <span class="n">realidx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a realization. A ScratchRealization will be effectively</span>
 <span class="sd">        converted to a virtual realization.</span>
 
@@ -344,7 +361,10 @@
                 <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.remove_realizations"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.remove_realizations">[docs]</a>    <span class="k">def</span> <span class="nf">remove_realizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deleteindices</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.remove_realizations">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.remove_realizations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_realizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deleteindices</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove realizations from internal data</span>
 
 <span class="sd">        This will remove all rows in all internalized data belonging</span>
@@ -377,7 +397,10 @@
             <span class="s2">&quot;Removed </span><span class="si">%s</span><span class="s2"> realization(s) from VirtualEnsemble&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">indicestodelete</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.remove_data"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.remove_data">[docs]</a>    <span class="k">def</span> <span class="nf">remove_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpaths</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.remove_data">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.remove_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpaths</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a certain datatype from the internal datastore</span>
 
 <span class="sd">        Args:</span>
@@ -396,7 +419,10 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ensemble did not contain </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.agg"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.agg">[docs]</a>    <span class="k">def</span> <span class="nf">agg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excludekeys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.agg">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.agg">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">agg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excludekeys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Aggregate the ensemble data into a VirtualRealization</span>
 
 <span class="sd">        All data will be attempted aggregated. String data will typically</span>
@@ -493,7 +519,10 @@
             <span class="n">vreal</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">aggregated</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vreal</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.append"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.append">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.append">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Append a dataframe to the internal datastore</span>
 
 <span class="sd">        Incoming dataframe MUST have a column called &#39;REAL&#39; which</span>
@@ -517,7 +546,10 @@
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.to_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk">[docs]</a>    <span class="k">def</span> <span class="nf">to_disk</span><span class="p">(</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.to_disk">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.to_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_disk</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">filesystempath</span><span class="p">,</span>
         <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -558,10 +590,7 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">HAVE_PYARROW</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="s2">&quot;Only exporting to CSV files. &quot;</span>
-                    <span class="s2">&quot;Install pyarrow to have parquet output&quot;</span>
-                <span class="p">)</span>
+                <span class="p">(</span><span class="s2">&quot;Only exporting to CSV files. Install pyarrow to have parquet output&quot;</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="c1"># Trigger load of all lazy frames:</span>
@@ -573,7 +602,7 @@
                 <span class="s2">&quot;dumpcsv and dumpparquet &quot;</span> <span class="o">+</span> <span class="s2">&quot;cannot be False at the same time&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">prepare_vens_directory</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">prepare_vens_directory</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Prepare a directory for dumping a virtual ensemble.</span>
 
 <span class="sd">            The end result is either an error, or a clean empty directory</span>
@@ -586,10 +615,7 @@
                     <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">filesystempath</span><span class="p">):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
-                        <span class="p">(</span>
-                            <span class="s2">&quot;Refusing to write virtual ensemble &quot;</span>
-                            <span class="s2">&quot; to non-empty directory&quot;</span>
-                        <span class="p">)</span>
+                        <span class="p">(</span><span class="s2">&quot;Refusing to write virtual ensemble  to non-empty directory&quot;</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Directory </span><span class="si">%s</span><span class="s2"> not empty&quot;</span> <span class="o">%</span> <span class="n">filesystempath</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -702,7 +728,10 @@
                 <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Wrote </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filebase</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.from_disk"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.from_disk">[docs]</a>    <span class="k">def</span> <span class="nf">from_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">lazy_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.from_disk">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.from_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filesystempath</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">lazy_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load data from disk.</span>
 
 <span class="sd">        Data must be written like to_disk() would have</span>
@@ -814,7 +843,8 @@
             <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
         <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_load_frame_fromdisk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_frame_fromdisk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.parquet&quot;</span><span class="p">):</span>
             <span class="n">parsedframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isvalidframe</span><span class="p">(</span><span class="n">parsedframe</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
@@ -824,11 +854,13 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isvalidframe</span><span class="p">(</span><span class="n">parsedframe</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parsedframe</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Textual representation of the object&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;VirtualEnsemble, </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_df"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_df">[docs]</a>    <span class="k">def</span> <span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="VirtualEnsemble.get_df">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_df">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Access the internal datastore which contains dataframes or dicts</span>
 
 <span class="sd">        The localpath argument can be shortened, as it will be</span>
@@ -877,7 +909,10 @@
             <span class="k">return</span> <span class="n">data</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_smry"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_smry">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function analoguous to the EclSum direct get&#39;ters in ScratchEnsemble,</span>
 <span class="sd">        but here we have to resort to what we have internalized.</span>
@@ -952,7 +987,10 @@
             <span class="n">smry_interpolated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interp</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">smry_interpolated</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_smry_stats"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_stats">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_smry_stats">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_stats">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)</span>
 <span class="sd">        for a set of simulation summary vectors (column key).</span>
@@ -1014,7 +1052,10 @@
 
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dframes</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;STATISTIC&quot;</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_volumetric_rates"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_volumetric_rates">[docs]</a>    <span class="k">def</span> <span class="nf">get_volumetric_rates</span><span class="p">(</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_volumetric_rates">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_volumetric_rates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_volumetric_rates</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute volumetric rates from internalized cumulative summary</span>
@@ -1063,7 +1104,10 @@
             <span class="n">vol_rates_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vol_rate_df</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">vol_rates_dfs</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VirtualEnsemble.get_smry_meta"><a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_meta">[docs]</a>    <span class="k">def</span> <span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VirtualEnsemble.get_smry_meta">
+<a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.virtualensemble.VirtualEnsemble.get_smry_meta">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provide metadata for summary data vectors.</span>
 
@@ -1107,38 +1151,39 @@
             <span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Substract another ensemble from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add another ensemble to this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale this ensemble with a scalar value&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Substract another ensemble from this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add another ensemble to this&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale this ensemble with a scalar value&quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Access the list of internalized files as they came from</span>
 <span class="sd">        a ScratchEnsemble. Might be empty</span>
 
@@ -1148,7 +1193,7 @@
         <span class="k">return</span> <span class="n">files</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the manifest of the ensemble. The manifest</span>
 <span class="sd">        is nothing but a dictionary with unspecified content</span>
 
@@ -1158,7 +1203,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manifest</span>
 
     <span class="nd">@manifest</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifest</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manifest</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the manifest of the ensemble. The manifest</span>
 <span class="sd">        is nothing but a Python dictionary with unspecified</span>
 <span class="sd">        content</span>
@@ -1190,17 +1235,17 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Wrong manifest type supplied&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Quick access to parameters&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the virtual ensemble as set during initialization&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_isvalidframe</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_isvalidframe</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that a DataFrame we read from disk is acceptable</span>
 <span class="sd">        as ensemble data. It must for example contain a column called</span>
 <span class="sd">        REAL with numerical data&quot;&quot;&quot;</span>
@@ -1214,10 +1259,7 @@
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="p">(</span>
-                    <span class="s2">&quot;The column &#39;REAL&#39; must contain &quot;</span>
-                    <span class="s2">&quot;only integers in file </span><span class="si">%s</span><span class="s2">  - ignored&quot;</span>
-                <span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;The column &#39;REAL&#39; must contain only integers in file </span><span class="si">%s</span><span class="s2">  - ignored&quot;</span><span class="p">),</span>
                 <span class="n">filename</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -1231,6 +1273,7 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span></div>
+
 </pre></div>
 
            </div>

@@ -1,23 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; fmu-ensemble 1.6.9 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Usage &mdash; fmu-ensemble 1.6.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=d749edf1"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fd927af5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -37,9 +35,6 @@
             fmu-ensemble
               <img src="_static/equinor-logo2.jpg" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                1.6.9
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -102,7 +97,7 @@
            <div itemprop="articleBody">
              
   <section id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
 <p>fmu-ensemble is designed for use in several scenarios:</p>
 <ul class="simple">
 <li><p>Interactive use in the (i)python interpreter or Jupyter</p></li>
@@ -115,7 +110,7 @@ preparatory work before f.ex. a webviz instance is generated</p></li>
 in the python interpreter. Whether you use ipython or jupyter does not
 matter. It is recommended to choose <cite>ipython</cite> over <cite>python</cite>.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <p>Basic knowlegde of Python is needed to use the module. For simple use,
 copy-paste from other projects will take you far. For something extra,
 it is strongly recommended to spend time learning the <a class="reference external" href="https://pandas.pydata.org/">Pandas</a>
@@ -124,12 +119,12 @@ of data processing and handling. Most data is exposed as Pandas
 dataframes.</p>
 </section>
 <section id="basic-interactive-usage">
-<h2>Basic interactive usage<a class="headerlink" href="#basic-interactive-usage" title="Permalink to this heading"></a></h2>
+<h2>Basic interactive usage<a class="headerlink" href="#basic-interactive-usage" title="Link to this heading"></a></h2>
 <section id="loading-an-ensemble">
-<h3>Loading an ensemble<a class="headerlink" href="#loading-an-ensemble" title="Permalink to this heading"></a></h3>
+<h3>Loading an ensemble<a class="headerlink" href="#loading-an-ensemble" title="Link to this heading"></a></h3>
 <p>An ensemble must be loaded from the filesystem (typically <cite>/scratch</cite>)
 into Python’s memory first.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">fmu</span> <span class="kn">import</span> <span class="n">ensemble</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fmu</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensemble</span>
 
 <span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;reek_r001_iter0&#39;</span><span class="p">,</span>
          <span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/realization-*/iter-3&#39;</span><span class="p">)</span>
@@ -165,7 +160,7 @@ done until the user requests it.</p>
 </div>
 </section>
 <section id="loading-multiple-ensembles">
-<h3>Loading multiple ensembles<a class="headerlink" href="#loading-multiple-ensembles" title="Permalink to this heading"></a></h3>
+<h3>Loading multiple ensembles<a class="headerlink" href="#loading-multiple-ensembles" title="Link to this heading"></a></h3>
 <p>If you have multiple ensembles in the typical <code class="docutils literal notranslate"><span class="pre">realization-*/iter-*</span></code>
 directory structure, you can load all these ensembles in one go:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">&#39;hm_attempt01&#39;</span><span class="p">,</span>
@@ -203,9 +198,9 @@ EnsembleSet object, and provide regular expressions for determining
 the iteration names and realization indices.</p>
 </section>
 <section id="obtaining-warning-and-error-messages">
-<h3>Obtaining warning and error messages<a class="headerlink" href="#obtaining-warning-and-error-messages" title="Permalink to this heading"></a></h3>
+<h3>Obtaining warning and error messages<a class="headerlink" href="#obtaining-warning-and-error-messages" title="Link to this heading"></a></h3>
 <p>Application/script authors can configure logging output to console by e.g.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 </pre></div>
@@ -213,7 +208,7 @@ the iteration names and realization indices.</p>
 <p>See documentation on <a class="reference external" href="https://docs.python.org/3/library/logging.html">Python logging</a> for more details.</p>
 </section>
 <section id="reading-eclipse-data">
-<h3>Reading Eclipse data<a class="headerlink" href="#reading-eclipse-data" title="Permalink to this heading"></a></h3>
+<h3>Reading Eclipse data<a class="headerlink" href="#reading-eclipse-data" title="Link to this heading"></a></h3>
 <p>The ensemble class has specific support for parsing binary files produced
 by reservoir simulator outputting the Eclipse binary format. This support
 is through <a class="reference external" href="https://github.com/equinor/resdata">resdata</a>.</p>
@@ -247,7 +242,7 @@ path for the file in the call to <cite>find_files()</cite>. If you have used the
 the correct <cite>UNSMRY</cite> file is done automatically.</p>
 </section>
 <section id="rate-handling-in-eclipse-summary-vectors">
-<h3>Rate handling in Eclipse summary vectors<a class="headerlink" href="#rate-handling-in-eclipse-summary-vectors" title="Permalink to this heading"></a></h3>
+<h3>Rate handling in Eclipse summary vectors<a class="headerlink" href="#rate-handling-in-eclipse-summary-vectors" title="Link to this heading"></a></h3>
 <p>Eclipse summary vectors with of <em>rate</em> type (oil rate, water rate etc.) are
 to be interpreted carefully. A value of e.g. <cite>FOPR</cite> at a specific date
 means that the value is valid backwards in time, until the prior point in
@@ -279,7 +274,7 @@ time interval length weigthing).</p>
 </div>
 </section>
 <section id="internalized-data">
-<h3>Internalized data<a class="headerlink" href="#internalized-data" title="Permalink to this heading"></a></h3>
+<h3>Internalized data<a class="headerlink" href="#internalized-data" title="Link to this heading"></a></h3>
 <p>The ensemble object (which holds a collection of realization
 objects) will internalize the data it reads if and when you call
 <code class="docutils literal notranslate"><span class="pre">load_&lt;something&gt;()</span></code>, meaning that it will keep the dataframes
@@ -302,7 +297,7 @@ entire pathname when calling <code class="docutils literal notranslate"><span cl
 ambiguity. You may also skip the extension <code class="docutils literal notranslate"><span class="pre">.csv</span></code> or <code class="docutils literal notranslate"><span class="pre">.txt</span></code>.</p>
 </section>
 <section id="reading-data-from-text-files">
-<h3>Reading data from text files<a class="headerlink" href="#reading-data-from-text-files" title="Permalink to this heading"></a></h3>
+<h3>Reading data from text files<a class="headerlink" href="#reading-data-from-text-files" title="Link to this heading"></a></h3>
 <p>Text files in this context is a special case of text files arranged
 similarly to the already mentioned <code class="docutils literal notranslate"><span class="pre">parameters.txt</span></code></p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;key1&gt; &lt;value1&gt;
@@ -319,7 +314,7 @@ realization directory, and call
 <code class="docutils literal notranslate"><span class="pre">myensembleobject.load_txt('outputs.txt')</span></code>.</p>
 </section>
 <section id="scalar-data">
-<h3>Scalar data<a class="headerlink" href="#scalar-data" title="Permalink to this heading"></a></h3>
+<h3>Scalar data<a class="headerlink" href="#scalar-data" title="Link to this heading"></a></h3>
 <p>There is support for text files containing only one value, either
 string or numeric. There should be nothing else than the value itself
 in the text file, except for comments after a comment character.</p>
@@ -341,7 +336,7 @@ name as the filename.</p>
 </div>
 </section>
 <section id="reading-tabular-data-from-csv-files">
-<h3>Reading tabular data from CSV files<a class="headerlink" href="#reading-tabular-data-from-csv-files" title="Permalink to this heading"></a></h3>
+<h3>Reading tabular data from CSV files<a class="headerlink" href="#reading-tabular-data-from-csv-files" title="Link to this heading"></a></h3>
 <p>CSV files are handled analogously to txt files, in that you read them
 in by <code class="docutils literal notranslate"><span class="pre">load_csv(filename)</span></code> (where <code class="docutils literal notranslate"><span class="pre">filename</span></code> is the filename local
 to each realization). The data will be stored with the filename as the
@@ -366,7 +361,7 @@ realization object, while on virtual ensembles, it occurs directly in
 its dataframe.</p>
 </section>
 <section id="reading-simulation-grid-data">
-<h3>Reading simulation grid data<a class="headerlink" href="#reading-simulation-grid-data" title="Permalink to this heading"></a></h3>
+<h3>Reading simulation grid data<a class="headerlink" href="#reading-simulation-grid-data" title="Link to this heading"></a></h3>
 <p>Simulation static and dynamic grid data can be read and aggregated from the
 ensemble and returned as a DataFrame. The current implementation can be
 slow for large grid model and/or ensembles with many realizations.</p>
@@ -384,7 +379,7 @@ results should be aggregated. Currently the options supported are <cite>mean</ci
 <cite>std</cite>.</p>
 </section>
 <section id="filtering-realizations">
-<h3>Filtering realizations<a class="headerlink" href="#filtering-realizations" title="Permalink to this heading"></a></h3>
+<h3>Filtering realizations<a class="headerlink" href="#filtering-realizations" title="Link to this heading"></a></h3>
 <p>In an ensemble, realizations can be filtered out based on certain
 properties. Filtering is relevant both for removing realizations that
 have failed somewhere in the process, and it is also relevant for
