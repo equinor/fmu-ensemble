@@ -20,10 +20,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-        numpy-version: ["numpy<2", "numpy>=2"]
-        exclude:
-          - python-version: "3.12"
-            numpy-version: "numpy<2"
 
     steps:
       - name: 📖 Checkout commit locally
@@ -43,12 +39,6 @@ jobs:
         run: |
           pip install res2df
           pip install ".[test, docs]"
-          pip install "${{ matrix.numpy-version }}"
-
-      - name: Install ecl2df
-        if: matrix.numpy-version == 'numpy<2'
-        run: |
-          pip install ecl2df
 
       - name: 🧾 List all installed packages
         run: pip freeze
@@ -71,7 +61,7 @@ jobs:
           touch build/sphinx/html/.nojekyll
 
       - name: 🚢 Build and deploy Python package
-        if: github.event_name == 'release' && matrix.python-version == '3.11' && matrix.numpy-version == 'numpy<2'
+        if: github.event_name == 'release' && matrix.python-version == '3.11'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_fmuensemble_token }}
@@ -81,7 +71,7 @@ jobs:
           twine upload dist/*
 
       - name: 📚 Update GitHub pages
-        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.11' && matrix.numpy-version == 'numpy<2'
+        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.11'
         run: |
           cp -R ./build/sphinx/html ../html
 
