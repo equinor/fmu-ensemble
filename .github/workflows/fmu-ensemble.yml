@@ -1,5 +1,8 @@
 name: fmu-ensemble
 
+permissions:
+   contents: write # Write required for GH pages
+
 on:
   push:
     branches:
