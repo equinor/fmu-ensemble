@@ -17,9 +17,8 @@ def test_deprecated_etc():
     logger = fmux.basiclogger(__name__, level="WARNING")
     logger.info("testing deprecated code")
 
-    # pylint: disable=import-outside-toplevel
     # Test different import:
-    from fmu.ensemble import etc
+    from fmu.ensemble import etc  # noqa: PLC0415
 
     with pytest.warns(DeprecationWarning):
         fmux = etc.Interaction()

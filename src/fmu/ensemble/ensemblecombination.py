@@ -128,8 +128,7 @@ class EnsembleCombination(object):
         Returns:
             VirtualEnsemble
         """
-        # pylint: disable=import-outside-toplevel
-        from .virtualensemble import VirtualEnsemble
+        from .virtualensemble import VirtualEnsemble  # noqa: PLC0415
 
         if keyfilter is None:
             keyfilter = "*"

@@ -848,7 +848,7 @@ class ScratchRealization(object):
         Use the function get_resdatafiles together with res2df instead.
         """
         try:
-            import ecl2df
+            import ecl2df  # noqa: PLC0415
         except ImportError:
             logger.warning("ecl2df not installed. Skipping")
             return None
