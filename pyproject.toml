@@ -86,6 +86,7 @@ select = [
   "INT",
   "LOG",
   "NPY",  # numpy specific rules
+  "PIE",
   "PL",  # pylint
   "PLE",
   "PYI",
