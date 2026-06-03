@@ -24,7 +24,7 @@ dynamic = ["version"]
 dependencies = [
     "resdata >= 4.0.0",
     "numpy",
-    "pandas",
+    "pandas<3",
     "pyyaml >= 5.1",
 ]
 
