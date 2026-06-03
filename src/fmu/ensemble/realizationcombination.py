@@ -168,8 +168,7 @@ class RealizationCombination(object):
         Returns:
             VirtualRealization
         """
-        # pylint: disable=import-outside-toplevel
-        from .virtualrealization import VirtualRealization
+        from .virtualrealization import VirtualRealization  # noqa: PLC0415
 
         if keyfilter is None:
             keyfilter = "*"

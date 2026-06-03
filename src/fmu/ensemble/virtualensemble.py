@@ -158,8 +158,7 @@ class VirtualEnsemble(object):
         of ambiguity, the shortpath will be returned.
 
         """
-        # pylint: disable=import-outside-toplevel
-        from .ensemble import shortcut2path
+        from .ensemble import shortcut2path  # noqa: PLC0415
 
         if keys is None:
             return shortcut2path(self.keys(), shortpath)
