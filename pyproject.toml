@@ -83,6 +83,7 @@ select = [
   "FAST",
   "FLY",
   "I",  # isort
+  "ISC",
   "INT",
   "LOG",
   "NPY",  # numpy specific rules

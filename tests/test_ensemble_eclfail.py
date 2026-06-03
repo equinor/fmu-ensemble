@@ -36,8 +36,7 @@ def test_ens_premature_ecl(tmpdir):
 
     shutil.copytree(testdir + "/data/testensemble-reek001", "ens_fail_real_reek001")
     unsmry_filename = (
-        "ens_fail_real_reek001/realization-1/"
-        + "iter-0/eclipse/model/2_R001_REEK-1.UNSMRY"
+        "ens_fail_real_reek001/realization-1/iter-0/eclipse/model/2_R001_REEK-1.UNSMRY"
     )
     shutil.copy(unsmry_filename + "-failed2000", unsmry_filename)
 
