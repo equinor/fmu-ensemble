@@ -285,7 +285,7 @@ class Interaction(object):
     # =========================================================================
 
     @staticmethod
-    def _get_class_from_frame(frame):
+    def _get_class_from_frame(_):
         # Incomplete (need more coffee)
         current = inspect.currentframe()
         outer = inspect.getouterframes(current)

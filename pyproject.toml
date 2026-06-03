@@ -72,6 +72,7 @@ line-length = 88
 [tool.ruff.lint]
 select = [
   "AIR",
+  "ARG",
   "ASYNC",
   "B",  # flake-8-bugbear
   "BLE",
