@@ -76,10 +76,11 @@ def compute_volumetric_rates(realization, column_keys, time_index, time_unit):
         # only give us integer months, and then leftover days.
         rel_deltas = [
             dateutil.relativedelta.relativedelta(t[1], t[0])
-            for t in zip(diff_cum.index, diff_cum.index[1:])
+            for t in zip(diff_cum.index, diff_cum.index[1:], strict=False)
         ]
         whole_days = [
-            (t[1] - t[0]).days for t in zip(diff_cum.index, diff_cum.index[1:])
+            (t[1] - t[0]).days
+            for t in zip(diff_cum.index, diff_cum.index[1:], strict=False)
         ]
         # Need to know which years are leap years for our index:
         dayspryear = [
@@ -88,10 +89,11 @@ def compute_volumetric_rates(realization, column_keys, time_index, time_unit):
         ]
         # Float-contribution to years from days:
         days = [
-            t[0] / float(t[1]) for t in zip([r.days for r in rel_deltas], dayspryear)
+            t[0] / float(t[1])
+            for t in zip([r.days for r in rel_deltas], dayspryear, strict=False)
         ]
         floatyearsnodays = [r.years + r.months / 12.0 for r in rel_deltas]
-        floatyears = [x + y for x, y in zip(floatyearsnodays, days)]
+        floatyears = [x + y for x, y in zip(floatyearsnodays, days, strict=False)]
 
         # Calculate month-difference:
         floatmonthsnodays = [r.years * 12.0 + r.months for r in rel_deltas]
@@ -101,9 +103,10 @@ def compute_volumetric_rates(realization, column_keys, time_index, time_unit):
             calendar.monthrange(t.year, t.month)[1] for t in diff_cum.index[1:]
         ]
         days = [
-            t[0] / float(t[1]) for t in zip([r.days for r in rel_deltas], daysprmonth)
+            t[0] / float(t[1])
+            for t in zip([r.days for r in rel_deltas], daysprmonth, strict=False)
         ]
-        floatmonths = [x + y for x, y in zip(floatmonthsnodays, days)]
+        floatmonths = [x + y for x, y in zip(floatmonthsnodays, days, strict=False)]
 
         diff_cum["DAYS"] = whole_days + [0]
         diff_cum["MONTHS"] = floatmonths + [0]
