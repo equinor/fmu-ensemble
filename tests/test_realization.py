@@ -666,7 +666,7 @@ def test_independent_realization(tmp="TMP"):
         os.path.join(
             datadir,
             "testensemble-reek001/realization-2/iter-0/eclipse/"
-            + "model/2_R001_REEK-2.UNSMRY",
+            "model/2_R001_REEK-2.UNSMRY",
         ),
         os.path.join(tmpdir, "2_R001_REEK-2.UNSMRY"),
     )
@@ -674,7 +674,7 @@ def test_independent_realization(tmp="TMP"):
         os.path.join(
             datadir,
             "testensemble-reek001/realization-2/iter-0/eclipse/"
-            + "model/2_R001_REEK-2.SMSPEC",
+            "model/2_R001_REEK-2.SMSPEC",
         ),
         os.path.join(tmpdir, "2_R001_REEK-2.SMSPEC"),
     )

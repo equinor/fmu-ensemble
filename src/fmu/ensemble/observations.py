@@ -426,7 +426,7 @@ class Observations(object):
             print(mismatch[zeroerrors])
             raise ValueError(
                 "Zero measurement error in observation set"
-                + ". can't be used to calculate misfit"
+                ". can't be used to calculate misfit"
             )
         if "MISFIT" not in mismatch.columns:
             mismatch["MISFIT"] = mismatch["L2"] / (mismatch["MEASERROR"] ** 2)

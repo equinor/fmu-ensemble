@@ -115,9 +115,9 @@ class Interaction(object):
         else:
             self._lformat = (
                 "%(asctime)s Line: %(lineno)4d %(name)44s "
-                + "[%(funcName)40s()]"
-                + "%(levelname)8s:"
-                + "\t%(message)s"
+                "[%(funcName)40s()]"
+                "%(levelname)8s:"
+                "\t%(message)s"
             )
 
         return self._lformat
