@@ -84,8 +84,9 @@ select = [
   "FLY",
   "I",  # isort
   "ICN",
-  "ISC",
+  "INP",
   "INT",
+  "ISC",
   "LOG",
   "NPY",  # numpy specific rules
   "PIE",
