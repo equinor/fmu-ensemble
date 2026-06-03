@@ -495,7 +495,7 @@ class ScratchRealization(object):
             # This should not happen as long as __init__ requires STATUS
             # to be present.
             return pd.DataFrame()  # will be empty
-        errorcolumns = ["error" + str(x) for x in range(0, 10)]
+        errorcolumns = ["error" + str(x) for x in range(10)]
 
         status = pd.read_csv(
             statusfile,
