@@ -71,14 +71,32 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
+  "AIR",
+  "ASYNC",
   "B",  # flake-8-bugbear
+  "BLE",
   "C4",  # flake8-comprehensions
+  "DJ",
+  "EXE",
   "F",  # pyflakes
+  "FA",
+  "FAST",
+  "FLY",
   "I",  # isort
+  "INT",
+  "LOG",
   "NPY",  # numpy specific rules
   "PL",  # pylint
+  "PLE",
+  "PYI",
+  "Q",
+  "RSE",
   "SIM",  # flake-8-simplify
+  "SLOT",
+  "TC",
+  "TID",
   "W",  # pycodestyle
+  "YTT"
 ]
 ignore = ["PLW2901",  # redefined-loop-name
           "PLR2004",  # magic-value-comparison
