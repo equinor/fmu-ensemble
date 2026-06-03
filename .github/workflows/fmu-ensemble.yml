@@ -16,6 +16,8 @@ on:
   schedule:
     # Run CI every night and check that tests are working with latest dependencies
     - cron: "0 0 * * *"
+env:
+  UV_FROZEN: true
 
 jobs:
   fmu-ensemble:
@@ -38,29 +40,34 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          prune-cache: false
+          python-version: ${{ matrix.python-version }}
+
+
       - name: 📦 Install fmu-ensemble with test dependencies
         run: |
-          pip install res2df
-          pip install ".[test, docs]"
-
-      - name: 🧾 List all installed packages
-        run: pip freeze
+          uv sync --extra=test --extra=docs
+          uv pip install res2df
 
       - name: 🤖 Run tests
         run: |
-          python -c "import fmu.ensemble"
-          pytest tests/
-          pip install ".[parquet]"
-          pytest tests/test_virtualensemble.py
+          uv run python -c "import fmu.ensemble"
+          uv run pytest tests/
+          uv pip install ".[parquet]"
+          uv run pytest tests/test_virtualensemble.py
 
       - name: Syntax check on RST documentation
-        run: rstcheck -r docs/
+        run: uv run rstcheck -r docs/
 
       - name: Build docs
         run: |
-          sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
+          uv run sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
           mkdir tmp
-          sphinx-build -W -b html -d tmp/doctrees docs build/sphinx/html
+          uv run sphinx-build -W -b html -d tmp/doctrees docs build/sphinx/html
           touch build/sphinx/html/.nojekyll
 
       - name: 🚢 Build and deploy Python package
