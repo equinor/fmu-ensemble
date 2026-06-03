@@ -8,7 +8,7 @@ authors = [
     {name = "Håvard Berland", email = "havb@equinor.com"},
 ]
 description = "Python API to ensembles produced by ERT"
-requires-python = ">= 3.8"
+requires-python = ">= 3.10"
 readme = "README.rst"
 license = {text = "GPL-3.0"}
 keywords = ["fmu", "ensemble"]
