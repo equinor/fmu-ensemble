@@ -83,6 +83,7 @@ select = [
   "FAST",
   "FLY",
   "I",  # isort
+  "ICN",
   "ISC",
   "INT",
   "LOG",

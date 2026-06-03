@@ -16,7 +16,7 @@ from .ensemblecombination import EnsembleCombination
 from .virtualrealization import VirtualRealization
 
 try:
-    import pyarrow
+    import pyarrow as pa
 
     HAVE_PYARROW = True
 except ImportError:
@@ -599,7 +599,7 @@ file is picked up"""
                 try:
                     data.to_parquet(filebase + ".parquet", index=False, engine="auto")
                     logger.info("Wrote %s", filebase + ".parquet")
-                except (ValueError, pyarrow.ArrowTypeError, TypeError):
+                except (ValueError, pa.ArrowTypeError, TypeError):
                     # Accept that some dataframes cannot be written to parquet,
                     # the CSV file will there as backup always
                     logger.warning("Could not write %s as parquet file", key)
