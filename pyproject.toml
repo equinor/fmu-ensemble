@@ -8,7 +8,7 @@ authors = [
     {name = "Håvard Berland", email = "havb@equinor.com"},
 ]
 description = "Python API to ensembles produced by ERT"
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 readme = "README.rst"
 license = {text = "GPL-3.0"}
 keywords = ["fmu", "ensemble"]
@@ -19,12 +19,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dynamic = ["version"]
 dependencies = [
     "resdata >= 4.0.0",
     "numpy",
-    "pandas<3",
+    "pandas",
     "pyyaml >= 5.1",
 ]
 

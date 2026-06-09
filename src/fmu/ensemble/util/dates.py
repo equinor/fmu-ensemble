@@ -35,8 +35,12 @@ def date_range(start_date, end_date, freq):
         list of datetimes
     """
     try:
-        return pd.date_range(
-            start_date, end_date, freq=PD_FREQ_MNEMONICS.get(freq, freq)
+        # Pandas >= 3 handles dates beyond year 2262 natively. Pandas < 3 raises
+        # OutOfBoundsDatetime and we fall back to the pure-Python implementation.
+        return (
+            pd.date_range(start_date, end_date, freq=PD_FREQ_MNEMONICS.get(freq, freq))
+            .to_pydatetime()
+            .tolist()
         )
     except pd.errors.OutOfBoundsDatetime:
         return _fallback_date_range(start_date, end_date, freq)
@@ -156,14 +160,14 @@ def normalize_dates(
     try:
         start_normalized = offset.rollback(start_date).date()
     except pd.errors.OutOfBoundsDatetime:
-        # Pandas only supports datetime up to year 2262
+        # Pandas < 3 only supports datetime up to year 2262
         start_normalized = _fallback_date_roll(
             datetime.datetime.combine(start_date, datetime.time()), "back", freq
         ).date()
     try:
         end_normalized = offset.rollforward(end_date).date()
     except pd.errors.OutOfBoundsDatetime:
-        # Pandas only supports datetime up to year 2262
+        # Pandas < 3 only supports datetime up to year 2262
         end_normalized = _fallback_date_roll(
             datetime.datetime.combine(end_date, datetime.time()), "forward", freq
         ).date()

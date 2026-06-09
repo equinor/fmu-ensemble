@@ -22,7 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        pandas-version: [">3"]
+        include:
+          - python-version: "3.14"
+            pandas-version: ">=2,<3"
 
     steps:
       - name: 📖 Checkout commit locally
@@ -51,17 +55,23 @@ jobs:
           uv sync --extra=test --extra=docs
           uv pip install res2df
 
+      - name: Pin pandas version
+        if: matrix.pandas-version
+        run: uv pip install "pandas${{ matrix.pandas-version }}"
+
       - name: 🤖 Run tests
         run: |
-          uv run python -c "import fmu.ensemble"
-          uv run pytest tests/
+          uv run --no-sync python -c "import fmu.ensemble"
+          uv run --no-sync pytest tests/
           uv pip install ".[parquet]"
-          uv run pytest tests/test_virtualensemble.py
+          uv run --no-sync pytest tests/test_virtualensemble.py
 
       - name: Syntax check on RST documentation
-        run: uv run rstcheck -r docs/
+        if: matrix.python-version == '3.11'
+        run: uv run --no-sync rstcheck -r docs/
 
       - name: Build docs
+        if: matrix.python-version == '3.11'
         run: |
           uv run sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
           mkdir tmp

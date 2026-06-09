@@ -111,7 +111,7 @@ def test_real_mismatch():
     obs2r = Observations(yaml.full_load(obs2.to_yaml()))
     realmis2r = obs2r.mismatch(real)
     assert np.all(
-        realmis2["MISMATCH"].values.sort() == realmis2r["MISMATCH"].values.sort()
+        np.sort(realmis2["MISMATCH"].values) == np.sort(realmis2r["MISMATCH"].values)
     )
 
     # Test use of allocated values:

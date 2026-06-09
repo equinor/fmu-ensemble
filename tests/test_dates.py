@@ -1,10 +1,13 @@
 from datetime import datetime as dt
 
+import pandas as pd
 import pytest
 
 from fmu.ensemble.util.dates import _fallback_date_roll, date_range
 
 # These tests are duplicated from https://github.com/equinor/res2df/blob/master/tests/test_summary.py
+
+PANDAS_BELOW_3 = int(pd.__version__.split(".")[0]) < 3
 
 
 @pytest.mark.parametrize(
@@ -104,13 +107,6 @@ def test_fallback_date_roll(rollme, direction, freq, expected):
                 dt(3000, 2, 1),
             ],
         ),
-        pytest.param(
-            dt(3000, 1, 1),
-            dt(3000, 2, 1),
-            "weekly",
-            None,
-            marks=pytest.mark.xfail(raises=ValueError),
-        ),
         (
             # Crossing the problematic time boundary:
             dt(2260, 1, 1),
@@ -152,6 +148,35 @@ def test_fallback_date_roll(rollme, direction, freq, expected):
             [],
         ),
         (
+            dt(2304, 5, 6),
+            dt(2302, 3, 1),
+            "yearly",
+            [],
+        ),
+    ],
+)
+def test_date_range(start, end, freq, expected):
+    """Date ranges that behave identically on all supported Pandas versions."""
+    assert date_range(start, end, freq) == expected
+
+
+@pytest.mark.skipif(
+    not PANDAS_BELOW_3,
+    reason="Only relevant for Pandas < 3 (fallback behavior beyond year 2262)",
+)
+@pytest.mark.parametrize(
+    "start, end, freq, expected",
+    [
+        pytest.param(
+            # Pandas < 3 has no fallback for weekly frequency beyond year 2262
+            dt(3000, 1, 1),
+            dt(3000, 2, 1),
+            "weekly",
+            None,
+            marks=pytest.mark.xfail(raises=ValueError),
+        ),
+        (
+            # The pure-Python fallback includes the off-boundary endpoints
             dt(2300, 5, 6),
             dt(2302, 3, 1),
             "yearly",
@@ -163,12 +188,6 @@ def test_fallback_date_roll(rollme, direction, freq, expected):
             ],
         ),
         (
-            dt(2304, 5, 6),
-            dt(2302, 3, 1),
-            "yearly",
-            [],
-        ),
-        (
             dt(2302, 3, 1),
             dt(2302, 3, 1),
             "yearly",
@@ -176,7 +195,49 @@ def test_fallback_date_roll(rollme, direction, freq, expected):
         ),
     ],
 )
-def test_date_range(start, end, freq, expected):
-    """When dates are beyond year 2262,
-    the function _fallback_date_range() is triggered."""
+def test_date_range_pandas_below_3(start, end, freq, expected):
+    """Beyond year 2262 Pandas < 3 falls back to _fallback_date_range(), which
+    includes off-boundary endpoints and only supports yearly/monthly frequency."""
+    assert date_range(start, end, freq) == expected
+
+
+@pytest.mark.skipif(
+    PANDAS_BELOW_3, reason="Pandas >= 3 handles dates beyond year 2262 natively"
+)
+@pytest.mark.parametrize(
+    "start, end, freq, expected",
+    [
+        (
+            # Pandas >= 3 supports weekly frequency beyond year 2262 natively
+            dt(3000, 1, 1),
+            dt(3000, 2, 1),
+            "weekly",
+            [
+                dt(3000, 1, 6),
+                dt(3000, 1, 13),
+                dt(3000, 1, 20),
+                dt(3000, 1, 27),
+            ],
+        ),
+        (
+            # Native pandas.date_range only yields on-boundary dates
+            dt(2300, 5, 6),
+            dt(2302, 3, 1),
+            "yearly",
+            [
+                dt(2301, 1, 1),
+                dt(2302, 1, 1),
+            ],
+        ),
+        (
+            dt(2302, 3, 1),
+            dt(2302, 3, 1),
+            "yearly",
+            [],
+        ),
+    ],
+)
+def test_date_range_pandas_3(start, end, freq, expected):
+    """Pandas >= 3 has no year-2262 limitation and uses native pandas.date_range,
+    which does not add off-boundary endpoints."""
     assert date_range(start, end, freq) == expected
