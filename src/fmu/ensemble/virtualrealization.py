@@ -473,6 +473,7 @@ class VirtualRealization(object):
             self.get_df("__smry_metadata")
             .set_index("SMRYCOLUMN")
             .loc[list(matches), :]
+            .replace({np.nan: None})
             .to_dict(orient="index")
         )
 

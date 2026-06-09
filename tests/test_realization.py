@@ -27,6 +27,8 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+PANDAS_BELOW_3 = int(pd.__version__.split(".")[0]) < 3
+
 
 def test_single_realization(tmpdir):
     """Test internalization of properties pertaining
@@ -642,8 +644,15 @@ def test_can_import_summary_files_beyond_2262(tmpdir, monkeypatch):
         assert "2263-01-01" in str(
             real.get_smry(column_keys="*", time_index=time_index)
         )
-    with pytest.raises(ValueError):
-        real.get_smry(column_keys="*", time_index="weekly")
+    if PANDAS_BELOW_3:
+        # Pandas < 3 has no fallback for weekly frequency beyond year 2262.
+        with pytest.raises(ValueError):
+            real.get_smry(column_keys="*", time_index="weekly")
+    else:
+        # Pandas >= 3 handles weekly frequency beyond year 2262 natively.
+        weekly = real.get_smry(column_keys="*", time_index="weekly")
+        assert not weekly.empty
+        assert "2263" in str(weekly)
 
 
 def test_independent_realization(tmp="TMP"):

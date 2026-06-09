@@ -1,5 +1,8 @@
 name: style
 
+permissions:
+   contents: read
+
 on:
   push:
     branches:
@@ -19,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.14"]
 
     steps:
       - name: 📖 Checkout commit locally
