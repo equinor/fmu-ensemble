@@ -1,6 +1,5 @@
 """Testing fmu-ensemble, virtualized ensembles"""
 
-import logging
 import os
 from datetime import datetime
 
@@ -16,8 +15,6 @@ try:
     HAVE_PYARROW = True
 except ImportError:
     HAVE_PYARROW = False
-
-logger = logging.getLogger(__name__)
 
 
 def test_virtualensemble():

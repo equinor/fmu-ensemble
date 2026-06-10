@@ -1,7 +1,6 @@
 """Testing fmu-ensemble, virtual realizations"""
 
 import datetime
-import logging
 import os
 
 import numpy as np
@@ -10,8 +9,6 @@ import pytest
 
 from fmu import ensemble
 from fmu.ensemble.virtualrealization import smry_cumulative
-
-logger = logging.getLogger(__name__)
 
 
 def test_virtual_realization():

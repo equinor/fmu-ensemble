@@ -1,6 +1,5 @@
 """Testing incorporation of res2df in fmu-ensemble."""
 
-import logging
 import os
 
 import pytest
@@ -12,8 +11,6 @@ try:
     import res2df
 except ImportError:
     HAVE_RES2DF = False
-
-logger = logging.getLogger(__name__)
 
 
 def test_res2df_real():

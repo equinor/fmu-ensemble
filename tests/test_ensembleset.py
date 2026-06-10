@@ -2,7 +2,6 @@
 
 import contextlib
 import glob
-import logging
 import os
 import re
 import shutil
@@ -17,8 +16,6 @@ try:
     from fmu.tools import volumetrics
 except ImportError:
     SKIP_FMU_TOOLS = True
-
-logger = logging.getLogger(__name__)
 
 
 def symlink_iter(origensdir, newitername):

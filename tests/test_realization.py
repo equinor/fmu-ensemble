@@ -1,7 +1,6 @@
 """Testing fmu-ensemble."""
 
 import datetime
-import logging
 import os
 import shutil
 from pathlib import Path
@@ -22,8 +21,6 @@ try:
     from fmu.tools import volumetrics
 except ImportError:
     SKIP_FMU_TOOLS = True
-
-logger = logging.getLogger(__name__)
 
 PANDAS_BELOW_3 = int(pd.__version__.split(".")[0]) < 3
 
