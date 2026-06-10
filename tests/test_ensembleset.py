@@ -481,7 +481,7 @@ def test_filestructures(tmpdir):
     assert len(dummy6[dummy6.ensemblenames[0]]) == 5
 
 
-def test_ertrunpathfile(tmp="TMP"):
+def test_ertrunpathfile(tmp_path):
     """Initialize an ensemble set from an ERT runpath file
 
     ERT runpath files look like:
@@ -496,52 +496,23 @@ def test_ertrunpathfile(tmp="TMP"):
     else:
         testdir = os.path.abspath(".")
 
-    ensdir = os.path.join(testdir, "data/testensemble-reek001/")
-    # Copy iter-0 to iter-1, creating an identical ensemble<
-    # we can load for testing. Delete in case it exists
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        if os.path.exists(realizationdir + "/iter-1"):
-            if os.path.islink(realizationdir + "/iter-1"):
-                os.remove(realizationdir + "/iter-1")
-            else:
-                shutil.rmtree(realizationdir + "/iter-1")
-        # Symlink each file/dir individually (so we can remove some)
-        os.mkdir(realizationdir + "/iter-1")
-        for realizationcomponent in glob.glob(realizationdir + "/iter-0/*"):
-            if ("parameters.txt" not in realizationcomponent) and (
-                "outputs.txt" not in realizationcomponent
-            ):
-                os.symlink(
-                    realizationcomponent,
-                    realizationcomponent.replace("iter-0", "iter-1"),
-                )
-
-    # Also construct an artificial ert runpathfile with iter-0 and iter-1,
-    # by modifying a copy of the runpath for iter-0
-
+    # Construct an artificial ert runpathfile with iter-0 and iter-1,
+    # by duplicating the runpath for iter-0. It is written to a temporary
+    # directory to avoid leaking into the working directory.
     with open(testdir + "/data/ert-runpath-file", "r") as fhandle:
         iter0runpath = fhandle.readlines()
 
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-
-    with open(tmp + "/ensset-runpath-file", "w") as enssetrunpathfile:
-        print(iter0runpath)
+    runpathfile = tmp_path / "ensset-runpath-file"
+    with open(runpathfile, "w") as enssetrunpathfile:
         enssetrunpathfile.write("".join(iter0runpath))
         for line in iter0runpath:
             (real, path, eclname, _) = line.split()
-            enssetrunpathfile.write(real + " ")  # CHECK THIS!
-            # Could the first column just be the line number?
-            # Iterate on the ERT official doc when determined.
+            enssetrunpathfile.write(real + " ")
             enssetrunpathfile.write(path.replace("iter-0", "iter-1") + " ")
             enssetrunpathfile.write(eclname + " ")
             enssetrunpathfile.write("001" + "\n")
 
-    ensset = EnsembleSet("ensfromrunpath", runpathfile=tmp + "/ensset-runpath-file")
+    ensset = EnsembleSet("ensfromrunpath", runpathfile=str(runpathfile))
     assert len(ensset) == 2
     assert len(ensset["iter-0"]) == 5
     assert len(ensset["iter-1"]) == 5
-
-    # Delete the symlinks when we are done.
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        shutil.rmtree(realizationdir + "/iter-1")

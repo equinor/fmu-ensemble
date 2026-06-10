@@ -1,7 +1,6 @@
 """Testing observations in fmu-ensemble."""
 
 import datetime
-import glob
 import os
 
 import dateutil
@@ -11,6 +10,8 @@ import pytest
 import yaml
 
 from fmu.ensemble import EnsembleSet, Observations, ScratchEnsemble, ScratchRealization
+
+from .test_ensembleset import symlink_iter
 
 
 def test_observation_import(tmpdir):
@@ -530,7 +531,7 @@ def test_ens_failedreals():
     assert not obs.mismatch(ens).empty
 
 
-def test_ensset_mismatch():
+def test_ensset_mismatch(tmpdir):
     """Test mismatch calculation on an EnsembleSet"""
     if "__file__" in globals():
         # Easen up copying test code into interactive sessions
@@ -540,15 +541,15 @@ def test_ensset_mismatch():
 
     ensdir = os.path.join(testdir, "data/testensemble-reek001/")
 
-    # Copy iter-0 to iter-1, creating an identical ensemble
-    # we can load for testing.
-    for realizationdir in glob.glob(ensdir + "/realization-*"):
-        if os.path.exists(realizationdir + "/iter-1"):
-            os.remove(realizationdir + "/iter-1")
-        os.symlink(realizationdir + "/iter-0", realizationdir + "/iter-1")
+    # Copy iter-0 to iter-1, creating an identical ensemble we can load for
+    # testing. The symlinks are created in a temporary directory to avoid
+    # polluting the committed test data.
+    tmpdir.chdir()
+    symlink_iter(ensdir, "iter-0")
+    symlink_iter(ensdir, "iter-1")
 
-    iter0 = ScratchEnsemble("iter-0", ensdir + "/realization-*/iter-0")
-    iter1 = ScratchEnsemble("iter-1", ensdir + "/realization-*/iter-1")
+    iter0 = ScratchEnsemble("iter-0", str(tmpdir.join("realization-*/iter-0")))
+    iter1 = ScratchEnsemble("iter-1", str(tmpdir.join("realization-*/iter-1")))
 
     ensset = EnsembleSet("reek001", [iter0, iter1])
 
