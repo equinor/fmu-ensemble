@@ -36,7 +36,10 @@ def test_single_realization(tmpdir):
 
     tmpdir.chdir()
 
-    realdir = os.path.join(testdir, "data/testensemble-reek001", "realization-0/iter-0")
+    # Symlink the realization into the temporary directory so that test
+    # artifacts written below do not leak into the committed test data.
+    symlink_iter(os.path.join(testdir, "data/testensemble-reek001"), "iter-0")
+    realdir = str(tmpdir.join("realization-0/iter-0"))
     real = ensemble.ScratchRealization(realdir)
 
     assert os.path.isabs(real.runpath())
@@ -465,7 +468,7 @@ def test_datenormalization():
     assert str(real.get_df("unsmry--weekly")["DATE"].iloc[-1]) == "2003-01-06"
 
 
-def test_singlereal_ecl(tmp="TMP"):
+def test_singlereal_ecl(tmp_path):
     """Test Eclipse specific functionality for realizations"""
 
     testdir = os.path.dirname(os.path.abspath(__file__))
@@ -474,9 +477,7 @@ def test_singlereal_ecl(tmp="TMP"):
 
     # Eclipse summary files:
     assert isinstance(real.get_eclsum(), Summary)
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    real.load_smry().to_csv(os.path.join(tmp, "real0smry.csv"), index=False)
+    real.load_smry().to_csv(os.path.join(tmp_path, "real0smry.csv"), index=False)
     assert real.load_smry().shape == (378, 474)
     # 378 dates, 470 columns + DATE column
 
@@ -649,7 +650,7 @@ def test_can_import_summary_files_beyond_2262(tmpdir, monkeypatch):
         assert "2263" in str(weekly)
 
 
-def test_independent_realization(tmp="TMP"):
+def test_independent_realization(tmp_path):
     """Test what we are able to load a single Eclipse run
     that might have nothing to do with FMU"""
 
@@ -660,10 +661,7 @@ def test_independent_realization(tmp="TMP"):
         testdir = os.path.abspath(".")
 
     datadir = os.path.join(testdir, "data")
-    tmpdir = os.path.join(datadir, tmp)
-    if os.path.exists(tmpdir):
-        shutil.rmtree(tmpdir)
-    os.mkdir(tmpdir)
+    rundir = str(tmp_path)
     # Let the directory contain only the UNSMRY and SMSPEC file
     shutil.copyfile(
         os.path.join(
@@ -671,7 +669,7 @@ def test_independent_realization(tmp="TMP"):
             "testensemble-reek001/realization-2/iter-0/eclipse/"
             "model/2_R001_REEK-2.UNSMRY",
         ),
-        os.path.join(tmpdir, "2_R001_REEK-2.UNSMRY"),
+        os.path.join(rundir, "2_R001_REEK-2.UNSMRY"),
     )
     shutil.copyfile(
         os.path.join(
@@ -679,16 +677,16 @@ def test_independent_realization(tmp="TMP"):
             "testensemble-reek001/realization-2/iter-0/eclipse/"
             "model/2_R001_REEK-2.SMSPEC",
         ),
-        os.path.join(tmpdir, "2_R001_REEK-2.SMSPEC"),
+        os.path.join(rundir, "2_R001_REEK-2.SMSPEC"),
     )
 
     # This should not fail, but with a nice constructive warning to the user hinting
     # about the solution
-    empty = ensemble.ScratchRealization(tmpdir)
+    empty = ensemble.ScratchRealization(rundir)
     assert not empty.index  # The index is None in such realizations.
 
     # This is how it must be done:
-    real = ensemble.ScratchRealization(tmpdir, index="999")
+    real = ensemble.ScratchRealization(rundir, index="999")
     assert real.index == 999
 
     # No auto-discovery here:
@@ -699,11 +697,9 @@ def test_independent_realization(tmp="TMP"):
     assert not real.get_smry().empty
 
     # However, we can do something with an undefined index:
-    noindex = ensemble.ScratchRealization(tmpdir)
+    noindex = ensemble.ScratchRealization(rundir)
     noindex.find_files("*UNSMRY")
     assert not real.get_smry().empty
-
-    shutil.rmtree(tmpdir)
 
 
 def test_filesystem_changes():
