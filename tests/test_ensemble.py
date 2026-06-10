@@ -1,7 +1,5 @@
 """Testing fmu-ensemble."""
 
-# pylint: disable=protected-access
-
 import logging
 import os
 
@@ -639,7 +637,6 @@ def test_filter():
     )
     assert len(reekensemble) == 2
 
-    # (False positive from pylint on this line)
     assert reekensemble.agg("mean")["parameters"]["RMS_SEED"] == 723121249
 
     # Test numeric equivalence
@@ -947,12 +944,10 @@ def test_get_df():
     assert not ens.get_df("share/results/tables/unsmry--yearly").empty
     assert not ens.get_df("share/results/tables/unsmry--yearly.csv").empty
     with pytest.raises(KeyError):
-        # pylint: disable=pointless-statement
         ens.get_df("unsmry--monthly")
     ens.load_smry(column_keys="FO*", time_index="monthly")
     assert not ens.get_df("unsmry--monthly").empty
     with pytest.raises(KeyError):
-        # pylint: disable=pointless-statement
         ens.get_df("unsmry-monthly")
 
     # Tests that we can do merges directly:

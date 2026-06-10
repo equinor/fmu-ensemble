@@ -11,7 +11,6 @@ import pytest
 from fmu.ensemble import ScratchEnsemble, VirtualEnsemble
 
 try:
-    # pylint: disable=unused-import
     import pyarrow  # noqa
 
     HAVE_PYARROW = True

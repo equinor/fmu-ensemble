@@ -263,7 +263,6 @@ def test_errormessages():
 
     # Emtpy
     with pytest.raises(TypeError):
-        # pylint: disable=E1120
         Observations()
 
     # Non-existing filename:

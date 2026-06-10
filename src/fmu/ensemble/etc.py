@@ -7,8 +7,6 @@ import sys
 import timeit
 import warnings
 
-# pylint: disable=protected-access
-
 warnings.filterwarnings(
     action="always",
     category=DeprecationWarning,
@@ -21,7 +19,6 @@ class _BColors(object):
     # bgcolors:
     # 40=black, 41=red, 42=green, 43=yellow, 44=blue, 45=pink, 46 cyan
 
-    # pylint: disable=too-few-public-methods
     HEADER = "\033[1;96m"
     OKBLUE = "\033[94m"
     OKGREEN = "\033[92m"
@@ -78,7 +75,6 @@ class Interaction(object):
 
     @logginglevel.setter
     def logginglevel(self, level):
-        # pylint: disable=pointless-statement
 
         validlevels = ("INFO", "WARNING", "DEBUG", "ERROR", "CRITICAL")
         if level in validlevels:
@@ -292,7 +288,6 @@ class Interaction(object):
         return outer[0]
 
     def _output(self, idx, level, string):
-        # pylint: disable=too-many-branches
 
         prefix = ""
         endfix = ""

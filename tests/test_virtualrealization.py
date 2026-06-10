@@ -1,7 +1,5 @@
 """Testing fmu-ensemble, virtual realizations"""
 
-# pylint: disable=protected-access,duplicate-code
-
 import datetime
 import logging
 import os
@@ -266,7 +264,6 @@ def test_get_smry_cumulative():
     with pytest.raises(TypeError):
         smry_cumulative({})
     with pytest.raises(TypeError):
-        # pylint: disable=no-value-for-parameter
         smry_cumulative()
     assert smry_cumulative(["FOPT"])[0]
     assert not smry_cumulative(["FOPR"])[0]
