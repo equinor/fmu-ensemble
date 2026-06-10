@@ -50,7 +50,6 @@ def compute_volumetric_rates(realization, column_keys, time_index, time_unit):
     if isinstance(time_unit, str) and time_unit not in {"days", "months", "years"}:
         raise ValueError("Unsupported time_unit " + time_unit + " for volumetric rates")
 
-    # pylint: disable=protected-access
     column_keys = realization._glob_smry_keys(column_keys)
 
     # Be strict and only include certain summary vectors that look

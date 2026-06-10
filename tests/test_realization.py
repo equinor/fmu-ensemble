@@ -1,7 +1,5 @@
 """Testing fmu-ensemble."""
 
-# pylint: disable=protected-access
-
 import datetime
 import logging
 import os
@@ -614,7 +612,6 @@ def test_singlereal_ecl(tmp="TMP"):
     assert "FOPT" in real["unsmry--raw"]
     with pytest.raises((ValueError, KeyError)):
         # This does not exist before we have asked for it
-        # pylint: disable=pointless-statement
         _ = "FOPT" in real["unsmry--yearly"]
 
 
@@ -1214,9 +1211,7 @@ def test_get_df_merge():
         columns=["BARF", "ARBF"], data=[[1, 3], [2, 4]]
     )
     with pytest.raises(TypeError):
-        # pylint: disable=pointless-statement
         real.get_df("parameters", merge="randtable")
 
     with pytest.raises(pd.errors.MergeError):
-        # pylint: disable=pointless-statement
         real.get_df("unsmry--monthly", merge="randtable")
