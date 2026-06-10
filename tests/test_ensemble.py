@@ -1,6 +1,5 @@
 """Testing fmu-ensemble."""
 
-import logging
 import os
 
 import numpy as np
@@ -17,8 +16,6 @@ try:
     from fmu.tools import volumetrics
 except ImportError:
     SKIP_FMU_TOOLS = True
-
-logger = logging.getLogger(__name__)
 
 
 def test_reek001(tmpdir):

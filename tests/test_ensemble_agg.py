@@ -1,14 +1,11 @@
 """Testing aggregation of ensembles."""
 
-import logging
 import os
 
 import pandas as pd
 import pytest
 
 from fmu.ensemble import ScratchEnsemble
-
-logger = logging.getLogger(__name__)
 
 
 def test_ensemble_aggregations(tmpdir):

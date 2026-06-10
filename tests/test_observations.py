@@ -2,7 +2,6 @@
 
 import datetime
 import glob
-import logging
 import os
 
 import dateutil
@@ -12,8 +11,6 @@ import pytest
 import yaml
 
 from fmu.ensemble import EnsembleSet, Observations, ScratchEnsemble, ScratchRealization
-
-logger = logging.getLogger(__name__)
 
 
 def test_observation_import(tmpdir):

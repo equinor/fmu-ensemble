@@ -8,7 +8,6 @@ not try to distuingish between early exits from failure or deliberate (like this
 """
 
 import datetime
-import logging
 import os
 import shutil
 
@@ -16,8 +15,6 @@ import numpy as np
 import pandas as pd
 
 from fmu.ensemble import ScratchEnsemble
-
-logger = logging.getLogger(__name__)
 
 
 def test_ens_premature_ecl(tmpdir):
