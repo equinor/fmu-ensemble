@@ -418,7 +418,7 @@ wheels = [
 
 [[package]]
 name = "ipython"
-version = "9.14.0"
+version = "9.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -434,9 +434,9 @@ dependencies = [
     { name = "traitlets" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/c2/c0064cf15d026501a1ef70e42efd9c3f818663089399aacc5e37a82901c1/ipython-9.14.0.tar.gz", hash = "sha256:6f27ff0f1d9ea050e0551f71568bc4b34d8aba579e8f111c5b4175f44ac6b4aa", size = 4432601, upload-time = "2026-05-29T15:13:24.611Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e2/23/3a27530575643c8bb7bfc757a28e2e7ef80092afbf59a2bc5716320b6602/ipython-9.14.1.tar.gz", hash = "sha256:f913bf74df06d458e46ced84ca506c23797590d594b236fe60b14df213291e7b", size = 4433457, upload-time = "2026-06-05T08:12:34.921Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/a3/9e59340f02c1dc8f8c0a05b09244712b8609eb5439f9996e887e2b82f452/ipython-9.14.0-py3-none-any.whl", hash = "sha256:8fd984a3372c14b12790b084ba6b5cff5678c0cb063244a0034f06a51f20d6c2", size = 627457, upload-time = "2026-05-29T15:13:22.942Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/22/58818a63eaf8982b67632b1bc20585c811611b15a8da19d6012323dc76a5/ipython-9.14.1-py3-none-any.whl", hash = "sha256:5d4a9ecaa3b10e6e5f269dd0948bdb58ca9cb851899cd23e07c320d3eb11613c", size = 627770, upload-time = "2026-06-05T08:12:33.045Z" },
 ]
 
 [[package]]
@@ -1164,7 +1164,7 @@ wheels = [
 
 [[package]]
 name = "resdata"
-version = "6.2.9"
+version = "6.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cwrap" },
@@ -1172,20 +1172,21 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "resfo-utilities" },
+    { name = "typing-extensions" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/11/6681e304460bef9a627a940874620923e3aaf1f4535e19b62f837e502381/resdata-6.2.9-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:bd1492b0a456129b06a233e7fa8fe861487dca255bae7528399e5d0b9ad4c2cd", size = 1337111, upload-time = "2026-05-18T08:43:36.53Z" },
-    { url = "https://files.pythonhosted.org/packages/41/2a/1f29a01a9d9606e71ea7f999a89b5b380825f6829ce0c1024d290b993f21/resdata-6.2.9-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c7dac96bc93e0141989b9b160feea565687a294e5b9248a76f1804520a370126", size = 4245556, upload-time = "2026-05-18T08:43:38.86Z" },
-    { url = "https://files.pythonhosted.org/packages/85/ad/4334a4754f545864ee5b079703debcebb4fd4cc0bf53b0b3345a222077b9/resdata-6.2.9-cp311-cp311-win_amd64.whl", hash = "sha256:9c6113c0ca33150b6d234a2ba403da16fb5359d3e37e8a566ffcdfd21468a130", size = 796603, upload-time = "2026-05-18T08:43:40.147Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/e0/3baa35abb28efa98191c51cc66623c3655d49e7391de831d5407fd3668b3/resdata-6.2.9-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ea614440dc0c626e97f8a3bc9e8ecda834ec7f9c0232c0ebc84c1e86485b4dbb", size = 1337103, upload-time = "2026-05-18T08:43:42.285Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/10/e549702c6d2c25609bb7053851e722f102de497f7680537c3d3114368d4a/resdata-6.2.9-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cfeb559622e54f594f14f10cec1ca97e72b17b1f03dcf7f1664b9b9d5f31521b", size = 4245562, upload-time = "2026-05-18T08:43:43.993Z" },
-    { url = "https://files.pythonhosted.org/packages/43/1b/8eb22910948fccc52aeba26079231900256fa094ea342c804cdf0dad1f22/resdata-6.2.9-cp312-cp312-win_amd64.whl", hash = "sha256:47613095cf2c22ef40bffb93700f8336ad9909436d49f0ebecd58911e7b6f050", size = 796602, upload-time = "2026-05-18T08:43:45.397Z" },
-    { url = "https://files.pythonhosted.org/packages/d2/5f/4329f6fa2b475d607a9f78a2e230376b981d2aa9493ace0697c4d6c0922f/resdata-6.2.9-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:0215d147bbbef29eee1d1d3f8bdbe61af3d4e08851470af64aac3c631e14c5e4", size = 1337112, upload-time = "2026-05-18T08:43:47.45Z" },
-    { url = "https://files.pythonhosted.org/packages/3e/db/1f46428dab612fde36296f2240c53cf4116a73ac2f47595a5c95d47bcf85/resdata-6.2.9-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6df4e2bfa9dd92de255c4f6138558e57ebee3baba477b6ab114962493dc1dfde", size = 4245568, upload-time = "2026-05-18T08:43:48.962Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/3b/fb1ed52d3438685094a800bfff188fcf404ad770a0e9d84b5079493c6d4b/resdata-6.2.9-cp313-cp313-win_amd64.whl", hash = "sha256:2339adea9af0835e53714d62d69b38b9d99320a9c34bc1319e48d3448115a069", size = 796605, upload-time = "2026-05-18T08:43:50.471Z" },
-    { url = "https://files.pythonhosted.org/packages/0d/94/a0fbb2b770d19623a3e02d8cffd8ddd0e41554ad5aa07b718e2aa7515059/resdata-6.2.9-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:62d61e7d8dc44b698c1b2a9f226c4556657c2cdf1c07c1b70c518d4ae6eee8ca", size = 1337111, upload-time = "2026-05-18T08:43:51.648Z" },
-    { url = "https://files.pythonhosted.org/packages/ab/d5/b46f8701decd45d3a1d77a5b6e6885086563a5d88827f7e5a135d68d99ca/resdata-6.2.9-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:bf970677ec39b1f58f9e27eea05ea342129f4004ebce40e3c49a0826ba466244", size = 4245565, upload-time = "2026-05-18T08:43:53.21Z" },
-    { url = "https://files.pythonhosted.org/packages/27/a6/3b68fe804af97a5dcc456ac1d786da764c3137a0d168d88f7363175e7d03/resdata-6.2.9-cp314-cp314-win_amd64.whl", hash = "sha256:d884425071bd23eb63c674bb7901d59f3ad37bc2a36dd313b771665794dbca83", size = 815481, upload-time = "2026-05-18T08:43:54.579Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/95/f8fb3b50038a15908a5efcd102155ac15f71dabbdfa112be851f6697a6cd/resdata-6.3.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:fac26150b1236ecd833c7f8f142db6ad5c80df445c772cd8c9936a495b4051ec", size = 1648557, upload-time = "2026-06-04T05:50:27.062Z" },
+    { url = "https://files.pythonhosted.org/packages/9c/60/0c3c669267bc54a6591c1fbead04c15e403398efd59e12ce650386dc31ce/resdata-6.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c4454f1c3387b4ba312fac2317f72fa016470f0ecc37f575967221668af5ae78", size = 4852185, upload-time = "2026-06-04T05:50:28.777Z" },
+    { url = "https://files.pythonhosted.org/packages/40/2e/42c444cc49760244b36485d5d3f2a8dacfbbf03f6f22370c19c6005e539e/resdata-6.3.0-cp311-cp311-win_amd64.whl", hash = "sha256:82b6a364a8594b17824e5a6de1d2ef67b3b4b5723f396dce79938fc71708f231", size = 1111820, upload-time = "2026-06-04T05:50:30.442Z" },
+    { url = "https://files.pythonhosted.org/packages/51/13/eb58d2593e429071349bded10e5a8411c74de3308f5ddb37a5edd02d13c8/resdata-6.3.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:da3bb19203de882fcf5cdbb3e070c1850a6756af3898b5ab27f7ebda0ee9ddb5", size = 1648906, upload-time = "2026-06-04T05:50:32.035Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/45/4121c938869dbc59ba96922e5cecbec51d3fea7b6a482bd8f66dcd4aea21/resdata-6.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d654dcc75e2273dbd039940ddfab2cc34a860f246debdf4a18f0dc9ee16395ec", size = 4856318, upload-time = "2026-06-04T05:50:33.547Z" },
+    { url = "https://files.pythonhosted.org/packages/51/9f/b92ce518b1d7950ba356d380de8563ee6387d4b1e3c8b59e7f1b8097dd4d/resdata-6.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:cf4df77cff8f303864ca2cd78fa31c362827ac3ef14b9586b7ea7d1b99a3123b", size = 1115257, upload-time = "2026-06-04T05:50:35.006Z" },
+    { url = "https://files.pythonhosted.org/packages/67/86/4a7f1a0ca6b1f7302a8f0aa5fb881df225df993faf414f0d1137af865312/resdata-6.3.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:4d8aa835d619b731d30ba9a8d2214899e5995353dce9ad128d7d77aaa9f1cf39", size = 1649126, upload-time = "2026-06-04T05:50:36.596Z" },
+    { url = "https://files.pythonhosted.org/packages/02/32/f9a0f492f1c2c8253f732b4038e8d902f8c4dcf74b76b70f318a72f2d4e5/resdata-6.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:84890c7e8739f0ea756231ef35d3b94d29eccd98fe65af7a681cebb39cf117cb", size = 4856207, upload-time = "2026-06-04T05:50:38.205Z" },
+    { url = "https://files.pythonhosted.org/packages/95/b1/2065b18c1a591864876a2dd342e7bb2aecf882dd5bd06501fd19ed0ba650/resdata-6.3.0-cp313-cp313-win_amd64.whl", hash = "sha256:82a4803c3720541be1082529da9aa3cfe447a66940a6d634e3733393e55c0c25", size = 1115350, upload-time = "2026-06-04T05:50:39.719Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/c1/8925dea838b363ac130018bb58e3ef574825bb3eed97023c689fa0248b46/resdata-6.3.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:b80dd6b88cf112c0697be076f73b6f38b10351f89dcacf17207b3eb00e6069f7", size = 1649980, upload-time = "2026-06-04T05:50:41.205Z" },
+    { url = "https://files.pythonhosted.org/packages/50/a4/0abb583bbdbde5da5952bd40661e0013e28acff55818d1ef8a200962d3e3/resdata-6.3.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e8c4ed4a7f6523d85b421b82f5c45600f5447bfdf43ebd5c3a6b3281abeb4d1e", size = 4856688, upload-time = "2026-06-04T05:50:42.554Z" },
+    { url = "https://files.pythonhosted.org/packages/91/db/2ea018d95d02828b9994cbf86115bfe8fe17eeebdb2d973737a82ed7c449/resdata-6.3.0-cp314-cp314-win_amd64.whl", hash = "sha256:505de5f9c0f26d83f3a7832294cfa559cf6ad9eeb8210520a1b6b59d3a9646c7", size = 1140357, upload-time = "2026-06-04T05:50:44.255Z" },
 ]
 
 [[package]]
