@@ -7,12 +7,20 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+    groups:
+      all-github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 7
+    groups:
+      all-pre-commit-hooks:
+        patterns:
+          - "*"
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
