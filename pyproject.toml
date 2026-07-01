@@ -8,7 +8,7 @@ authors = [
     {name = "Håvard Berland", email = "havb@equinor.com"},
 ]
 description = "Python API to ensembles produced by ERT"
-requires-python = ">= 3.11"
+requires-python = ">= 3.12"
 readme = "README.rst"
 license = {text = "GPL-3.0"}
 keywords = ["fmu", "ensemble"]
@@ -17,7 +17,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
