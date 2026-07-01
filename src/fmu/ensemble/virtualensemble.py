@@ -25,7 +25,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class VirtualEnsemble(object):
+class VirtualEnsemble:
     """A computed or archived ensemble
 
     Computed or archived, there is no link to the original dataset(s)
@@ -186,7 +186,7 @@ class VirtualEnsemble(object):
             VirtualRealization, populated with data.
         """
         vreal = VirtualRealization(
-            description="Realization %d from %s" % (realindex, self._name)
+            description=f"Realization {realindex} from {self.name}"
         )
         for key in self.data.keys():
             data = self.get_df(key)
@@ -210,7 +210,7 @@ class VirtualEnsemble(object):
             if "__smry_metadata" in self.keys():
                 vreal.append("__smry_metadata", self.get_df("__smry_metadata"))
             return vreal
-        raise ValueError("No data for realization %d" % realindex)
+        raise ValueError(f"No data for realization {realindex}")
 
     def add_realization(self, realization, realidx=None, overwrite=False):
         """Add a realization. A ScratchRealization will be effectively
@@ -334,10 +334,7 @@ class VirtualEnsemble(object):
         quantilematcher = re.compile(r"p(\d\d)")
         supported_aggs = ["mean", "median", "min", "max", "std", "var"]
         if aggregation not in supported_aggs and not quantilematcher.match(aggregation):
-            raise ValueError(
-                "{arg} is not a".format(arg=aggregation)
-                + "supported ensemble aggregation"
-            )
+            raise ValueError(f"{aggregation} is not a supported ensemble aggregation")
 
         # Generate a new empty object:
         vreal = VirtualRealization(self._name + " " + aggregation)
@@ -473,7 +470,7 @@ class VirtualEnsemble(object):
         )
         if not HAVE_PYARROW:
             logger.warning(
-                ("Only exporting to CSV files. Install pyarrow to have parquet output")
+                "Only exporting to CSV files. Install pyarrow to have parquet output"
             )
 
         # Trigger load of all lazy frames:
@@ -498,9 +495,9 @@ class VirtualEnsemble(object):
                     os.mkdir(filesystempath)
                 elif os.listdir(filesystempath):
                     logger.critical(
-                        ("Refusing to write virtual ensemble  to non-empty directory")
+                        "Refusing to write virtual ensemble  to non-empty directory"
                     )
-                    raise IOError("Directory %s not empty" % filesystempath)
+                    raise OSError(f"Directory {filesystempath} not empty")
             else:
                 os.mkdir(filesystempath)
 
@@ -642,7 +639,7 @@ file is picked up"""
         )
         start_time = datetime.datetime.now()
         if fmt not in ["csv", "parquet"]:
-            raise ValueError("Unknown format for from_disk: %s" % fmt)
+            raise ValueError(f"Unknown format for from_disk: {fmt}")
 
         # Clear all data we have, we don't dare to merge VirtualEnsembles
         # with data coming from disk.
@@ -660,7 +657,7 @@ file is picked up"""
             for filename in filenames:
                 # Special treatment of the filename "_name"
                 if filename == "_name":
-                    with open(os.path.join(root, filename), "r") as fhandle:
+                    with open(os.path.join(root, filename)) as fhandle:
                         self._name = "".join(fhandle.readlines()).strip()
 
                 if filename == "_manifest.yml":
@@ -735,7 +732,7 @@ file is picked up"""
 
     def __repr__(self):
         """Textual representation of the object"""
-        return "<VirtualEnsemble, {}>".format(self._name)
+        return f"<VirtualEnsemble, {self._name}>"
 
     def get_df(self, localpath, merge=None):
         """Access the internal datastore which contains dataframes or dicts

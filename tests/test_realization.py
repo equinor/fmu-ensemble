@@ -809,14 +809,12 @@ def test_filesystem_changes():
     # the situation where there is one successful job.
     with open(realdir + "/STATUS", "w") as fhandle:
         fhandle.write(
-            (
-                "Current host                    : st-rst16-02-03/x86_64  "
-                "file-server:10.14.10.238\n"
-                "LSF JOBID: not running LSF\n"
-                "COPY_FILE                       : 20:58:57 .... 20:59:00   "
-                "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
-                "Config/jobs/util/script/copy_file.py failed with exit code: 1\n"
-            )
+            "Current host                    : st-rst16-02-03/x86_64  "
+            "file-server:10.14.10.238\n"
+            "LSF JOBID: not running LSF\n"
+            "COPY_FILE                       : 20:58:57 .... 20:59:00   "
+            "EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
+            "Config/jobs/util/script/copy_file.py failed with exit code: 1\n"
         )
     real = ensemble.ScratchRealization(realdir)
     # When issue 37 is resolved, update this to 1 and check the
@@ -824,15 +822,13 @@ def test_filesystem_changes():
     assert len(real.get_df("STATUS")) == 1
     with open(realdir + "/STATUS", "w") as fhandle:
         fhandle.write(
-            (
-                "Current host                    : st-rst16-02-03/x86_64  "
-                "file-server:10.14.10.238\n"
-                "LSF JOBID: not running LSF\n"
-                "COPY_FILE                       : 20:58:55 .... 20:58:57\n"
-                "COPY_FILE                       : 20:58:57 .... 20:59:00  "
-                " EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
-                "Config/jobs/util/script/copy_file.py failed with exit code: 1 "
-            )
+            "Current host                    : st-rst16-02-03/x86_64  "
+            "file-server:10.14.10.238\n"
+            "LSF JOBID: not running LSF\n"
+            "COPY_FILE                       : 20:58:55 .... 20:58:57\n"
+            "COPY_FILE                       : 20:58:57 .... 20:59:00  "
+            " EXIT: 1/Executable: /project/res/komodo/2018.02/root/etc/ERT/"
+            "Config/jobs/util/script/copy_file.py failed with exit code: 1 "
         )
     real = ensemble.ScratchRealization(realdir)
     assert len(real.get_df("STATUS")) == 2

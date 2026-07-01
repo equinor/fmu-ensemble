@@ -23,7 +23,7 @@ from .virtualrealization import VirtualRealization
 logger = logging.getLogger(__name__)
 
 
-class Observations(object):
+class Observations:
     """Represents a set of observations and the ability to
     compare realizations and ensembles to the observations
 
@@ -324,10 +324,8 @@ class Observations(object):
                             )
                         else:
                             logger.error(
-                                (
-                                    "obsunit-timeindex was not string or date object\n"
-                                    "Should not be possible, file a bug report"
-                                )
+                                "obsunit-timeindex was not string or date object\n"
+                                "Should not be possible, file a bug report"
                             )
                             logger.error(obsunit["time_index"])
                             logger.error(type(obsunit["time_index"]))

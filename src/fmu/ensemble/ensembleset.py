@@ -14,7 +14,7 @@ from .ensemble import ScratchEnsemble, VirtualEnsemble
 logger = logging.getLogger(__name__)
 
 
-class EnsembleSet(object):
+class EnsembleSet:
     """An ensemble set is any collection of ensemble objects
 
     Ensemble objects are ScratchEnsembles or VirtualEnsembles.
@@ -73,11 +73,9 @@ class EnsembleSet(object):
 
         if (ensembles and frompath) or (ensembles and runpathfile):
             logger.error(
-                (
-                    "EnsembleSet only supports one initialization mode,"
-                    "from list of ensembles\n, list of paths or "
-                    "an ert runpath file"
-                )
+                "EnsembleSet only supports one initialization mode,"
+                "from list of ensembles\n, list of paths or "
+                "an ert runpath file"
             )
             raise ValueError
 
@@ -123,7 +121,7 @@ class EnsembleSet(object):
         if runpathfile:
             if not os.path.exists(runpathfile):
                 logger.error("Could not open runpath file %s", runpathfile)
-                raise IOError
+                raise OSError
             self.add_ensembles_fromrunpath(runpathfile, batch=batch)
             if not self._ensembles:
                 logger.warning("No ensembles added to EnsembleSet")
@@ -141,9 +139,7 @@ class EnsembleSet(object):
         return self._ensembles[name]
 
     def __repr__(self):
-        return "<EnsembleSet {}, {} ensembles:\n{}>".format(
-            self.name, len(self), self._ensembles
-        )
+        return f"<EnsembleSet {self.name}, {len(self)} ensembles:\n{self._ensembles}>"
 
     @property
     def ensemblenames(self):
@@ -324,9 +320,7 @@ class EnsembleSet(object):
         """
         if ensembleobject.name in self._ensembles:
             raise ValueError(
-                "The name {} already exists in the EnsembleSet".format(
-                    ensembleobject.name
-                )
+                f"The name {ensembleobject.name} already exists in the EnsembleSet"
             )
         self._ensembles[ensembleobject.name] = ensembleobject
 
@@ -412,7 +406,7 @@ class EnsembleSet(object):
                 pass
         if ensdflist:
             return pd.concat(ensdflist, sort=False)
-        raise KeyError("No data found for {} or merge failed".format(localpath))
+        raise KeyError(f"No data found for {localpath} or merge failed")
 
     def drop(self, localpath, **kwargs):
         """Delete elements from internalized data.
@@ -437,7 +431,7 @@ class EnsembleSet(object):
             keys: list of strings of keys to delete from a dictionary
         """
         if self.shortcut2path(localpath) not in self.keys():
-            raise ValueError("%s not found" % localpath)
+            raise ValueError(f"{localpath} not found")
         for _, ensemble in self._ensembles.items():
             try:  # noqa: SIM105
                 ensemble.drop(localpath, **kwargs)
@@ -753,7 +747,7 @@ class EnsembleSet(object):
         end_date = max(rawdates)
         pd_freq_mnenomics = {"monthly": "MS", "yearly": "YS", "daily": "D"}
         if freq not in pd_freq_mnenomics:
-            raise ValueError("Requested frequency %s not supported" % freq)
+            raise ValueError(f"Requested frequency {freq} not supported")
         datetimes = pd.date_range(start_date, end_date, freq=pd_freq_mnenomics[freq])
         # Convert from Pandas' datetime64 to datetime.date:
         return [x.date() for x in datetimes]

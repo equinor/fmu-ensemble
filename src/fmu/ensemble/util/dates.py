@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-from typing import List, Tuple
 
 import dateutil
 import pandas as pd
@@ -136,7 +135,7 @@ def unionize_smry_dates(eclsumsdates, freq, normalize, start_date=None, end_date
 
 def normalize_dates(
     start_date: datetime.date, end_date: datetime.date, freq: str
-) -> Tuple[datetime.date, datetime.date]:
+) -> tuple[datetime.date, datetime.date]:
     """
     Normalize start and end date according to frequency
     by extending the time range.
@@ -217,7 +216,7 @@ def _fallback_date_roll(
 
 def _fallback_date_range(
     start: datetime.date, end: datetime.date, freq: str
-) -> List[datetime.datetime]:
+) -> list[datetime.datetime]:
     """Fallback routine for generating date ranges beyond Pandas datetime64[ns]
     year-2262 limit.
 

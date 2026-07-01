@@ -8,7 +8,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class EnsembleCombination(object):
+class EnsembleCombination:
     """The class is used to perform linear operations on ensembles.
 
     When instantiated, the linear combination will not actually be

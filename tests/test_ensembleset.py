@@ -499,7 +499,7 @@ def test_ertrunpathfile(tmp_path):
     # Construct an artificial ert runpathfile with iter-0 and iter-1,
     # by duplicating the runpath for iter-0. It is written to a temporary
     # directory to avoid leaking into the working directory.
-    with open(testdir + "/data/ert-runpath-file", "r") as fhandle:
+    with open(testdir + "/data/ert-runpath-file") as fhandle:
         iter0runpath = fhandle.readlines()
 
     runpathfile = tmp_path / "ensset-runpath-file"

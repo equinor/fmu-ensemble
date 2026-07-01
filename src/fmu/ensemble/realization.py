@@ -42,7 +42,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class ScratchRealization(object):
+class ScratchRealization:
     r"""A representation of results still present on disk
 
     ScratchRealizations point to the filesystem for their
@@ -276,7 +276,7 @@ class ScratchRealization(object):
         elif fformat == "scalar":
             self.load_scalar(localpath, convert_numeric, force_reread)
         else:
-            raise ValueError("Unsupported file format %s" % fformat)
+            raise ValueError(f"Unsupported file format {fformat}")
 
     def load_scalar(
         self,
@@ -307,7 +307,7 @@ class ScratchRealization(object):
         """
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
-            raise IOError("File not found: " + fullpath)
+            raise OSError("File not found: " + fullpath)
         if fullpath in self.files["FULLPATH"].values and not force_reread:
             # Return cached version
             return self.data[localpath]
@@ -385,7 +385,7 @@ class ScratchRealization(object):
         """
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
-            raise IOError("File not found: " + fullpath)
+            raise OSError("File not found: " + fullpath)
         if fullpath in self.files["FULLPATH"].values and not force_reread:
             # Return cached version
             return self.data[localpath]
@@ -439,7 +439,7 @@ class ScratchRealization(object):
         """
         fullpath = os.path.abspath(os.path.join(self._origpath, localpath))
         if not os.path.exists(fullpath):
-            raise IOError("File not found: " + fullpath)
+            raise OSError("File not found: " + fullpath)
         # Look for cached version
         if localpath in self.data and not force_reread:
             return self.data[localpath]
@@ -686,7 +686,7 @@ class ScratchRealization(object):
         """
         fullpath = shortcut2path(self.keys(), localpath)
         if fullpath not in self.data.keys():
-            raise KeyError("Could not find {}".format(localpath))
+            raise KeyError(f"Could not find {localpath}")
         data = self.data[shortcut2path(self.keys(), localpath)]
         if not isinstance(merge, list):
             merge = [merge]  # can still be None
@@ -704,7 +704,7 @@ class ScratchRealization(object):
             else:
                 raise TypeError(
                     "Don't know how to merge data "
-                    + "from {} of type {}".format(localpath, type(data))
+                    f"from {localpath} of type {type(data)}"
                 )
         for mergekey in merge:
             if mergekey is None:
@@ -724,8 +724,7 @@ class ScratchRealization(object):
                 # there must be common columns for this operation.
             else:
                 raise TypeError(
-                    "Don't know how to merge data "
-                    + "from {} of type {}".format(mergekey, type(data))
+                    f"Don't know how to merge data from {mergekey} of type {type(data)}"
                 )
         return data
 
@@ -864,7 +863,7 @@ class ScratchRealization(object):
                 return None  # No filename matches *DATA
             if len(data_filenamelist) > 1:
                 logger.warning(
-                    ("Multiple DATA files found, consider turning off auto-discovery")
+                    "Multiple DATA files found, consider turning off auto-discovery"
                 )
             data_filename = data_filenamelist[0]
             self.find_files(data_filename)
@@ -906,7 +905,7 @@ class ScratchRealization(object):
                 return None  # No filename matches *DATA
             if len(data_filenamelist) > 1:
                 logger.warning(
-                    ("Multiple DATA files found, consider turning off auto-discovery")
+                    "Multiple DATA files found, consider turning off auto-discovery"
                 )
             data_filename = data_filenamelist[0]
             self.find_files(data_filename)
@@ -971,7 +970,7 @@ class ScratchRealization(object):
             eclsum = Summary(
                 unsmry_filename, lazy_load=False, include_restart=include_restart
             )
-        except IOError:
+        except OSError:
             # This can happen if there is something wrong with the file
             # or if SMSPEC is missing.
             logger.warning("Failed to create summary instance from %s", unsmry_filename)
@@ -1220,10 +1219,8 @@ class ScratchRealization(object):
         """
         if self.get_eclsum() is None:
             logger.warning(
-                (
-                    "Calling _glob_smry_keys without loaded or found summary file "
-                    "returns empty list"
-                )
+                "Calling _glob_smry_keys without loaded or found summary file "
+                "returns empty list"
             )
             return []
         if not isinstance(column_keys, list):
@@ -1413,7 +1410,7 @@ class ScratchRealization(object):
         """
         fullpath = shortcut2path(self.keys(), localpath)
         if fullpath not in self.keys():
-            raise ValueError("%s not found" % localpath)
+            raise ValueError(f"{localpath} not found")
 
         data = self.data[fullpath]
 
@@ -1443,7 +1440,7 @@ class ScratchRealization(object):
         """Represent the realization. Show only the last part of the path"""
         pathsummary = self._origpath[-50:]
         indexstr = str(self.index) if self.index is not None else "Error"
-        return "<Realization, index={}, path=...{}>".format(indexstr, pathsummary)
+        return f"<Realization, index={indexstr}, path=...{pathsummary}>"
 
     def __sub__(self, other):
         """Substract another realization from this"""
