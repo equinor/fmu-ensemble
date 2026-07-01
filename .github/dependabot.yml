@@ -4,17 +4,22 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
     cooldown:
       default-days: 7
     groups:
       all-github-actions:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
     cooldown:
       default-days: 7
     groups:
@@ -24,7 +29,7 @@ updates:
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
     allow:
       - dependency-type: "all"
     versioning-strategy: "lockfile-only"
