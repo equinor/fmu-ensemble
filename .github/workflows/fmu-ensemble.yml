@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14"]
         pandas-version: [">3"]
         include:
           - python-version: "3.14"
@@ -67,11 +67,11 @@ jobs:
           uv run --no-sync pytest tests/test_virtualensemble.py
 
       - name: Syntax check on RST documentation
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.12'
         run: uv run --no-sync rstcheck -r docs/
 
       - name: Build docs
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.12'
         run: |
           uv run sphinx-apidoc -H "API for fmu.ensemble" -o ./docs ./src/fmu
           mkdir tmp
@@ -79,7 +79,7 @@ jobs:
           touch build/sphinx/html/.nojekyll
 
       - name: 🚢 Build and deploy Python package
-        if: github.event_name == 'release' && matrix.python-version == '3.11'
+        if: github.event_name == 'release' && matrix.python-version == '3.12'
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.pypi_fmuensemble_token }}
@@ -89,7 +89,7 @@ jobs:
           twine upload dist/*
 
       - name: 📚 Update GitHub pages
-        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.11'
+        if: github.event_name == 'release' && github.repository == 'equinor/fmu-ensemble' && matrix.python-version == '3.12'
         run: |
           cp -R ./build/sphinx/html ../html
 
