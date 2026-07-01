@@ -24,7 +24,7 @@ from .virtualrealization import VirtualRealization
 logger = logging.getLogger(__name__)
 
 
-class ScratchEnsemble(object):
+class ScratchEnsemble:
     """An ensemble is a collection of Realizations.
 
     Ensembles are initialized from path(s) pointing to
@@ -508,12 +508,12 @@ class ScratchEnsemble(object):
                 # and that we should not skip.
                 logger.critical("load_file() failed in realization %d", index)
                 raise ValueError from exc
-            except IOError:
+            except OSError:
                 # At ensemble level, we allow files to be missing in
                 # some realizations
                 logger.warning("Could not read %s for realization %d", localpath, index)
         if self.get_df(localpath).empty:
-            raise ValueError("No ensemble data found for {}".format(localpath))
+            raise ValueError(f"No ensemble data found for {localpath}")
         return self.get_df(localpath)
 
     def find_files(self, paths, metadata=None, metayaml=False):
@@ -566,7 +566,7 @@ class ScratchEnsemble(object):
         return pd.DataFrame()
 
     def __repr__(self):
-        return "<ScratchEnsemble {}, {} realizations>".format(self.name, len(self))
+        return f"<ScratchEnsemble {self.name}, {len(self)} realizations>"
 
     def __len__(self):
         return len(self.realizations)
@@ -927,7 +927,7 @@ class ScratchEnsemble(object):
             keys: list of strings of keys to delete from a dictionary
         """
         if shortcut2path(self.keys(), localpath) not in self.keys():
-            raise ValueError("%s not found" % localpath)
+            raise ValueError(f"{localpath} not found")
         for _, realization in self.realizations.items():
             try:  # noqa: SIM105
                 realization.drop(localpath, **kwargs)
@@ -1235,10 +1235,7 @@ class ScratchEnsemble(object):
         quantilematcher = re.compile(r"p(\d\d)")
         supported_aggs = ["mean", "median", "min", "max", "std", "var"]
         if aggregation not in supported_aggs and not quantilematcher.match(aggregation):
-            raise ValueError(
-                "{arg} is not a".format(arg=aggregation)
-                + "supported ensemble aggregation"
-            )
+            raise ValueError(f"{aggregation} is not a supported ensemble aggregation")
 
         # Generate a new empty object:
         vreal = VirtualRealization(self.name + " " + aggregation)

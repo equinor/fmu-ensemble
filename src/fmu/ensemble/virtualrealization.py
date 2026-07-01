@@ -17,7 +17,7 @@ from .util.rates import compute_volumetric_rates
 logger = logging.getLogger(__name__)
 
 
-class VirtualRealization(object):
+class VirtualRealization:
     """A computed or archived realization.
 
     Computed or archived, one cannot assume to have access to the file
@@ -65,7 +65,7 @@ class VirtualRealization(object):
 
     def __repr__(self):
         """Represent the realization. Show only the last part of the path"""
-        return "<VirtualRealization, {}>".format(self._description)
+        return f"<VirtualRealization, {self._description}>"
 
     def to_disk(self, filesystempath, delete=False):
         """Write the virtual realization to the filesystem.
@@ -91,7 +91,7 @@ class VirtualRealization(object):
                 os.mkdir(filesystempath)
             elif os.listdir(filesystempath):
                 logger.critical("Refusing to write to non-empty directory")
-                raise IOError("Directory %s not empty" % filesystempath)
+                raise OSError(f"Directory {filesystempath} not empty")
         else:
             os.mkdir(filesystempath)
 
@@ -234,7 +234,7 @@ class VirtualRealization(object):
         if fullpath in self.keys():
             data = self.data[fullpath]
         else:
-            raise KeyError("Could not find {}".format(localpath))
+            raise KeyError(f"Could not find {localpath}")
         if merge is None:
             merge = []
         if not isinstance(merge, list):
@@ -262,7 +262,7 @@ class VirtualRealization(object):
             elif isinstance(mergedata, pd.DataFrame):
                 data = pd.merge(data, mergedata)
             else:
-                raise ValueError("Don't know how to merge data {}".format(mergekey))
+                raise ValueError(f"Don't know how to merge data {mergekey}")
         if isinstance(data, pd.Series):
             data = data.to_dict()
         if data is not None:

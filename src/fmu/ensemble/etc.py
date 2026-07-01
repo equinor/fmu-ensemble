@@ -14,7 +14,7 @@ warnings.filterwarnings(
 )
 
 
-class _BColors(object):
+class _BColors:
     # local class for ANSI term color commands
     # bgcolors:
     # 40=black, 41=red, 42=green, 43=yellow, 44=blue, 45=pink, 46 cyan
@@ -33,7 +33,7 @@ class _BColors(object):
         pass
 
 
-class Interaction(object):
+class Interaction:
     """System for handling interaction; dialogues and messages in FMU.
 
     This module cooperates with the standard Python logging module.
@@ -80,7 +80,7 @@ class Interaction(object):
         if level in validlevels:
             self._logginglevel = level
         else:
-            raise ValueError("Invalid level given, must be in {}".format(validlevels))
+            raise ValueError(f"Invalid level given, must be in {validlevels}")
 
     @property
     def numericallogginglevel(self):
@@ -150,8 +150,8 @@ class Interaction(object):
         print("")
         print(_BColors.HEADER)
         print("#" * 79)
-        print("#{}#".format(app.center(77)))
-        print("#{}#".format(cur_version.center(77)))
+        print(f"#{app.center(77)}#")
+        print(f"#{cur_version.center(77)}#")
         print("#" * 79)
         print(_BColors.ENDC)
         print("")
@@ -314,7 +314,7 @@ class Interaction(object):
 
         if prompt:
             if self._syslevel <= 1:
-                print("{} {}{}".format(prefix, string, endfix))
+                print(f"{prefix} {string}{endfix}")
             else:
                 ulevel = str(level)
                 if level == -5:
@@ -324,7 +324,5 @@ class Interaction(object):
                 if level == -9:
                     ulevel = "W"
                 print(
-                    "{0} <{1}> [{2:23s}->{3:>33s}] {4}{5}".format(
-                        prefix, ulevel, self._callclass, self._caller, string, endfix
-                    )
+                    f"{prefix} <{ulevel}> [{self._callclass:23s}->{self._caller:>33s}] {string}{endfix}"
                 )

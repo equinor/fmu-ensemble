@@ -101,6 +101,7 @@ select = [
   "SLOT",
   "TC",
   "TID",
+  "UP",
   "W",  # pycodestyle
   "YTT"
 ]
