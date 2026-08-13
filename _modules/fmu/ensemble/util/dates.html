@@ -5,16 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.util.dates &mdash; fmu-ensemble 1.6.11 documentation</title>
+  <title>fmu.ensemble.util.dates &mdash; fmu-ensemble 1.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=fd927af5"></script>
-      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/documentation_options.js?v=ca6af09f"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -82,7 +82,6 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dateutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -117,8 +116,12 @@
 <span class="sd">        list of datetimes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
-            <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">PD_FREQ_MNEMONICS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+        <span class="c1"># Pandas &gt;= 3 handles dates beyond year 2262 natively. Pandas &lt; 3 raises</span>
+        <span class="c1"># OutOfBoundsDatetime and we fall back to the pure-Python implementation.</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">PD_FREQ_MNEMONICS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">freq</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">to_pydatetime</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfBoundsDatetime</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_fallback_date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span></div>
@@ -220,7 +223,7 @@
 <a class="viewcode-back" href="../../../../fmu.ensemble.util.html#fmu.ensemble.util.dates.normalize_dates">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">normalize_dates</span><span class="p">(</span>
     <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Normalize start and end date according to frequency</span>
 <span class="sd">    by extending the time range.</span>
@@ -244,14 +247,14 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">start_normalized</span> <span class="o">=</span> <span class="n">offset</span><span class="o">.</span><span class="n">rollback</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
     <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfBoundsDatetime</span><span class="p">:</span>
-        <span class="c1"># Pandas only supports datetime up to year 2262</span>
+        <span class="c1"># Pandas &lt; 3 only supports datetime up to year 2262</span>
         <span class="n">start_normalized</span> <span class="o">=</span> <span class="n">_fallback_date_roll</span><span class="p">(</span>
             <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span> <span class="s2">&quot;back&quot;</span><span class="p">,</span> <span class="n">freq</span>
         <span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">end_normalized</span> <span class="o">=</span> <span class="n">offset</span><span class="o">.</span><span class="n">rollforward</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
     <span class="k">except</span> <span class="n">pd</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">OutOfBoundsDatetime</span><span class="p">:</span>
-        <span class="c1"># Pandas only supports datetime up to year 2262</span>
+        <span class="c1"># Pandas &lt; 3 only supports datetime up to year 2262</span>
         <span class="n">end_normalized</span> <span class="o">=</span> <span class="n">_fallback_date_roll</span><span class="p">(</span>
             <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">end_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="n">freq</span>
         <span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
@@ -302,7 +305,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_fallback_date_range</span><span class="p">(</span>
     <span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fallback routine for generating date ranges beyond Pandas datetime64[ns]</span>
 <span class="sd">    year-2262 limit.</span>
 

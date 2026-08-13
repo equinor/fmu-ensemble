@@ -5,16 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.6.11 documentation</title>
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=ca6af09f"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -104,7 +104,7 @@
 
 <div class="viewcode-block" id="Observations">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.observations.Observations">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Observations</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Observations</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a set of observations and the ability to</span>
 <span class="sd">    compare realizations and ensembles to the observations</span>
 
@@ -202,7 +202,6 @@
             <span class="n">ens_or_real</span> <span class="o">=</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ens_or_real</span><span class="p">,</span> <span class="n">EnsembleSet</span><span class="p">):</span>
             <span class="n">mismatches</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="c1"># pylint: disable=protected-access</span>
             <span class="k">for</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">ens</span> <span class="ow">in</span> <span class="n">ens_or_real</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating mismatch for ensemble </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ensname</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">realidx</span><span class="p">,</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">ens</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -415,10 +414,8 @@
                             <span class="p">)</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                                <span class="p">(</span>
-                                    <span class="s2">&quot;obsunit-timeindex was not string or date object</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                    <span class="s2">&quot;Should not be possible, file a bug report&quot;</span>
-                                <span class="p">)</span>
+                                <span class="s2">&quot;obsunit-timeindex was not string or date object</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                <span class="s2">&quot;Should not be possible, file a bug report&quot;</span>
                             <span class="p">)</span>
                             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">])</span>
                             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obsunit</span><span class="p">[</span><span class="s2">&quot;time_index&quot;</span><span class="p">]))</span>
@@ -516,7 +513,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="n">mismatch</span><span class="p">[</span><span class="n">zeroerrors</span><span class="p">])</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Zero measurement error in observation set&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;. can&#39;t be used to calculate misfit&quot;</span>
+                <span class="s2">&quot;. can&#39;t be used to calculate misfit&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;MISFIT&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mismatch</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">mismatch</span><span class="p">[</span><span class="s2">&quot;MISFIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mismatch</span><span class="p">[</span><span class="s2">&quot;L2&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">mismatch</span><span class="p">[</span><span class="s2">&quot;MEASERROR&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>

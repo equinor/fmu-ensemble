@@ -6,16 +6,16 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.util package &mdash; fmu-ensemble 1.6.11 documentation</title>
+  <title>fmu.ensemble.util package &mdash; fmu-ensemble 1.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fd927af5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/documentation_options.js?v=ca6af09f"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -102,7 +102,7 @@
 <p>Common utility functions used in fmu.ensemble</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="fmu.ensemble.util.dates.logger">
-<span class="sig-prename descclassname"><span class="pre">fmu.ensemble.util.dates.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Logger</span> <span class="pre">fmu.ensemble.util.dates</span> <span class="pre">(WARNING)&gt;</span></em><a class="headerlink" href="#fmu.ensemble.util.dates.logger" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fmu.ensemble.util.dates.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Logger</span> <span class="pre">fmu.ensemble.util.dates</span> <span class="pre">(WARNING)&gt;</span></span><a class="headerlink" href="#fmu.ensemble.util.dates.logger" title="Link to this definition"></a></dt>
 <dd><p>Mapping from fmu-ensemble custom offset strings to Pandas DateOffset strings.
 See
 <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects">https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects</a></p>
@@ -152,7 +152,7 @@ frequency, and potential normalized dates to the frequency (rollback/rollforward
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fmu.ensemble.util.dates.normalize_dates">
-<span class="sig-prename descclassname"><span class="pre">fmu.ensemble.util.dates.</span></span><span class="sig-name descname"><span class="pre">normalize_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">date</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">date</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/fmu/ensemble/util/dates.html#normalize_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fmu.ensemble.util.dates.normalize_dates" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">fmu.ensemble.util.dates.</span></span><span class="sig-name descname"><span class="pre">normalize_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">date</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">date</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/fmu/ensemble/util/dates.html#normalize_dates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fmu.ensemble.util.dates.normalize_dates" title="Link to this definition"></a></dt>
 <dd><p>Normalize start and end date according to frequency
 by extending the time range.</p>
 <p>So for [1997-11-5, 2020-03-02] and monthly freqency

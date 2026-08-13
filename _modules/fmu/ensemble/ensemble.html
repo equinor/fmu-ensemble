@@ -5,16 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 1.6.11 documentation</title>
+  <title>fmu.ensemble.ensemble &mdash; fmu-ensemble 1.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=ca6af09f"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -105,7 +105,7 @@
 
 <div class="viewcode-block" id="ScratchEnsemble">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemble.ScratchEnsemble">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ScratchEnsemble</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScratchEnsemble</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An ensemble is a collection of Realizations.</span>
 
 <span class="sd">    Ensembles are initialized from path(s) pointing to</span>
@@ -621,12 +621,12 @@
                 <span class="c1"># and that we should not skip.</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;load_file() failed in realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-            <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
                 <span class="c1"># At ensemble level, we allow files to be missing in</span>
                 <span class="c1"># some realizations</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not read </span><span class="si">%s</span><span class="s2"> for realization </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No ensemble data found for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">localpath</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No ensemble data found for </span><span class="si">{</span><span class="n">localpath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
 
 
@@ -683,7 +683,7 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;ScratchEnsemble </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> realizations&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;ScratchEnsemble </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> realizations&gt;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="p">)</span>
@@ -1064,7 +1064,7 @@
 <span class="sd">            keys: list of strings of keys to delete from a dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">localpath</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found&quot;</span> <span class="o">%</span> <span class="n">localpath</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">localpath</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">realization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">realizations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>  <span class="c1"># noqa: SIM105</span>
                 <span class="n">realization</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1393,10 +1393,7 @@
         <span class="n">quantilematcher</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;p(\d\d)&quot;</span><span class="p">)</span>
         <span class="n">supported_aggs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="s2">&quot;var&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">aggregation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_aggs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">quantilematcher</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">aggregation</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">{arg}</span><span class="s2"> is not a&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="n">aggregation</span><span class="p">)</span>
-                <span class="o">+</span> <span class="s2">&quot;supported ensemble aggregation&quot;</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">aggregation</span><span class="si">}</span><span class="s2"> is not a supported ensemble aggregation&quot;</span><span class="p">)</span>
 
         <span class="c1"># Generate a new empty object:</span>
         <span class="n">vreal</span> <span class="o">=</span> <span class="n">VirtualRealization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">aggregation</span><span class="p">)</span>

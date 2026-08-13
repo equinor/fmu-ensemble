@@ -5,16 +5,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble 1.6.11 documentation</title>
+  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble 1.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=fd927af5"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/documentation_options.js?v=ca6af09f"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -89,7 +89,7 @@
 
 <div class="viewcode-block" id="EnsembleCombination">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">EnsembleCombination</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnsembleCombination</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The class is used to perform linear operations on ensembles.</span>
 
 <span class="sd">    When instantiated, the linear combination will not actually be</span>
@@ -217,8 +217,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            VirtualEnsemble</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># pylint: disable=import-outside-toplevel</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.virtualensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualEnsemble</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.virtualensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualEnsemble</span>  <span class="c1"># noqa: PLC0415</span>
 
         <span class="k">if</span> <span class="n">keyfilter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">keyfilter</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
