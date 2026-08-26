@@ -1,17 +1,8 @@
-"""This module is deprecated and will be removed in fmu-ensemble v2.0.0"""
-
 import inspect
 import logging
 import os
 import sys
 import timeit
-import warnings
-
-warnings.filterwarnings(
-    action="always",
-    category=DeprecationWarning,
-    module=r"etc|ensemble.etc|fmu.ensemble.etc",
-)
 
 
 class _BColors:
@@ -40,10 +31,6 @@ class Interaction:
     """
 
     def __init__(self):
-        warnings.warn(
-            "fmu.ensemble.etc is deprecated and will be removed in later versions.",
-            DeprecationWarning,
-        )
         self._callclass = None
         self._caller = None
         self._lformat = None
@@ -75,7 +62,6 @@ class Interaction:
 
     @logginglevel.setter
     def logginglevel(self, level):
-
         validlevels = ("INFO", "WARNING", "DEBUG", "ERROR", "CRITICAL")
         if level in validlevels:
             self._logginglevel = level
@@ -288,7 +274,6 @@ class Interaction:
         return outer[0]
 
     def _output(self, idx, level, string):
-
         prefix = ""
         endfix = ""
 
