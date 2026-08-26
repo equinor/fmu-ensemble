@@ -471,8 +471,10 @@ class Observations:
                 if not ("key" in unit and "histvec" in unit):
                     logger.warning(
                         (
-                            "smryh units must contain both 'key' and "
-                            "'histvec', deleting: %s",
+                            (
+                                "smryh units must contain both 'key' and "
+                                "'histvec', deleting: %s"
+                            ),
                             str(unit),
                         )
                     )
