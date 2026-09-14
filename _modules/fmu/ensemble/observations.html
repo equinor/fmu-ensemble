@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.6.12 documentation</title>
+  <title>fmu.ensemble.observations &mdash; fmu-ensemble 1.6.13 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=ca6af09f"></script>
+      <script src="../../../_static/documentation_options.js?v=6e127486"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -561,8 +561,10 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s2">&quot;key&quot;</span> <span class="ow">in</span> <span class="n">unit</span> <span class="ow">and</span> <span class="s2">&quot;histvec&quot;</span> <span class="ow">in</span> <span class="n">unit</span><span class="p">):</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                         <span class="p">(</span>
-                            <span class="s2">&quot;smryh units must contain both &#39;key&#39; and &quot;</span>
-                            <span class="s2">&quot;&#39;histvec&#39;, deleting: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="p">(</span>
+                                <span class="s2">&quot;smryh units must contain both &#39;key&#39; and &quot;</span>
+                                <span class="s2">&quot;&#39;histvec&#39;, deleting: </span><span class="si">%s</span><span class="s2">&quot;</span>
+                            <span class="p">),</span>
                             <span class="nb">str</span><span class="p">(</span><span class="n">unit</span><span class="p">),</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
