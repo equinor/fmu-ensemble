@@ -51,10 +51,10 @@ def test_reek001(tmpdir):
     assert "argList" in statusdf.columns  # from jobs.json
 
     # Sample check the duration for RMS in realization 4:
-    assert int(statusdf.loc[4, "RMS_BATCH"]["DURATION"].values[0]) == 195
+    assert int(statusdf.loc[4, "RMS_BATCH"]["DURATION"].item()) == 195
 
     # STATUS in real4 is modified to simulate that Eclipse never finished:
-    assert np.isnan(statusdf.loc[4, "ECLIPSE100_2014.2"]["DURATION"].values[0])
+    assert np.isnan(statusdf.loc[4, "ECLIPSE100_2014.2"]["DURATION"].item())
 
     tmpdir.chdir()
     statusdf.to_csv("status.csv", index=False)
