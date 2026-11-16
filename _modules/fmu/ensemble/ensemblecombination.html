@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble 1.6.14 documentation</title>
+  <title>fmu.ensemble.ensemblecombination &mdash; fmu-ensemble 1.6.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a59be44b"></script>
+      <script src="../../../_static/documentation_options.js?v=01e36052"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -77,7 +77,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for fmu.ensemble.ensemblecombination</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Module for handling linear combinations of ensembles&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Module for handling linear combinations of ensembles"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -90,15 +90,15 @@
 <div class="viewcode-block" id="EnsembleCombination">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EnsembleCombination</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The class is used to perform linear operations on ensembles.</span>
+<span class="w">    </span><span class="sd">"""The class is used to perform linear operations on ensembles.</span>
 
 <span class="sd">    When instantiated, the linear combination will not actually be</span>
 <span class="sd">    computed before the results are actually asked for - lazy</span>
 <span class="sd">    evaluation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set up an object for a linear combination of ensembles.</span>
+<span class="w">        </span><span class="sd">"""Set up an object for a linear combination of ensembles.</span>
 
 <span class="sd">        Each instance of this object can only hold one operation,</span>
 <span class="sd">        either addition/substraction of two</span>
@@ -115,7 +115,7 @@
 <span class="sd">            add: ensemble or ensemblecombinaton with a positive sign</span>
 <span class="sd">            sub: ensemble or ensemblecombination with a negative sign.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span>
         <span class="k">if</span> <span class="n">scale</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
@@ -137,9 +137,9 @@
 <div class="viewcode-block" id="EnsembleCombination.keys">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.keys">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the intersection of all keys available in reference</span>
+<span class="w">        </span><span class="sd">"""Return the intersection of all keys available in reference</span>
 <span class="sd">        ensemble(combination) and the other</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">combkeys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">combkeys</span> <span class="o">=</span> <span class="n">combkeys</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
@@ -152,7 +152,7 @@
 <div class="viewcode-block" id="EnsembleCombination.get_df">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_df">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Obtain given data from the ensemblecombination,</span>
+<span class="w">        </span><span class="sd">"""Obtain given data from the ensemblecombination,</span>
 <span class="sd">        doing the actual computation of ensemble on the fly.</span>
 
 <span class="sd">        Warning: In order to add dataframes together with meaning,</span>
@@ -161,7 +161,7 @@
 <span class="sd">        where you want to add together volumes for correct zone</span>
 <span class="sd">        and fault segment).</span>
 
-<span class="sd">        If you have the columns &quot;REAL&quot;, &quot;DATE&quot;, &quot;ZONE&quot; and/or &quot;REGION&quot;, it</span>
+<span class="sd">        If you have the columns "REAL", "DATE", "ZONE" and/or "REGION", it</span>
 <span class="sd">        will be regarded as an index column.</span>
 
 <span class="sd">        Args:</span>
@@ -172,66 +172,66 @@
 <span class="sd">                objects in case of ScratchEnsembles), and all ensemble</span>
 <span class="sd">                combination computations happen after merging. Be careful</span>
 <span class="sd">                with index guessing and merged data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># We can pandas.add when the index is set correct.</span>
         <span class="c1"># WE MUST GUESS!</span>
         <span class="n">indexlist</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">indexcandidates</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">,</span> <span class="s2">&quot;DATE&quot;</span><span class="p">,</span> <span class="s2">&quot;ZONE&quot;</span><span class="p">,</span> <span class="s2">&quot;REGION&quot;</span><span class="p">]</span>
+        <span class="n">indexcandidates</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"REAL"</span><span class="p">,</span> <span class="s2">"DATE"</span><span class="p">,</span> <span class="s2">"ZONE"</span><span class="p">,</span> <span class="s2">"REGION"</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indexcandidates</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="n">indexlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;get_df() inferred index columns to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indexlist</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"get_df() inferred index columns to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">indexlist</span><span class="p">))</span>
         <span class="n">refdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
-        <span class="n">refdf</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+        <span class="n">refdf</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">"number"</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">refdf</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
             <span class="n">otherdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
-            <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+            <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">"number"</span><span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
             <span class="n">otherdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
-            <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
+            <span class="n">otherdf</span> <span class="o">=</span> <span class="n">otherdf</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="s2">"number"</span><span class="p">)</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">otherdf</span><span class="p">)</span>
         <span class="c1"># Delete rows where everything is NaN, which will be case when</span>
         <span class="c1"># realization (multi-)indices does not match up in both ensembles.</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"index"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"all"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Also delete columns where everything is NaN, happens when</span>
         <span class="c1"># column data are not similar</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"columns"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"all"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="EnsembleCombination.to_virtual">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.to_virtual">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_virtual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyfilter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate the current linear combination and return as</span>
+<span class="w">        </span><span class="sd">"""Evaluate the current linear combination and return as</span>
 <span class="sd">        a virtual ensemble.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            keyfilter (list or str): If supplied, only keys matching wildcards</span>
 <span class="sd">                in this argument will be included. Use this for speed reasons</span>
 <span class="sd">                when only some data is needed. Default is to include everything.</span>
-<span class="sd">                If you supply &quot;unsmry&quot;, it will match every key that</span>
-<span class="sd">                includes this string by prepending and appending &#39;*&#39; to your pattern</span>
+<span class="sd">                If you supply "unsmry", it will match every key that</span>
+<span class="sd">                includes this string by prepending and appending '*' to your pattern</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            VirtualEnsemble</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.virtualensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">VirtualEnsemble</span>  <span class="c1"># noqa: PLC0415</span>
 
         <span class="k">if</span> <span class="n">keyfilter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">keyfilter</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+            <span class="n">keyfilter</span> <span class="o">=</span> <span class="s2">"*"</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">keyfilter</span> <span class="o">=</span> <span class="p">[</span><span class="n">keyfilter</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keyfilter</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;keyfilter in to_virtual() must be list or string&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"keyfilter in to_virtual() must be list or string"</span><span class="p">)</span>
 
         <span class="n">vens</span> <span class="o">=</span> <span class="n">VirtualEnsemble</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">pattern</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">keyfilter</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">"*"</span> <span class="o">+</span> <span class="n">pattern</span> <span class="o">+</span> <span class="s2">"*"</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">keyfilter</span><span class="p">]</span>
             <span class="p">):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating ensemblecombination on </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Calculating ensemblecombination on </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
                 <span class="n">vens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
         <span class="n">vens</span><span class="o">.</span><span class="n">update_realindices</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">vens</span></div>
@@ -240,11 +240,11 @@
 <div class="viewcode-block" id="EnsembleCombination.get_smry_dates">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry_dates">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_dates</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"monthly"</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a union of dates available in the</span>
+<span class="w">        </span><span class="sd">"""Create a union of dates available in the</span>
 <span class="sd">        involved ensembles</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">dates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">normalize</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
             <span class="n">dates</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
@@ -262,7 +262,7 @@
 <div class="viewcode-block" id="EnsembleCombination.get_smry">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_smry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Loads the Eclipse summary data directly from the underlying</span>
 <span class="sd">        ensemble data. The ensembles can be ScratchEnsemble or</span>
 <span class="sd">        VirtualEnsemble, if scratch it will access binary</span>
@@ -271,7 +271,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            column_keys (str or list): column key wildcards. Default</span>
-<span class="sd">                is &#39;*&#39;, which will match all vectors in the Eclipse</span>
+<span class="sd">                is '*', which will match all vectors in the Eclipse</span>
 <span class="sd">                output.</span>
 <span class="sd">            time_index (str or list of DateTime): time_index mnemonic or</span>
 <span class="sd">                a list of explicit datetime at which the summary data</span>
@@ -280,10 +280,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFrame. Indexed by rows, has at least the columns REAL</span>
 <span class="sd">                and DATE if not empty.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
-        <span class="n">indexlist</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;REAL&quot;</span><span class="p">,</span> <span class="s2">&quot;DATE&quot;</span><span class="p">]</span>
+        <span class="n">indexlist</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"REAL"</span><span class="p">,</span> <span class="s2">"DATE"</span><span class="p">]</span>
         <span class="n">refdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
             <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span>
         <span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">indexlist</span><span class="p">)</span>
@@ -303,8 +303,8 @@
 
 <div class="viewcode-block" id="EnsembleCombination.get_smry_stats">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry_stats">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">"monthly"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Function to extract the ensemble statistics (Mean, Min, Max, P10, P90)</span>
 <span class="sd">        for a set of simulation summary vectors (column key).</span>
 
@@ -320,20 +320,20 @@
 <span class="sd">               If a string is supplied, that string is attempted used</span>
 <span class="sd">               via get_smry_dates() in order to obtain a time index.</span>
 <span class="sd">        Returns:</span>
-<span class="sd">            A MultiLevel dataframe. Outer index is &#39;minimum&#39;, &#39;maximum&#39;,</span>
-<span class="sd">            &#39;mean&#39;, &#39;p10&#39;, &#39;p90&#39;, inner index are the dates. Column names</span>
+<span class="sd">            A MultiLevel dataframe. Outer index is 'minimum', 'maximum',</span>
+<span class="sd">            'mean', 'p10', 'p90', inner index are the dates. Column names</span>
 <span class="sd">            are the different vectors. Quantiles follow the scientific</span>
 <span class="sd">            standard, opposite to the oil industry standard.</span>
 
 <span class="sd">        TODO: add warning message when failed realizations are removed</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Obtain an aggregated dataframe for only the needed columns over</span>
         <span class="c1"># the entire ensemble.</span>
 
         <span class="n">dframe</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;REAL&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;DATE&quot;</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">"REAL"</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"DATE"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">mean</span> <span class="o">=</span> <span class="n">dframe</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         <span class="n">p90</span> <span class="o">=</span> <span class="n">dframe</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.90</span><span class="p">)</span>
@@ -343,8 +343,8 @@
 
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
             <span class="p">[</span><span class="n">mean</span><span class="p">,</span> <span class="n">p10</span><span class="p">,</span> <span class="n">p90</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">minimum</span><span class="p">],</span>
-            <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;p10&quot;</span><span class="p">,</span> <span class="s2">&quot;p90&quot;</span><span class="p">,</span> <span class="s2">&quot;maximum&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">],</span>
-            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;statistic&quot;</span><span class="p">],</span>
+            <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"p10"</span><span class="p">,</span> <span class="s2">"p90"</span><span class="p">,</span> <span class="s2">"maximum"</span><span class="p">,</span> <span class="s2">"minimum"</span><span class="p">],</span>
+            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"statistic"</span><span class="p">],</span>
             <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -352,7 +352,7 @@
 <div class="viewcode-block" id="EnsembleCombination.get_smry_meta">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_smry_meta">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Provide metadata for summary data vectors.</span>
 
 <span class="sd">        A dictionary indexed by summary vector names is returned, and each</span>
@@ -367,7 +367,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            column_keys: List or str of column key wildcards</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
             <span class="n">meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_smry_meta</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">))</span>
@@ -379,19 +379,19 @@
 <div class="viewcode-block" id="EnsembleCombination.agg">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.agg">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">agg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">excludekeys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Aggregator, this is a wrapper that will</span>
+<span class="w">        </span><span class="sd">"""Aggregator, this is a wrapper that will</span>
 <span class="sd">        call .to_virtual() on your behalf and call the corresponding</span>
 <span class="sd">        agg() in VirtualEnsemble.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">aggregation</span><span class="p">,</span> <span class="n">keylist</span><span class="p">,</span> <span class="n">excludekeys</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EnsembleCombination.get_volumetric_rates">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_volumetric_rates">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_volumetric_rates</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s2">"monthly"</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute volumetric rates from cumulative summary</span>
+<span class="w">        </span><span class="sd">"""Compute volumetric rates from cumulative summary</span>
 <span class="sd">        vectors.</span>
 
 <span class="sd">        Column names that are not referring to cumulative summary</span>
@@ -399,7 +399,7 @@
 
 <span class="sd">        A Dataframe is returned with volumetric rates, that is rate</span>
 <span class="sd">        values that can be summed up to the cumulative version. The</span>
-<span class="sd">        &#39;T&#39; in the column name is switched with &#39;R&#39;. If you ask for</span>
+<span class="sd">        'T' in the column name is switched with 'R'. If you ask for</span>
 <span class="sd">        FOPT, you will get FOPR in the returned dataframe.</span>
 
 <span class="sd">        Rates in the returned dataframe are valid **forwards** in time,</span>
@@ -418,26 +418,26 @@
 <span class="sd">            time_unit: str or None. If None, the rates returned will</span>
 <span class="sd">                be the difference in cumulative between each included</span>
 <span class="sd">                time step (where the time interval can vary arbitrarily)</span>
-<span class="sd">                If set to &#39;days&#39;, &#39;months&#39; or &#39;years&#39;, the rates will</span>
+<span class="sd">                If set to 'days', 'months' or 'years', the rates will</span>
 <span class="sd">                be scaled to represent a daily, monthly or yearly rate that</span>
 <span class="sd">                is compatible with the date index and the cumulative data.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">(</span><span class="n">keyfilter</span><span class="o">=</span><span class="s2">&quot;unsmry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_virtual</span><span class="p">(</span><span class="n">keyfilter</span><span class="o">=</span><span class="s2">"unsmry"</span><span class="p">)</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span>
             <span class="n">column_keys</span><span class="o">=</span><span class="n">column_keys</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="n">time_index</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="n">time_unit</span>
         <span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return parameters from the ensemble as a class property&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return parameters from the ensemble as a class property"""</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">"parameters.txt"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate the number of realizations in this</span>
+<span class="w">        </span><span class="sd">"""Estimate the number of realizations in this</span>
 <span class="sd">        ensemble combinations.</span>
 
 <span class="sd">        This is not always well defined in cases of strange</span>
@@ -447,20 +447,20 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            int, number of realizations (upper limit)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">())</span>
 
 <div class="viewcode-block" id="EnsembleCombination.get_realindices">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensemblecombination.EnsembleCombination.get_realindices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_realindices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the integer indices for realizations in this ensemble</span>
+<span class="w">        </span><span class="sd">"""Return the integer indices for realizations in this ensemble</span>
 
 <span class="sd">        There is no guarantee that all realizations returned here</span>
 <span class="sd">        will be valid for all datatypes after computation.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list of integers</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
             <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">get_realindices</span><span class="p">()))</span>
@@ -473,42 +473,42 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Try to give out a linear expression&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Try to give out a linear expression"""</span>
         <span class="c1"># NB: Implementation in this method requires scaling not to happen</span>
         <span class="c1"># simultaneously as adds or subs.</span>
-        <span class="n">scalestring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="n">addstring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="n">substring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">scalestring</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="n">addstring</span> <span class="o">=</span> <span class="s2">""</span>
+        <span class="n">substring</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">scalestring</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; * &quot;</span>
+            <span class="n">scalestring</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" * "</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">:</span>
-            <span class="n">addstring</span> <span class="o">=</span> <span class="s2">&quot; + &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">)</span>
+            <span class="n">addstring</span> <span class="o">=</span> <span class="s2">" + "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span>
-            <span class="n">substring</span> <span class="o">=</span> <span class="s2">&quot; - &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">)</span>
+            <span class="n">substring</span> <span class="o">=</span> <span class="s2">" - "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">scalestring</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span> <span class="o">+</span> <span class="n">addstring</span> <span class="o">+</span> <span class="n">substring</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Substract another ensemble from this combination&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Substract another ensemble from this combination"""</span>
         <span class="k">return</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add another ensemble from this combination&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Add another ensemble from this combination"""</span>
         <span class="k">return</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add another ensemble from this combination&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Add another ensemble from this combination"""</span>
         <span class="k">return</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Substract another ensemble from this combination&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Substract another ensemble from this combination"""</span>
         <span class="k">return</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="o">=</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale this EnsembleCombination by a scalar value&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Scale this EnsembleCombination by a scalar value"""</span>
         <span class="k">return</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scale this EnsembleCombination by a scalar value&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Scale this EnsembleCombination by a scalar value"""</span>
         <span class="k">return</span> <span class="n">EnsembleCombination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">))</span></div>
 
 </pre></div>

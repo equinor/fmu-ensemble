@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; fmu-ensemble 1.6.14 documentation</title>
+  <title>Usage &mdash; fmu-ensemble 1.6.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=a59be44b"></script>
+      <script src="_static/documentation_options.js?v=01e36052"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -126,8 +126,8 @@ dataframes.</p>
 into Python’s memory first.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fmu</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensemble</span>
 
-<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;reek_r001_iter0&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/realization-*/iter-3&#39;</span><span class="p">)</span>
+<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'reek_r001_iter0'</span><span class="p">,</span>
+         <span class="s1">'/scratch/fmustandmat/r001_reek_scratch/realization-*/iter-3'</span><span class="p">)</span>
 
 <span class="c1"># Type the object name to check what you got</span>
 <span class="n">ens</span>
@@ -152,7 +152,7 @@ done until the user requests it.</p>
 <span class="n">ens</span><span class="o">.</span><span class="n">parameters</span>
 
 <span class="c1"># Unique realizations indices with parameters.txt</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;REAL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">'REAL'</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
 
 <span class="c1"># List of parameters available:</span>
 <span class="n">ens</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">columns</span>
@@ -163,8 +163,8 @@ done until the user requests it.</p>
 <h3>Loading multiple ensembles<a class="headerlink" href="#loading-multiple-ensembles" title="Link to this heading"></a></h3>
 <p>If you have multiple ensembles in the typical <code class="docutils literal notranslate"><span class="pre">realization-*/iter-*</span></code>
 directory structure, you can load all these ensembles in one go:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">&#39;hm_attempt01&#39;</span><span class="p">,</span>
-              <span class="n">frompath</span><span class="o">=</span><span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">'hm_attempt01'</span><span class="p">,</span>
+              <span class="n">frompath</span><span class="o">=</span><span class="s1">'/scratch/fmustandmat/r001_reek_scratch/'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This will look for realizations and iterations and group them
@@ -173,8 +173,8 @@ directory level, and will be named <cite>iter-X</cite></p>
 <p>If you have run prediction ensembles, which do not match <cite>iter-X</cite> in
 the directory name, you have to add them manually to the ensemble set:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Augment the existing ens_set object</span>
-<span class="n">ens_set</span><span class="o">.</span><span class="n">add_ensemble</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;pred-dg3&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;/scratch/fmustandmat/r001_reek_scratch/realization-*/pred-dg3/&#39;</span><span class="p">))</span>
+<span class="n">ens_set</span><span class="o">.</span><span class="n">add_ensemble</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'pred-dg3'</span><span class="p">,</span>
+    <span class="s1">'/scratch/fmustandmat/r001_reek_scratch/realization-*/pred-dg3/'</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>EnsembleSet object can be treated almost as Ensemble
@@ -185,8 +185,8 @@ ensemble names.</p>
 <p>If you in ERT have exported a “runpath file”, you can initialize an
 EnsembleSet from that file with</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load from an ERT runpath file</span>
-<span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">&#39;hm&#39;</span><span class="p">,</span>
-    <span class="n">runpath</span><span class="o">=</span><span class="s1">&#39;/foo/bar/ert-runpath-file&#39;</span><span class="p">)</span>
+<span class="n">ens_set</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">EnsembleSet</span><span class="p">(</span><span class="s1">'hm'</span><span class="p">,</span>
+    <span class="n">runpath</span><span class="o">=</span><span class="s1">'/foo/bar/ert-runpath-file'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The realization and iteration integers are taken directly from the information
@@ -214,7 +214,7 @@ by reservoir simulator outputting the Eclipse binary format. This support
 is through <a class="reference external" href="https://github.com/equinor/resdata">resdata</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get a dataframe with monthly summary data for all field vectors</span>
 <span class="c1"># and all well vectors</span>
-<span class="n">smry</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F*&#39;</span><span class="p">,</span> <span class="s1">&#39;W*&#39;</span><span class="p">],</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">)</span>
+<span class="n">smry</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">'F*'</span><span class="p">,</span> <span class="s1">'W*'</span><span class="p">],</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">'monthly'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The Python object <code class="docutils literal notranslate"><span class="pre">smry</span></code> is now a Pandas DataFrame (a table)
@@ -232,7 +232,7 @@ and then files with the suffix <cite>*.UNSMRY</cite>. In case you either have mu
 directory you need to hint to the exact location beforehand, using the
 <em>file discovery</em> (<cite>find_files()</cite>) feature. If your Eclipse output files is
 at the realization root (the old standard), you only need to issue</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="s2">&quot;*.UNSMRY&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">find_files</span><span class="p">(</span><span class="s2">"*.UNSMRY"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>prior to running <cite>load_smry()</cite>. If your problem is multiple Eclipse
@@ -264,12 +264,12 @@ volumetric rates are scaled to correspond to daily/monthly/yearly rates.
 These will sum up to the cumulative given correct integration (with
 time interval length weigthing).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Examples for volumetric rate computations, yearly rates:</span>
-<span class="n">yearly_volumes</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
-                                          <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;yearly&#39;</span><span class="p">)</span>
+<span class="n">yearly_volumes</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="s1">'FOPT'</span><span class="p">,</span>
+                                          <span class="n">time_index</span><span class="o">=</span><span class="s1">'yearly'</span><span class="p">)</span>
 <span class="c1"># For each month, compute the average daily rate:</span>
-<span class="n">daily_rates</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
-                                       <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">,</span>
-                                       <span class="n">time_unit</span><span class="o">=</span><span class="s1">&#39;days&#39;</span><span class="p">)</span>
+<span class="n">daily_rates</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_volumetric_rates</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="s1">'FOPT'</span><span class="p">,</span>
+                                       <span class="n">time_index</span><span class="o">=</span><span class="s1">'monthly'</span><span class="p">,</span>
+                                       <span class="n">time_unit</span><span class="o">=</span><span class="s1">'days'</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -318,7 +318,7 @@ realization directory, and call
 <p>There is support for text files containing only one value, either
 string or numeric. There should be nothing else than the value itself
 in the text file, except for comments after a comment character.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">load_scalar</span><span class="p">(</span><span class="s1">&#39;npv.txt&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">load_scalar</span><span class="p">(</span><span class="s1">'npv.txt'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>You are advised to add the option <cite>convert_numeric=True</cite> when the
@@ -330,8 +330,8 @@ the data for all realizations will be treated as strings.</p>
 aggregated, a dataframe with the realization index in the first column
 and the values in the second column. This value column has the same
 name as the filename.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">npv</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s1">&#39;npv.txt&#39;</span><span class="p">)</span>  <span class="c1"># A DataFrame is returned, with the columns &#39;REAL&#39; and &#39;npv.txt&#39;</span>
-<span class="n">npv_values</span> <span class="o">=</span> <span class="n">npv</span><span class="p">[</span><span class="s1">&#39;npv.txt&#39;</span><span class="p">]</span>  <span class="c1"># Need to say &#39;npv.txt&#39; once more to get to the column values.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">npv</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s1">'npv.txt'</span><span class="p">)</span>  <span class="c1"># A DataFrame is returned, with the columns 'REAL' and 'npv.txt'</span>
+<span class="n">npv_values</span> <span class="o">=</span> <span class="n">npv</span><span class="p">[</span><span class="s1">'npv.txt'</span><span class="p">]</span>  <span class="c1"># Need to say 'npv.txt' once more to get to the column values.</span>
 </pre></div>
 </div>
 </section>
@@ -349,11 +349,11 @@ the CSV data you loaded.</p>
 columns and rows from internalized dataframes through the <cite>drop()</cite>
 functionality. For an ensemble object called <cite>ens</cite> you may issue the
 following:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;BOGUSDATA&#39;</span><span class="p">)</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FOO1&#39;</span><span class="p">,</span> <span class="s1">&#39;FOO2&#39;</span><span class="p">,</span> <span class="s1">&#39;FOO3&#39;</span><span class="p">])</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;geo_gas_volumes.csv&#39;</span><span class="p">,</span> <span class="n">rowcontains</span><span class="o">=</span><span class="s1">&#39;Totals&#39;</span><span class="p">)</span> <span class="c1"># Deletes all rows with &#39;Totals&#39; anywhere.</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;geo_oil_volumes.csv&#39;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;Giip&#39;</span><span class="p">)</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;unsmry--monthly&#39;</span><span class="p">,</span> <span class="n">rowcontains</span><span class="o">=</span><span class="s1">&#39;2000-01-01&#39;</span><span class="p">)</span> <span class="c1"># Enter dates as strings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'parameters.txt'</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">'BOGUSDATA'</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'parameters.txt'</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s1">'FOO1'</span><span class="p">,</span> <span class="s1">'FOO2'</span><span class="p">,</span> <span class="s1">'FOO3'</span><span class="p">])</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'geo_gas_volumes.csv'</span><span class="p">,</span> <span class="n">rowcontains</span><span class="o">=</span><span class="s1">'Totals'</span><span class="p">)</span> <span class="c1"># Deletes all rows with 'Totals' anywhere.</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'geo_oil_volumes.csv'</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">'Giip'</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">'unsmry--monthly'</span><span class="p">,</span> <span class="n">rowcontains</span><span class="o">=</span><span class="s1">'2000-01-01'</span><span class="p">)</span> <span class="c1"># Enter dates as strings</span>
 </pre></div>
 </div>
 <p>When called on <cite>ScratchEnsemble</cite> object the drops occur in each linked
@@ -368,7 +368,7 @@ slow for large grid model and/or ensembles with many realizations.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Find of the report number corresponding to the date you are interested to extract from</span>
 <span class="n">ens</span><span class="o">.</span><span class="n">get_unrst_report_dates</span><span class="p">()</span>
 <span class="c1"># Extract the mean of following properties at the report step 4</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">get_eclgrid</span><span class="p">(</span><span class="n">props</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;PERMX&#39;</span><span class="p">,</span> <span class="s1">&#39;FLOWATI+&#39;</span><span class="p">,</span> <span class="s1">&#39;FLOWATJ+&#39;</span><span class="p">],</span> <span class="n">report</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">agg</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">get_eclgrid</span><span class="p">(</span><span class="n">props</span><span class="o">=</span><span class="p">[</span><span class="s1">'PERMX'</span><span class="p">,</span> <span class="s1">'FLOWATI+'</span><span class="p">,</span> <span class="s1">'FLOWATJ+'</span><span class="p">],</span> <span class="n">report</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">agg</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>When called, <cite>get_eclgrid()</cite> reads the grid (geometry) from one
@@ -392,16 +392,16 @@ those realizations that matched the criterion.</p>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assuming an ensemble where yearly summary data is loaded,</span>
 <span class="c1"># throw away all realizations that did not reach a certain date</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">&#39;unsmry--yearly&#39;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">&#39;DATE&#39;</span><span class="p">,</span>
-           <span class="n">columncontains</span><span class="o">=</span><span class="s1">&#39;2030-01-01&#39;</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">'unsmry--yearly'</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s1">'DATE'</span><span class="p">,</span>
+           <span class="n">columncontains</span><span class="o">=</span><span class="s1">'2030-01-01'</span><span class="p">)</span>
 
 <span class="c1"># Extract the subset for a specific sensitivity.</span>
-<span class="n">vens</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;DRAINAGE_STRATEGY&#39;</span><span class="p">,</span>
-                  <span class="n">value</span><span class="o">=</span><span class="s1">&#39;Depletion&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">vens</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">'parameters.txt'</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">'DRAINAGE_STRATEGY'</span><span class="p">,</span>
+                  <span class="n">value</span><span class="o">=</span><span class="s1">'Depletion'</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># Remove all realizations where a specific output file</span>
 <span class="c1"># (that we have tried to internalize) is missing</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">&#39;geo_oil_1.csv&#39;</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">'geo_oil_1.csv'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Filtering with other comparators than equivalence is not implemented.</p>

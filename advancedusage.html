@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced usage &mdash; fmu-ensemble 1.6.14 documentation</title>
+  <title>Advanced usage &mdash; fmu-ensemble 1.6.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=a59be44b"></script>
+      <script src="_static/documentation_options.js?v=01e36052"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -96,11 +96,11 @@ specific tasks that can now be accomplished using this module. That
 CSV export is just a merge of the dataframes coming from
 <code class="docutils literal notranslate"><span class="pre">parameters.txt</span></code> and the Eclipse summary data.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="n">smry</span> <span class="o">=</span> <span class="n">reekensemble</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">)</span>
+<span class="n">smry</span> <span class="o">=</span> <span class="n">reekensemble</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">time_index</span><span class="o">=</span><span class="s1">'monthly'</span><span class="p">)</span>
 <span class="n">params</span> <span class="o">=</span> <span class="n">reekensemble</span><span class="o">.</span><span class="n">parameters</span>
 <span class="c1"># Match the two tables where the value of REAL is identical:</span>
 <span class="n">smry_params</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">smry</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-<span class="n">smry_params</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;smry_params.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">smry_params</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">'smry_params.csv'</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For finer control, you can specify exactly which summary vectors you
@@ -133,16 +133,16 @@ functionality through the function <code class="docutils literal notranslate"><s
 integers you supply are forwarded directly to Pandas, beware that this
 is opposite to the usual subsurface understanding of e.g. a “high case
 p10 profile”. Translate p10 to p90 if needed in your client code.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ref-ensemble&#39;</span><span class="p">,</span>
-         <span class="s1">&#39;/scratch/foo/r018-ref-case/realization-*/iter-3&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'ref-ensemble'</span><span class="p">,</span>
+         <span class="s1">'/scratch/foo/r018-ref-case/realization-*/iter-3'</span><span class="p">)</span>
 
-<span class="n">mean</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">'mean'</span><span class="p">)</span>
 
-<span class="c1"># What is the mean value of &quot;FWL&quot; in parameters.txt?</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="s1">&#39;parameters.txt&#39;</span><span class="p">][</span><span class="s1">&#39;FWL&#39;</span><span class="p">])</span>
+<span class="c1"># What is the mean value of "FWL" in parameters.txt?</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="s1">'parameters.txt'</span><span class="p">][</span><span class="s1">'FWL'</span><span class="p">])</span>
 
 <span class="c1"># What is the mean ultimate FOPT</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="s1">&#39;unsmry--monthly&#39;</span><span class="p">][</span><span class="s1">&#39;FOPT&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="s1">'unsmry--monthly'</span><span class="p">][</span><span class="s1">'FOPT'</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 <span class="c1"># (.iloc[-1] is here Pandas functionality for accessing the last</span>
 <span class="c1"># row)</span>
 </pre></div>
@@ -162,17 +162,17 @@ time-steps. It is therefore recommended to interpolate them to
 e.g. monthly time interval prior to combination.</p>
 <p>Ensembles can be linearly combined analogously to realizations, and
 will be matched on realization index <code class="docutils literal notranslate"><span class="pre">REAL</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">refens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ref-ensemble&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;/scratch/foo/r018-ref-case/realization-*/iter-3&#39;</span><span class="p">)</span>
-<span class="n">iorens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;ior-ensemble&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;/scratch/foo/r018-ior-case/realization-*/pred&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">refens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'ref-ensemble'</span><span class="p">,</span>
+            <span class="s1">'/scratch/foo/r018-ref-case/realization-*/iter-3'</span><span class="p">)</span>
+<span class="n">iorens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'ior-ensemble'</span><span class="p">,</span>
+            <span class="s1">'/scratch/foo/r018-ior-case/realization-*/pred'</span><span class="p">)</span>
 
 <span class="c1"># Calculate the delta ensemble</span>
 <span class="n">deltaens</span> <span class="o">=</span> <span class="n">iorens</span> <span class="o">-</span> <span class="n">refens</span>
 
 <span class="c1"># Obtain the field gain:</span>
-<span class="n">fieldgain</span> <span class="o">=</span> <span class="n">deltaens</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FOPT&#39;</span><span class="p">],</span>
-                              <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;monthly&#39;</span><span class="p">)</span>
+<span class="n">fieldgain</span> <span class="o">=</span> <span class="n">deltaens</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">'FOPT'</span><span class="p">],</span>
+                              <span class="n">time_index</span><span class="o">=</span><span class="s1">'monthly'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If the ensembles you want to combine cannot be compared realization by
@@ -200,27 +200,27 @@ like:</p>
 </div>
 <p>This file can be loaded in Python:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume the yaml above has been put in a file:</span>
-<span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">(</span><span class="s1">&#39;fopt-obs.yml&#39;</span><span class="p">)</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">(</span><span class="s1">'fopt-obs.yml'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Alternatively, it is possible to initialize this directly without the filesystem:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">({</span><span class="s1">&#39;smryh&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPT&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;histvec&#39;</span><span class="p">:</span> <span class="s1">&#39;FOPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;time_index&#39;</span><span class="p">:</span> <span class="s1">&#39;last&#39;</span><span class="p">}]})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">({</span><span class="s1">'smryh'</span><span class="p">:</span> <span class="p">[{</span><span class="s1">'key'</span><span class="p">:</span> <span class="s1">'FOPT'</span><span class="p">,</span>
+        <span class="s1">'histvec'</span><span class="p">:</span> <span class="s1">'FOPTH'</span><span class="p">,</span> <span class="s1">'time_index'</span><span class="p">:</span> <span class="s1">'last'</span><span class="p">}]})</span>
 </pre></div>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an ensemble we want to analyze</span>
-<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;hmcandidate&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/scratch/foo/something/realization-*/iter-3&#39;</span><span class="p">)</span>
+<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'hmcandidate'</span><span class="p">,</span>
+        <span class="s1">'/scratch/foo/something/realization-*/iter-3'</span><span class="p">)</span>
 
 <span class="c1"># Perform calculation of misfit</span>
 <span class="c1"># A dataframe with computed mismatches is returned.</span>
-<span class="c1"># We only have one &quot;observation&quot; for each realization, so</span>
+<span class="c1"># We only have one "observation" for each realization, so</span>
 <span class="c1"># only one row pr. realization is returned.</span>
 <span class="n">misfit</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">mismatch</span><span class="p">(</span><span class="n">ens</span><span class="p">)</span>
 
 <span class="c1"># Sort ascending by L1 (absolute error) and print the realization</span>
 <span class="c1"># indices of the first five:</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">misfit</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;L1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()[</span><span class="s1">&#39;REAL&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">misfit</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">'L1'</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">()[</span><span class="s1">'REAL'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 <span class="c1"># Will return f.ex:</span>
 <span class="c1">#   [ 38  26 100  71  57]</span>
 </pre></div>
@@ -231,7 +231,7 @@ matching), use the YAML syntax:</p>
 <span class="w">  </span><span class="c1"># Mandatory elements per entry: key and observations</span>
 <span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">WBP4:OP_1</span>
 <span class="w">    </span><span class="l l-Scalar l-Scalar-Plain"># This is a global comment regarding this set of observations</span>
-<span class="w">  </span><span class="nt">comment</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Shut-in</span><span class="nv"> </span><span class="s">pressures</span><span class="nv"> </span><span class="s">converted</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">well</span><span class="nv"> </span><span class="s">head</span><span class="nv"> </span><span class="s">conditions&quot;</span>
+<span class="w">  </span><span class="nt">comment</span><span class="p">:</span><span class="w"> </span><span class="s">"Shut-in</span><span class="nv"> </span><span class="s">pressures</span><span class="nv"> </span><span class="s">converted</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">well</span><span class="nv"> </span><span class="s">head</span><span class="nv"> </span><span class="s">conditions"</span>
 <span class="w">  </span><span class="nt">observations</span><span class="p">:</span>
 <span class="w">     </span><span class="c1"># Mandatory elements per entry in ecl_vector observations: value, error, date</span>
 <span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="nv">251</span><span class="p p-Indicator">,</span><span class="nt"> error</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="nt"> date</span><span class="p">:</span><span class="w"> </span><span class="nv">2001-01-01</span><span class="p p-Indicator">}</span>
@@ -255,26 +255,26 @@ existing realization. If you then use the Observation object to
 compute mismatches, and then rank realizations by the mismatch, you
 can pick the realization that is closest to your statistics of choice.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an ensemble we want to analyze</span>
-<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">&#39;hmensemble&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;/scratch/foo/something/realization-*/iter-3&#39;</span><span class="p">)</span>
-<span class="n">ens</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;FOPT&#39;</span><span class="p">],</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;yearly&#39;</span><span class="p">)</span>
+<span class="n">ens</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s1">'hmensemble'</span><span class="p">,</span>
+        <span class="s1">'/scratch/foo/something/realization-*/iter-3'</span><span class="p">)</span>
+<span class="n">ens</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">column_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">'FOPT'</span><span class="p">],</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">'yearly'</span><span class="p">)</span>
 
-<span class="c1"># Calculate a &quot;mean&quot; realization</span>
-<span class="n">mean</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+<span class="c1"># Calculate a "mean" realization</span>
+<span class="n">mean</span> <span class="o">=</span> <span class="n">ens</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s1">'mean'</span><span class="p">)</span>
 
 <span class="c1"># Create an empty observation object</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">Observations</span><span class="p">({})</span>
 
 <span class="c1"># Load data from the mean realization as virtual observations:</span>
-<span class="n">obs</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="s1">&#39;FOPT&#39;</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">&#39;yearly&#39;</span><span class="p">)</span>
+<span class="n">obs</span><span class="o">.</span><span class="n">load_smry</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="s1">'FOPT'</span><span class="p">,</span> <span class="n">time_index</span><span class="o">=</span><span class="s1">'yearly'</span><span class="p">)</span>
 
 <span class="c1"># Calculate the difference between the ensemble members and the</span>
 <span class="c1"># mean realization:</span>
 <span class="n">mis</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">mismatch</span><span class="p">(</span><span class="n">ens</span><span class="p">)</span>
 
 <span class="c1"># Group mismatch data by realization, and pick the realization</span>
-<span class="c1"># index with the smallest sum of squared errors (&#39;L2&#39;)</span>
-<span class="n">closest_to_mean</span> <span class="o">=</span> <span class="n">mis</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;REAL&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">&#39;L2&#39;</span><span class="p">]</span>\
+<span class="c1"># index with the smallest sum of squared errors ('L2')</span>
+<span class="n">closest_to_mean</span> <span class="o">=</span> <span class="n">mis</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'REAL'</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">numeric_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s1">'L2'</span><span class="p">]</span>\
                                      <span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>\
                                      <span class="o">.</span><span class="n">index</span>\
                                      <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -329,10 +329,10 @@ in the realization object to use, potentially only the directory).</p>
 zone) and PERMX is an arithmetic mean. In the language of <a class="reference external" href="https://equinor.github.io/res2df/">res2df</a> this could be done with a code like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">res2df</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid</span><span class="p">,</span> <span class="n">ResdataFiles</span>
 
-<span class="n">resdatafiles</span> <span class="o">=</span> <span class="n">ResdataFiles</span><span class="p">(</span><span class="s1">&#39;MYDATADECK.DATA&#39;</span><span class="p">)</span>  <span class="c1"># There is a file zones.lyr alongside this.</span>
+<span class="n">resdatafiles</span> <span class="o">=</span> <span class="n">ResdataFiles</span><span class="p">(</span><span class="s1">'MYDATADECK.DATA'</span><span class="p">)</span>  <span class="c1"># There is a file zones.lyr alongside this.</span>
 <span class="n">grid_df</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">df</span><span class="p">(</span><span class="n">resdatafiles</span><span class="p">)</span>  <span class="c1"># Produce a dataframe with one row pr. cell</span>
-<span class="n">my_aggregators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PORV&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;VOLUME&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;PERMX&#39;</span><span class="p">:</span> <span class="s1">&#39;mean&#39;</span><span class="p">}</span>
-<span class="n">stats_df</span> <span class="o">=</span> <span class="n">grid_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;ZONE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">my_aggregators</span><span class="p">)</span>
+<span class="n">my_aggregators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'PORV'</span><span class="p">:</span> <span class="s1">'sum'</span><span class="p">,</span> <span class="s1">'VOLUME'</span><span class="p">:</span> <span class="s1">'sum'</span><span class="p">,</span> <span class="s1">'Z'</span><span class="p">:</span> <span class="s1">'min'</span><span class="p">,</span> <span class="s1">'PERMX'</span><span class="p">:</span> <span class="s1">'mean'</span><span class="p">}</span>
+<span class="n">stats_df</span> <span class="o">=</span> <span class="n">grid_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"ZONE"</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">my_aggregators</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">stats_df</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -348,17 +348,17 @@ dataframe. The wrapper function can look like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">res2df</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid</span><span class="p">,</span> <span class="n">ResdataFiles</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">my_realization_stats</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-<span class="w">   </span><span class="sd">&quot;&quot;&quot;A custom function for performing a particular calculation</span>
+<span class="w">   </span><span class="sd">"""A custom function for performing a particular calculation</span>
 <span class="sd">   on every realization</span>
 
 <span class="sd">   Args:</span>
 <span class="sd">      args (dict): A dictionary with parameters to my custom function.</span>
-<span class="sd">          The keys &#39;realization&#39; and &#39;localpath&#39; are reserved for fmu.ensemble.&quot;&quot;&quot;</span>
-   <span class="n">realization</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;realization&quot;</span><span class="p">]</span>  <span class="c1"># Provided by fmu.ensemble apply()</span>
+<span class="sd">          The keys 'realization' and 'localpath' are reserved for fmu.ensemble."""</span>
+   <span class="n">realization</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"realization"</span><span class="p">]</span>  <span class="c1"># Provided by fmu.ensemble apply()</span>
    <span class="n">resdatafiles</span> <span class="o">=</span> <span class="n">realization</span><span class="o">.</span><span class="n">get_resdatafiles</span><span class="p">()</span>
    <span class="n">grid_df</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">df</span><span class="p">(</span><span class="n">resdatafiles</span><span class="p">)</span>
-   <span class="n">my_aggregators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PORV&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;VOLUME&#39;</span><span class="p">:</span> <span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;PERMX&#39;</span><span class="p">:</span> <span class="s1">&#39;mean&#39;</span><span class="p">}</span>
-   <span class="n">stats_df</span> <span class="o">=</span> <span class="n">grid_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;ZONE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">my_aggregators</span><span class="p">)</span>
+   <span class="n">my_aggregators</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'PORV'</span><span class="p">:</span> <span class="s1">'sum'</span><span class="p">,</span> <span class="s1">'VOLUME'</span><span class="p">:</span> <span class="s1">'sum'</span><span class="p">,</span> <span class="s1">'Z'</span><span class="p">:</span> <span class="s1">'min'</span><span class="p">,</span> <span class="s1">'PERMX'</span><span class="p">:</span> <span class="s1">'mean'</span><span class="p">}</span>
+   <span class="n">stats_df</span> <span class="o">=</span> <span class="n">grid_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"ZONE"</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">my_aggregators</span><span class="p">)</span>
    <span class="k">return</span> <span class="n">stats_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>  <span class="c1"># Zone names are in the index, lost if not reset.</span>
 </pre></div>
 </div>
@@ -370,8 +370,8 @@ this function on every realization as in the following (this would work on
 EnsembleSets also):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fmu.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScratchEnsemble</span>
 
-<span class="n">ensemble</span> <span class="o">=</span> <span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;testcase/realization-*/iter-0&quot;</span><span class="p">)</span>
-<span class="n">ensemble</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">my_realization_stats</span><span class="p">,</span> <span class="n">localpath</span><span class="o">=</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+<span class="n">ensemble</span> <span class="o">=</span> <span class="n">ScratchEnsemble</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="s2">"testcase/realization-*/iter-0"</span><span class="p">)</span>
+<span class="n">ensemble</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">my_realization_stats</span><span class="p">,</span> <span class="n">localpath</span><span class="o">=</span><span class="s2">"zonestats.csv"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For interactive test-runs on single realizations, you can run
@@ -385,8 +385,8 @@ aggregation to the ensemble level can be sone with the <a class="reference inter
 VirtualRealization object from an Ensemble object. If we want only the
 aggregated table for our particular custom function, we can aggregate the
 ensemble only for that particular datatype:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">mean_realization</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
-<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">mean_realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;zonestats.csv&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">mean_realization</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">"mean"</span><span class="p">,</span> <span class="n">keylist</span><span class="o">=</span><span class="s2">"zonestats.csv"</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">mean_realization</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">"zonestats.csv"</span><span class="p">)</span>
 <span class="n">Out</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
         <span class="n">ZONE</span>        <span class="n">PERMX</span>        <span class="n">VOLUME</span>            <span class="n">Z</span>         <span class="n">PORV</span>
 <span class="mi">0</span>  <span class="n">LowerReek</span>  <span class="mf">1105.552718</span>  <span class="mf">6.070259e+08</span>  <span class="mf">1599.113406</span>  <span class="mf">109885776.0</span>

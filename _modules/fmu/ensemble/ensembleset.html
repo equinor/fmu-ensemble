@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 1.6.14 documentation</title>
+  <title>fmu.ensemble.ensembleset &mdash; fmu-ensemble 1.6.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=a59be44b"></script>
+      <script src="../../../_static/documentation_options.js?v=01e36052"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -77,7 +77,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for fmu.ensemble.ensembleset</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Module for book-keeping and aggregation of ensembles&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""Module for book-keeping and aggregation of ensembles"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -96,7 +96,7 @@
 <div class="viewcode-block" id="EnsembleSet">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EnsembleSet</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;An ensemble set is any collection of ensemble objects</span>
+<span class="w">    </span><span class="sd">"""An ensemble set is any collection of ensemble objects</span>
 
 <span class="sd">    Ensemble objects are ScratchEnsembles or VirtualEnsembles.</span>
 
@@ -118,7 +118,7 @@
 <span class="sd">        frompath: string or list of strings with filesystem path.</span>
 <span class="sd">            Will be globbed by default. If no realizations or iterations</span>
 <span class="sd">            are detected after globbing, the standard glob</span>
-<span class="sd">            &#39;realization-*/iter-*/ will be used.</span>
+<span class="sd">            'realization-*/iter-*/ will be used.</span>
 <span class="sd">        runpathfile: string with path to an ert runpath file which will</span>
 <span class="sd">            be used to lookup realizations and iterations.</span>
 <span class="sd">        realidxregexp: regular expression object that will be used to</span>
@@ -135,7 +135,7 @@
 <span class="sd">            should be run at time of initialization for each realization.</span>
 <span class="sd">            Each element is a length 1 dictionary with the function name to run as</span>
 <span class="sd">            the key and each keys value should be the function arguments as a dict.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -150,43 +150,43 @@
         <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary indexed by each ensemble&#39;s name.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary indexed by each ensemble's name.</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">ensembles</span> <span class="ow">and</span> <span class="n">frompath</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ensembles</span> <span class="ow">and</span> <span class="n">runpathfile</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;EnsembleSet only supports one initialization mode,&quot;</span>
-                <span class="s2">&quot;from list of ensembles</span><span class="se">\n</span><span class="s2">, list of paths or &quot;</span>
-                <span class="s2">&quot;an ert runpath file&quot;</span>
+                <span class="s2">"EnsembleSet only supports one initialization mode,"</span>
+                <span class="s2">"from list of ensembles</span><span class="se">\n</span><span class="s2">, list of paths or "</span>
+                <span class="s2">"an ert runpath file"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
         <span class="c1"># Check consistency in arguments.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;EnsembleSet name defaulted to &#39;ensembleset&#39;&quot;</span><span class="p">)</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;ensembleset&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"EnsembleSet name defaulted to 'ensembleset'"</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">"ensembleset"</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Name of EnsembleSet must be a string&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Name of EnsembleSet must be a string"</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">frompath</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frompath</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;frompath arg given to EnsembleSet must be a string&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"frompath arg given to EnsembleSet must be a string"</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">ensembles</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensembles</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Ensembles supplied to EnsembleSet must be a list&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Ensembles supplied to EnsembleSet must be a list"</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="k">if</span> <span class="n">ensembles</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensembles</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">batch</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;Batch commands not procesed when loading finished ensembles&quot;</span>
+                    <span class="s2">"Batch commands not procesed when loading finished ensembles"</span>
                 <span class="p">)</span>
             <span class="k">for</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="n">ensembles</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensemble</span><span class="p">,</span> <span class="p">(</span><span class="n">ScratchEnsemble</span><span class="p">,</span> <span class="n">VirtualEnsemble</span><span class="p">)):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensemble</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Supplied object was not an ensemble&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Supplied object was not an ensemble"</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ensembles added to EnsembleSet&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No ensembles added to EnsembleSet"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">frompath</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_ensembles_frompath</span><span class="p">(</span>
                 <span class="n">frompath</span><span class="p">,</span>
@@ -197,20 +197,20 @@
                 <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ensembles added to EnsembleSet&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No ensembles added to EnsembleSet"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">runpathfile</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not open runpath file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not open runpath file </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">OSError</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_ensembles_fromrunpath</span><span class="p">(</span><span class="n">runpathfile</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No ensembles added to EnsembleSet&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"No ensembles added to EnsembleSet"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the name of the ensembleset,</span>
-<span class="sd">        as initialized&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the name of the ensembleset,</span>
+<span class="sd">        as initialized"""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -220,24 +220,24 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;EnsembleSet </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> ensembles:</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"&lt;EnsembleSet </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> ensembles:</span><span class="se">\n</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="si">}</span><span class="s2">&gt;"</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ensemblenames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a list of named ensembles in this set</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 <div class="viewcode-block" id="EnsembleSet.keys">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.keys">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the union of all keys available in the ensembles.</span>
 
 <span class="sd">        Keys refer to the realization datastore, a dictionary</span>
 <span class="sd">        of dataframes or dicts.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">allkeys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">allkeys</span> <span class="o">=</span> <span class="n">allkeys</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -255,7 +255,7 @@
         <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convenience function for adding multiple ensembles.</span>
+<span class="w">        </span><span class="sd">"""Convenience function for adding multiple ensembles.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            paths: str or list of strings with path to the</span>
@@ -276,48 +276,48 @@
 <span class="sd">                should be run at time of initialization for each realization.</span>
 <span class="sd">                Each element is a length 1 dictionary with the function name to run as</span>
 <span class="sd">                the key and each keys value should be the function arguments as a dict.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Try to catch the most common use case and make that easy:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="s2">&quot;realization&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span>
+                <span class="s2">"realization"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">paths</span>
                 <span class="ow">and</span> <span class="ow">not</span> <span class="n">realidxregexp</span>
                 <span class="ow">and</span> <span class="ow">not</span> <span class="n">iterregexp</span>
                 <span class="ow">and</span> <span class="ow">not</span> <span class="n">batchregexp</span>
             <span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="s2">&quot;Adding realization-*/iter-* path pattern to case directory&quot;</span>
+                    <span class="s2">"Adding realization-*/iter-* path pattern to case directory"</span>
                 <span class="p">)</span>
-                <span class="n">paths</span> <span class="o">=</span> <span class="n">paths</span> <span class="o">+</span> <span class="s2">&quot;/realization-*/iter-*&quot;</span>
+                <span class="n">paths</span> <span class="o">=</span> <span class="n">paths</span> <span class="o">+</span> <span class="s2">"/realization-*/iter-*"</span>
             <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">paths</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">realidxregexp</span><span class="p">:</span>
-            <span class="n">realidxregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;realization-(\d+)&quot;</span><span class="p">)</span>
+            <span class="n">realidxregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"realization-(\d+)"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">realidxregexp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">realidxregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">realidxregexp</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">iterregexp</span><span class="p">:</span>
             <span class="c1"># Alternative regexp that extracts iteration</span>
             <span class="c1"># as an integer</span>
-            <span class="c1"># iterregexp = re.compile(r&#39;iter-(\d+)&#39;)</span>
-            <span class="c1"># Default regexp that will add &#39;iter-&#39; to the</span>
+            <span class="c1"># iterregexp = re.compile(r'iter-(\d+)')</span>
+            <span class="c1"># Default regexp that will add 'iter-' to the</span>
             <span class="c1"># ensemble name</span>
-            <span class="n">iterregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(iter-\d+)&quot;</span><span class="p">)</span>
+            <span class="n">iterregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(iter-\d+)"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iterregexp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">iterregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">iterregexp</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">batchregexp</span><span class="p">:</span>
-            <span class="n">batchregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;batch-(\d+)&quot;</span><span class="p">)</span>
+            <span class="n">batchregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"batch-(\d+)"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batchregexp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">batchregexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">batchregexp</span><span class="p">)</span>
 
         <span class="c1"># Check that the regexpes actually can return something</span>
         <span class="k">if</span> <span class="n">realidxregexp</span><span class="o">.</span><span class="n">groups</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Invalid regular expression for realization&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">"Invalid regular expression for realization"</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">iterregexp</span><span class="o">.</span><span class="n">groups</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Invalid regular expression for iter&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">"Invalid regular expression for iter"</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="k">if</span> <span class="n">batchregexp</span><span class="o">.</span><span class="n">groups</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Invalid regular expression for batch&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">"Invalid regular expression for batch"</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="n">globbedpaths</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
@@ -325,11 +325,11 @@
 
         <span class="c1"># Build a temporary dataframe of globbed paths, and columns with</span>
         <span class="c1"># the realization index and the iter we found</span>
-        <span class="c1"># (extented to a third level called &#39;batch&#39;)</span>
-        <span class="n">paths_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;real&quot;</span><span class="p">,</span> <span class="s2">&quot;iter&quot;</span><span class="p">,</span> <span class="s2">&quot;batch&quot;</span><span class="p">])</span>
+        <span class="c1"># (extented to a third level called 'batch')</span>
+        <span class="n">paths_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"real"</span><span class="p">,</span> <span class="s2">"iter"</span><span class="p">,</span> <span class="s2">"batch"</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">globbedpaths</span><span class="p">:</span>
             <span class="n">real</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">iterr</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &#39;iter&#39; is a builtin..</span>
+            <span class="n">iterr</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 'iter' is a builtin..</span>
             <span class="n">batchname</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">for</span> <span class="n">path_comp</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">)):</span>
                 <span class="n">realmatch</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">realidxregexp</span><span class="p">,</span> <span class="n">path_comp</span><span class="p">)</span>
@@ -346,22 +346,22 @@
                 <span class="k">if</span> <span class="n">batchmatch</span><span class="p">:</span>
                     <span class="n">batchname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">itermatch</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
                     <span class="k">break</span>
-            <span class="n">df_row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span> <span class="n">real</span><span class="p">,</span> <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="n">iterr</span><span class="p">,</span> <span class="s2">&quot;batch&quot;</span><span class="p">:</span> <span class="n">batchname</span><span class="p">}</span>
+            <span class="n">df_row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"real"</span><span class="p">:</span> <span class="n">real</span><span class="p">,</span> <span class="s2">"iter"</span><span class="p">:</span> <span class="n">iterr</span><span class="p">,</span> <span class="s2">"batch"</span><span class="p">:</span> <span class="n">batchname</span><span class="p">}</span>
             <span class="n">paths_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">paths_df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">df_row</span><span class="p">])],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">paths_df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;Unknown&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">paths_df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">"Unknown"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Initialize ensemble objects for each iter found:</span>
-        <span class="n">iters</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">paths_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Identified </span><span class="si">%s</span><span class="s2"> iterations, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">iters</span><span class="p">),</span> <span class="n">iters</span><span class="p">)</span>
+        <span class="n">iters</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">paths_df</span><span class="p">[</span><span class="s2">"iter"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Identified </span><span class="si">%s</span><span class="s2"> iterations, </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">iters</span><span class="p">),</span> <span class="n">iters</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">iterr</span> <span class="ow">in</span> <span class="n">iters</span><span class="p">:</span>
             <span class="c1"># The realization indices *must* be unique for these</span>
             <span class="c1"># chosen paths, otherwise we are most likely in</span>
             <span class="c1"># trouble</span>
-            <span class="n">iterslice</span> <span class="o">=</span> <span class="n">paths_df</span><span class="p">[</span><span class="n">paths_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterslice</span><span class="p">[</span><span class="s2">&quot;real&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterslice</span><span class="p">):</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Repeated realization indices for iter </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">iterr</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Some realizations will be ignored&quot;</span><span class="p">)</span>
-            <span class="n">pathsforiter</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">paths_df</span><span class="p">[</span><span class="n">paths_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">][</span><span class="s2">&quot;path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-            <span class="c1"># iterr might contain the &#39;iter-&#39; prefix,</span>
+            <span class="n">iterslice</span> <span class="o">=</span> <span class="n">paths_df</span><span class="p">[</span><span class="n">paths_df</span><span class="p">[</span><span class="s2">"iter"</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterslice</span><span class="p">[</span><span class="s2">"real"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterslice</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Repeated realization indices for iter </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">iterr</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Some realizations will be ignored"</span><span class="p">)</span>
+            <span class="n">pathsforiter</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">paths_df</span><span class="p">[</span><span class="n">paths_df</span><span class="p">[</span><span class="s2">"iter"</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">][</span><span class="s2">"path"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="c1"># iterr might contain the 'iter-' prefix,</span>
             <span class="c1"># depending on chosen regexpx</span>
             <span class="n">ens</span> <span class="o">=</span> <span class="n">ScratchEnsemble</span><span class="p">(</span>
                 <span class="nb">str</span><span class="p">(</span><span class="n">iterr</span><span class="p">),</span>
@@ -376,26 +376,26 @@
 <div class="viewcode-block" id="EnsembleSet.add_ensembles_fromrunpath">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.add_ensembles_fromrunpath">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_ensembles_fromrunpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runpathfile</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add one or many ensembles from an ERT runpath file.</span>
+<span class="w">        </span><span class="sd">"""Add one or many ensembles from an ERT runpath file.</span>
 
 <span class="sd">        autodiscovery is not an argument, it is by default set to False</span>
 <span class="sd">        for runpath-files, since the location of the UNSMRY-file is given in</span>
 <span class="sd">        the runpath file.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">runpath_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
             <span class="n">runpathfile</span><span class="p">,</span>
-            <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span>
-            <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">,</span>
-            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="s2">&quot;runpath&quot;</span><span class="p">,</span> <span class="s2">&quot;eclbase&quot;</span><span class="p">,</span> <span class="s2">&quot;iter&quot;</span><span class="p">],</span>
+            <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">"\s+"</span><span class="p">,</span>
+            <span class="n">engine</span><span class="o">=</span><span class="s2">"python"</span><span class="p">,</span>
+            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"index"</span><span class="p">,</span> <span class="s2">"runpath"</span><span class="p">,</span> <span class="s2">"eclbase"</span><span class="p">,</span> <span class="s2">"iter"</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="c1"># If index and iter columns are all integers (typically zero padded),</span>
         <span class="c1"># Pandas has converted them to int64. If not, they will be</span>
         <span class="c1"># strings (objects)</span>
-        <span class="k">for</span> <span class="n">iterr</span> <span class="ow">in</span> <span class="n">runpath_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">iterr</span> <span class="ow">in</span> <span class="n">runpath_df</span><span class="p">[</span><span class="s2">"iter"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
             <span class="c1"># Make a runpath slice, and initialize from that:</span>
-            <span class="n">ens_runpath</span> <span class="o">=</span> <span class="n">runpath_df</span><span class="p">[</span><span class="n">runpath_df</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">]</span>
+            <span class="n">ens_runpath</span> <span class="o">=</span> <span class="n">runpath_df</span><span class="p">[</span><span class="n">runpath_df</span><span class="p">[</span><span class="s2">"iter"</span><span class="p">]</span> <span class="o">==</span> <span class="n">iterr</span><span class="p">]</span>
             <span class="n">ens</span> <span class="o">=</span> <span class="n">ScratchEnsemble</span><span class="p">(</span>
-                <span class="s2">&quot;iter-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iterr</span><span class="p">),</span>
+                <span class="s2">"iter-"</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iterr</span><span class="p">),</span>
                 <span class="n">runpathfile</span><span class="o">=</span><span class="n">ens_runpath</span><span class="p">,</span>
                 <span class="n">autodiscovery</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
@@ -406,43 +406,43 @@
 <div class="viewcode-block" id="EnsembleSet.add_ensemble">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.add_ensemble">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ensembleobject</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a single ensemble to the ensemble set</span>
+<span class="w">        </span><span class="sd">"""Add a single ensemble to the ensemble set</span>
 
 <span class="sd">        Name is taken from the ensembleobject.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The name </span><span class="si">{</span><span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists in the EnsembleSet&quot;</span>
+                <span class="sa">f</span><span class="s2">"The name </span><span class="si">{</span><span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> already exists in the EnsembleSet"</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="p">[</span><span class="n">ensembleobject</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensembleobject</span></div>
 
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a dataframe of the information in each</span>
+<span class="w">        </span><span class="sd">"""Build a dataframe of the information in each</span>
 <span class="sd">        realizations parameters.txt.</span>
 
 <span class="sd">        If no realizations have the file, an empty dataframe is returned.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.DataFrame</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;parameters.txt&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">"parameters.txt"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
 
 <div class="viewcode-block" id="EnsembleSet.load_scalar">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.load_scalar">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a single value from a file</span>
+<span class="w">        </span><span class="sd">"""Parse a single value from a file</span>
 
 <span class="sd">        The value can be a string or a number. Empty files</span>
 <span class="sd">        are treated as existing, with an empty string as</span>
 <span class="sd">        the value, different from non-existing files.</span>
 
 <span class="sd">        Parsing is performed individually in each ensemble</span>
-<span class="sd">        and realization&quot;&quot;&quot;</span>
+<span class="sd">        and realization"""</span>
         <span class="k">for</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">load_scalar</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span>
@@ -451,32 +451,32 @@
                 <span class="c1"># At ensemble level that is an Error, but at EnsembleSet level</span>
                 <span class="c1"># it is only a warning.</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;Ensemble </span><span class="si">%s</span><span class="s2"> did not contain the data </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">localpath</span>
+                    <span class="s2">"Ensemble </span><span class="si">%s</span><span class="s2"> did not contain the data </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">localpath</span>
                 <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EnsembleSet.load_txt">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.load_txt">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_txt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse and internalize a txt-file from disk</span>
+<span class="w">        </span><span class="sd">"""Parse and internalize a txt-file from disk</span>
 
 <span class="sd">        Parses text files on the form</span>
 <span class="sd">        &lt;key&gt; &lt;value&gt;</span>
-<span class="sd">        in each line.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s2">&quot;txt&quot;</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span></div>
+<span class="sd">        in each line."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s2">"txt"</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EnsembleSet.load_csv">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.load_csv">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse and internalize a CSV file from disk&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""Parse and internalize a CSV file from disk"""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="s2">"csv"</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EnsembleSet.load_file">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.load_file">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">fformat</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal function for load_*()&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Internal function for load_*()"""</span>
         <span class="k">for</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">fformat</span><span class="p">,</span> <span class="n">convert_numeric</span><span class="p">,</span> <span class="n">force_reread</span><span class="p">)</span>
@@ -485,7 +485,7 @@
                 <span class="c1"># At ensemble level that is an Error, but at EnsembleSet level</span>
                 <span class="c1"># it is only a warning.</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;Ensemble </span><span class="si">%s</span><span class="s2"> did not contain the data </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">localpath</span>
+                    <span class="s2">"Ensemble </span><span class="si">%s</span><span class="s2"> did not contain the data </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">ensname</span><span class="p">,</span> <span class="n">localpath</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span></div>
 
@@ -493,19 +493,19 @@
 <div class="viewcode-block" id="EnsembleSet.get_df">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.get_df">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect contents of dataframes from each ensemble</span>
+<span class="w">        </span><span class="sd">"""Collect contents of dataframes from each ensemble</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            localpath (str): path to the text file, relative to each realization</span>
 <span class="sd">            merge (list or str): refer to additional localpath(s) which will</span>
 <span class="sd">                be merged into the dataframe for every ensemble/realization.</span>
 <span class="sd">                Merging happens before aggregation.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">ensdflist</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">ensdf</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="n">merge</span><span class="p">)</span>
-                <span class="n">ensdf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;ENSEMBLE&quot;</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">ensdf</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"ENSEMBLE"</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="n">ensdflist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ensdf</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
                 <span class="c1"># Happens if an ensemble is missing some data</span>
@@ -513,13 +513,13 @@
                 <span class="k">pass</span>
         <span class="k">if</span> <span class="n">ensdflist</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">ensdflist</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No data found for </span><span class="si">{</span><span class="n">localpath</span><span class="si">}</span><span class="s2"> or merge failed&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No data found for </span><span class="si">{</span><span class="n">localpath</span><span class="si">}</span><span class="s2"> or merge failed"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EnsembleSet.drop">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.drop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete elements from internalized data.</span>
+<span class="w">        </span><span class="sd">"""Delete elements from internalized data.</span>
 
 <span class="sd">        Shortcuts are allowed for localpath. If the data pointed to is</span>
 <span class="sd">        a DataFrame, you can delete columns, or rows containing certain</span>
@@ -539,9 +539,9 @@
 <span class="sd">            key: string with a keyname in a dictionary. Will not work for</span>
 <span class="sd">                dataframes</span>
 <span class="sd">            keys: list of strings of keys to delete from a dictionary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortcut2path</span><span class="p">(</span><span class="n">localpath</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">localpath</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">localpath</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>  <span class="c1"># noqa: SIM105</span>
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">localpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -552,7 +552,7 @@
 <div class="viewcode-block" id="EnsembleSet.remove_data">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.remove_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">localpaths</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove certain datatypes from each ensembles/realizations</span>
+<span class="w">        </span><span class="sd">"""Remove certain datatypes from each ensembles/realizations</span>
 <span class="sd">        datastores. This modifies the underlying realization</span>
 <span class="sd">        objects, and is equivalent to</span>
 
@@ -563,7 +563,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            localpaths (string): Full localpath to</span>
 <span class="sd">                the data, or list of strings.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">ensemble</span><span class="o">.</span><span class="n">remove_data</span><span class="p">(</span><span class="n">localpaths</span><span class="p">)</span></div>
 
@@ -571,7 +571,7 @@
 <div class="viewcode-block" id="EnsembleSet.process_batch">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.process_batch">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a list of functions to run/apply</span>
+<span class="w">        </span><span class="sd">"""Process a list of functions to run/apply</span>
 
 <span class="sd">        This is equivalent to calling each function individually</span>
 <span class="sd">        but this enables more efficient concurrency. It is meant</span>
@@ -582,7 +582,7 @@
 <span class="sd">            batch (list): Each list element is a dictionary with one key,</span>
 <span class="sd">                being a function names, value pr key is a dict with keyword</span>
 <span class="sd">                arguments to be supplied to each function.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">for</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensemble</span><span class="p">,</span> <span class="n">ScratchEnsemble</span><span class="p">):</span>
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span></div>
@@ -591,14 +591,14 @@
 <div class="viewcode-block" id="EnsembleSet.apply">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.apply">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback functionalty, apply a function to every realization</span>
+<span class="w">        </span><span class="sd">"""Callback functionalty, apply a function to every realization</span>
 
 <span class="sd">        The supplied function handle will be handed over to each</span>
 <span class="sd">        underlying ScratchEnsemble object, which in turn will hand it</span>
 <span class="sd">        over to its realization objects. The function supplied must</span>
 <span class="sd">        return a Pandas DataFrame. The function can obtain the</span>
 <span class="sd">        realization object in the kwargs dictionary through the key</span>
-<span class="sd">        &#39;realization&#39;.</span>
+<span class="sd">        'realization'.</span>
 
 <span class="sd">        Any VirtualEnsembles are ignored. Operations on dataframes in</span>
 <span class="sd">        VirtualEnsembles can be done using the apply() functionality</span>
@@ -606,8 +606,8 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            callback: function handle</span>
-<span class="sd">            kwargs: dictionary where &#39;realization&#39; and</span>
-<span class="sd">                &#39;localpath&#39; is reserved, will be forwarded</span>
+<span class="sd">            kwargs: dictionary where 'realization' and</span>
+<span class="sd">                'localpath' is reserved, will be forwarded</span>
 <span class="sd">                to the callbacked function</span>
 <span class="sd">            localpath: str, optional if the data is to be internalized</span>
 <span class="sd">                in each realization object.</span>
@@ -616,12 +616,12 @@
 <span class="sd">            pd.DataFrame, aggregated result of the supplied function</span>
 <span class="sd">                on each realization.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">ens_name</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ensemble</span><span class="p">,</span> <span class="n">ScratchEnsemble</span><span class="p">):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="n">result</span><span class="p">[</span><span class="s2">&quot;ENSEMBLE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ens_name</span>
+                <span class="n">result</span><span class="p">[</span><span class="s2">"ENSEMBLE"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ens_name</span>
                 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
@@ -629,12 +629,12 @@
 <div class="viewcode-block" id="EnsembleSet.shortcut2path">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.shortcut2path">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">shortcut2path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shortpath</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Convert short pathnames to fully qualified pathnames</span>
 <span class="sd">        within the datastore.</span>
 
 <span class="sd">        If the fully qualified localpath is</span>
-<span class="sd">            &#39;share/results/volumes/simulator_volume_fipnum.csv&#39;</span>
+<span class="sd">            'share/results/volumes/simulator_volume_fipnum.csv'</span>
 <span class="sd">        then you can also access this with these alternatives:</span>
 <span class="sd">         * simulator_volume_fipnum</span>
 <span class="sd">         * simulator_volume_fipnum.csv</span>
@@ -644,21 +644,21 @@
 <span class="sd">        of ambiguity, the shortpath will be returned.</span>
 
 <span class="sd">        CODE DUPLICATION from realization.py</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">basenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
         <span class="k">if</span> <span class="n">basenames</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
             <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
-        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="n">noexts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
         <span class="k">if</span> <span class="n">noexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+            <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
             <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
         <span class="n">basenamenoexts</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">basenamenoexts</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">shortpath</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">short2path</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
             <span class="p">}</span>
             <span class="k">return</span> <span class="n">short2path</span><span class="p">[</span><span class="n">shortpath</span><span class="p">]</span>
         <span class="c1"># If we get here, we did not find anything that</span>
@@ -670,7 +670,7 @@
 <div class="viewcode-block" id="EnsembleSet.get_csv_deprecated">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.get_csv_deprecated">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_csv_deprecated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load CSV data from each realization in each</span>
+<span class="w">        </span><span class="sd">"""Load CSV data from each realization in each</span>
 <span class="sd">        ensemble, and aggregate.</span>
 
 <span class="sd">        Args:</span>
@@ -679,11 +679,11 @@
 <span class="sd">            dataframe: Merged CSV from each realization.</span>
 <span class="sd">                Realizations with missing data are ignored.</span>
 <span class="sd">                Empty dataframe if no data is found</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">dflist</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dframe</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">get_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-            <span class="n">dframe</span><span class="p">[</span><span class="s2">&quot;ENSEMBLE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">dframe</span><span class="p">[</span><span class="s2">"ENSEMBLE"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span>
             <span class="n">dflist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dframe</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dflist</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -692,20 +692,20 @@
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.load_smry">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_smry</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">time_index</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+        <span class="n">time_index</span><span class="o">=</span><span class="s2">"raw"</span><span class="p">,</span>
         <span class="n">column_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">cache_eclsum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Fetch summary data from all ensembles</span>
 
 <span class="sd">        Wraps around Ensemble.load_smry() which wraps</span>
 <span class="sd">        Realization.load_smry(), which wraps resdata.summary.Summary.pandas_frame()</span>
 
 <span class="sd">        The time index is determined at realization level. If you</span>
-<span class="sd">        ask for &#39;monthly&#39;, you will from each realization get its</span>
+<span class="sd">        ask for 'monthly', you will from each realization get its</span>
 <span class="sd">        months. At ensemble or ensembleset-level, the number of</span>
 <span class="sd">        monthly report dates between realization can vary</span>
 
@@ -724,21 +724,21 @@
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
 <span class="sd">                start_date will always be included. Overridden if time_index</span>
-<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                is 'first' or 'last'.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
 <span class="sd">                end_date will always be included. Overridden if time_index</span>
-<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                is 'first' or 'last'.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A DataFame of summary vectors for the ensembleset.</span>
-<span class="sd">            The column &#39;ENSEMBLE&#39; will denote each ensemble&#39;s name</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            The column 'ENSEMBLE' will denote each ensemble's name</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">cache_eclsum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="p">(</span>
-                    <span class="s2">&quot;cache_eclsum option to load_smry() is deprecated and &quot;</span>
-                    <span class="s2">&quot;will be removed in fmu-ensemble v2.0.0&quot;</span>
+                    <span class="s2">"cache_eclsum option to load_smry() is deprecated and "</span>
+                    <span class="s2">"will be removed in fmu-ensemble v2.0.0"</span>
                 <span class="p">),</span>
                 <span class="ne">FutureWarning</span><span class="p">,</span>
             <span class="p">)</span>
@@ -753,10 +753,10 @@
                 <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-            <span class="n">time_index</span> <span class="o">=</span> <span class="s2">&quot;custom&quot;</span>
+            <span class="n">time_index</span> <span class="o">=</span> <span class="s2">"custom"</span>
         <span class="k">elif</span> <span class="n">time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">time_index</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">&quot;share/results/tables/unsmry--&quot;</span> <span class="o">+</span> <span class="n">time_index</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span></div>
+            <span class="n">time_index</span> <span class="o">=</span> <span class="s2">"raw"</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_df</span><span class="p">(</span><span class="s2">"share/results/tables/unsmry--"</span> <span class="o">+</span> <span class="n">time_index</span> <span class="o">+</span> <span class="s2">".csv"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EnsembleSet.get_smry">
@@ -769,7 +769,7 @@
         <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Aggregates summary data from all ensembles</span>
+<span class="w">        </span><span class="sd">"""Aggregates summary data from all ensembles</span>
 
 <span class="sd">        Wraps around Ensemble.get_smry(), which wraps around</span>
 <span class="sd">        Realization.get_smry() which wraps around</span>
@@ -789,22 +789,22 @@
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
 <span class="sd">                start_date will always be included. Overridden if time_index</span>
-<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                is 'first' or 'last'.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
 <span class="sd">                end_date will always be included. Overridden if time_index</span>
-<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                is 'first' or 'last'.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            A DataFame of summary vectors for the EnsembleSet. The column</span>
 <span class="sd">            ENSEMBLE will distinguish the different ensembles by their</span>
 <span class="sd">            respective names.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="n">cache_eclsum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="p">(</span>
-                    <span class="s2">&quot;cache_eclsum option to get_smry() is deprecated and &quot;</span>
-                    <span class="s2">&quot;will be removed in fmu-ensemble v2.0.0&quot;</span>
+                    <span class="s2">"cache_eclsum option to get_smry() is deprecated and "</span>
+                    <span class="s2">"will be removed in fmu-ensemble v2.0.0"</span>
                 <span class="p">),</span>
                 <span class="ne">FutureWarning</span><span class="p">,</span>
             <span class="p">)</span>
@@ -814,7 +814,7 @@
             <span class="n">smry</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">get_smry</span><span class="p">(</span>
                 <span class="n">time_index</span><span class="p">,</span> <span class="n">column_keys</span><span class="p">,</span> <span class="n">cache_eclsum</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span>
             <span class="p">)</span>
-            <span class="n">smry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;ENSEMBLE&quot;</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">smry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"ENSEMBLE"</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">smrylist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">smry</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">smrylist</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">smrylist</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -824,39 +824,39 @@
 <div class="viewcode-block" id="EnsembleSet.get_smry_dates">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.get_smry_dates">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_smry_dates</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="n">cache_eclsum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"monthly"</span><span class="p">,</span> <span class="n">cache_eclsum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return list of datetimes from an ensembleset</span>
+<span class="w">        </span><span class="sd">"""Return list of datetimes from an ensembleset</span>
 
 <span class="sd">        Datetimes from each realization in each ensemble can</span>
 <span class="sd">        be returned raw, or be resampled.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">           freq: string denoting requested frequency for</span>
-<span class="sd">               the returned list of datetime. &#39;report&#39; will</span>
+<span class="sd">               the returned list of datetime. 'report' will</span>
 <span class="sd">               yield the sorted union of all valid timesteps for</span>
 <span class="sd">               all realizations. Other valid options are</span>
-<span class="sd">               &#39;daily&#39;, &#39;monthly&#39; and &#39;yearly&#39;.</span>
+<span class="sd">               'daily', 'monthly' and 'yearly'.</span>
 <span class="sd">            cache_eclsum: Boolean for whether we should cache the Summary</span>
 <span class="sd">                objects. Set to False if you cannot keep all Summary files in</span>
 <span class="sd">                memory simultaneously</span>
 <span class="sd">            start_date: str or date with first date to include.</span>
 <span class="sd">                Dates prior to this date will be dropped, supplied</span>
 <span class="sd">                start_date will always be included. Overridden if time_index</span>
-<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                is 'first' or 'last'.</span>
 <span class="sd">            end_date: str or date with last date to be included.</span>
 <span class="sd">                Dates past this date will be dropped, supplied</span>
 <span class="sd">                end_date will always be included. Overridden if time_index</span>
-<span class="sd">                is &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">                is 'first' or 'last'.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            list of datetime.date.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="n">cache_eclsum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="p">(</span>
-                    <span class="s2">&quot;cache_eclsum option to get_smry_dates() is deprecated and &quot;</span>
-                    <span class="s2">&quot;will be removed in fmu-ensemble v2.0.0&quot;</span>
+                    <span class="s2">"cache_eclsum option to get_smry_dates() is deprecated and "</span>
+                    <span class="s2">"will be removed in fmu-ensemble v2.0.0"</span>
                 <span class="p">),</span>
                 <span class="ne">FutureWarning</span><span class="p">,</span>
             <span class="p">)</span>
@@ -865,7 +865,7 @@
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">ensemble</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensembles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">rawdates</span> <span class="o">=</span> <span class="n">rawdates</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
                 <span class="n">ensemble</span><span class="o">.</span><span class="n">get_smry_dates</span><span class="p">(</span>
-                    <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;report&quot;</span><span class="p">,</span>
+                    <span class="n">freq</span><span class="o">=</span><span class="s2">"report"</span><span class="p">,</span>
                     <span class="n">cache_eclsum</span><span class="o">=</span><span class="n">cache_eclsum</span><span class="p">,</span>
                     <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
                     <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
@@ -873,24 +873,24 @@
             <span class="p">)</span>
         <span class="n">rawdates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rawdates</span><span class="p">)</span>
         <span class="n">rawdates</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;report&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">"report"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">rawdates</span>
         <span class="c1"># Later optimization: Wrap eclsum.start_date in the</span>
         <span class="c1"># ensemble object.</span>
         <span class="n">start_date</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">rawdates</span><span class="p">)</span>
         <span class="n">end_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rawdates</span><span class="p">)</span>
-        <span class="n">pd_freq_mnenomics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;monthly&quot;</span><span class="p">:</span> <span class="s2">&quot;MS&quot;</span><span class="p">,</span> <span class="s2">&quot;yearly&quot;</span><span class="p">:</span> <span class="s2">&quot;YS&quot;</span><span class="p">,</span> <span class="s2">&quot;daily&quot;</span><span class="p">:</span> <span class="s2">&quot;D&quot;</span><span class="p">}</span>
+        <span class="n">pd_freq_mnenomics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"monthly"</span><span class="p">:</span> <span class="s2">"MS"</span><span class="p">,</span> <span class="s2">"yearly"</span><span class="p">:</span> <span class="s2">"YS"</span><span class="p">,</span> <span class="s2">"daily"</span><span class="p">:</span> <span class="s2">"D"</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">freq</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pd_freq_mnenomics</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested frequency </span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2"> not supported&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Requested frequency </span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2"> not supported"</span><span class="p">)</span>
         <span class="n">datetimes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">pd_freq_mnenomics</span><span class="p">[</span><span class="n">freq</span><span class="p">])</span>
-        <span class="c1"># Convert from Pandas&#39; datetime64 to datetime.date:</span>
+        <span class="c1"># Convert from Pandas' datetime64 to datetime.date:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">datetimes</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="EnsembleSet.get_wellnames">
 <a class="viewcode-back" href="../../../fmu.ensemble.html#fmu.ensemble.ensembleset.EnsembleSet.get_wellnames">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_wellnames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">well_match</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a union of all Eclipse summary well names in all ensembles</span>
+<span class="w">        </span><span class="sd">"""Return a union of all Eclipse summary well names in all ensembles</span>
 <span class="sd">        realizations (union).</span>
 
 <span class="sd">        Optionally, the well names can be filtered.</span>
@@ -903,10 +903,10 @@
 <span class="sd">            list of strings with eclipse well names. Empty list if no</span>
 <span class="sd">            summary file or no matched well names.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;ensembleset.get_wellnames() is deprecated and &quot;</span>
-            <span class="s2">&quot;will be removed in later versions.&quot;</span><span class="p">,</span>
+            <span class="s2">"ensembleset.get_wellnames() is deprecated and "</span>
+            <span class="s2">"will be removed in later versions."</span><span class="p">,</span>
             <span class="ne">FutureWarning</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
